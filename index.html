@@ -275,13 +275,12 @@ function render(groups,whDiv){
   var rate=(gSh+gPe)?gSh/(gSh+gPe)*100:0;
 
   var top=groups.slice().filter(function(d){return d[2]>0;}).sort(function(a,b){return b[2]-a[2];}).slice(0,12);
-  var maxTot=1; top.forEach(function(d){ var t=d[2]+d[4]; if(t>maxTot) maxTot=t; });
   var bars=top.map(function(d){
-    var tot=d[2]+d[4];
+    var tot=d[2]+d[4], g=tot?d[2]/tot*100:0, a=tot?d[4]/tot*100:0;
     return '<div class="barrow"><div class="blab" title="'+esc(d[0])+'">'+esc(d[1])+'<small>'+esc(d[0])+'</small></div>'+
-      '<div class="btrack">'+
-        '<div class="bfill sh" data-w="'+(d[2]/maxTot*100).toFixed(2)+'"></div>'+
-        '<div class="bfill pe" data-w="'+(d[4]/maxTot*100).toFixed(2)+'"></div>'+
+      '<div class="btrack" title="Đã lên kệ '+nf(d[2])+' / '+nf(tot)+' · còn '+nf(d[4])+'">'+
+        '<div class="bfill sh" data-w="'+g.toFixed(2)+'"></div>'+
+        '<div class="bfill pe" data-w="'+a.toFixed(2)+'"></div>'+
       '</div>'+
       '<div class="bval"><b>'+nf(d[2])+'</b> / '+nf(tot)+'<small>còn '+nf(d[4])+'</small></div></div>';
   }).join('');
