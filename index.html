@@ -127,6 +127,21 @@ code{background:#eef1f5;padding:1px 7px;border-radius:6px;font-size:12px;color:#
 .mfilters label{font-size:10px;font-weight:650;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;padding-left:2px}
 .mfilters input,.mfilters select{padding:8px 10px;border:1px solid #d5dbe4;border-radius:9px;font-size:12.5px;background:#fff;color:var(--ink);transition:border-color .15s var(--ease),box-shadow .15s var(--ease);width:100%}
 .mfilters input:focus,.mfilters select:focus{outline:0;border-color:var(--brand2);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+.combo{position:relative}
+.combo-menu{position:absolute;top:calc(100% + 5px);left:0;right:0;z-index:30;background:#fff;border:1px solid var(--line);border-radius:11px;box-shadow:var(--shadow-lg);
+  max-height:250px;overflow-y:auto;overscroll-behavior:contain;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;padding:5px;
+  opacity:0;visibility:hidden;transform:translateY(-6px) scale(.99);transform-origin:top;transition:opacity .16s var(--ease),transform .16s var(--ease),visibility .16s}
+.combo-menu.show{opacity:1;visibility:visible;transform:none}
+.combo-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 11px;border-radius:8px;font-size:12.5px;cursor:pointer;color:var(--ink);
+  white-space:nowrap;overflow:hidden;transition:background .12s var(--ease),color .12s var(--ease)}
+.combo-item .nm{overflow:hidden;text-overflow:ellipsis}
+.combo-item .c{color:var(--ink3);font-size:11px;font-variant-numeric:tabular-nums;flex:none}
+.combo-item:hover,.combo-item.active{background:#eef4ff;color:var(--brand)}
+.combo-item.all{border-bottom:1px solid var(--line);border-radius:8px 8px 0 0;font-weight:600}
+.combo-empty{padding:12px 11px;font-size:12px;color:var(--ink3);text-align:center}
+.combo-menu::-webkit-scrollbar{width:9px}
+.combo-menu::-webkit-scrollbar-thumb{background:#cbd3dd;border-radius:6px;border:2px solid #fff}
+.combo-menu::-webkit-scrollbar-thumb:hover{background:#aab4c2}
 .msum{padding:9px 22px;font-size:12px;color:var(--ink2);border-bottom:1px solid var(--line);background:#fbfcfe;font-variant-numeric:tabular-nums}
 .modalbody{overflow:auto;padding:0 22px 22px;scroll-behavior:smooth;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .mtbl{width:100%;border-collapse:collapse;font-size:12.5px}
@@ -172,10 +187,10 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
       <button id="tabPend" class="tab" onclick="setTab('pend')">Chưa lên kệ (<span id="cPend">0</span>)</button>
     </div>
     <div class="mfilters">
-      <div class="fld"><label>CategoryName</label><input id="fCat" list="catlist" oninput="renderRows()" placeholder="Tất cả category…" autocomplete="off"><datalist id="catlist"></datalist></div>
-      <div class="fld"><label>Mã vị trí</label><input id="fLoc" oninput="renderRows()" placeholder="Lọc vị trí…"></div>
-      <div class="fld"><label>SKU</label><input id="fSku" oninput="renderRows()" placeholder="Lọc SKU…"></div>
-      <div class="fld"><label>ProductName</label><input id="fName" oninput="renderRows()" placeholder="Lọc tên sản phẩm…"></div>
+      <div class="fld"><label>CategoryName</label><div class="combo" id="catCombo"><input id="fCat" autocomplete="off" placeholder="Tất cả category…" oninput="onCatInput()" onfocus="renderCatMenu()"><div class="combo-menu" id="catMenu"></div></div></div>
+      <div class="fld"><label>Mã vị trí</label><input id="fLoc" oninput="qfilter()" placeholder="Lọc vị trí…"></div>
+      <div class="fld"><label>SKU</label><input id="fSku" oninput="qfilter()" placeholder="Lọc SKU…"></div>
+      <div class="fld"><label>ProductName</label><input id="fName" oninput="qfilter()" placeholder="Lọc tên sản phẩm…"></div>
     </div>
     <div class="msum" id="msum"></div>
     <div class="modalbody"><table class="mtbl"><thead><tr>
@@ -341,12 +356,25 @@ function render(groups,whDiv){
 }
 
 /* ---------- modal ---------- */
+var CUR_CATS=[];
 function fillCatOptions(){
-  var rows=WH_DATA[curWh][curTab], seen={}, opts=[];
-  for(var i=0;i<rows.length;i++){ seen[rows[i][3]]=1; }
-  Object.keys(seen).sort().forEach(function(cat){ opts.push('<option value="'+esc(cat)+'">'); });
-  document.getElementById('catlist').innerHTML=opts.join('');
+  var rows=WH_DATA[curWh][curTab], cnt={};
+  for(var i=0;i<rows.length;i++){ var c=rows[i][3]; cnt[c]=(cnt[c]||0)+1; }
+  CUR_CATS=Object.keys(cnt).sort().map(function(c){ return {name:c,n:cnt[c]}; });
 }
+function renderCatMenu(){
+  var q=document.getElementById('fCat').value.toLowerCase();
+  var items=CUR_CATS.filter(function(c){ return !q||c.name.toLowerCase().indexOf(q)>=0; });
+  var html='<div class="combo-item all" data-v=""><span class="nm">Tất cả category</span><span class="c">'+CUR_CATS.length+' nhóm</span></div>';
+  html+=items.map(function(c){ return '<div class="combo-item" data-v="'+esc(c.name)+'"><span class="nm">'+esc(c.name)+'</span><span class="c">'+nf(c.n)+'</span></div>'; }).join('');
+  if(!items.length) html+='<div class="combo-empty">Không có nhóm phù hợp</div>';
+  var m=document.getElementById('catMenu'); m.innerHTML=html; m.classList.add('show');
+}
+function onCatInput(){ renderCatMenu(); qfilter(); }
+function pickCat(v){ document.getElementById('fCat').value=v; closeCat(); renderRows(); }
+function closeCat(){ document.getElementById('catMenu').classList.remove('show'); }
+var _deb;
+function qfilter(){ clearTimeout(_deb); _deb=setTimeout(renderRows,110); }
 function openModal(w){
   curWh=w; curTab='shelf';
   document.getElementById('mtitle').textContent=w;
@@ -368,6 +396,7 @@ function setTab(t,skipFill){
   document.getElementById('tabPend').classList.toggle('active',t==='pend');
   fillCatOptions();
   document.getElementById('fCat').value='';
+  closeCat();
   renderRows();
 }
 function renderRows(){
@@ -389,7 +418,19 @@ function renderRows(){
   document.getElementById('mbody').innerHTML=out.length?out.join(''):'<tr><td colspan="5" class="empty">Không có dữ liệu phù hợp</td></tr>';
   document.getElementById('msum').textContent=nf(cnt)+' dòng · tổng số lượng '+nf(qsum);
 }
-document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeModal(); });
+document.addEventListener('keydown',function(e){
+  if(e.key!=='Escape') return;
+  var m=document.getElementById('catMenu');
+  if(m && m.classList.contains('show')) closeCat(); else closeModal();
+});
+document.getElementById('catMenu').addEventListener('click',function(e){
+  var it=e.target.closest('.combo-item'); if(!it) return;
+  pickCat(it.getAttribute('data-v')||'');
+});
+document.addEventListener('click',function(e){
+  var combo=document.getElementById('catCombo');
+  if(combo && !combo.contains(e.target)) closeCat();
+});
 
 loadData();
 </script>
