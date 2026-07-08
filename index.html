@@ -52,17 +52,22 @@ code{background:#eef1f5;padding:1px 7px;border-radius:6px;font-size:12px;color:#
 
 .grid{display:grid;grid-template-columns:1.22fr 1fr;gap:16px;margin-bottom:16px}
 @media(max-width:860px){.grid{grid-template-columns:1fr}}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow);margin-bottom:16px}
 .panel h2{margin:0 0 16px;font-size:14.5px;font-weight:680;color:#374151;letter-spacing:-.01em;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.lg{font-weight:400;font-size:11px;color:var(--ink2);display:inline-flex;align-items:center;gap:5px;margin-left:2px}
+.sw{width:10px;height:10px;border-radius:3px;display:inline-block} .sw.sh{background:var(--teal)} .sw.pe{background:#f7c07a}
 
-.barrow{display:grid;grid-template-columns:180px 1fr 58px;align-items:center;gap:12px;margin-bottom:11px}
+.barrow{display:grid;grid-template-columns:180px 1fr 104px;align-items:center;gap:12px;margin-bottom:11px}
 .blab{font-size:11.5px;line-height:1.3;text-align:right;color:#374151}
 .blab small{color:var(--ink3);font-size:10px;display:block}
-.btrack{background:#eef1f5;border-radius:7px;height:22px;overflow:hidden}
-.bfill{height:100%;border-radius:7px;width:0;transition:width .9s var(--ease)}
-.bval{font-weight:700;font-size:13px;text-align:right;font-variant-numeric:tabular-nums}
+.btrack{background:#eef1f5;border-radius:7px;height:22px;overflow:hidden;display:flex}
+.bfill{height:100%;width:0;transition:width .9s var(--ease)}
+.bfill.sh{background:var(--teal)} .bfill.pe{background:#f7c07a}
+.bval{font-weight:700;font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums;line-height:1.2}
+.bval b{color:var(--teal)} .bval small{display:block;color:var(--amber);font-size:10px;font-weight:600}
 
-.whlist{display:flex;flex-direction:column;gap:12px}
+.whlist{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(max-width:720px){.whlist{grid-template-columns:1fr}}
 .whcard{background:#fbfcfe;border:1px solid var(--line);border-radius:12px;padding:12px 14px;transition:box-shadow .2s var(--ease),transform .2s var(--ease)}
 .whcard:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
 .whtop{display:flex;justify-content:space-between;align-items:center;font-size:12px;gap:10px}
@@ -104,7 +109,7 @@ code{background:#eef1f5;padding:1px 7px;border-radius:6px;font-size:12px;color:#
 /* modal */
 .modal{display:none;position:fixed;inset:0;background:rgba(17,24,39,.5);backdrop-filter:blur(2px);z-index:99;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity .22s var(--ease)}
 .modal.show{opacity:1}
-.modalbox{background:#fff;border-radius:18px;width:min(1000px,100%);max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);
+.modalbox{background:#fff;border-radius:18px;width:min(1280px,96vw);max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);
   transform:translateY(12px) scale(.985);opacity:.6;transition:transform .26s var(--ease),opacity .26s var(--ease)}
 .modal.show .modalbox{transform:none;opacity:1}
 .modalhd{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--line)}
@@ -123,13 +128,13 @@ code{background:#eef1f5;padding:1px 7px;border-radius:6px;font-size:12px;color:#
 .mfilters input,.mfilters select{padding:8px 10px;border:1px solid #d5dbe4;border-radius:9px;font-size:12.5px;background:#fff;color:var(--ink);transition:border-color .15s var(--ease),box-shadow .15s var(--ease);width:100%}
 .mfilters input:focus,.mfilters select:focus{outline:0;border-color:var(--brand2);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
 .msum{padding:9px 22px;font-size:12px;color:var(--ink2);border-bottom:1px solid var(--line);background:#fbfcfe;font-variant-numeric:tabular-nums}
-.modalbody{overflow:auto;padding:0 22px 22px}
+.modalbody{overflow:auto;padding:0 22px 22px;scroll-behavior:smooth;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .mtbl{width:100%;border-collapse:collapse;font-size:12.5px}
-.mtbl thead th{position:sticky;top:0;background:var(--ink);color:#fff;padding:9px 11px;text-align:left;font-weight:600;font-size:11px;z-index:1}
+.mtbl thead th{position:sticky;top:0;background:var(--ink);color:#fff;padding:9px 11px;text-align:left;font-weight:600;font-size:11px;z-index:1;white-space:nowrap}
 .mtbl td{padding:8px 11px;border-bottom:1px solid #f1f4f8;vertical-align:top}
 .mtbl tbody tr:hover{background:#f5f9ff}
 .mtbl .empty{text-align:center;color:var(--ink3);padding:28px}
-.mtbl .pn{color:var(--ink2);max-width:340px}
+.mtbl .pn{color:var(--ink2);white-space:nowrap}
 .loc{font-family:ui-monospace,Consolas,monospace;color:var(--teal);font-size:12px}
 
 footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line-height:1.6}
@@ -167,7 +172,7 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
       <button id="tabPend" class="tab" onclick="setTab('pend')">Chưa lên kệ (<span id="cPend">0</span>)</button>
     </div>
     <div class="mfilters">
-      <div class="fld"><label>CategoryName</label><select id="fCat" onchange="renderRows()"><option value="">Tất cả</option></select></div>
+      <div class="fld"><label>CategoryName</label><input id="fCat" list="catlist" oninput="renderRows()" placeholder="Tất cả category…" autocomplete="off"><datalist id="catlist"></datalist></div>
       <div class="fld"><label>Mã vị trí</label><input id="fLoc" oninput="renderRows()" placeholder="Lọc vị trí…"></div>
       <div class="fld"><label>SKU</label><input id="fSku" oninput="renderRows()" placeholder="Lọc SKU…"></div>
       <div class="fld"><label>ProductName</label><input id="fName" oninput="renderRows()" placeholder="Lọc tên sản phẩm…"></div>
@@ -270,11 +275,15 @@ function render(groups,whDiv){
   var rate=(gSh+gPe)?gSh/(gSh+gPe)*100:0;
 
   var top=groups.slice().filter(function(d){return d[2]>0;}).sort(function(a,b){return b[2]-a[2];}).slice(0,12);
-  var maxv=top.length?top[0][2]:1;
+  var maxTot=1; top.forEach(function(d){ var t=d[2]+d[4]; if(t>maxTot) maxTot=t; });
   var bars=top.map(function(d){
+    var tot=d[2]+d[4];
     return '<div class="barrow"><div class="blab" title="'+esc(d[0])+'">'+esc(d[1])+'<small>'+esc(d[0])+'</small></div>'+
-      '<div class="btrack"><div class="bfill" data-w="'+(d[2]/maxv*100).toFixed(1)+'" style="background:'+WH_COLOR[d[0]]+'"></div></div>'+
-      '<div class="bval">'+nf(d[2])+'</div></div>';
+      '<div class="btrack">'+
+        '<div class="bfill sh" data-w="'+(d[2]/maxTot*100).toFixed(2)+'"></div>'+
+        '<div class="bfill pe" data-w="'+(d[4]/maxTot*100).toFixed(2)+'"></div>'+
+      '</div>'+
+      '<div class="bval"><b>'+nf(d[2])+'</b> / '+nf(tot)+'<small>còn '+nf(d[4])+'</small></div></div>';
   }).join('');
 
   var whKeys=Object.keys(wh).sort(function(a,b){return wh[b][0]-wh[a][0];});
@@ -323,11 +332,9 @@ function render(groups,whDiv){
     '<span class="tag rem">Còn lại '+(100-rate).toFixed(1)+'% ('+nf(gPe)+' SKU)</span></div>'+
     '<div class="ratebar"><div class="ratef" data-w="'+rate.toFixed(1)+'">'+rate.toFixed(0)+'%</div>'+
     '<div class="ratefr" data-w="'+(100-rate).toFixed(1)+'">'+(100-rate).toFixed(0)+'%</div></div></div>'+
-    '<div class="grid">'+
-    '<section class="panel"><h2>Top Category theo số SKU đã lên kệ</h2>'+bars+'</section>'+
+    '<section class="panel"><h2>Bảng chi tiết <span class="hint">(bấm nhóm để mở, bấm từng kho để xem chi tiết &amp; total)</span></h2><div class="accwrap">'+acc+'</div></section>'+
     '<section class="panel"><h2>Tiến độ lên kệ theo Warehouse <span class="hint">(bấm số lượng SKU để xem chi tiết)</span></h2><div class="whlist">'+whchips+'</div></section>'+
-    '</div>'+
-    '<section class="panel"><h2>Bảng chi tiết <span class="hint">(bấm nhóm để mở, bấm từng kho để xem chi tiết &amp; total)</span></h2><div class="accwrap">'+acc+'</div></section>';
+    '<section class="panel"><h2>Top Category theo số SKU đã lên kệ <span class="lg"><span class="sw sh"></span>đã lên kệ<span class="sw pe" style="margin-left:6px"></span>chưa lên kệ</span></h2>'+bars+'</section>';
   document.getElementById('content').innerHTML=html;
   requestAnimationFrame(function(){ requestAnimationFrame(function(){
     document.querySelectorAll('[data-w]').forEach(function(el){ el.style.width=el.getAttribute('data-w')+'%'; });
@@ -336,10 +343,10 @@ function render(groups,whDiv){
 
 /* ---------- modal ---------- */
 function fillCatOptions(){
-  var rows=WH_DATA[curWh][curTab], seen={}, opts=['<option value="">Tất cả category</option>'];
-  for(var i=0;i<rows.length;i++){ var cat=rows[i][3]; if(!seen[cat]){ seen[cat]=1; } }
-  Object.keys(seen).sort().forEach(function(cat){ opts.push('<option value="'+esc(cat)+'">'+esc(cat)+'</option>'); });
-  document.getElementById('fCat').innerHTML=opts.join('');
+  var rows=WH_DATA[curWh][curTab], seen={}, opts=[];
+  for(var i=0;i<rows.length;i++){ seen[rows[i][3]]=1; }
+  Object.keys(seen).sort().forEach(function(cat){ opts.push('<option value="'+esc(cat)+'">'); });
+  document.getElementById('catlist').innerHTML=opts.join('');
 }
 function openModal(w){
   curWh=w; curTab='shelf';
@@ -371,7 +378,7 @@ function renderRows(){
   var fn=document.getElementById('fName').value.toLowerCase();
   var rows=WH_DATA[curWh][curTab], out=[], cnt=0, qsum=0;
   for(var i=0;i<rows.length;i++){ var r=rows[i]; // [sku,pn,loc,cat,qty]
-    if(fc && r[3].toLowerCase()!==fc) continue;
+    if(fc && r[3].toLowerCase().indexOf(fc)<0) continue;
     if(fl && r[2].toLowerCase().indexOf(fl)<0) continue;
     if(fs && r[0].toLowerCase().indexOf(fs)<0) continue;
     if(fn && r[1].toLowerCase().indexOf(fn)<0) continue;
