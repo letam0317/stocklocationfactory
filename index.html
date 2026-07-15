@@ -27,8 +27,17 @@ code{background:#eef1f5;padding:1px 7px;border-radius:6px;font-size:12px;color:#
 .srcbar a{color:var(--brand2);text-decoration:none;font-weight:600}
 .srcbar a:hover{text-decoration:underline}
 .chip{background:#e7effe;color:#1e40af;border-radius:999px;padding:4px 13px;font-weight:600;font-size:12px}
-#reload{background:var(--ink);color:#fff;border:0;border-radius:9px;padding:7px 15px;font-size:12.5px;font-weight:600;cursor:pointer;transition:background .2s var(--ease),transform .1s var(--ease)}
-#reload:hover{background:#111827} #reload:active{transform:scale(.97)} #reload:disabled{opacity:.45;cursor:default}
+#reload{background:var(--ink);color:#fff;border:0;border-radius:9px;padding:7px 15px;font-size:12.5px;font-weight:600;cursor:pointer;transition:background .2s var(--ease),transform .1s var(--ease),color .2s var(--ease)}
+#reload:hover:not(:disabled){background:#111827} #reload:active:not(:disabled){transform:scale(.97)}
+/* Cooldown 4h: nút khoá xám mờ, tắt con trỏ pointer (cursor not-allowed), không hover/nhấn */
+#reload:disabled{background:#c7cdd6;color:#eef1f5;cursor:not-allowed;transform:none}
+
+/* Toast thông báo kết quả đồng bộ WMS */
+#toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,16px);background:#111827;color:#fff;padding:12px 20px;border-radius:12px;
+  font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);opacity:0;pointer-events:none;z-index:200;max-width:92vw;text-align:center;
+  transition:opacity .25s var(--ease),transform .25s var(--ease)}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#toast.ok{background:#0f766e} #toast.warn{background:#b45309} #toast.err{background:#b42318}
 
 .cards{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin:24px 0 14px}
 @media(max-width:820px){.cards{grid-template-columns:repeat(2,1fr)}}
@@ -217,15 +226,17 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
   <span class="chip">Nguồn: stocklocationfactory</span>
   <a id="srclink" href="#" target="_blank" rel="noopener">Mở Google Sheet</a>
   <span id="loadinfo" class="hint"></span>
-  <button id="reload" onclick="loadData()">Tải lại dữ liệu</button>
+  <button id="reload" onclick="syncWms()" title="Kéo dữ liệu mới trực tiếp từ WMS">Tải lại dữ liệu</button>
 </div>
 </header>
 
 <div id="content"></div>
 <div id="state" class="state"><div class="spin"></div>Đang tải dữ liệu trực tiếp từ Google Sheet…</div>
 
-<footer>Dashboard đọc trực tiếp online từ Google Sheet “stocklocationfactory” (2 tab: MTG &amp; Garment, gviz API).<br>SKU đếm distinct theo Kho × Category.</footer>
+<footer>Dashboard đọc trực tiếp online từ Google Sheet “stocklocationfactory” (2 tab: mastige &amp; garment, gviz API).<br>SKU đếm distinct theo Kho × Category · Nút “Tải lại dữ liệu” kéo trực tiếp từ WMS (tối đa 4 giờ/lần).</footer>
 </div>
+
+<div id="toast"></div>
 
 <div id="modal" class="modal" onclick="if(event.target===this)closeModal()">
   <div class="modalbox">
@@ -250,7 +261,14 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
 <script>
 var SHEET_ID = "1eY_oo9fAvWCTXp24x-Z0FXq9mp_jJPlTHg09qdemETs";
 var SHEET_URL = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/edit";
-var TABS = [{sheet:"MTG",div:"Mastige"},{sheet:"Garment",div:"Garment"}];
+// Tên tab THẬT trên Sheet là "mastige"/"garment" (bản cũ ghi "MTG" chỉ chạy nhờ gviz fallback về tab đầu)
+var TABS = [{sheet:"mastige",div:"Mastige"},{sheet:"garment",div:"Garment"}];
+// Web App Apps Script (bộ 5S dùng chung) — nút "Tải lại dữ liệu" gọi action force_sync_wms để GAS kéo WMS
+var APPSCRIPT_URL = "https://script.google.com/macros/s/AKfycbzIE6E68VYxS0Zm1vj8Ttfd790-JYolO1C4rMoEPj7FdNOWLPb23QpUHgIZ2T_dlZPJRQ/exec";
+var META_TAB = "Metadata";                 // A1 = giờ hiển thị, B1 = epoch ms — do GAS/Node ghi sau mỗi lần đồng bộ WMS
+var COOLDOWN_MS = 4 * 60 * 60 * 1000;      // anti-spam: chỉ được gọi WMS 4 giờ/lần
+var LAST_SYNC_MS = 0;                      // mốc đồng bộ WMS cuối — LẤY TỪ BACKEND, không dùng new Date() local
+var _syncing = false, _rowCount = 0, _unlockTimer = null;
 var DIV_ORDER = ["Mastige","Garment"];
 var PAL = ["#2563eb","#0ea5e9","#14b8a6","#f59e0b","#8b5cf6","#ef4444","#10b981","#ec4899","#6366f1","#f43f5e","#0891b2","#84cc16"];
 var WH_DATA = {}, WH_COLOR = {}, curWh = null, curTab = 'shelf';
@@ -278,6 +296,24 @@ function loadData(){
     sc.onerror=function(){ _failed++; _pending--; checkDone(); };
     document.body.appendChild(sc);
   });
+  loadMeta();
+}
+/* Mốc "cập nhật lúc" LẤY TỪ BACKEND (tab Metadata do GAS/Node ghi sau khi đồng bộ WMS thành công) */
+function loadMeta(){
+  window.gviz_meta=function(resp){
+    try{
+      var c=resp.table.rows[0].c;
+      var ms=(c[1]&&c[1].v!=null)?Number(c[1].v):0;
+      if(ms>0) LAST_SYNC_MS=ms;
+    }catch(e){ /* chưa có tab Metadata (chưa đồng bộ lần nào) */ }
+    capNhatThongTin(); capNhatNut();
+  };
+  var url="https://docs.google.com/spreadsheets/d/"+SHEET_ID+"/gviz/tq?tqx=out:json;responseHandler:gviz_meta"+
+          "&sheet="+encodeURIComponent(META_TAB)+"&headers=0&range=A1:B1";
+  var old=document.getElementById('sc_meta'); if(old) old.remove();
+  var sc=document.createElement('script'); sc.id='sc_meta'; sc.src=url;
+  sc.onerror=function(){ capNhatThongTin(); capNhatNut(); };
+  document.body.appendChild(sc);
 }
 function onTab(resp,div){
   try{
@@ -289,11 +325,11 @@ function onTab(resp,div){
 function checkDone(){
   if(_pending>0) return;
   if(_raw.length===0){
-    document.getElementById('state').innerHTML='⚠ Không tải được dữ liệu. Kiểm tra quyền chia sẻ Google Sheet (Anyone with the link → Viewer) rồi bấm “Tải lại dữ liệu”.';
-    document.getElementById('reload').disabled=false; return;
+    document.getElementById('state').innerHTML='⚠ Không tải được dữ liệu. Kiểm tra quyền chia sẻ Google Sheet (Anyone with the link → Viewer).';
+    capNhatNut(); return;
   }
   aggregate();
-  document.getElementById('reload').disabled=false;
+  capNhatNut();
 }
 
 function aggregate(){
@@ -324,7 +360,8 @@ function aggregate(){
   var whs=Object.keys(whset), ci=0;
   whs.forEach(function(w){ WH_COLOR[w]=PAL[ci++%PAL.length]; });
   render(groups,whDiv);
-  document.getElementById('loadinfo').textContent='· '+nf(_raw.length)+' dòng · cập nhật '+new Date().toLocaleString('vi-VN')+(_failed?(' · '+_failed+' tab lỗi'):'');
+  _rowCount=_raw.length;
+  capNhatThongTin();   // giờ "cập nhật" lấy từ Metadata backend, KHÔNG new Date() local
 }
 
 function render(groups,whDiv){
@@ -479,6 +516,69 @@ document.addEventListener('click',function(e){
   var combo=document.getElementById('catCombo');
   if(combo && !combo.contains(e.target)) closeCat();
 });
+
+/* ================= Đồng bộ WMS on-demand + cooldown 4h ================= */
+function fmtTime(ms){  // HH:mm:ss DD/MM/YYYY
+  var d=new Date(ms); function p(n){return (n<10?'0':'')+n;}
+  return p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds())+' '+p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear();
+}
+function capNhatThongTin(){
+  var t='';
+  if(_rowCount) t='· '+nf(_rowCount)+' dòng';
+  if(LAST_SYNC_MS) t+=(t?' ':'')+'· cập nhật '+fmtTime(LAST_SYNC_MS);
+  if(_failed) t+=' · '+_failed+' tab lỗi';
+  document.getElementById('loadinfo').textContent=t;
+}
+/* Nút chỉ "sáng" khi đã qua 4h kể từ lần đồng bộ WMS cuối; còn lại khoá xám + tooltip */
+function capNhatNut(){
+  var btn=document.getElementById('reload');
+  if(_syncing){ btn.disabled=true; btn.textContent='Đang đồng bộ WMS...'; btn.title='Đang kéo dữ liệu từ WMS — có thể mất 1–3 phút.'; return; }
+  btn.textContent='Tải lại dữ liệu';
+  var remain=LAST_SYNC_MS?(LAST_SYNC_MS+COOLDOWN_MS-Date.now()):0;
+  if(remain>0){
+    btn.disabled=true;
+    btn.title='Chỉ có thể tải lại dữ liệu sau mỗi 4 giờ. Mở khoá lúc '+fmtTime(LAST_SYNC_MS+COOLDOWN_MS)+'.';
+    clearTimeout(_unlockTimer);
+    _unlockTimer=setTimeout(capNhatNut, Math.min(remain+1000, 2147000000));   // tự sáng lại đúng lúc hết cooldown
+  }else{
+    btn.disabled=false;
+    btn.title='Kéo dữ liệu mới trực tiếp từ WMS';
+  }
+}
+var _toastTimer=null;
+function toast(msg,type){
+  var el=document.getElementById('toast');
+  el.className=type||''; el.textContent=msg;
+  requestAnimationFrame(function(){ el.classList.add('show'); });
+  clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(function(){ el.classList.remove('show'); },6000);
+}
+/* Nút "Tải lại dữ liệu": kích hoạt GAS kéo TRỰC TIẾP từ WMS (force_sync_wms) rồi đọc lại Sheet */
+function syncWms(){
+  if(_syncing) return;
+  var remain=LAST_SYNC_MS?(LAST_SYNC_MS+COOLDOWN_MS-Date.now()):0;
+  if(remain>0){ toast('Chỉ có thể tải lại dữ liệu sau mỗi 4 giờ. Còn '+Math.ceil(remain/60000)+' phút nữa.','warn'); capNhatNut(); return; }
+  _syncing=true; capNhatNut();
+  fetch(APPSCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'force_sync_wms'})})
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      _syncing=false;
+      if(j.status==='success'){
+        LAST_SYNC_MS=j.at||LAST_SYNC_MS;              // mốc thời gian TỪ BACKEND → khoá nút, mở chu kỳ 4h mới
+        toast('Đã đồng bộ WMS thành công!','ok');
+        loadData();                                    // tự fetch lại bảng dữ liệu mới
+      }else if(j.code===401){
+        toast('Token WMS đã hết hạn. Đang chờ luồng chạy ngầm cập nhật Token mới.','err');
+      }else if(j.code===429){
+        if(j.lastSync) LAST_SYNC_MS=j.lastSync;        // đồng bộ lại mốc cooldown từ máy chủ (chặn bypass)
+        toast(j.message||'Chỉ có thể tải lại dữ liệu sau mỗi 4 giờ.','warn');
+      }else{
+        toast('Đồng bộ thất bại: '+(j.message||'lỗi không xác định.'),'err');
+      }
+      capNhatThongTin(); capNhatNut();
+    })
+    .catch(function(e){ _syncing=false; toast('Không gọi được máy chủ đồng bộ ('+e.message+').','err'); capNhatNut(); });
+}
 
 loadData();
 </script>
