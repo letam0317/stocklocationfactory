@@ -8,10 +8,19 @@
 :root{
   --bg:#f5f7fa; --panel:#ffffff; --ink:#1f2937; --ink2:#6b7280; --ink3:#9ca3af;
   --line:#e8ecf1; --brand:#1d4ed8; --brand-on:#ffffff; --brand2:#2563eb; --teal:#0d9488; --amber:#d97706;
+  --primary:var(--brand2);
   --radius:16px; --shadow:0 1px 2px rgba(16,24,40,.04),0 4px 16px rgba(16,24,40,.05);
   --shadow-lg:0 24px 60px rgba(16,24,40,.28);
   --ease:cubic-bezier(.4,0,.2,1);
 }
+/* ===== 7 theme — bê nguyên từ Audit Kiểm soát kho (đổi màu accent + màu tiêu đề) ===== */
+:root[data-theme="hasaki"]{--brand2:#2f7a55;--brand:#245c40}
+:root[data-theme="tokyo"]{--brand2:#3b6fd6;--brand:#2f5bb0}
+:root[data-theme="dracula"]{--brand2:#7c3aed;--brand:#6528d4}
+:root[data-theme="nord"]{--brand2:#5e81ac;--brand:#4c6f96}
+:root[data-theme="mocha"]{--brand2:#4c6ef5;--brand:#3b5bdb}
+:root[data-theme="latte"]{--brand2:#1e66f5;--brand:#1552cc}
+:root[data-theme="solar"]{--brand2:#268bd2;--brand:#1e6fa8}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 /* Thanh cuộn mảnh đồng bộ toàn trang (Webkit) */
@@ -64,9 +73,34 @@ h1.brand-title{margin:0;min-width:0}
 .tt8 svg{width:clamp(16px,2vw,19px);height:clamp(16px,2vw,19px);flex:0 0 auto}
 .tt8 b{font-size:clamp(17px,2.2vw,21px);font-weight:800;text-transform:uppercase}
 .tt8 i{font-size:clamp(12px,1.5vw,13px);opacity:.72;font-weight:500;border-left:1.5px solid var(--c);padding-left:9px}
-#hstyle{height:34px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink2);font-size:12.5px;font-weight:600;padding:0 28px 0 11px;cursor:pointer;appearance:none;-webkit-appearance:none;flex:none;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b7280' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+#hstyle{width:100%;height:36px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink2);font-size:13px;font-weight:600;padding:0 30px 0 12px;cursor:pointer;appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b7280' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center}
 #hstyle:focus{outline:0;border-color:var(--brand2)}
+
+/* ===== Menu Cài đặt (bánh răng) — bê nguyên từ Audit Kiểm soát kho: theme + kiểu tiêu đề + tải dữ liệu ===== */
+.setwrap{position:relative;flex:none}
+.btnic{width:38px;height:38px;border:1px solid var(--line);border-radius:9px;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink2);transition:border-color .18s var(--ease),color .18s var(--ease)}
+.btnic:hover{border-color:var(--brand2);color:var(--brand2)}
+.btnic svg{width:19px;height:19px}
+.setmenu{position:absolute;top:calc(100% + 6px);right:0;z-index:60;width:216px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 30px rgba(0,0,0,.14);padding:8px;opacity:0;visibility:hidden;transform:translateY(-8px);transition:all .18s var(--ease)}
+.setwrap.open .setmenu{opacity:1;visibility:visible;transform:none}
+.set-h{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);padding:4px 8px 8px}
+.theme-opt{display:flex;align-items:center;gap:9px;padding:8px 8px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--ink2)}
+.theme-opt:hover{background:#f3f4f6} .theme-opt.sel{font-weight:700;color:var(--ink)}
+.theme-opt .tsw{width:14px;height:14px;border-radius:50%;flex:none;box-shadow:0 0 0 2px #fff,0 0 0 3px var(--line)}
+.theme-opt .ck{margin-left:auto;color:var(--brand2);opacity:0} .theme-opt.sel .ck{opacity:1}
+.setmenu #reload{width:100%;margin-top:2px}
+
+/* ===== Footbar dính đáy: nguồn dữ liệu + link Sheet + số dòng/cập nhật ===== */
+.footbar{position:sticky;bottom:0;z-index:40;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:9px 16px;background:#fff;border:1px solid var(--line);border-radius:10px 10px 0 0;box-shadow:0 -2px 10px rgba(16,24,40,.06);font-size:12.5px;margin-top:16px}
+.footbar a{color:var(--brand2);text-decoration:none;font-weight:600}
+.footbar a:hover{text-decoration:underline}
+.footbar .hint{font-variant-numeric:tabular-nums}
+
+/* ===== Độ mượt: fade khi chuyển tab + render nhẹ danh sách dài ===== */
+@keyframes vfadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.vfade{animation:vfadein .24s var(--ease)}
+.catg{content-visibility:auto;contain-intrinsic-size:38px}
 
 /* ===== Tab đầu trang: Trạng thái lưu trữ | Kiểm kê ===== */
 .toptabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:12px 0 14px;overflow-x:auto;scrollbar-width:none}
@@ -370,16 +404,26 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
 <div class="wrap">
 <header class="hdr">
   <div class="hgrow"><h1 class="brand-title" id="brandTitle"></h1></div>
-  <select id="hstyle" title="Kiểu tiêu đề">
-    <option value="1">1 · Xếp chồng</option>
-    <option value="2">2 · Viên nhãn</option>
-    <option value="3">3 · Vạch dọc</option>
-    <option value="4">4 · Đậm/mảnh</option>
-    <option value="5">5 · Gạch chân</option>
-    <option value="6">6 · Sao đỏ (dọc)</option>
-    <option value="7">7 · Chữ viền</option>
-    <option value="8">8 · Sao đỏ (ngang)</option>
-  </select>
+  <div class="setwrap" id="setWrap">
+    <button class="btnic" id="btnSet" title="Cài đặt (theme + kiểu tiêu đề + dữ liệu)" aria-label="Cài đặt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+    <div class="setmenu" id="setMenu">
+      <div class="set-h">Giao diện (Theme)</div>
+      <div id="themeList"></div>
+      <div class="set-h" style="margin-top:6px">Kiểu tiêu đề</div>
+      <select id="hstyle" title="Kiểu tiêu đề">
+        <option value="1">1 · Xếp chồng</option>
+        <option value="2">2 · Viên nhãn</option>
+        <option value="3">3 · Vạch dọc</option>
+        <option value="4">4 · Đậm/mảnh</option>
+        <option value="5">5 · Gạch chân</option>
+        <option value="6">6 · Sao đỏ (dọc)</option>
+        <option value="7">7 · Chữ viền</option>
+        <option value="8">8 · Sao đỏ (ngang)</option>
+      </select>
+      <div class="set-h" style="margin-top:6px">Dữ liệu</div>
+      <button id="reload" onclick="syncWms()" title="Kéo dữ liệu mới trực tiếp từ WMS">Tải lại dữ liệu</button>
+    </div>
+  </div>
 </header>
 
 <div class="toptabs">
@@ -390,12 +434,6 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
 <!-- ===== TAB 1: Trạng thái lưu trữ (dashboard hiện tại) ===== -->
 <div id="viewStock">
   <p class="sub"><span class="muted">"Đã lên kệ" = có vị trí thực (&ne; <code>F0-A0</code>/<code>F00-A00</code>) &nbsp;·&nbsp; "Còn cần lên kệ" = SKU đang ở <code>F0-A0</code>/<code>F00-A00</code></span></p>
-  <div class="srcbar">
-    <span class="chip">Nguồn: stocklocationfactory</span>
-    <a id="srclink" href="#" target="_blank" rel="noopener">Mở Google Sheet</a>
-    <span id="loadinfo" class="hint"></span>
-    <button id="reload" onclick="syncWms()" title="Kéo dữ liệu mới trực tiếp từ WMS">Tải lại dữ liệu</button>
-  </div>
   <div id="content"></div>
   <div id="state" class="state"><div class="spin"></div>Đang tải dữ liệu trực tiếp từ Google Sheet…</div>
 </div>
@@ -423,7 +461,13 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
   <div class="kknote" id="kkNote"></div>
 </div>
 
-<footer>Dashboard đọc trực tiếp online từ Google Sheet “stocklocationfactory” (gviz API).<br>Trạng thái lưu trữ: SKU đếm distinct theo Kho × Category · Kiểm kê: tab kiemke-sku / kiemke-location · Nút “Tải lại dữ liệu” kéo trực tiếp từ WMS (tối đa 4 giờ/lần).</footer>
+<footer>Dashboard đọc trực tiếp online từ Google Sheet “stocklocationfactory” (gviz API).<br>Trạng thái lưu trữ: SKU đếm distinct theo Kho × Category · Kiểm kê: tab kiemke-sku / kiemke-location · Nút “Tải lại dữ liệu” (trong menu Cài đặt) kéo trực tiếp từ WMS (tối đa 4 giờ/lần).</footer>
+
+<div class="footbar">
+  <span class="chip">Nguồn: stocklocationfactory</span>
+  <a id="srclink" href="#" target="_blank" rel="noopener">Mở Google Sheet</a>
+  <span id="loadinfo" class="hint"></span>
+</div>
 </div>
 
 <div id="toast"></div>
@@ -943,10 +987,37 @@ function setTitle(t){
 document.getElementById('hstyle').addEventListener('change',function(){ setTitle(this.value); });
 setTitle((function(){ try{ return localStorage.getItem('slf-hstyle')||'1'; }catch(e){ return '1'; } })());
 
-/* ===== Tab đầu trang: Trạng thái lưu trữ | Kiểm kê ===== */
+/* ===== 7 theme + menu Cài đặt — bê nguyên từ Audit Kiểm soát kho ===== */
+var THEMES=[["hasaki","Hasaki","#2f7a55"],["tokyo","Tokyo Night","#3b6fd6"],["dracula","Dracula","#7c3aed"],["nord","Nord","#5e81ac"],["mocha","Catppuccin Mocha","#4c6ef5"],["latte","Catppuccin Latte","#1e66f5"],["solar","Solarized","#268bd2"]];
+function curTheme(){ try{ return localStorage.getItem('slf-theme')||'hasaki'; }catch(e){ return 'hasaki'; } }
+function setTheme(t){
+  if(!THEMES.some(function(x){ return x[0]===t; })) t='hasaki';
+  document.documentElement.setAttribute('data-theme',t);
+  try{ localStorage.setItem('slf-theme',t); }catch(e){}
+  renderThemeList();
+}
+function renderThemeList(){
+  var cur=curTheme();
+  document.getElementById('themeList').innerHTML=THEMES.map(function(x){
+    return '<div class="theme-opt'+(x[0]===cur?' sel':'')+'" data-t="'+x[0]+'"><span class="tsw" style="background:'+x[2]+'"></span>'+x[1]+'<span class="ck">✓</span></div>';
+  }).join('');
+}
+document.getElementById('btnSet').addEventListener('click',function(){ document.getElementById('setWrap').classList.toggle('open'); });
+document.getElementById('setMenu').addEventListener('click',function(e){
+  var o=e.target.closest('.theme-opt');
+  if(o){ setTheme(o.getAttribute('data-t')); }
+});
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.setwrap')){ var w=document.querySelector('.setwrap.open'); if(w) w.classList.remove('open'); }
+});
+setTheme(curTheme());
+
+/* ===== Tab đầu trang: Trạng thái lưu trữ | Kiểm kê (fade mượt, giữ nguyên DOM/trạng thái) ===== */
 function showTab(t){
-  document.getElementById('viewStock').hidden=(t!=='stock');
-  document.getElementById('viewKK').hidden=(t!=='kk');
+  var vs=document.getElementById('viewStock'), vk=document.getElementById('viewKK');
+  vs.hidden=(t!=='stock'); vk.hidden=(t!=='kk');
+  var v=(t==='stock')?vs:vk;
+  v.classList.remove('vfade'); void v.offsetWidth; v.classList.add('vfade');
   document.getElementById('ttStock').classList.toggle('active',t==='stock');
   document.getElementById('ttKK').classList.toggle('active',t==='kk');
   if(t==='kk' && !KK.loadedOnce){ KK.loadedOnce=true; kkLoad(); }
