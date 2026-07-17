@@ -14,6 +14,11 @@
 }
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
+/* Thanh cuộn mảnh đồng bộ toàn trang (Webkit) */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:10px}
+::-webkit-scrollbar-thumb:hover{background:#9ca3af}
 body{margin:0;background:var(--bg);color:var(--ink);
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
@@ -61,9 +66,10 @@ code{background:#eef1f5;padding:1px 7px;border-radius:6px;font-size:12px;color:#
 .grid{display:grid;grid-template-columns:1.22fr 1fr;gap:16px;margin-bottom:16px}
 @media(max-width:860px){.grid{grid-template-columns:1fr}}
 
-/* Lưới dashboard 2x2: Warehouse ↖ · Chart ngày ↗ · Category ↙ · Bảng chi tiết ↘ */
+/* Lưới dashboard 2x2: Warehouse ↖ · Chart ngày ↗ · Category ↙ · Bảng chi tiết ↘
+   align-items:start = khối chỉ cao đúng nội dung, KHÔNG bị kéo giãn theo khối cạnh bên */
 .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;align-items:start}
-.grid2 .panel{margin-bottom:0;min-width:0}
+.grid2 .panel{margin-bottom:0;min-width:0;padding:24px}
 @media(max-width:1024px){.grid2{grid-template-columns:1fr}}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;box-shadow:var(--shadow);margin-bottom:12px}
 .panel h2{margin:0 0 10px;font-size:14px;font-weight:680;color:#374151;letter-spacing:-.01em;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -80,10 +86,7 @@ code{background:#eef1f5;padding:1px 7px;border-radius:6px;font-size:12px;color:#
 .bval b{color:var(--teal)} .bval small{color:var(--amber);font-size:10px;font-weight:600;margin-left:5px}
 
 /* Category: mỗi cate 1 hàng gọn (≤32px); bấm CẢ DÒNG mở modal phân bổ theo kho */
-.catwrap{display:flex;flex-direction:column;gap:6px;max-height:620px;overflow-y:auto;padding-right:4px}
-.catwrap::-webkit-scrollbar{width:9px}
-.catwrap::-webkit-scrollbar-thumb{background:#cbd3dd;border-radius:6px;border:2px solid #fff}
-.catwrap::-webkit-scrollbar-thumb:hover{background:#aab4c2}
+.catwrap{display:flex;flex-direction:column;gap:6px;max-height:400px;overflow-y:auto;padding-right:6px}
 .catg{border:1px solid var(--line);border-radius:8px;background:#fff;overflow:hidden;flex:none}
 .cathd{width:100%;border:0;background:#fff;cursor:pointer;padding:4px 12px;min-height:30px;display:grid;grid-template-columns:200px 1fr auto;align-items:center;gap:10px;text-align:left;font:inherit;color:inherit;transition:background .18s var(--ease)}
 .catnum{justify-self:end;padding:2px 9px;font-size:11px}
@@ -98,11 +101,12 @@ code{background:#eef1f5;padding:1px 7px;border-radius:6px;font-size:12px;color:#
 .cmtotal td{border-top:2px solid var(--line);font-weight:700;background:#fafbfc}
 
 /* Chart: SKU đã lên kệ theo ngày (cột chồng Mastige/Garment, cuộn ngang nếu nhiều ngày) */
+#histwrap{min-height:350px;display:flex;flex-direction:column;justify-content:flex-end}
 .histscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
-.histchart{display:flex;align-items:flex-end;gap:8px;min-height:176px;padding-top:4px}
+.histchart{display:flex;align-items:flex-end;gap:8px;padding-top:4px}
 .hcol{flex:0 0 34px;display:flex;flex-direction:column;align-items:center;cursor:default}
 .hval{font-size:10px;font-weight:650;color:var(--ink2);font-variant-numeric:tabular-nums;line-height:1.2;margin-bottom:2px;min-height:12px;white-space:nowrap}
-.hbars{width:22px;height:130px;display:flex;flex-direction:column;justify-content:flex-end}
+.hbars{width:22px;height:260px;display:flex;flex-direction:column;justify-content:flex-end}
 .hseg{width:100%;min-height:0;transition:height .8s var(--ease)}
 .hseg.top{border-radius:4px 4px 0 0}
 .hseg+.hseg{margin-top:2px}   /* khe 2px giữa 2 phần chồng */
@@ -113,7 +117,7 @@ code{background:#eef1f5;padding:1px 7px;border-radius:6px;font-size:12px;color:#
 .histchart::after{content:'';position:absolute;left:0;right:0;bottom:18px;border-top:1px solid var(--line)}
 .histempty{color:var(--ink3);font-size:12px;padding:14px 2px}
 
-.whlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(272px,1fr));gap:12px}
+.whlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(272px,1fr));gap:12px;max-height:400px;overflow-y:auto;padding-right:6px}
 @media(max-width:720px){.whlist{grid-template-columns:1fr}}
 .whcard{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px 12px;transition:box-shadow .2s var(--ease)}
 .whcard:hover{box-shadow:var(--shadow)}
@@ -187,9 +191,6 @@ code{background:#eef1f5;padding:1px 7px;border-radius:6px;font-size:12px;color:#
 .combo-item:hover,.combo-item.active{background:#eef4ff;color:var(--brand)}
 .combo-item.all{border-bottom:1px solid var(--line);border-radius:8px 8px 0 0;font-weight:600}
 .combo-empty{padding:12px 11px;font-size:12px;color:var(--ink3);text-align:center}
-.combo-menu::-webkit-scrollbar{width:9px}
-.combo-menu::-webkit-scrollbar-thumb{background:#cbd3dd;border-radius:6px;border:2px solid #fff}
-.combo-menu::-webkit-scrollbar-thumb:hover{background:#aab4c2}
 .msum{padding:9px 22px;font-size:12px;color:var(--ink2);border-bottom:1px solid var(--line);background:#fbfcfe;font-variant-numeric:tabular-nums}
 .modalbody{overflow:auto;padding:0 22px 22px;scroll-behavior:smooth;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .mtbl{width:100%;border-collapse:collapse;font-size:12.5px}
@@ -222,6 +223,7 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
   .card .l{font-size:10.5px}
 
   .panel{padding:12px 12px}
+  .grid2 .panel{padding:14px}
   .panel h2{font-size:13.5px}
 
   /* Tỷ lệ tổng */
@@ -424,7 +426,7 @@ function renderHistory(){
   });
   var ds=Object.keys(days).sort().slice(-60);   // tối đa 60 ngày gần nhất
   var max=1; ds.forEach(function(d){ var v=days[d]; if(v.mtg+v.gar>max) max=v.mtg+v.gar; });
-  var H=130;
+  var H=260;   // khớp chiều cao .hbars trong CSS
   var html=ds.map(function(d,i){
     var v=days[d], tot=v.mtg+v.gar;
     var prev=i>0?(days[ds[i-1]].mtg+days[ds[i-1]].gar):null;
