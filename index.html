@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Factory — Trạng thái lưu trữ Mastige & Garment</title>
+<title>Audit Factory · Kiểm soát kho</title>
 <style>
 :root{
   --bg:#f5f7fa; --panel:#ffffff; --ink:#1f2937; --ink2:#6b7280; --ink3:#9ca3af;
-  --line:#e8ecf1; --brand:#1d4ed8; --brand2:#2563eb; --teal:#0d9488; --amber:#d97706;
+  --line:#e8ecf1; --brand:#1d4ed8; --brand-on:#ffffff; --brand2:#2563eb; --teal:#0d9488; --amber:#d97706;
   --radius:16px; --shadow:0 1px 2px rgba(16,24,40,.04),0 4px 16px rgba(16,24,40,.05);
   --shadow-lg:0 24px 60px rgba(16,24,40,.28);
   --ease:cubic-bezier(.4,0,.2,1);
@@ -24,8 +24,86 @@ body{margin:0;background:var(--bg);color:var(--ink);
   -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
   font-size:14px;line-height:1.55;letter-spacing:-.003em}
 .wrap{max-width:1720px;margin:0 auto;padding:20px clamp(20px,3.2vw,52px) 40px}
-header h1{margin:0 0 6px;font-size:22px;font-weight:750;letter-spacing:-.02em;line-height:1.2}
+header.hdr{display:flex;align-items:flex-start;gap:12px}
+header.hdr .hgrow{flex:1;min-width:0}
 .sub{margin:0 0 10px;color:var(--ink2);font-size:12.5px}
+
+/* ===== Bộ 8 kiểu tiêu đề — bê nguyên từ Audit Kiểm soát kho (đổi HASAKI -> FACTORY) ===== */
+h1.brand-title{margin:0;min-width:0}
+.tt-wrap{--c:var(--brand);display:flex;align-items:center;gap:10px;color:var(--c);text-shadow:0 1px 1px rgba(0,0,0,.08)}
+.tt-wrap i{font-style:normal}
+.tt-wrap svg{display:block}
+.tt1{flex-direction:column;align-items:flex-start;gap:0}
+.tt1 b{font-size:clamp(20px,2.5vw,27px);font-weight:800;letter-spacing:-.01em;text-transform:uppercase}
+.tt1 i{font-size:clamp(10px,1.2vw,11px);font-weight:600;letter-spacing:.32em;text-transform:uppercase;opacity:.72;margin-top:6px}
+.tt2 .chip{background:var(--c);color:var(--brand-on);font-weight:800;font-size:clamp(12px,1.5vw,14px);letter-spacing:.06em;padding:5px 10px;border-radius:8px}
+.tt2 .tx{display:flex;flex-direction:column;line-height:1.05}
+.tt2 .tx b{font-size:clamp(16px,2vw,19px);font-weight:800;text-transform:uppercase}
+.tt2 .tx i{font-size:12px;opacity:.7;font-weight:500}
+.tt3 b{font-size:clamp(18px,2.3vw,23px);font-weight:800;letter-spacing:-.01em;text-transform:uppercase}
+.tt3 .bar{width:2px;height:1.05em;background:var(--c);opacity:.45;border-radius:2px;flex:0 0 auto}
+.tt3 i{font-size:clamp(12px,1.5vw,15px);font-weight:400;opacity:.8}
+.tt4{flex-direction:column;align-items:flex-start;gap:0}
+.tt4 .r{font-size:clamp(19px,2.4vw,25px);text-transform:uppercase}
+.tt4 .r .a{font-weight:300}.tt4 .r .b{font-weight:800;letter-spacing:.01em}
+.tt4 i{font-size:clamp(9px,1.1vw,10.5px);font-weight:600;letter-spacing:.28em;text-transform:uppercase;opacity:.7;margin-top:6px}
+.tt5{align-items:flex-end}
+.tt5 .h{font-size:clamp(18px,2.3vw,23px);font-weight:800;line-height:1.05;text-transform:uppercase}
+.tt5 .h .u{display:inline-block;border-bottom:4px solid var(--c);padding-bottom:2px}
+.tt5 i{font-size:clamp(10px,1.2vw,11px);opacity:.72;font-weight:600;text-transform:uppercase;letter-spacing:.12em;padding-bottom:4px}
+.tt6 .tile{width:clamp(32px,4vw,40px);height:clamp(32px,4vw,40px);border-radius:10px;background:var(--c);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.tt6 .tile svg{width:60%;height:60%}
+.tt6 .tx{display:flex;flex-direction:column;line-height:1.05}
+.tt6 .tx b{font-size:clamp(16px,2vw,19px);font-weight:800;text-transform:uppercase}
+.tt6 .tx i{font-size:12px;opacity:.7;font-weight:500}
+.tt7{flex-direction:column;align-items:flex-start;gap:0}
+.tt7 .r{font-size:clamp(18px,2.3vw,24px);letter-spacing:.02em;text-transform:uppercase}
+.tt7 .r .o{font-weight:800;color:transparent;-webkit-text-stroke:1.4px var(--c)}
+.tt7 .r .f{font-weight:800}
+.tt7 i{font-size:clamp(9px,1.1vw,10.5px);font-weight:600;letter-spacing:.28em;text-transform:uppercase;opacity:.7;margin-top:7px}
+.tt8 svg{width:clamp(16px,2vw,19px);height:clamp(16px,2vw,19px);flex:0 0 auto}
+.tt8 b{font-size:clamp(17px,2.2vw,21px);font-weight:800;text-transform:uppercase}
+.tt8 i{font-size:clamp(12px,1.5vw,13px);opacity:.72;font-weight:500;border-left:1.5px solid var(--c);padding-left:9px}
+#hstyle{height:34px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink2);font-size:12.5px;font-weight:600;padding:0 28px 0 11px;cursor:pointer;appearance:none;-webkit-appearance:none;flex:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b7280' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+#hstyle:focus{outline:0;border-color:var(--brand2)}
+
+/* ===== Tab đầu trang: Trạng thái lưu trữ | Kiểm kê ===== */
+.toptabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:12px 0 14px;overflow-x:auto;scrollbar-width:none}
+.toptabs::-webkit-scrollbar{display:none}
+.toptab{flex:0 0 auto;border:0;background:0;padding:9px 16px;font-size:13.5px;font-weight:650;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;transition:color .18s var(--ease)}
+.toptab:hover{color:var(--ink2)}
+.toptab.active{color:var(--brand2);border-bottom-color:var(--brand2)}
+
+/* ===== Tab Kiểm kê (Physical Count — port từ QC) ===== */
+.kkbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.kktabs{display:flex;gap:4px;flex:none}
+.kktab{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:600;color:var(--ink2);cursor:pointer}
+.kktab.active{background:var(--brand2);border-color:var(--brand2);color:#fff}
+.kkbar input{flex:1;min-width:170px;max-width:320px;height:32px;border:1px solid #d5dbe4;border-radius:8px;padding:0 11px;font-size:12.5px;outline:none}
+.kkbar input:focus{border-color:var(--brand2)}
+.kkbar select{height:32px;border:1px solid #d5dbe4;border-radius:8px;background:#fff;color:var(--ink);font-size:12.5px;padding:0 8px;cursor:pointer;max-width:220px}
+.kkbar .kklink{color:var(--brand2);font-weight:600;font-size:12.5px;text-decoration:none;white-space:nowrap}
+.kkbar .kklink:hover{text-decoration:underline}
+.kksum{display:flex;gap:0;align-items:stretch;background:#fff;border:1px solid var(--line);border-radius:10px;overflow-x:auto;margin-bottom:12px;scrollbar-width:none}
+.kksum::-webkit-scrollbar{display:none}
+.kksum .sm{padding:12px 18px;white-space:nowrap;border-right:1px solid var(--line);flex:none}
+.kksum .sm:last-child{border-right:0}
+.kksum .sm .k{font-size:18px;font-weight:750;font-variant-numeric:tabular-nums}
+.kksum .sm .l{font-size:11px;color:var(--ink2);margin-top:2px}
+.kksum .c-ok .k{color:var(--teal)} .kksum .c-neg .k{color:#b42318} .kksum .c-pos .k{color:var(--brand2)} .kksum .c-mut .k{color:var(--ink3)}
+.kkwrap{max-height:62vh;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.kkwrap table{width:100%;border-collapse:collapse;font-size:12px;min-width:1080px}
+.kkwrap thead th{position:sticky;top:0;z-index:2;background:#fafbfc;color:var(--ink3);font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;text-align:left;padding:9px 11px;border-bottom:1px solid var(--line);white-space:nowrap}
+.kkwrap tbody td{padding:8px 11px;border-bottom:1px solid #f1f4f8;white-space:nowrap;vertical-align:top}
+.kkwrap tbody tr:hover td{background:#f5f9ff}
+.kkwrap .pn2{white-space:normal;max-width:280px;color:var(--ink2);line-height:1.35;font-size:11.5px}
+.d-am{color:#b42318;font-weight:700} .d-duong{color:var(--brand2);font-weight:700} .d-khop{color:var(--ink3)}
+.badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:10px;font-weight:750}
+.b-ok{background:#d1faf3;color:#0f766e} .b-proc{background:#fdecd0;color:#b45309} .b-pend{background:#eceff3;color:#6b7280} .b-rej{background:#fdecea;color:#b42318}
+.wlink{color:#0056b3;text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:3px}
+.wlink:hover{text-decoration:underline} .wlink svg{width:11px;height:11px}
+.kknote{padding:8px 2px 0;font-size:11.5px;color:var(--ink3)}
 code{background:#eef1f5;padding:1px 7px;border-radius:6px;font-size:12px;color:#b42318;font-family:ui-monospace,Consolas,monospace}
 .hint{font-weight:400;color:var(--ink3);font-size:11.5px;letter-spacing:0}
 .srcbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0;font-size:12.5px}
@@ -46,14 +124,14 @@ code{background:#eef1f5;padding:1px 7px;border-radius:6px;font-size:12px;color:#
 
 .cards{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:14px 0 10px}
 @media(max-width:820px){.cards{grid-template-columns:repeat(2,1fr)}}
-.card{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px 10px 16px;max-height:72px;position:relative;overflow:hidden;
+.card{color:#fff;border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);
   opacity:0;transform:translateY(8px);animation:rise .5s var(--ease) forwards}
-.card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ac,#94a3b8)}
 .card:nth-child(2){animation-delay:.05s}.card:nth-child(3){animation-delay:.1s}
 .card:nth-child(4){animation-delay:.15s}.card:nth-child(5){animation-delay:.2s}
-.card .k{font-size:20px;font-weight:750;line-height:1.1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--ac,var(--ink))}
-.card .l{font-size:11px;color:var(--ink2);margin-top:3px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.c1{--ac:#0f766e} .c2{--ac:#d97706} .c3{--ac:#2563eb} .c4{--ac:#7c3aed} .c5{--ac:#e11d48}
+.card .k{font-size:27px;font-weight:780;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.card .l{font-size:12px;opacity:.94;margin-top:7px;font-weight:500}
+.c1{background:linear-gradient(135deg,#0f766e,#14b8a6)} .c2{background:linear-gradient(135deg,#b45309,#f59e0b)}
+.c3{background:linear-gradient(135deg,#1e40af,#3b82f6)} .c4{background:linear-gradient(135deg,#6d28d9,#8b5cf6)} .c5{background:linear-gradient(135deg,#9f1239,#f43f5e)}
 
 .ratewrap{margin:4px 0 16px}
 .ratehdr{display:flex;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px}
@@ -66,8 +144,8 @@ code{background:#eef1f5;padding:1px 7px;border-radius:6px;font-size:12px;color:#
 .grid{display:grid;grid-template-columns:1.22fr 1fr;gap:16px;margin-bottom:16px}
 @media(max-width:860px){.grid{grid-template-columns:1fr}}
 
-/* Lưới dashboard 2-1: hàng 1 = Warehouse (62%) + Chart ngày (38%) bằng chiều cao; hàng 2 = Category full-width */
-.grid2{display:grid;grid-template-columns:1.62fr 1fr;gap:16px;align-items:stretch}
+/* Lưới dashboard 2-1: hàng 1 = Chart ngày (38%, trái) + Warehouse (62%, phải) bằng chiều cao; hàng 2 = Category full-width */
+.grid2{display:grid;grid-template-columns:1fr 1.62fr;gap:16px;align-items:stretch}
 .grid2 .panel{margin-bottom:0;min-width:0;padding:24px}
 .grid2 .span2{grid-column:1/-1}
 @media(max-width:1024px){.grid2{grid-template-columns:1fr}.grid2 .span2{grid-column:auto}}
@@ -224,10 +302,10 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
   .srcbar{gap:8px;font-size:12px;margin-top:14px}
   #reload{padding:8px 14px}
 
-  .cards{gap:8px;margin:12px 0 10px}
-  .card{padding:9px 12px 9px 14px}
-  .card .k{font-size:18px}
-  .card .l{font-size:10.5px}
+  .cards{gap:10px;margin:14px 0 10px}
+  .card{padding:14px 15px}
+  .card .k{font-size:22px}
+  .card .l{font-size:11px}
 
   .panel{padding:12px 12px}
   .grid2 .panel{padding:14px}
@@ -290,21 +368,62 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
 </head>
 <body>
 <div class="wrap">
-<header>
-<h1><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-factory" style="margin-right:8px;vertical-align:text-bottom"><path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path></svg>Factory</h1>
-<p class="sub"><span class="muted">"Đã lên kệ" = có vị trí thực (&ne; <code>F0-A0</code>/<code>F00-A00</code>) &nbsp;·&nbsp; "Còn cần lên kệ" = SKU đang ở <code>F0-A0</code>/<code>F00-A00</code></span></p>
-<div class="srcbar">
-  <span class="chip">Nguồn: stocklocationfactory</span>
-  <a id="srclink" href="#" target="_blank" rel="noopener">Mở Google Sheet</a>
-  <span id="loadinfo" class="hint"></span>
-  <button id="reload" onclick="syncWms()" title="Kéo dữ liệu mới trực tiếp từ WMS">Tải lại dữ liệu</button>
-</div>
+<header class="hdr">
+  <div class="hgrow"><h1 class="brand-title" id="brandTitle"></h1></div>
+  <select id="hstyle" title="Kiểu tiêu đề">
+    <option value="1">1 · Xếp chồng</option>
+    <option value="2">2 · Viên nhãn</option>
+    <option value="3">3 · Vạch dọc</option>
+    <option value="4">4 · Đậm/mảnh</option>
+    <option value="5">5 · Gạch chân</option>
+    <option value="6">6 · Sao đỏ (dọc)</option>
+    <option value="7">7 · Chữ viền</option>
+    <option value="8">8 · Sao đỏ (ngang)</option>
+  </select>
 </header>
 
-<div id="content"></div>
-<div id="state" class="state"><div class="spin"></div>Đang tải dữ liệu trực tiếp từ Google Sheet…</div>
+<div class="toptabs">
+  <button class="toptab active" id="ttStock" onclick="showTab('stock')">Trạng thái lưu trữ</button>
+  <button class="toptab" id="ttKK" onclick="showTab('kk')">Kiểm kê</button>
+</div>
 
-<footer>Dashboard đọc trực tiếp online từ Google Sheet “stocklocationfactory” (2 tab: mastige &amp; garment, gviz API).<br>SKU đếm distinct theo Kho × Category · Nút “Tải lại dữ liệu” kéo trực tiếp từ WMS (tối đa 4 giờ/lần).</footer>
+<!-- ===== TAB 1: Trạng thái lưu trữ (dashboard hiện tại) ===== -->
+<div id="viewStock">
+  <p class="sub"><span class="muted">"Đã lên kệ" = có vị trí thực (&ne; <code>F0-A0</code>/<code>F00-A00</code>) &nbsp;·&nbsp; "Còn cần lên kệ" = SKU đang ở <code>F0-A0</code>/<code>F00-A00</code></span></p>
+  <div class="srcbar">
+    <span class="chip">Nguồn: stocklocationfactory</span>
+    <a id="srclink" href="#" target="_blank" rel="noopener">Mở Google Sheet</a>
+    <span id="loadinfo" class="hint"></span>
+    <button id="reload" onclick="syncWms()" title="Kéo dữ liệu mới trực tiếp từ WMS">Tải lại dữ liệu</button>
+  </div>
+  <div id="content"></div>
+  <div id="state" class="state"><div class="spin"></div>Đang tải dữ liệu trực tiếp từ Google Sheet…</div>
+</div>
+
+<!-- ===== TAB 2: Kiểm kê (Physical Count — port từ QC) ===== -->
+<div id="viewKK" hidden>
+  <div class="kkbar">
+    <div class="kktabs">
+      <button class="kktab active" id="kkTabSku" onclick="kkSetTab('sku')">SKU</button>
+      <button class="kktab" id="kkTabLoc" onclick="kkSetTab('loc')">Location count result</button>
+    </div>
+    <input id="kkq" placeholder="Tìm nhanh SKU / tên / vị trí…" oninput="kkQuick()">
+    <select id="kkWh" onchange="kkRender()"></select>
+    <select id="kkDate" onchange="kkRender()">
+      <option value="all">Ngày: tất cả</option>
+      <option value="today">Hôm nay</option>
+      <option value="7d">7 ngày</option>
+      <option value="30d">30 ngày</option>
+    </select>
+    <select id="kkSt" onchange="kkRender()"></select>
+    <a class="kklink" href="https://wms.inshasaki.com/physical-count/result/list" target="_blank" rel="noopener">Mở WMS</a>
+  </div>
+  <div class="kksum" id="kkSummary"></div>
+  <div class="kkwrap" id="kkWrap"><div class="state"><div class="spin"></div>Đang tải dữ liệu kiểm kê…</div></div>
+  <div class="kknote" id="kkNote"></div>
+</div>
+
+<footer>Dashboard đọc trực tiếp online từ Google Sheet “stocklocationfactory” (gviz API).<br>Trạng thái lưu trữ: SKU đếm distinct theo Kho × Category · Kiểm kê: tab kiemke-sku / kiemke-location · Nút “Tải lại dữ liệu” kéo trực tiếp từ WMS (tối đa 4 giờ/lần).</footer>
 </div>
 
 <div id="toast"></div>
@@ -608,8 +727,8 @@ function render(groups,whDiv){
     '<div class="ratebar" title="Đã lên kệ '+rate.toFixed(1)+'% · còn lại '+(100-rate).toFixed(1)+'%"><div class="ratef" data-w="'+rate.toFixed(1)+'"></div>'+
     '<div class="ratefr" data-w="'+(100-rate).toFixed(1)+'"></div></div></div>'+
     '<div class="grid2">'+
-    '<section class="panel"><h2>Tiến độ lên kệ theo Warehouse <span class="hint">(bấm thẻ kho để xem chi tiết SKU · cột nhỏ = xu hướng 5 ngày)</span></h2><div class="whlist">'+whchips+'</div></section>'+
     '<section class="panel"><h2>SKU đã lên kệ theo ngày <span class="hint">(rê chuột vào cột để xem chi tiết)</span> <span class="lg"><span class="sw" style="background:#2563eb"></span>Mastige<span class="sw" style="background:#0d9488;margin-left:6px"></span>Garment</span></h2><div id="histwrap"></div></section>'+
+    '<section class="panel"><h2>Tiến độ lên kệ theo Warehouse <span class="hint">(bấm thẻ kho để xem chi tiết SKU · cột nhỏ = xu hướng 5 ngày)</span></h2><div class="whlist">'+whchips+'</div></section>'+
     '<section class="panel span2"><h2>Category theo số SKU đã lên kệ <span class="hint">('+cats.length+' category — bấm dòng: phân bổ theo kho · bấm số SKU: từng SKU)</span> <span class="lg"><span class="sw sh"></span>đã lên kệ<span class="sw pe" style="margin-left:6px"></span>chưa lên kệ</span></h2><div class="catwrap">'+bars+'</div></section>'+
     '</div>';
   document.getElementById('content').innerHTML=html;
@@ -801,6 +920,172 @@ function syncWms(){
       capNhatThongTin(); capNhatNut();
     })
     .catch(function(e){ _syncing=false; toast('Không gọi được máy chủ đồng bộ ('+e.message+').','err'); capNhatNut(); });
+}
+
+/* ===== Bộ 8 kiểu tiêu đề — bê nguyên từ Audit Kiểm soát kho, đổi HASAKI -> FACTORY ===== */
+var STAR='<svg viewBox="0 0 24 24"><polygon points="12,2 14.6,8.6 21.8,9 16.2,13.6 18.2,20.6 12,16.6 5.8,20.6 7.8,13.6 2.2,9 9.4,8.6" fill="#d81e05"/></svg>';
+var TITLES={
+  '1':'<span class="tt-wrap tt1"><b>AUDIT FACTORY</b><i>Kiểm soát kho</i></span>',
+  '2':'<span class="tt-wrap tt2"><span class="chip">AUDIT</span><span class="tx"><b>FACTORY</b><i>Kiểm soát kho</i></span></span>',
+  '3':'<span class="tt-wrap tt3"><b>AUDIT FACTORY</b><span class="bar"></span><i>Kiểm soát kho</i></span>',
+  '4':'<span class="tt-wrap tt4"><span class="r"><span class="a">Audit </span><span class="b">FACTORY</span></span><i>Kiểm soát kho</i></span>',
+  '5':'<span class="tt-wrap tt5"><span class="h"><span class="u">AUDIT</span> FACTORY</span><i>Kiểm soát kho</i></span>',
+  '6':'<span class="tt-wrap tt6"><span class="tile">'+STAR+'</span><span class="tx"><b>AUDIT FACTORY</b><i>Kiểm soát kho</i></span></span>',
+  '7':'<span class="tt-wrap tt7"><span class="r"><span class="o">AUDIT</span> <span class="f">FACTORY</span></span><i>Kiểm soát kho</i></span>',
+  '8':'<span class="tt-wrap tt8">'+STAR+'<b>AUDIT FACTORY</b><i>Kiểm soát kho</i></span>'
+};
+function setTitle(t){
+  if(!TITLES[t]) t='1';
+  document.getElementById('brandTitle').innerHTML=TITLES[t];
+  document.getElementById('hstyle').value=t;
+  try{ localStorage.setItem('slf-hstyle',t); }catch(e){}
+}
+document.getElementById('hstyle').addEventListener('change',function(){ setTitle(this.value); });
+setTitle((function(){ try{ return localStorage.getItem('slf-hstyle')||'1'; }catch(e){ return '1'; } })());
+
+/* ===== Tab đầu trang: Trạng thái lưu trữ | Kiểm kê ===== */
+function showTab(t){
+  document.getElementById('viewStock').hidden=(t!=='stock');
+  document.getElementById('viewKK').hidden=(t!=='kk');
+  document.getElementById('ttStock').classList.toggle('active',t==='stock');
+  document.getElementById('ttKK').classList.toggle('active',t==='kk');
+  if(t==='kk' && !KK.loadedOnce){ KK.loadedOnce=true; kkLoad(); }
+}
+
+/* ===== Tab Kiểm kê (Physical Count) — port nguyên logic từ QC, đọc tab kiemke-sku / kiemke-location ===== */
+var KK={loadedOnce:false,data:{sku:[],loc:[]},loaded:0,tab:'sku',wh:'',st:'',range:'all',q:'',refDay:0};
+var KK_TABS={sku:'kiemke-sku',loc:'kiemke-location'};
+var KK_STATUSES=['PENDING','CANCELED','PROCESSING','VERIFIED','REJECTED','APPROVED','NOT COUNT','WAITING FOR APPROVE'];
+var KK_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17L17 7M17 7H9M17 7V15"/></svg>';
+function kkP2(n){ return (n<10?'0':'')+n; }
+function kkParseDate(s){
+  if(!s) return NaN; s=String(s);
+  var m=s.match(/^Date\((\d+),(\d+),(\d+)(?:,(\d+),(\d+),(\d+))?/);
+  if(m) return Date.UTC(+m[1],+m[2],+m[3],+m[4]||0,+m[5]||0);
+  m=s.match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{1,2}):(\d{2})/);
+  if(m) return Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5]);
+  m=s.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if(m) return Date.UTC(+m[1],+m[2]-1,+m[3]);
+  var t=Date.parse(s); return isNaN(t)?NaN:t;
+}
+function kkDayKey(ms){ return isNaN(ms)?NaN:Math.floor(ms/86400000); }
+function kkFmtD(ms,dateOnly){
+  if(isNaN(ms)) return '—';
+  var d=new Date(ms), o=kkP2(d.getUTCDate())+'/'+kkP2(d.getUTCMonth()+1)+'/'+d.getUTCFullYear();
+  return dateOnly?o:o+' '+kkP2(d.getUTCHours())+':'+kkP2(d.getUTCMinutes());
+}
+function kkCountMs(r){ var d=kkParseDate(r.cdate); return isNaN(d)?kkParseDate(r.upd):d; }
+function kkBadge(st){ st=String(st||'').toUpperCase();
+  if(st==='VERIFIED'||st==='APPROVED') return 'b-ok';
+  if(st==='REJECTED'||st==='CANCELED') return 'b-rej';
+  if(st==='NOT COUNT'||st==='PENDING') return 'b-pend';
+  return 'b-proc';
+}
+function kkEval(inv,cnt){ if(cnt==null||cnt==='') return {d:0,counted:false}; var d=(Number(cnt)||0)-(Number(inv)||0); return {d:d,counted:true}; }
+function kkLoad(){
+  KK.loaded=0; KK.data={sku:[],loc:[]};
+  document.getElementById('kkWrap').innerHTML='<div class="state"><div class="spin"></div>Đang tải dữ liệu kiểm kê…</div>';
+  ['sku','loc'].forEach(function(kind){
+    var cb='kkgv_'+kind;
+    window[cb]=function(resp){
+      try{
+        if(resp.status==='error') throw 0;
+        var H=(resp.table&&resp.table.cols||[]).map(function(c){ return String((c&&c.label)||'').replace(/\s+/g,' ').trim().toLowerCase(); });
+        var rows=(resp.table&&resp.table.rows||[]).map(function(r){ return (r.c||[]).map(function(c){ return c?(c.v==null?'':c.v):''; }); });
+        KK.data[kind]=kkMap(kind,H,rows);
+      }catch(e){ KK.data[kind]=[]; }
+      if(++KK.loaded>=2){ kkFilters(); kkRender(); }
+    };
+    var old=document.getElementById('sc_kk_'+kind); if(old) old.remove();
+    var s=document.createElement('script'); s.id='sc_kk_'+kind;
+    s.src='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:json;responseHandler:'+cb+'&sheet='+encodeURIComponent(KK_TABS[kind])+'&headers=1';
+    s.onerror=function(){ KK.data[kind]=[]; if(++KK.loaded>=2){ kkFilters(); kkRender(); } };
+    document.body.appendChild(s);
+  });
+}
+function kkIdx(H,names){ for(var i=0;i<names.length;i++){ var j=H.indexOf(names[i].toLowerCase()); if(j>=0) return j; } return -1; }
+function kkMap(kind,H,rows){
+  var g=function(r,i){ return i>=0&&r[i]!=null?r[i]:''; };
+  if(kind==='sku'){
+    var c={id:kkIdx(H,['ID']),req:kkIdx(H,['Request code']),wh:kkIdx(H,['Warehouse']),sku:kkIdx(H,['SKU']),pn:kkIdx(H,['Product Name']),cat:kkIdx(H,['Category']),type:kkIdx(H,['Type']),inv:kkIdx(H,['Inventory']),cnt:kkIdx(H,['Quantity Count']),by:kkIdx(H,['Counted by']),cdate:kkIdx(H,['Counted date']),upd:kkIdx(H,['Updated At']),plan:kkIdx(H,['Plan Date']),st:kkIdx(H,['Status'])};
+    return rows.filter(function(r){ return String(g(r,c.sku))!==''; }).map(function(r){ return {id:String(g(r,c.id)),req:String(g(r,c.req)),wh:String(g(r,c.wh)),sku:String(g(r,c.sku)),pn:String(g(r,c.pn)),cat:String(g(r,c.cat)),type:String(g(r,c.type)),inv:Number(g(r,c.inv))||0,cnt:(g(r,c.cnt)===''?null:Number(g(r,c.cnt))||0),by:String(g(r,c.by)),cdate:String(g(r,c.cdate)),upd:String(g(r,c.upd)),plan:String(g(r,c.plan)),st:String(g(r,c.st))}; });
+  }
+  var d={id:kkIdx(H,['ID']),req:kkIdx(H,['Request code']),wh:kkIdx(H,['Warehouse']),type:kkIdx(H,['Type']),loc:kkIdx(H,['Location']),pri:kkIdx(H,['Priority']),diff:kkIdx(H,['Diff']),by:kkIdx(H,['Counted by']),cdate:kkIdx(H,['Counted date']),upd:kkIdx(H,['Updated At']),plan:kkIdx(H,['Plan Date']),st:kkIdx(H,['Status'])};
+  return rows.filter(function(r){ return String(g(r,d.loc))!==''; }).map(function(r){ return {id:String(g(r,d.id)),req:String(g(r,d.req)),wh:String(g(r,d.wh)),type:String(g(r,d.type)),loc:String(g(r,d.loc)),pri:String(g(r,d.pri)),diff:Number(g(r,d.diff))||0,by:String(g(r,d.by)),cdate:String(g(r,d.cdate)),upd:String(g(r,d.upd)),plan:String(g(r,d.plan)),st:String(g(r,d.st))}; });
+}
+function kkSetTab(t){
+  KK.tab=t;
+  document.getElementById('kkTabSku').classList.toggle('active',t==='sku');
+  document.getElementById('kkTabLoc').classList.toggle('active',t==='loc');
+  kkFilters(); kkRender();
+}
+var _kkDeb=null;
+function kkQuick(){ clearTimeout(_kkDeb); _kkDeb=setTimeout(kkRender,120); }
+function kkFilters(){
+  var set={}; KK.data[KK.tab].forEach(function(r){ if(r.wh) set[r.wh]=1; });
+  var whs=Object.keys(set).sort();
+  var whSel=document.getElementById('kkWh');
+  var cur=whSel.value; if(cur&&whs.indexOf(cur)<0) cur='';
+  whSel.innerHTML='<option value="">Kho: tất cả</option>'+whs.map(function(w){ return '<option value="'+esc(w)+'"'+(w===cur?' selected':'')+'>'+esc(w)+'</option>'; }).join('');
+  var stSel=document.getElementById('kkSt');
+  var curSt=stSel.value;
+  stSel.innerHTML='<option value="">Trạng thái: tất cả</option>'+KK_STATUSES.map(function(s){ return '<option value="'+s+'"'+(s===curSt?' selected':'')+'>'+s+'</option>'; }).join('');
+}
+function kkRows(){
+  var arr=KK.data[KK.tab];
+  var wh=document.getElementById('kkWh').value, st=document.getElementById('kkSt').value;
+  var range=document.getElementById('kkDate').value, q=(document.getElementById('kkq').value||'').toLowerCase();
+  KK.refDay=0; arr.forEach(function(r){ var d=kkDayKey(kkCountMs(r)); if(!isNaN(d)&&d>KK.refDay) KK.refDay=d; });
+  if(!KK.refDay) KK.refDay=Math.floor(Date.now()/86400000);
+  return arr.filter(function(r){
+    if(wh&&r.wh!==wh) return false;
+    if(st&&String(r.st||'').toUpperCase()!==st) return false;
+    if(q&&((r.sku||'')+' '+(r.pn||'')+' '+(r.loc||'')).toLowerCase().indexOf(q)<0) return false;
+    if(range==='all') return true;
+    var dk=kkDayKey(kkCountMs(r)); if(isNaN(dk)) return false;
+    if(range==='today') return dk===KK.refDay;
+    if(range==='7d') return dk>=KK.refDay-6;
+    return dk>=KK.refDay-29;
+  });
+}
+function kkDash(v){ return v?esc(v):'—'; }
+function kkDcell(d){ return '<td class="num '+(d<0?'d-am':d>0?'d-duong':'d-khop')+'">'+(d>0?'+':'')+nf(d)+'</td>'; }
+function kkEmpty(n){ return '<tr><td colspan="'+n+'" style="text-align:center;color:var(--ink3);padding:28px;white-space:normal">Không có dòng phù hợp — dữ liệu kiểm kê lấy từ tab '+KK_TABS[KK.tab]+' trên Sheet</td></tr>'; }
+function kkIdLink(id,tab){ if(!id) return '—'; return '<a class="wlink" href="https://wms.inshasaki.com/physical-count/result/'+tab+'/detail/'+encodeURIComponent(id)+'?page=1&size=20" target="_blank" rel="noopener">'+esc(id)+KK_ICON+'</a>'; }
+function kkRender(){
+  var rs=kkRows(), counted=0, notc=0, neg=0, pos=0;
+  rs.forEach(function(r){
+    if(KK.tab==='loc'){
+      var st=String(r.st||'').toUpperCase(), c=st!==''&&st!=='NOT COUNT'&&st!=='PENDING';
+      if(c) counted++; else notc++;
+      if(c&&r.diff<0) neg++; if(c&&r.diff>0) pos++;
+    }else{
+      var e=kkEval(r.inv,r.cnt);
+      if(e.counted&&String(r.st||'').toUpperCase()!=='NOT COUNT') counted++; else notc++;
+      if(e.counted&&e.d<0) neg++; if(e.counted&&e.d>0) pos++;
+    }
+  });
+  var U=KK.tab==='loc'?'Location':'SKU';
+  document.getElementById('kkSummary').innerHTML=
+    '<div class="sm c-ok"><div class="k">'+nf(rs.length)+'</div><div class="l">'+U+' total</div></div>'+
+    '<div class="sm c-ok"><div class="k">'+nf(counted)+'</div><div class="l">'+U+' counted</div></div>'+
+    '<div class="sm c-mut"><div class="k">'+nf(notc)+'</div><div class="l">'+U+' not count</div></div>'+
+    '<div class="sm c-neg"><div class="k">'+nf(neg)+'</div><div class="l">'+U+' negative</div></div>'+
+    '<div class="sm c-pos"><div class="k">'+nf(pos)+'</div><div class="l">'+U+' positive</div></div>';
+  var CAP=300, out=[];
+  if(KK.tab==='sku'){
+    for(var i=0;i<rs.length&&out.length<CAP;i++){ var r=rs[i], e=kkEval(r.inv,r.cnt);
+      out.push('<tr><td>'+kkIdLink(r.id,'sku')+'</td><td><b>'+esc(r.sku)+'</b><div class="pn2">'+esc(r.pn)+'</div></td><td>'+kkDash(r.cat)+'</td>'+
+        kkDcell(r.cnt==null?0:e.d)+'<td class="num">'+nf(r.inv)+'</td><td class="num">'+(r.cnt==null?'—':nf(r.cnt))+'</td><td>'+kkDash(r.type)+'</td><td>'+kkDash(r.req)+'</td><td>'+kkDash(r.by)+'</td><td>'+kkFmtD(kkParseDate(r.cdate))+'</td><td>'+kkFmtD(kkParseDate(r.plan),true)+'</td><td><span class="badge '+kkBadge(r.st)+'">'+(r.st?esc(r.st):'—')+'</span></td></tr>');
+    }
+    document.getElementById('kkWrap').innerHTML='<table><thead><tr><th>ID</th><th>SKU</th><th>Category</th><th class="num">Diff</th><th class="num">Inventory</th><th class="num">Qty count</th><th>Type</th><th>Request</th><th>Counted by</th><th>Counted date</th><th>Plan date</th><th>Status</th></tr></thead><tbody>'+(out.join('')||kkEmpty(12))+'</tbody></table>';
+  }else{
+    for(var j=0;j<rs.length&&out.length<CAP;j++){ var l=rs[j];
+      out.push('<tr><td>'+kkIdLink(l.id,'location')+'</td><td class="loc">'+esc(l.loc)+'</td><td>'+kkDash(l.wh)+'</td><td>'+kkDash(l.type)+'</td><td>'+kkDash(l.pri)+'</td>'+kkDcell(l.diff)+'<td>'+kkDash(l.req)+'</td><td>'+kkDash(l.by)+'</td><td>'+kkFmtD(kkParseDate(l.cdate))+'</td><td>'+kkFmtD(kkParseDate(l.plan),true)+'</td><td><span class="badge '+kkBadge(l.st)+'">'+(l.st?esc(l.st):'—')+'</span></td></tr>');
+    }
+    document.getElementById('kkWrap').innerHTML='<table><thead><tr><th>ID</th><th>Location</th><th>Warehouse</th><th>Type</th><th>Priority</th><th class="num">Diff</th><th>Request</th><th>Counted by</th><th>Counted date</th><th>Plan date</th><th>Status</th></tr></thead><tbody>'+(out.join('')||kkEmpty(11))+'</tbody></table>';
+  }
+  document.getElementById('kkNote').textContent=rs.length>CAP?('Hiển thị '+nf(CAP)+' / '+nf(rs.length)+' dòng — lọc để thu hẹp.'):(nf(rs.length)+' dòng.');
 }
 
 loadData();
