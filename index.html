@@ -210,20 +210,29 @@ h1.brand-title{margin:0;min-width:0}
 /* Lưới Kiểm kê 50/50 (2 khối SKU | mã vị trí song song) */
 .grid2.even{grid-template-columns:1fr 1fr}
 @media(max-width:1024px){.grid2.even{grid-template-columns:1fr}}
-/* Dải 5 chỉ số bấm được trong từng khối */
-.kkstrip{margin-bottom:12px}
-.kkstrip .sm{cursor:pointer;transition:background .18s var(--ease)}
-.kkstrip .sm:hover{background:var(--hover)}
-.kkstrip .sm .l{white-space:nowrap}
-/* Thanh trạng thái 100% + chips đếm theo trạng thái (bấm mở danh sách) */
-.kkstbar{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--surface2);margin:2px 0 8px}
+/* ===== Khối Kiểm kê — thiết kế lại: cân bằng lưới, typography phân cấp, chi tiết tinh gọn ===== */
+.grid2.even>.panel{display:flex;flex-direction:column;min-width:0}   /* 2 khối luôn bằng chiều cao */
+.grid2.even .kkdaily{margin-top:auto}                                /* chart neo đáy -> 2 khối thẳng hàng */
+/* Dải 5 chỉ số: số to-mỏng-thanh thoát, nhãn uppercase mờ, divider mảnh giữa các ô */
+.kkstrip{display:flex;align-items:stretch;margin:6px 0 16px}
+.kkstrip .ks{flex:1;min-width:0;padding:3px 14px;cursor:pointer;border-left:1px solid var(--border);border-radius:8px;transition:background .18s var(--ease)}
+.kkstrip .ks:first-child{border-left:0;padding-left:2px}
+.kkstrip .ks:hover{background:var(--hover)}
+.kkstrip .v{font-size:clamp(19px,1.7vw,26px);font-weight:300;letter-spacing:-.02em;line-height:1.15;font-variant-numeric:tabular-nums;color:var(--ink)}
+.kkstrip .v b{font-weight:300}
+.kkstrip .t{font-size:9.5px;font-weight:650;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kkstrip .v.ok{color:var(--good)} .kkstrip .v.mut{color:var(--muted)} .kkstrip .v.neg{color:var(--bad)} .kkstrip .v.pos{color:var(--info)}
+/* Thanh trạng thái 100%: mỏng 8px, bo tròn hẳn, khe 2px giữa các đoạn */
+.kkstbar{display:flex;height:8px;border-radius:99px;overflow:hidden;background:var(--surface2);margin:2px 0 10px}
 .kkstbar i{display:block;height:100%;min-width:2px}
 .kkstbar i+i{margin-left:2px}
-.kkstchips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:2px}
-.kkstchip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600;color:var(--ink2);cursor:pointer;background:var(--surface);font-family:inherit}
-.kkstchip:hover{border-color:var(--accent);color:var(--accent)}
-.kkstchip .dot2{width:8px;height:8px;border-radius:50%;flex:none}
-.kkstchip b{color:var(--ink);font-variant-numeric:tabular-nums}
+/* Pill trạng thái: viên nhãn nhỏ, nền mờ 12% màu chính, chấm tròn chỉ thị, chữ đậm */
+.kkstchips{display:flex;flex-wrap:wrap;gap:6px}
+.kkstchip{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:99px;padding:4px 11px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;
+  background:color-mix(in srgb,var(--cc) 12%,transparent);color:color-mix(in srgb,var(--cc) 58%,var(--text));transition:background .18s var(--ease)}
+.kkstchip:hover{background:color-mix(in srgb,var(--cc) 22%,transparent)}
+.kkstchip .dot2{width:7px;height:7px;border-radius:50%;background:var(--cc);flex:none}
+.kkstchip b{font-variant-numeric:tabular-nums;font-weight:750;color:inherit}
 /* Chart mini "Đã kiểm theo ngày" trong từng khối + delta so với ngày kề trước */
 .kkdhead{font-size:12px;font-weight:650;color:var(--ink2);margin:14px 0 8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .kkdaily{min-height:220px;display:flex;flex-direction:column;justify-content:flex-end}
@@ -350,8 +359,8 @@ code{background:var(--surface2);padding:1px 7px;border-radius:6px;font-size:12px
   transition:background .18s var(--ease),color .18s var(--ease),border-color .18s var(--ease)}
 .whnum b{font-size:13px;font-variant-numeric:tabular-nums}
 .whnum:hover{background:var(--good);color:var(--surface);border-color:var(--good)} .whnum:hover b{color:var(--surface)}
-.prog{background:var(--surface2);border-radius:6px;height:6px;margin:5px 0 4px;overflow:hidden}
-.progf{height:100%;border-radius:6px;width:0;transition:width .9s var(--ease)}
+.prog{background:var(--surface2);border-radius:99px;height:6px;margin:5px 0 4px;overflow:hidden}
+.progf{height:100%;border-radius:99px;width:0;transition:width .9s var(--ease)}
 .whsub{font-size:11px;color:var(--ink2)} .whsub b{color:var(--amber)}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:middle}
 
@@ -574,14 +583,14 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
   <div class="grid2 even">
     <section class="panel">
       <h2>Kiểm kê theo SKU <span class="hint">(Type: SKU · SKU Factory)</span></h2>
-      <div class="kksum kkstrip" id="kkStrip-sku"></div>
+      <div class="kkstrip" id="kkStrip-sku"></div>
       <div id="kkStatus-sku"></div>
       <div class="kkdhead">Đã kiểm theo ngày <span class="hint">(Counted date · so với ngày kề trước)</span> <span class="lg" id="kkLegend-sku"></span></div>
       <div class="kkdaily" id="kkHist-sku"></div>
     </section>
     <section class="panel">
       <h2>Kiểm kê theo mã vị trí <span class="hint">(Type: Location · Full Location · Full Location Factory)</span></h2>
-      <div class="kksum kkstrip" id="kkStrip-loc"></div>
+      <div class="kkstrip" id="kkStrip-loc"></div>
       <div id="kkStatus-loc"></div>
       <div class="kkdhead">Đã kiểm theo ngày <span class="hint">(Counted date · so với ngày kề trước)</span> <span class="lg" id="kkLegend-loc"></span></div>
       <div class="kkdaily" id="kkHist-loc"></div>
@@ -1245,7 +1254,7 @@ function kkEval(inv,cnt){ if(cnt==null||cnt==='') return {d:0,counted:false}; va
 var CACHE_TTL=10*60*1000;
 function cacheGet(k){ try{ var o=JSON.parse(sessionStorage.getItem(k)||'null'); if(o&&(Date.now()-o.at)<CACHE_TTL) return o.d; }catch(e){} return null; }
 function cacheSet(k,d){ try{ sessionStorage.setItem(k,JSON.stringify({at:Date.now(),d:d})); }catch(e){ /* quá quota -> bỏ qua, không cache */ } }
-function clearCaches(){ try{ ['slf-kk-sku','slf-kk-loc','slf-hist','slf-hist2'].forEach(function(k){ sessionStorage.removeItem(k); }); }catch(e){} }
+function clearCaches(){ try{ ['slf-kk-sku','slf-kk-loc','slf-kk3-sku','slf-kk3-loc','slf-hist','slf-hist2'].forEach(function(k){ sessionStorage.removeItem(k); }); }catch(e){} }
 function gvizP(sheet,params,cb){
   return new Promise(function(res){
     window[cb]=function(resp){ res(resp); };
@@ -1256,8 +1265,17 @@ function gvizP(sheet,params,cb){
     document.body.appendChild(s);
   });
 }
+/* PHẦN 1: MAPPING CHUẨN THEO TYPE — tách bạch 2 luồng dữ liệu TRƯỚC khi vào UI.
+   Khối SKU (sheet kiemke-sku):      Type = "SKU" | "SKU - Factory" (mã enum SKU / SKU_FACTORY)
+   Khối Vị trí (sheet kiemke-location): Type = "Location - Factory" | "Full location" | "Full location - Factory"
+   kkTypeKey chuẩn hoá cả 2 dạng viết ("SKU - Factory" và "SKU_FACTORY" đều thành SKU_FACTORY) rồi filter() chính xác. */
+var KK_TYPES={
+  sku:['SKU','SKU_FACTORY'],
+  loc:['LOCATION','LOCATION_FACTORY','FULL_LOCATION','FULL_LOCATION_FACTORY']
+};
+function kkTypeKey(t){ return String(t||'').toUpperCase().replace(/[^A-Z]+/g,'_').replace(/^_+|_+$/g,''); }
 async function kkFetch(kind){
-  var ck='slf-kk-'+kind, hit=cacheGet(ck);
+  var ck='slf-kk3-'+kind, hit=cacheGet(ck);
   if(hit) return hit;
   var resp=await gvizP(KK_TABS[kind],'&headers=1','kkgv_'+kind);
   var out=[];
@@ -1265,7 +1283,7 @@ async function kkFetch(kind){
     if(!resp||resp.status==='error') throw 0;
     var H=(resp.table&&resp.table.cols||[]).map(function(c){ return String((c&&c.label)||'').replace(/\s+/g,' ').trim().toLowerCase(); });
     var rows=(resp.table&&resp.table.rows||[]).map(function(r){ return (r.c||[]).map(function(c){ return c?(c.v==null?'':c.v):''; }); });
-    out=kkMap(kind,H,rows);
+    out=kkMap(kind,H,rows).filter(function(r){ return KK_TYPES[kind].indexOf(kkTypeKey(r.type))>=0; });   // LỌC ĐÚNG TYPE
   }catch(e){ out=[]; }
   if(out.length) cacheSet(ck,out);
   return out;
@@ -1366,16 +1384,16 @@ function kkRenderPanel(kind){
     var s=kkStKey(r); stc[s]=(stc[s]||0)+1;
   });
   var notc=rs.length-counted, rate=rs.length?counted/rs.length*100:0;
-  /* Tầng 1: dải 5 số bấm được — Tổng / Đã kiểm / Còn lại / Lệch âm / Lệch dương */
-  function it(metric,cls,val,lab,sub){
-    return '<div class="sm '+cls+'" data-k="'+kind+'" data-m="'+metric+'" onclick="kkOpen(this.getAttribute(\'data-k\'),this.getAttribute(\'data-m\'))" title="Bấm xem danh sách chi tiết"><div class="k">'+nf(val)+'</div><div class="l">'+lab+(sub?' · '+sub:'')+'</div></div>';
+  /* Tầng 1: dải 5 số bấm được — số to mỏng, nhãn uppercase mờ, divider mảnh */
+  function it(metric,cls,val,lab){
+    return '<div class="ks" data-k="'+kind+'" data-m="'+metric+'" onclick="kkOpen(this.getAttribute(\'data-k\'),this.getAttribute(\'data-m\'))" title="Bấm xem danh sách chi tiết"><div class="v '+cls+'">'+nf(val)+'</div><div class="t">'+lab+'</div></div>';
   }
   document.getElementById('kkStrip-'+kind).innerHTML=
     it('total','',rs.length,'Tổng '+U)+
-    it('counted','c-ok',counted,'Đã kiểm',pct(rate))+
-    it('notcount','c-mut',notc,'Còn lại')+
-    it('negative','c-neg',neg,'Lệch âm')+
-    it('positive','c-pos',pos,'Lệch dương');
+    it('counted','ok',counted,'Đã kiểm · '+pct(rate))+
+    it('notcount','mut',notc,'Còn lại')+
+    it('negative','neg',neg,'Lệch âm')+
+    it('positive','pos',pos,'Lệch dương');
   /* Tầng 2: thanh trạng thái 100% + chips đếm (Verified/Đã duyệt/Đang xử lý/Pending/Đã huỷ...) */
   var keys=KK_ST_ORDER.filter(function(s){ return stc[s]; })
     .concat(Object.keys(stc).filter(function(s){ return KK_ST_ORDER.indexOf(s)<0; }).sort());
@@ -1385,7 +1403,7 @@ function kkRenderPanel(kind){
   }).join('');
   var chips=keys.map(function(s){
     var m=kkStMeta(s);
-    return '<button class="kkstchip" data-k="'+kind+'" data-m="st:'+esc(s)+'" onclick="kkOpen(this.getAttribute(\'data-k\'),this.getAttribute(\'data-m\'))"><span class="dot2" style="background:'+m[1]+'"></span>'+esc(m[0])+' <b>'+nf(stc[s])+'</b></button>';
+    return '<button class="kkstchip" style="--cc:'+m[1]+'" data-k="'+kind+'" data-m="st:'+esc(s)+'" onclick="kkOpen(this.getAttribute(\'data-k\'),this.getAttribute(\'data-m\'))"><span class="dot2"></span>'+esc(m[0])+' <b>'+nf(stc[s])+'</b></button>';
   }).join('');
   document.getElementById('kkStatus-'+kind).innerHTML=rs.length
     ? '<div class="kkstbar">'+segs+'</div><div class="kkstchips">'+chips+'</div>'
