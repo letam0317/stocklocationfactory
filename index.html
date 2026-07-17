@@ -60,6 +60,11 @@ code{background:#eef1f5;padding:1px 7px;border-radius:6px;font-size:12px;color:#
 
 .grid{display:grid;grid-template-columns:1.22fr 1fr;gap:16px;margin-bottom:16px}
 @media(max-width:860px){.grid{grid-template-columns:1fr}}
+
+/* Lưới dashboard 2x2: Warehouse ↖ · Chart ngày ↗ · Category ↙ · Bảng chi tiết ↘ */
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;align-items:start}
+.grid2 .panel{margin-bottom:0;min-width:0}
+@media(max-width:1024px){.grid2{grid-template-columns:1fr}}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;box-shadow:var(--shadow);margin-bottom:12px}
 .panel h2{margin:0 0 10px;font-size:14px;font-weight:680;color:#374151;letter-spacing:-.01em;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .lg{font-weight:400;font-size:11px;color:var(--ink2);display:inline-flex;align-items:center;gap:5px;margin-left:2px}
@@ -74,23 +79,23 @@ code{background:#eef1f5;padding:1px 7px;border-radius:6px;font-size:12px;color:#
 .bval{font-weight:700;font-size:12px;text-align:right;font-variant-numeric:tabular-nums;line-height:1.15;white-space:nowrap}
 .bval b{color:var(--teal)} .bval small{color:var(--amber);font-size:10px;font-weight:600;margin-left:5px}
 
-/* Category: mỗi cate 1 hàng gọn (≤32px), bấm mở breakdown theo từng kho */
-.catwrap{display:flex;flex-direction:column;gap:6px}
-.catg{border:1px solid var(--line);border-radius:8px;background:#fff;overflow:hidden}
-.cathd{width:100%;border:0;background:#fff;cursor:pointer;padding:4px 12px;min-height:30px;display:grid;grid-template-columns:11px 230px 1fr auto;align-items:center;gap:10px;text-align:left;font:inherit;color:inherit;transition:background .18s var(--ease)}
+/* Category: mỗi cate 1 hàng gọn (≤32px); bấm CẢ DÒNG mở modal phân bổ theo kho */
+.catwrap{display:flex;flex-direction:column;gap:6px;max-height:620px;overflow-y:auto;padding-right:4px}
+.catwrap::-webkit-scrollbar{width:9px}
+.catwrap::-webkit-scrollbar-thumb{background:#cbd3dd;border-radius:6px;border:2px solid #fff}
+.catwrap::-webkit-scrollbar-thumb:hover{background:#aab4c2}
+.catg{border:1px solid var(--line);border-radius:8px;background:#fff;overflow:hidden;flex:none}
+.cathd{width:100%;border:0;background:#fff;cursor:pointer;padding:4px 12px;min-height:30px;display:grid;grid-template-columns:200px 1fr auto;align-items:center;gap:10px;text-align:left;font:inherit;color:inherit;transition:background .18s var(--ease)}
 .catnum{justify-self:end;padding:2px 9px;font-size:11px}
 .catnum b{font-size:12px}
-.cathd:hover{background:#f8fafc}
+.cathd:hover{background:#f9fafb}
 .cathd .btrack{display:flex}
 .catlab{font-size:11.5px;font-weight:600;color:#374151;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .catlab small{color:var(--ink3);font-size:10px;font-weight:400;margin-left:6px}
-.catg.open .chev{transform:rotate(45deg)}
-.catg.open .accbody{grid-template-rows:1fr}
-.catbody{padding:2px 12px 8px 33px;border-top:1px dashed var(--line)}
-.catbody .barrow{grid-template-columns:208px 1fr 104px;gap:10px;margin:5px 0 0}
-.catbody .blab{text-align:left;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.catbody .btrack{height:10px;border-radius:5px}
-.catbody .bval{font-size:11px}
+
+/* Modal phân bổ Category theo kho */
+.modalbox.catbox{width:min(820px,96vw)}
+.cmtotal td{border-top:2px solid var(--line);font-weight:700;background:#fafbfc}
 
 /* Chart: SKU đã lên kệ theo ngày (cột chồng Mastige/Garment, cuộn ngang nếu nhiều ngày) */
 .histscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
@@ -108,7 +113,7 @@ code{background:#eef1f5;padding:1px 7px;border-radius:6px;font-size:12px;color:#
 .histchart::after{content:'';position:absolute;left:0;right:0;bottom:18px;border-top:1px solid var(--line)}
 .histempty{color:var(--ink3);font-size:12px;padding:14px 2px}
 
-.whlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+.whlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(272px,1fr));gap:12px}
 @media(max-width:720px){.whlist{grid-template-columns:1fr}}
 .whcard{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px 12px;transition:box-shadow .2s var(--ease)}
 .whcard:hover{box-shadow:var(--shadow)}
@@ -234,15 +239,11 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
   .barrow .btrack{grid-area:bar;height:12px}
   .barrow .bval{grid-area:val;text-align:right;white-space:nowrap;line-height:1.3}
 
-  /* Khối Category: header 2 hàng (chev+tên | số), thanh bar full-width */
-  .cathd{grid-template-columns:11px 1fr auto;grid-template-areas:"chev lab val" "bar bar bar";gap:4px 8px;padding:7px 10px}
-  .cathd .chev{grid-area:chev}
+  /* Khối Category: header 2 hàng (tên | số), thanh bar full-width */
+  .cathd{grid-template-columns:1fr auto;grid-template-areas:"lab val" "bar bar";gap:4px 8px;padding:7px 10px}
   .cathd .catlab{grid-area:lab;white-space:normal}
   .cathd .btrack{grid-area:bar;height:12px}
   .cathd .catnum{grid-area:val;width:auto;justify-self:end;padding:4px 9px}
-  .catbody{padding:2px 10px 8px}
-  .catbody .barrow{grid-template-columns:1fr auto;grid-template-areas:"lab val" "bar bar";gap:2px 10px;margin:8px 0 0}
-  .catbody .btrack{height:10px}
 
   /* Bảng chi tiết trong accordion: cuộn ngang thay vì tràn ra ngoài */
   .acchd{padding:14px 14px}
@@ -302,6 +303,16 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
   </div>
 </div>
 
+<!-- Modal drill-down: phân bổ 1 category trên từng kho -->
+<div id="catmodal" class="modal" onclick="if(event.target===this)closeCatWhModal()">
+  <div class="modalbox catbox">
+    <div class="modalhd"><div><div class="mt" id="cmtitle"></div><div class="mtsub" id="cmsub"></div></div><button class="mclose" onclick="closeCatWhModal()">&times;</button></div>
+    <div class="modalbody" style="padding-top:14px"><table class="mtbl"><thead><tr>
+      <th>Tên Kho</th><th class="num">SKU đã lên kệ</th><th class="num">SKU chưa lên kệ</th><th class="num">Tổng SKU</th><th class="num">Tỷ lệ hoàn thành</th>
+    </tr></thead><tbody id="cmbody"></tbody></table></div>
+  </div>
+</div>
+
 <script>
 var SHEET_ID = "1eY_oo9fAvWCTXp24x-Z0FXq9mp_jJPlTHg09qdemETs";
 var SHEET_URL = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/edit";
@@ -317,6 +328,7 @@ var DIV_ORDER = ["Mastige","Garment"];
 var PAL = ["#2563eb","#0ea5e9","#14b8a6","#f59e0b","#8b5cf6","#ef4444","#10b981","#ec4899","#6366f1","#f43f5e","#0891b2","#84cc16"];
 var WH_DATA = {}, WH_COLOR = {}, curWh = null, curTab = 'pend';
 var MODAL_ROWS = {shelf:[],pend:[]};   // bộ dữ liệu modal đang xem (1 kho hoặc 1 category gộp mọi kho)
+var CAT_DATA = {};                     // cate -> {sh,pe,whs:[[kho,skuSh,skuPe],...]} cho modal phân bổ kho
 
 document.getElementById('srclink').href = SHEET_URL;
 
@@ -499,26 +511,17 @@ function render(groups,whDiv){
     var x=catAgg[a], y=catAgg[b];
     return (y.sh-x.sh) || ((y.sh+y.pe)-(x.sh+x.pe)) || (a<b?-1:1);
   });
+  CAT_DATA=catAgg;   // modal "Chi tiết lên kệ" đọc phân bổ kho từ đây
   var bars=cats.map(function(cat){
     var ca=catAgg[cat], tot=ca.sh+ca.pe, g=tot?ca.sh/tot*100:0, a=tot?ca.pe/tot*100:0;
-    var whrows=ca.whs.slice().sort(function(x,y){return (y[1]-x[1]) || ((y[1]+y[2])-(x[1]+x[2]));}).map(function(wr){
-      var wt=wr[1]+wr[2], wg=wt?wr[1]/wt*100:0, wa=wt?wr[2]/wt*100:0;
-      return '<div class="barrow"><div class="blab" title="'+esc(wr[0])+'"><span class="dot" style="background:'+(WH_COLOR[wr[0]]||'#94a3b8')+'"></span>'+esc(wr[0])+'</div>'+
-        '<div class="btrack" title="Đã lên kệ '+nf(wr[1])+' / '+nf(wt)+' · còn '+nf(wr[2])+'">'+
-          '<div class="bfill sh" data-w="'+wg.toFixed(2)+'"></div>'+
-          '<div class="bfill pe" data-w="'+wa.toFixed(2)+'"></div>'+
-        '</div>'+
-        '<div class="bval"><b>'+nf(wr[1])+'</b> / '+nf(wt)+'<small>còn '+nf(wr[2])+'</small></div></div>';
-    }).join('');
-    return '<div class="catg"><div class="cathd" onclick="this.parentNode.classList.toggle(\'open\')">'+
-      '<span class="chev"></span>'+
+    return '<div class="catg"><div class="cathd" data-cat="'+esc(cat)+'" title="Bấm để xem phân bổ theo từng kho" '+
+      'onclick="openCatWh(this.getAttribute(\'data-cat\'))">'+
       '<span class="catlab" title="'+esc(cat)+'">'+esc(cat)+'<small>'+ca.whs.length+' kho · còn '+nf(ca.pe)+' SKU chưa lên kệ</small></span>'+
       '<span class="btrack" title="Đã lên kệ '+nf(ca.sh)+' / '+nf(tot)+' · còn '+nf(ca.pe)+'">'+
         '<span class="bfill sh" data-w="'+g.toFixed(2)+'"></span>'+
         '<span class="bfill pe" data-w="'+a.toFixed(2)+'"></span></span>'+
-      '<button class="whnum catnum" data-cat="'+esc(cat)+'" title="Xem chi tiết SKU của category này trên toàn bộ kho" '+
-        'onclick="event.stopPropagation();openCatModal(this.getAttribute(\'data-cat\'))"><b>'+nf(ca.sh)+'</b> / '+nf(tot)+' SKU</button></div>'+
-      '<div class="accbody"><div class="accinner"><div class="catbody">'+whrows+'</div></div></div></div>';
+      '<button class="whnum catnum" data-cat="'+esc(cat)+'" title="Xem chi tiết từng SKU của category này trên toàn bộ kho" '+
+        'onclick="event.stopPropagation();openCatModal(this.getAttribute(\'data-cat\'))"><b>'+nf(ca.sh)+'</b> / '+nf(tot)+' SKU</button></div></div>';
   }).join('');
 
   var whKeys=Object.keys(wh).sort(function(a,b){return wh[b][0]-wh[a][0];});
@@ -567,10 +570,12 @@ function render(groups,whDiv){
     '<span class="tag rem">Còn lại '+(100-rate).toFixed(1)+'% ('+nf(gPe)+' SKU)</span></div>'+
     '<div class="ratebar" title="Đã lên kệ '+rate.toFixed(1)+'% · còn lại '+(100-rate).toFixed(1)+'%"><div class="ratef" data-w="'+rate.toFixed(1)+'"></div>'+
     '<div class="ratefr" data-w="'+(100-rate).toFixed(1)+'"></div></div></div>'+
-    '<section class="panel"><h2>SKU đã lên kệ theo ngày <span class="hint">(rê chuột vào cột để xem chi tiết)</span> <span class="lg"><span class="sw" style="background:#2563eb"></span>Mastige<span class="sw" style="background:#0d9488;margin-left:6px"></span>Garment</span></h2><div id="histwrap"></div></section>'+
-    '<section class="panel"><h2>Bảng chi tiết <span class="hint">(bấm nhóm để mở, bấm từng kho để xem chi tiết &amp; total)</span></h2><div class="accwrap">'+acc+'</div></section>'+
+    '<div class="grid2">'+
     '<section class="panel"><h2>Tiến độ lên kệ theo Warehouse <span class="hint">(bấm số lượng SKU để xem chi tiết)</span></h2><div class="whlist">'+whchips+'</div></section>'+
-    '<section class="panel"><h2>Category theo số SKU đã lên kệ <span class="hint">('+cats.length+' category — bấm dòng để xem từng kho · bấm số SKU để xem chi tiết)</span> <span class="lg"><span class="sw sh"></span>đã lên kệ<span class="sw pe" style="margin-left:6px"></span>chưa lên kệ</span></h2><div class="catwrap">'+bars+'</div></section>';
+    '<section class="panel"><h2>SKU đã lên kệ theo ngày <span class="hint">(rê chuột vào cột để xem chi tiết)</span> <span class="lg"><span class="sw" style="background:#2563eb"></span>Mastige<span class="sw" style="background:#0d9488;margin-left:6px"></span>Garment</span></h2><div id="histwrap"></div></section>'+
+    '<section class="panel"><h2>Category theo số SKU đã lên kệ <span class="hint">('+cats.length+' category — bấm dòng: phân bổ theo kho · bấm số SKU: từng SKU)</span> <span class="lg"><span class="sw sh"></span>đã lên kệ<span class="sw pe" style="margin-left:6px"></span>chưa lên kệ</span></h2><div class="catwrap">'+bars+'</div></section>'+
+    '<section class="panel"><h2>Bảng chi tiết <span class="hint">(bấm nhóm để mở, bấm từng kho để xem chi tiết &amp; total)</span></h2><div class="accwrap">'+acc+'</div></section>'+
+    '</div>';
   document.getElementById('content').innerHTML=html;
   renderHistory();   // container #histwrap vừa được tạo — đổ chart nếu lịch sử đã về
   requestAnimationFrame(function(){ requestAnimationFrame(function(){
@@ -626,6 +631,34 @@ function closeModal(){
   var m=document.getElementById('modal'); m.classList.remove('show');
   setTimeout(function(){ m.style.display='none'; },240);
 }
+/* Modal drill-down: bảng phân bổ 1 category trên từng kho */
+function openCatWh(cat){
+  var ca=CAT_DATA[cat]; if(!ca) return;
+  document.getElementById('cmtitle').textContent='Chi tiết lên kệ: '+cat;
+  document.getElementById('cmsub').textContent='Phân bổ trên '+ca.whs.length+' kho — số SKU đếm distinct theo Kho × Category';
+  var rows=ca.whs.slice().sort(function(x,y){ return (y[1]-x[1]) || ((y[1]+y[2])-(x[1]+x[2])); });
+  var html=rows.map(function(wr){
+    var tot=wr[1]+wr[2], rt=tot?wr[1]/tot*100:0;
+    return '<tr><td class="whn"><span class="dot" style="background:'+(WH_COLOR[wr[0]]||'#94a3b8')+'"></span>'+esc(wr[0])+'</td>'+
+      '<td class="num" style="color:var(--teal);font-weight:700">'+nf(wr[1])+'</td>'+
+      '<td class="num pend">'+nf(wr[2])+'</td>'+
+      '<td class="num">'+nf(tot)+'</td>'+
+      '<td class="num"><b>'+rt.toFixed(0)+'%</b></td></tr>';
+  });
+  var tt=ca.sh+ca.pe, trt=tt?ca.sh/tt*100:0;
+  html.push('<tr class="cmtotal"><td>Tổng</td>'+
+    '<td class="num" style="color:var(--teal)">'+nf(ca.sh)+'</td>'+
+    '<td class="num pend">'+nf(ca.pe)+'</td>'+
+    '<td class="num">'+nf(tt)+'</td>'+
+    '<td class="num">'+trt.toFixed(0)+'%</td></tr>');
+  document.getElementById('cmbody').innerHTML=html.join('');
+  var m=document.getElementById('catmodal'); m.style.display='flex';
+  requestAnimationFrame(function(){ m.classList.add('show'); });
+}
+function closeCatWhModal(){
+  var m=document.getElementById('catmodal'); m.classList.remove('show');
+  setTimeout(function(){ m.style.display='none'; },240);
+}
 function setTab(t,skipFill){
   curTab=t;
   document.getElementById('tabShelf').classList.toggle('active',t==='shelf');
@@ -657,7 +690,10 @@ function renderRows(){
 document.addEventListener('keydown',function(e){
   if(e.key!=='Escape') return;
   var m=document.getElementById('catMenu');
-  if(m && m.classList.contains('show')) closeCat(); else closeModal();
+  if(m && m.classList.contains('show')){ closeCat(); return; }
+  var cm=document.getElementById('catmodal');
+  if(cm && cm.classList.contains('show')){ closeCatWhModal(); return; }
+  closeModal();
 });
 document.getElementById('catMenu').addEventListener('click',function(e){
   var it=e.target.closest('.combo-item'); if(!it) return;
