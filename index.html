@@ -562,14 +562,14 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
       <button id="tabShelf" class="tab" onclick="setTab('shelf')">Đã lên kệ (<span id="cShelf">0</span>)</button>
     </div>
     <div class="mfilters">
-      <div class="fld"><label>CategoryName</label><div class="combo" id="catCombo"><input id="fCat" autocomplete="off" placeholder="Tất cả category…" oninput="onCatInput()" onfocus="renderCatMenu()"><div class="combo-menu" id="catMenu"></div></div></div>
+      <div class="fld"><label id="fLbl">CategoryName</label><div class="combo" id="catCombo"><input id="fCat" autocomplete="off" placeholder="Tất cả category…" oninput="onCatInput()" onfocus="renderCatMenu()"><div class="combo-menu" id="catMenu"></div></div></div>
       <div class="fld"><label>Mã vị trí</label><input id="fLoc" oninput="qfilter()" placeholder="Lọc vị trí…"></div>
       <div class="fld"><label>SKU</label><input id="fSku" oninput="qfilter()" placeholder="Lọc SKU…"></div>
       <div class="fld"><label>ProductName</label><input id="fName" oninput="qfilter()" placeholder="Lọc tên sản phẩm…"></div>
     </div>
     <div class="msum" id="msum"></div>
-    <div class="modalbody"><table class="mtbl"><thead><tr>
-      <th class="col-kho">Kho</th><th>CategoryName</th><th>Mã vị trí</th><th>SKU</th><th>ProductName</th><th class="num">Số lượng</th>
+    <div class="modalbody"><table class="mtbl"><thead><tr id="mthead">
+      <th>CategoryName</th><th>Mã vị trí</th><th>SKU</th><th>ProductName</th><th class="num">Số lượng</th>
     </tr></thead><tbody id="mbody"></tbody></table></div>
   </div>
 </div>
@@ -699,9 +699,12 @@ function onHist(resp){
 }
 /* Snapshot Constraint: cùng ngày có nhiều bản ghi -> chỉ giữ bản GẦN MỐC CHỐT SỔ 08:01 nhất
    (theo ApiAt; bản ghi không có ApiAt xếp cuối; hoà nhau lấy bản sau) */
+/* Múi giờ SET CỨNG +07:00 (VN) — tránh lỗi UTC lùi ngày trên trình duyệt khác múi giờ */
+var VN_OFFSET=7*60*60*1000;
+function vnDate(ms){ return new Date(ms+VN_OFFSET); }   // sau đó CHỈ đọc bằng getUTC* = giờ VN
 function histDaily(){
-  var TARGET=8*60+1;   // 08:01 sáng
-  function kc(r){ if(!r.at) return 1e9; var t=new Date(r.at); return Math.abs(t.getHours()*60+t.getMinutes()-TARGET); }
+  var TARGET=8*60+1;   // 08:01 sáng giờ VN
+  function kc(r){ if(!r.at) return 1e9; var t=vnDate(r.at); return Math.abs(t.getUTCHours()*60+t.getUTCMinutes()-TARGET); }
   var best={};
   HIST.forEach(function(r){
     var k=r.d+'|'+r.div+'|'+r.wh, cur=best[k];
@@ -752,10 +755,12 @@ function renderHistory(){
       if(/^gar/i.test(r.div)) days[r.d].gar+=r.sh; else days[r.d].mtg+=r.sh;
       days[r.d].pe+=r.pe;
     });
-    // Định tuyến thời gian: từ NGÀY 15 của tháng hiện tại đến hôm nay (chưa tới 15 thì lùi về 15 tháng trước)
-    var now=new Date(), moc=(now.getDate()>=15)?new Date(now.getFullYear(),now.getMonth(),15):new Date(now.getFullYear(),now.getMonth()-1,15);
+    // Định tuyến thời gian: từ NGÀY 15 của tháng hiện tại đến hôm nay — tính theo GIỜ VN set cứng +07:00
+    var nowVN=vnDate(Date.now());
+    var y=nowVN.getUTCFullYear(), mo=nowVN.getUTCMonth(), da=nowVN.getUTCDate();
+    var moc=new Date(Date.UTC(y,(da>=15)?mo:mo-1,15));
     function p(n){ return (n<10?'0':'')+n; }
-    var tuKey=moc.getFullYear()+'-'+p(moc.getMonth()+1)+'-'+p(moc.getDate());
+    var tuKey=moc.getUTCFullYear()+'-'+p(moc.getUTCMonth()+1)+'-'+p(moc.getUTCDate());
     var ds=Object.keys(days).sort();
     var win=ds.filter(function(d){ return d>=tuKey; });
     if(win.length) ds=win;   // cửa sổ rỗng (dữ liệu quá cũ) -> hiển thị toàn bộ thay vì trống trơn
@@ -896,17 +901,20 @@ function render(groups,whDiv){
 
 /* ---------- modal ---------- */
 var CUR_CATS=[];
+/* CT4: option dropdown SINH TỪ DỮ LIỆU THỰC của pop-up (Set giá trị duy nhất của tab đang xem) —
+   pop-up chỉ có hàng ở 2 kho thì dropdown chỉ được phép có đúng 2 option */
 function fillCatOptions(){
-  var rows=MODAL_ROWS[curTab], cnt={};
-  for(var i=0;i<rows.length;i++){ var c=rows[i][3]; cnt[c]=(cnt[c]||0)+1; }
-  CUR_CATS=Object.keys(cnt).sort().map(function(c){ return {name:c,n:cnt[c]}; });
+  var rows=MODAL_ROWS[curTab], uniq=new Set(), cnt={};
+  for(var i=0;i<rows.length;i++){ var v=String(rows[i][MODAL_KEY]||''); uniq.add(v); cnt[v]=(cnt[v]||0)+1; }
+  CUR_CATS=Array.from(uniq).sort().map(function(c){ return {name:c,n:cnt[c]}; });
 }
 function renderCatMenu(){
+  var isWh=(MODAL_KEY===3);
   var q=document.getElementById('fCat').value.toLowerCase();
   var items=CUR_CATS.filter(function(c){ return !q||c.name.toLowerCase().indexOf(q)>=0; });
-  var html='<div class="combo-item all" data-v=""><span class="nm">Tất cả category</span><span class="c">'+CUR_CATS.length+' nhóm</span></div>';
+  var html='<div class="combo-item all" data-v=""><span class="nm">'+(isWh?'Tất cả category':'Tất cả kho')+'</span><span class="c">'+CUR_CATS.length+(isWh?' nhóm':' kho')+'</span></div>';
   html+=items.map(function(c){ return '<div class="combo-item" data-v="'+esc(c.name)+'"><span class="nm">'+esc(c.name)+'</span><span class="c">'+nf(c.n)+'</span></div>'; }).join('');
-  if(!items.length) html+='<div class="combo-empty">Không có nhóm phù hợp</div>';
+  if(!items.length) html+='<div class="combo-empty">Không có mục phù hợp</div>';
   var m=document.getElementById('catMenu'); m.innerHTML=html; m.classList.add('show');
 }
 function onCatInput(){ renderCatMenu(); qfilter(); }
@@ -914,9 +922,14 @@ function pickCat(v){ document.getElementById('fCat').value=v; closeCat(); render
 function closeCat(){ document.getElementById('catMenu').classList.remove('show'); }
 var _deb;
 function qfilter(){ clearTimeout(_deb); _deb=setTimeout(renderRows,110); }
+/* SMART CONTEXT: MODAL_KEY = cột dùng cho bộ lọc + cột đầu bảng.
+   Mở từ thẻ KHO  -> tiêu đề đã là kho  -> key=3 (CategoryName), cột "Kho" bị TRIỆT TIÊU khỏi DOM.
+   Mở từ thẻ CATE -> tiêu đề đã là cate -> key=5 (Kho/Warehouse), cột "Category" bị TRIỆT TIÊU. */
+var MODAL_KEY=3;
 function openModal(w){
   curWh=w;
   MODAL_ROWS=WH_DATA[w];
+  MODAL_KEY=3;
   openDetail(w,'Chi tiết SKU theo mã vị trí — lọc theo từng cột bên dưới');
 }
 function openCatModal(cat){
@@ -926,11 +939,20 @@ function openCatModal(cat){
     WH_DATA[w].pend.forEach(function(r){ if(r[3]===cat){ pe.push(r); whn[w]=1; } });
   }
   MODAL_ROWS={shelf:sh,pend:pe};
+  MODAL_KEY=5;
   openDetail(cat,'Chi tiết SKU của category trên '+Object.keys(whn).length+' kho — lọc theo từng cột bên dưới');
 }
 function openDetail(title,sub){
+  var isWh=(MODAL_KEY===3);
   document.getElementById('mtitle').textContent=title;
   document.getElementById('mtsub').textContent=sub;
+  /* CT3: hoán đổi nhãn + chức năng bộ lọc theo ngữ cảnh */
+  document.getElementById('fLbl').textContent=isWh?'CategoryName':'Kho (Warehouse)';
+  document.getElementById('fCat').placeholder=isWh?'Tất cả category…':'Tất cả kho…';
+  /* CT2: dựng thead theo ngữ cảnh — cột trùng với tiêu đề KHÔNG được sinh ra */
+  document.getElementById('mthead').innerHTML=
+    (isWh?'<th>CategoryName</th>':'<th>Kho (Warehouse)</th>')+
+    '<th>Mã vị trí</th><th>SKU</th><th>ProductName</th><th class="num">Số lượng</th>';
   document.getElementById('cShelf').textContent=nf(MODAL_ROWS.shelf.length);
   document.getElementById('cPend').textContent=nf(MODAL_ROWS.pend.length);
   document.getElementById('fLoc').value=''; document.getElementById('fSku').value=''; document.getElementById('fName').value='';
@@ -984,18 +1006,22 @@ function renderRows(){
   var fl=document.getElementById('fLoc').value.toLowerCase();
   var fs=document.getElementById('fSku').value.toLowerCase();
   var fn=document.getElementById('fName').value.toLowerCase();
-  var rows=MODAL_ROWS[curTab], out=[], cnt=0, qsum=0;
+  var rows=MODAL_ROWS[curTab], out=[], cnt=0, qsum=0, isWh=(MODAL_KEY===3);
   for(var i=0;i<rows.length;i++){ var r=rows[i]; // [sku,pn,loc,cat,qty,wh]
-    if(fc && r[3].toLowerCase().indexOf(fc)<0) continue;
+    if(fc && String(r[MODAL_KEY]||'').toLowerCase().indexOf(fc)<0) continue;   // CT3: lọc theo cột ngữ cảnh
     if(fl && r[2].toLowerCase().indexOf(fl)<0) continue;
     if(fs && r[0].toLowerCase().indexOf(fs)<0) continue;
     if(fn && r[1].toLowerCase().indexOf(fn)<0) continue;
     cnt++; qsum+=r[4];
     if(out.length<4000)
-      out.push('<tr><td class="whn col-kho"><span class="dot" style="background:'+(WH_COLOR[r[5]]||'#94a3b8')+'"></span>'+esc(r[5]||'')+'</td><td>'+esc(r[3])+'</td><td class="loc">'+esc(r[2])+'</td><td>'+esc(r[0])+'</td><td class="pn">'+esc(r[1])+'</td><td class="num">'+nf(r[4])+'</td></tr>');
+      /* CT2: cột đầu theo ngữ cảnh — KHÔNG sinh cột trùng với tiêu đề pop-up */
+      out.push('<tr>'+(isWh
+          ? '<td>'+esc(r[3])+'</td>'
+          : '<td class="whn"><span class="dot" style="background:'+(WH_COLOR[r[5]]||'#94a3b8')+'"></span>'+esc(r[5]||'')+'</td>')+
+        '<td class="loc">'+esc(r[2])+'</td><td>'+esc(r[0])+'</td><td class="pn">'+esc(r[1])+'</td><td class="num">'+nf(r[4])+'</td></tr>');
   }
-  if(cnt>4000) out.push('<tr><td colspan="6" class="empty">Hiển thị 4.000 / '+nf(cnt)+' dòng — dùng bộ lọc để thu hẹp.</td></tr>');
-  document.getElementById('mbody').innerHTML=out.length?out.join(''):'<tr><td colspan="6" class="empty">Không có dữ liệu phù hợp</td></tr>';
+  if(cnt>4000) out.push('<tr><td colspan="5" class="empty">Hiển thị 4.000 / '+nf(cnt)+' dòng — dùng bộ lọc để thu hẹp.</td></tr>');
+  document.getElementById('mbody').innerHTML=out.length?out.join(''):'<tr><td colspan="5" class="empty">Không có dữ liệu phù hợp</td></tr>';
   document.getElementById('msum').textContent=nf(cnt)+' dòng · tổng số lượng '+nf(qsum);
 }
 document.addEventListener('keydown',function(e){
