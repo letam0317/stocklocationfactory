@@ -207,12 +207,32 @@ h1.brand-title{margin:0;min-width:0}
 /* Thẻ chỉ số Kiểm kê: bấm mở modal danh sách chi tiết (hover lift dùng transition kiemsoatkho) */
 .kkcard{cursor:pointer;transition:transform .16s var(--ez-apple),box-shadow .25s ease}
 .kkcard:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
-/* Chart "Đã đếm theo ngày" + delta so với ngày trước */
-#kkHist{min-height:330px;display:flex;flex-direction:column;justify-content:flex-end}
-#kkHist .histchart::after{bottom:30px}   /* baseline nâng lên vì có thêm hàng delta dưới ngày */
+/* Lưới Kiểm kê 50/50 (2 khối SKU | mã vị trí song song) */
+.grid2.even{grid-template-columns:1fr 1fr}
+@media(max-width:1024px){.grid2.even{grid-template-columns:1fr}}
+/* Dải 5 chỉ số bấm được trong từng khối */
+.kkstrip{margin-bottom:12px}
+.kkstrip .sm{cursor:pointer;transition:background .18s var(--ease)}
+.kkstrip .sm:hover{background:var(--hover)}
+.kkstrip .sm .l{white-space:nowrap}
+/* Thanh trạng thái 100% + chips đếm theo trạng thái (bấm mở danh sách) */
+.kkstbar{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--surface2);margin:2px 0 8px}
+.kkstbar i{display:block;height:100%;min-width:2px}
+.kkstbar i+i{margin-left:2px}
+.kkstchips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:2px}
+.kkstchip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600;color:var(--ink2);cursor:pointer;background:var(--surface);font-family:inherit}
+.kkstchip:hover{border-color:var(--accent);color:var(--accent)}
+.kkstchip .dot2{width:8px;height:8px;border-radius:50%;flex:none}
+.kkstchip b{color:var(--ink);font-variant-numeric:tabular-nums}
+/* Chart mini "Đã kiểm theo ngày" trong từng khối + delta so với ngày kề trước */
+.kkdhead{font-size:12px;font-weight:650;color:var(--ink2);margin:14px 0 8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.kkdaily{min-height:220px;display:flex;flex-direction:column;justify-content:flex-end}
+.kkdaily .hbars{height:150px}
+.kkdaily .histchart::after{bottom:30px}   /* baseline nâng lên vì có thêm hàng delta dưới ngày */
 .hdelta{font-size:9.5px;font-weight:750;line-height:1.3;min-height:13px;font-variant-numeric:tabular-nums}
 /* Thẻ kho đang được lọc (cross-filter tab Kiểm kê) */
 .whcard.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);background:var(--hover)}
+.whsub2{font-size:11px;color:var(--ink2);margin-top:2px}
 .kkwrap{max-height:62vh;overflow:auto;border:1px solid var(--line);border-radius:8px}
 .kkwrap table{width:100%;border-collapse:collapse;font-size:12px;min-width:1080px}
 .kkwrap thead th{position:sticky;top:0;z-index:2;background:var(--surface2);color:var(--ink3);font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;text-align:left;padding:9px 11px;border-bottom:1px solid var(--line);white-space:nowrap}
@@ -538,13 +558,9 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
   <div id="state" class="state"><div class="spin"></div>Đang tải dữ liệu trực tiếp từ Google Sheet…</div>
 </div>
 
-<!-- ===== TAB 2: Kiểm kê — dashboard phân tích theo kho / SKU-Location / theo ngày ===== -->
+<!-- ===== TAB 2: Kiểm kê — 2 khối song song: theo SKU & theo mã vị trí ===== -->
 <div id="viewKK" hidden>
   <div class="kkbar">
-    <div class="kktabs">
-      <button class="kktab active" id="kkTabSku" onclick="kkSetTab('sku')">Theo SKU</button>
-      <button class="kktab" id="kkTabLoc" onclick="kkSetTab('loc')">Theo mã vị trí</button>
-    </div>
     <input id="kkq" placeholder="Tìm nhanh SKU / tên / vị trí…" oninput="kkQuick()">
     <select id="kkWh" onchange="kkRender()"></select>
     <select id="kkDate" onchange="kkRender()">
@@ -555,11 +571,22 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
     </select>
     <select id="kkSt" onchange="kkRender()"></select>
   </div>
-  <div class="cards" id="kkCards"></div>
-  <div class="ratewrap" id="kkRate"></div>
-  <div class="grid2">
-    <section class="panel"><h2>Đã đếm theo ngày <span class="hint">(theo Counted date · rê chuột xem chi tiết &amp; chênh lệch)</span> <span class="lg" id="kkLegend"></span></h2><div id="kkHist"></div></section>
-    <section class="panel"><h2>Tiến độ theo kho <span class="hint">(bấm thẻ kho để lọc toàn tab · bấm lại để bỏ lọc)</span></h2><div class="whlist" id="kkWhList"></div></section>
+  <div class="grid2 even">
+    <section class="panel">
+      <h2>Kiểm kê theo SKU <span class="hint">(Type: SKU · SKU Factory)</span></h2>
+      <div class="kksum kkstrip" id="kkStrip-sku"></div>
+      <div id="kkStatus-sku"></div>
+      <div class="kkdhead">Đã kiểm theo ngày <span class="hint">(Counted date · so với ngày kề trước)</span> <span class="lg" id="kkLegend-sku"></span></div>
+      <div class="kkdaily" id="kkHist-sku"></div>
+    </section>
+    <section class="panel">
+      <h2>Kiểm kê theo mã vị trí <span class="hint">(Type: Location · Full Location · Full Location Factory)</span></h2>
+      <div class="kksum kkstrip" id="kkStrip-loc"></div>
+      <div id="kkStatus-loc"></div>
+      <div class="kkdhead">Đã kiểm theo ngày <span class="hint">(Counted date · so với ngày kề trước)</span> <span class="lg" id="kkLegend-loc"></span></div>
+      <div class="kkdaily" id="kkHist-loc"></div>
+    </section>
+    <section class="panel span2"><h2>Tiến độ theo kho <span class="hint">(SKU + mã vị trí · bấm thẻ kho để lọc toàn tab · bấm lại để bỏ lọc)</span></h2><div class="whlist" id="kkWhList"></div></section>
   </div>
 </div>
 
@@ -1244,9 +1271,11 @@ async function kkFetch(kind){
   return out;
 }
 async function kkLoad(){
-  var el=document.getElementById('kkCards');
-  el.innerHTML='<div class="sk sk-card"></div><div class="sk sk-card"></div><div class="sk sk-card"></div><div class="sk sk-card"></div><div class="sk sk-card"></div>';
-  var h=document.getElementById('kkHist'); if(h) h.innerHTML='<div class="sk" style="height:280px;border-radius:10px"></div>';   // skeleton chart
+  ['sku','loc'].forEach(function(k){   // skeleton loading cho cả 2 khối
+    document.getElementById('kkStrip-'+k).innerHTML='<div class="sk" style="height:58px;flex:1;border-radius:10px"></div>';
+    document.getElementById('kkStatus-'+k).innerHTML='<div class="sk" style="height:44px;border-radius:8px"></div>';
+    document.getElementById('kkHist-'+k).innerHTML='<div class="sk" style="height:180px;border-radius:10px"></div>';
+  });
   var res=await Promise.all([kkFetch('sku'),kkFetch('loc')]);   // 2 nguồn chạy song song
   KK.data={sku:res[0],loc:res[1]};
   kkFilters(); kkRender();
@@ -1261,33 +1290,30 @@ function kkMap(kind,H,rows){
   var d={id:kkIdx(H,['ID']),req:kkIdx(H,['Request code']),wh:kkIdx(H,['Warehouse']),type:kkIdx(H,['Type']),loc:kkIdx(H,['Location']),pri:kkIdx(H,['Priority']),diff:kkIdx(H,['Diff']),by:kkIdx(H,['Counted by']),cdate:kkIdx(H,['Counted date']),upd:kkIdx(H,['Updated At']),plan:kkIdx(H,['Plan Date']),st:kkIdx(H,['Status'])};
   return rows.filter(function(r){ return String(g(r,d.loc))!==''; }).map(function(r){ return {id:String(g(r,d.id)),req:String(g(r,d.req)),wh:String(g(r,d.wh)),type:String(g(r,d.type)),loc:String(g(r,d.loc)),pri:String(g(r,d.pri)),diff:Number(g(r,d.diff))||0,by:String(g(r,d.by)),cdate:String(g(r,d.cdate)),upd:String(g(r,d.upd)),plan:String(g(r,d.plan)),st:String(g(r,d.st))}; });
 }
-function kkSetTab(t){
-  KK.tab=t;
-  document.getElementById('kkTabSku').classList.toggle('active',t==='sku');
-  document.getElementById('kkTabLoc').classList.toggle('active',t==='loc');
-  kkFilters(); kkRender();
-}
 var _kkDeb=null;
 function kkQuick(){ clearTimeout(_kkDeb); _kkDeb=setTimeout(kkRender,120); }
+function kkStKey(r){ return String(r.st||'').trim().toUpperCase()||'NOT COUNT'; }
 function kkFilters(){
-  var set={}; KK.data[KK.tab].forEach(function(r){ if(r.wh) set[r.wh]=1; });
+  var set={}, sts={};
+  ['sku','loc'].forEach(function(k){ KK.data[k].forEach(function(r){ if(r.wh) set[r.wh]=1; sts[kkStKey(r)]=1; }); });
   var whs=Object.keys(set).sort();
   var whSel=document.getElementById('kkWh');
   var cur=whSel.value; if(cur&&whs.indexOf(cur)<0) cur='';
   whSel.innerHTML='<option value="">Kho: tất cả</option>'+whs.map(function(w){ return '<option value="'+esc(w)+'"'+(w===cur?' selected':'')+'>'+esc(w)+'</option>'; }).join('');
   var stSel=document.getElementById('kkSt');
   var curSt=stSel.value;
-  stSel.innerHTML='<option value="">Trạng thái: tất cả</option>'+KK_STATUSES.map(function(s){ return '<option value="'+s+'"'+(s===curSt?' selected':'')+'>'+s+'</option>'; }).join('');
+  var stList=Object.keys(sts).sort();   // option sinh từ dữ liệu thực — không hiện trạng thái rỗng
+  stSel.innerHTML='<option value="">Trạng thái: tất cả</option>'+stList.map(function(s){ return '<option value="'+esc(s)+'"'+(s===curSt?' selected':'')+'>'+esc(kkStMeta(s)[0])+'</option>'; }).join('');
 }
-function kkRows(skipWh){
-  var arr=KK.data[KK.tab];
+function kkRows(kind,skipWh){
+  var arr=KK.data[kind];
   var wh=document.getElementById('kkWh').value, st=document.getElementById('kkSt').value;
   var range=document.getElementById('kkDate').value, q=(document.getElementById('kkq').value||'').toLowerCase();
   KK.refDay=0; arr.forEach(function(r){ var d=kkDayKey(kkCountMs(r)); if(!isNaN(d)&&d>KK.refDay) KK.refDay=d; });
   if(!KK.refDay) KK.refDay=Math.floor(Date.now()/86400000);
   return arr.filter(function(r){
     if(!skipWh&&wh&&r.wh!==wh) return false;
-    if(st&&String(r.st||'').toUpperCase()!==st) return false;
+    if(st&&kkStKey(r)!==st) return false;
     if(q&&((r.sku||'')+' '+(r.pn||'')+' '+(r.loc||'')).toLowerCase().indexOf(q)<0) return false;
     if(range==='all') return true;
     var dk=kkDayKey(kkCountMs(r)); if(isNaN(dk)) return false;
@@ -1298,55 +1324,85 @@ function kkRows(skipWh){
 }
 function kkDash(v){ return v?esc(v):'—'; }
 function kkDcell(d){ return '<td class="num '+(d<0?'d-am':d>0?'d-duong':'d-khop')+'">'+(d>0?'+':'')+nf(d)+'</td>'; }
-function kkEmpty(n){ return '<tr><td colspan="'+n+'" style="text-align:center;color:var(--ink3);padding:28px;white-space:normal">Không có dòng phù hợp — dữ liệu kiểm kê lấy từ tab '+KK_TABS[KK.tab]+' trên Sheet</td></tr>'; }
+function kkEmpty(n){ return '<tr><td colspan="'+n+'" style="text-align:center;color:var(--ink3);padding:28px;white-space:normal">Không có dòng phù hợp</td></tr>'; }
 function kkIdLink(id,tab){ if(!id) return '—'; return '<a class="wlink" href="https://wms.inshasaki.com/physical-count/result/'+tab+'/detail/'+encodeURIComponent(id)+'?page=1&size=20" target="_blank" rel="noopener">'+esc(id)+KK_ICON+'</a>'; }
-/* CT3: 1 dòng có được tính "đã đếm" không (đồng nhất giữa summary và modal drill-down) */
-function kkIsCounted(r){
-  if(KK.tab==='loc'){ var st=String(r.st||'').toUpperCase(); return st!==''&&st!=='NOT COUNT'&&st!=='PENDING'; }
+/* 1 dòng có được tính "đã kiểm" không (đồng nhất giữa dải số, chart và modal drill-down) */
+function kkIsCounted(kind,r){
+  if(kind==='loc'){ var st=kkStKey(r); return st!=='NOT COUNT'&&st!=='PENDING'; }
   var e=kkEval(r.inv,r.cnt);
-  return e.counted&&String(r.st||'').toUpperCase()!=='NOT COUNT';
+  return e.counted&&kkStKey(r)!=='NOT COUNT';
 }
-function kkDiffOf(r){
-  if(KK.tab==='loc') return Number(r.diff)||0;
-  var e=kkEval(r.inv,r.cnt); return e.counted?e.d:null;   // null = chưa đếm
+function kkDiffOf(kind,r){
+  if(kind==='loc') return kkIsCounted(kind,r)?(Number(r.diff)||0):null;
+  var e=kkEval(r.inv,r.cnt); return e.counted?e.d:null;   // null = chưa kiểm
 }
-/* CT3: tab Kiểm kê = dashboard phân tích — thẻ chỉ số bấm được, KHÔNG render bảng thô */
+/* Bảng màu trạng thái — ngữ nghĩa, ăn theo theme */
+var KK_ST_META={
+  'VERIFIED':['Verified','var(--good)'],
+  'APPROVED':['Đã duyệt','var(--info)'],
+  'WAITING FOR APPROVE':['Chờ duyệt','color-mix(in srgb,var(--info) 45%,var(--surface))'],
+  'PROCESSING':['Đang xử lý','var(--warn)'],
+  'PENDING':['Pending','var(--muted)'],
+  'NOT COUNT':['Chưa đếm','color-mix(in srgb,var(--muted) 35%,var(--surface))'],
+  'REJECTED':['Từ chối','var(--bad)'],
+  'CANCELED':['Đã huỷ','color-mix(in srgb,var(--bad) 40%,var(--muted))']
+};
+var KK_ST_ORDER=['VERIFIED','APPROVED','WAITING FOR APPROVE','PROCESSING','PENDING','NOT COUNT','REJECTED','CANCELED'];
+function kkStMeta(s){ return KK_ST_META[s]||[s,PAL[s.length%PAL.length]]; }
+/* Dashboard Kiểm kê: 2 khối song song (SKU | mã vị trí), mỗi khối = dải số + thanh trạng thái + chart ngày */
 function kkRender(){
-  var el=document.getElementById('kkCards'); if(!el) return;
-  var rs=kkRows(), counted=0, notc=0, neg=0, pos=0;
-  rs.forEach(function(r){
-    var c=kkIsCounted(r), d=kkDiffOf(r);
-    if(c) counted++; else notc++;
-    if(d!=null&&d<0) neg++; if(d!=null&&d>0) pos++;
-  });
-  var U=KK.tab==='loc'?'Location':'SKU';
-  function card(metric,cls,val,lab){
-    return '<div class="card '+cls+' kkcard" data-m="'+metric+'" onclick="kkOpen(this.getAttribute(\'data-m\'))" title="Bấm để xem danh sách chi tiết"><div class="k">'+nf(val)+'</div><div class="l">'+lab+'</div></div>';
-  }
-  el.innerHTML=
-    card('total','c3',rs.length,U+' total')+
-    card('counted','c1',counted,U+' counted')+
-    card('notcount','c2',notc,U+' not count')+
-    card('negative','c5',neg,U+' negative (lệch âm)')+
-    card('positive','c4',pos,U+' positive (lệch dương)');
-  var rate=rs.length?counted/rs.length*100:0;
-  document.getElementById('kkRate').innerHTML=
-    '<div class="ratehdr"><span class="tag shelf">Đã đếm '+pct(rate)+' ('+nf(counted)+' '+U+')</span>'+
-    '<span class="tag rem">Chưa đếm '+pct(100-rate)+' ('+nf(notc)+' '+U+')</span></div>'+
-    '<div class="ratebar" title="Đã đếm '+pct(rate)+'"><div class="ratef" style="width:'+rate.toFixed(1)+'%"></div><div class="ratefr" style="width:'+(100-rate).toFixed(1)+'%"></div></div>';
-  kkRenderDaily();
+  if(!document.getElementById('kkStrip-sku')) return;
+  kkRenderPanel('sku');
+  kkRenderPanel('loc');
   kkRenderWh();
+}
+function kkRenderPanel(kind){
+  var U=(kind==='loc')?'vị trí':'SKU';
+  var rs=kkRows(kind), counted=0, neg=0, pos=0, stc={};
+  rs.forEach(function(r){
+    if(kkIsCounted(kind,r)) counted++;
+    var d=kkDiffOf(kind,r);
+    if(d!=null&&d<0) neg++; if(d!=null&&d>0) pos++;
+    var s=kkStKey(r); stc[s]=(stc[s]||0)+1;
+  });
+  var notc=rs.length-counted, rate=rs.length?counted/rs.length*100:0;
+  /* Tầng 1: dải 5 số bấm được — Tổng / Đã kiểm / Còn lại / Lệch âm / Lệch dương */
+  function it(metric,cls,val,lab,sub){
+    return '<div class="sm '+cls+'" data-k="'+kind+'" data-m="'+metric+'" onclick="kkOpen(this.getAttribute(\'data-k\'),this.getAttribute(\'data-m\'))" title="Bấm xem danh sách chi tiết"><div class="k">'+nf(val)+'</div><div class="l">'+lab+(sub?' · '+sub:'')+'</div></div>';
+  }
+  document.getElementById('kkStrip-'+kind).innerHTML=
+    it('total','',rs.length,'Tổng '+U)+
+    it('counted','c-ok',counted,'Đã kiểm',pct(rate))+
+    it('notcount','c-mut',notc,'Còn lại')+
+    it('negative','c-neg',neg,'Lệch âm')+
+    it('positive','c-pos',pos,'Lệch dương');
+  /* Tầng 2: thanh trạng thái 100% + chips đếm (Verified/Đã duyệt/Đang xử lý/Pending/Đã huỷ...) */
+  var keys=KK_ST_ORDER.filter(function(s){ return stc[s]; })
+    .concat(Object.keys(stc).filter(function(s){ return KK_ST_ORDER.indexOf(s)<0; }).sort());
+  var segs=keys.map(function(s){
+    var m=kkStMeta(s), w=rs.length?stc[s]/rs.length*100:0;
+    return '<i style="width:'+w.toFixed(2)+'%;background:'+m[1]+'" title="'+esc(m[0])+': '+nf(stc[s])+' ('+pct(w)+')"></i>';
+  }).join('');
+  var chips=keys.map(function(s){
+    var m=kkStMeta(s);
+    return '<button class="kkstchip" data-k="'+kind+'" data-m="st:'+esc(s)+'" onclick="kkOpen(this.getAttribute(\'data-k\'),this.getAttribute(\'data-m\'))"><span class="dot2" style="background:'+m[1]+'"></span>'+esc(m[0])+' <b>'+nf(stc[s])+'</b></button>';
+  }).join('');
+  document.getElementById('kkStatus-'+kind).innerHTML=rs.length
+    ? '<div class="kkstbar">'+segs+'</div><div class="kkstchips">'+chips+'</div>'
+    : '<div class="histempty">Không có dòng nào theo bộ lọc hiện tại.</div>';
+  /* Tầng 3: chart mini "Đã kiểm theo ngày" */
+  kkRenderDaily(kind);
 }
 /* ===== Chart "Đã đếm theo ngày" — cột chồng theo KHO từ Counted date, so sánh tiến độ ngày kề trước ===== */
 var KK_COLOR={}, _kkci=0;
 function kkColor(w){ if(WH_COLOR[w]) return WH_COLOR[w]; if(!KK_COLOR[w]) KK_COLOR[w]=PAL[(_kkci++)%PAL.length]; return KK_COLOR[w]; }
 function kkDayStr(ms){ var t=new Date(ms); function p(n){ return (n<10?'0':'')+n; } return t.getUTCFullYear()+'-'+p(t.getUTCMonth()+1)+'-'+p(t.getUTCDate()); }
-function kkRenderDaily(){
-  var el=document.getElementById('kkHist'); if(!el) return;
-  var rs=kkRows(), U=KK.tab==='loc'?'Location':'SKU';
+function kkRenderDaily(kind){
+  var el=document.getElementById('kkHist-'+kind); if(!el) return;
+  var rs=kkRows(kind), U=(kind==='loc')?'vị trí':'SKU';
   var days={}, khoAll={};
   rs.forEach(function(r){
-    if(!kkIsCounted(r)) return;
+    if(!kkIsCounted(kind,r)) return;
     var ms=kkCountMs(r); if(isNaN(ms)) return;
     var d=kkDayStr(ms);
     if(!days[d]) days[d]={tot:0,kho:{}};
@@ -1355,11 +1411,11 @@ function kkRenderDaily(){
   });
   var ds=Object.keys(days).sort().slice(-60);
   var khos=Object.keys(khoAll).sort();
-  var lg=document.getElementById('kkLegend');
+  var lg=document.getElementById('kkLegend-'+kind);
   if(lg) lg.innerHTML=khos.map(function(w){ return '<span class="sw" style="background:'+kkColor(w)+'"></span>'+esc(w); }).join('&nbsp;&nbsp;');
-  if(!ds.length){ el.innerHTML='<div class="histempty">Chưa có dòng nào được đếm (theo bộ lọc hiện tại).</div>'; return; }
+  if(!ds.length){ el.innerHTML='<div class="histempty">Chưa có dòng nào được kiểm (theo bộ lọc hiện tại).</div>'; return; }
   var max=1; ds.forEach(function(d){ if(days[d].tot>max) max=days[d].tot; });
-  var H=260;
+  var H=150;   // khớp .kkdaily .hbars trong CSS
   var html=ds.map(function(d,i){
     var v=days[d], prev=i>0?days[ds[i-1]].tot:null;
     var delta=(prev==null)?null:(v.tot-prev);
@@ -1385,34 +1441,37 @@ function kkToggleWh(w){
 }
 function kkRenderWh(){
   var el=document.getElementById('kkWhList'); if(!el) return;
-  var rs=kkRows(true);   // bỏ qua filter kho để luôn liệt kê đủ các kho
   var selWh=document.getElementById('kkWh').value;
   var agg={};
-  rs.forEach(function(r){
-    var w=r.wh||'(trống)';
-    if(!agg[w]) agg[w]={tot:0,cnt:0,neg:0,pos:0};
-    var a=agg[w]; a.tot++;
-    var c=kkIsCounted(r), d=kkDiffOf(r);
-    if(c) a.cnt++;
-    if(d!=null&&d<0) a.neg++; if(d!=null&&d>0) a.pos++;
+  ['sku','loc'].forEach(function(kind){
+    kkRows(kind,true).forEach(function(r){   // bỏ qua filter kho để luôn liệt kê đủ các kho
+      var w=r.wh||'(trống)';
+      if(!agg[w]) agg[w]={sku:{tot:0,cnt:0},loc:{tot:0,cnt:0}};
+      var a=agg[w][kind]; a.tot++;
+      if(kkIsCounted(kind,r)) a.cnt++;
+    });
   });
-  var ws=Object.keys(agg).sort(function(a,b){ return agg[b].tot-agg[a].tot; });
+  var ws=Object.keys(agg).sort(function(a,b){ return (agg[b].sku.tot+agg[b].loc.tot)-(agg[a].sku.tot+agg[a].loc.tot); });
   el.innerHTML=ws.map(function(w){
-    var a=agg[w], rt=a.tot?a.cnt/a.tot*100:0;
+    var a=agg[w];
+    var rs=a.sku.tot?a.sku.cnt/a.sku.tot*100:0, rl=a.loc.tot?a.loc.cnt/a.loc.tot*100:0;
     return '<div class="whcard'+(selWh===w?' active':'')+'" data-wh="'+esc(w)+'" title="Bấm để lọc toàn tab theo kho này" onclick="kkToggleWh(this.getAttribute(\'data-wh\'))">'+
       '<div class="whtop"><span class="whname"><span class="dot" style="background:'+kkColor(w)+'"></span>'+esc(w)+'</span>'+
-      '<span class="whnum"><b>'+nf(a.cnt)+'</b> / '+nf(a.tot)+'</span></div>'+
-      '<div class="prog"><div class="progf" style="width:'+rt.toFixed(1)+'%;background:'+kkColor(w)+'"></div></div>'+
-      '<div class="whsub">đã đếm '+pct(rt)+' · lệch âm <b>'+nf(a.neg)+'</b> · lệch dương '+nf(a.pos)+'</div></div>';
+      '<span class="whnum">SKU <b>'+nf(a.sku.cnt)+'</b>/'+nf(a.sku.tot)+' · VT <b>'+nf(a.loc.cnt)+'</b>/'+nf(a.loc.tot)+'</span></div>'+
+      '<div class="prog"><div class="progf" style="width:'+rs.toFixed(1)+'%;background:'+kkColor(w)+'"></div></div>'+
+      '<div class="whsub2">SKU đã kiểm '+pct(rs)+'</div>'+
+      '<div class="prog"><div class="progf" style="width:'+rl.toFixed(1)+'%;background:color-mix(in srgb,'+kkColor(w)+' 55%,var(--surface))"></div></div>'+
+      '<div class="whsub2">Mã vị trí đã kiểm '+pct(rl)+'</div></div>';
   }).join('')||'<div class="histempty">Chưa có dữ liệu kiểm kê.</div>';
 }
-/* CT3+CT5: modal drill-down — bảng thô CHỈ dựng DOM lúc bấm thẻ */
-var KK_METRIC_LABEL={total:'total',counted:'counted',notcount:'not count',negative:'negative (lệch âm)',positive:'positive (lệch dương)'};
-function kkMetricRows(metric){
-  var rs=kkRows();
+/* Modal drill-down — bảng thô CHỈ dựng DOM lúc bấm (lazy); metric có thể là chỉ số hoặc 'st:TRẠNG THÁI' */
+var KK_METRIC_LABEL={total:'tổng',counted:'đã kiểm',notcount:'còn lại (chưa kiểm)',negative:'lệch âm',positive:'lệch dương'};
+function kkMetricRows(kind,metric){
+  var rs=kkRows(kind);
   if(metric==='total') return rs;
+  if(metric.indexOf('st:')===0){ var s=metric.slice(3); return rs.filter(function(r){ return kkStKey(r)===s; }); }
   return rs.filter(function(r){
-    var c=kkIsCounted(r), d=kkDiffOf(r);
+    var c=kkIsCounted(kind,r), d=kkDiffOf(kind,r);
     if(metric==='counted') return c;
     if(metric==='notcount') return !c;
     if(metric==='negative') return d!=null&&d<0;
@@ -1420,9 +1479,9 @@ function kkMetricRows(metric){
     return true;
   });
 }
-function kkTable(rs){
+function kkTable(kind,rs){
   var CAP=300, out=[];
-  if(KK.tab==='sku'){
+  if(kind==='sku'){
     for(var i=0;i<rs.length&&out.length<CAP;i++){ var r=rs[i], e=kkEval(r.inv,r.cnt);
       out.push('<tr><td>'+kkIdLink(r.id,'sku')+'</td><td><b>'+esc(r.sku)+'</b><div class="pn2">'+esc(r.pn)+'</div></td><td>'+kkDash(r.cat)+'</td>'+
         kkDcell(r.cnt==null?0:e.d)+'<td class="num">'+nf(r.inv)+'</td><td class="num">'+(r.cnt==null?'—':nf(r.cnt))+'</td><td>'+kkDash(r.type)+'</td><td>'+kkDash(r.req)+'</td><td>'+kkDash(r.by)+'</td><td>'+kkFmtD(kkParseDate(r.cdate))+'</td><td>'+kkFmtD(kkParseDate(r.plan),true)+'</td><td><span class="badge '+kkBadge(r.st)+'">'+(r.st?esc(r.st):'—')+'</span></td></tr>');
@@ -1436,11 +1495,12 @@ function kkTable(rs){
   return '<div class="kkwrap"><table><thead><tr><th>ID</th><th>Location</th><th>Warehouse</th><th>Type</th><th>Priority</th><th class="num">Diff</th><th>Request</th><th>Counted by</th><th>Counted date</th><th>Plan date</th><th>Status</th></tr></thead><tbody>'+(out.join('')||kkEmpty(11))+'</tbody></table></div>'+
     '<div class="kknote">'+(rs.length>CAP?('Hiển thị '+nf(CAP)+' / '+nf(rs.length)+' dòng — lọc để thu hẹp.'):(nf(rs.length)+' dòng.'))+'</div>';
 }
-function kkOpen(metric){
-  var rs=kkMetricRows(metric), U=KK.tab==='loc'?'Location':'SKU';
-  document.getElementById('kkmTitle').textContent=U+' '+KK_METRIC_LABEL[metric]+' — '+nf(rs.length)+' dòng';
+function kkOpen(kind,metric){
+  var rs=kkMetricRows(kind,metric), U=(kind==='loc')?'Mã vị trí':'SKU';
+  var lab=(metric.indexOf('st:')===0)?('trạng thái '+kkStMeta(metric.slice(3))[0]):KK_METRIC_LABEL[metric];
+  document.getElementById('kkmTitle').textContent=U+' · '+lab+' — '+nf(rs.length)+' dòng';
   document.getElementById('kkmSub').textContent='Theo bộ lọc hiện tại của tab Kiểm kê · bấm ID để mở WMS';
-  document.getElementById('kkmBody').innerHTML=kkTable(rs);   // lazy DOM: chỉ dựng lúc mở
+  document.getElementById('kkmBody').innerHTML=kkTable(kind,rs);   // lazy DOM: chỉ dựng lúc mở
   var m=document.getElementById('kkmodal'); m.style.display='flex';
   requestAnimationFrame(function(){ m.classList.add('show'); });
 }
