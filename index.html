@@ -100,6 +100,22 @@ code{background:#eef1f5;padding:1px 7px;border-radius:6px;font-size:12px;color:#
 .modalbox.catbox{width:min(820px,96vw)}
 .cmtotal td{border-top:2px solid var(--line);font-weight:700;background:#fafbfc}
 
+/* Exception list: SKU chưa lên kệ (actionable) */
+.excbar{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.excbar input{flex:1;min-width:170px;border:1px solid #d5dbe4;border-radius:8px;padding:6px 11px;font-size:12.5px;outline:none;color:var(--ink);background:#fff;transition:border-color .18s var(--ease)}
+.excbar input:focus{border-color:var(--brand2)}
+.excwh{background:#ecfdf6;border:1px solid #a7f3d0;color:#0f766e;border-radius:999px;padding:3px 11px;font-size:11.5px;font-weight:600;cursor:pointer;white-space:nowrap}
+.excwh:hover{background:#0f766e;color:#fff;border-color:#0f766e}
+.exctblwrap{max-height:400px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.exctbl{font-size:12px}
+.exctbl thead th{position:sticky;top:0;background:#fafbfc;z-index:1;border-top:0}
+.exctbl th,.exctbl td{padding:6px 8px;white-space:nowrap;vertical-align:top}
+.exctbl .pn{white-space:normal;min-width:140px;max-width:250px;word-break:break-word;color:var(--ink2)}
+.exctbl .whn{white-space:normal;min-width:100px;font-size:11px}
+.exctbl td:nth-child(4){white-space:normal;min-width:80px;font-size:11px}
+.exctbl .empty{text-align:center;color:var(--ink3);padding:22px;white-space:normal}
+.exctbl tbody tr{cursor:default}
+
 /* Chart: SKU đã lên kệ theo ngày (cột chồng Mastige/Garment, cuộn ngang nếu nhiều ngày) */
 #histwrap{min-height:350px;display:flex;flex-direction:column;justify-content:flex-end}
 .histscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
@@ -119,8 +135,9 @@ code{background:#eef1f5;padding:1px 7px;border-radius:6px;font-size:12px;color:#
 
 .whlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(272px,1fr));gap:12px;max-height:400px;overflow-y:auto;padding-right:6px}
 @media(max-width:720px){.whlist{grid-template-columns:1fr}}
-.whcard{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px 12px;transition:box-shadow .2s var(--ease)}
-.whcard:hover{box-shadow:var(--shadow)}
+.whcard{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px 12px;cursor:pointer;transition:box-shadow .2s var(--ease),border-color .2s var(--ease),background .2s var(--ease)}
+.whcard:hover{box-shadow:var(--shadow);background:#f9fafb}
+.whcard.active{border-color:#14b8a6;background:#f0fdfa;box-shadow:0 0 0 1px #14b8a6}
 .whtop{display:flex;justify-content:space-between;align-items:center;font-size:12px;gap:8px}
 .whname{font-weight:600;max-width:56%;line-height:1.25}
 .whnum{background:#ecfdf6;border:1px solid #a7f3d0;color:#0f766e;border-radius:7px;padding:3px 10px;font-size:11.5px;cursor:pointer;white-space:nowrap;font-weight:600;
@@ -529,35 +546,15 @@ function render(groups,whDiv){
   var whKeys=Object.keys(wh).sort(function(a,b){return wh[b][0]-wh[a][0];});
   var whchips=whKeys.map(function(w){
     var v=wh[w], rt=(v[0]+v[2])?v[0]/(v[0]+v[2])*100:0;
-    return '<div class="whcard"><div class="whtop"><span class="whname"><span class="dot" style="background:'+WH_COLOR[w]+'"></span>'+esc(w)+'</span>'+
-      '<button class="whnum" data-wh="'+esc(w)+'" onclick="openModal(this.getAttribute(\'data-wh\'))"><b>'+nf(v[0])+'</b> / '+nf(v[0]+v[2])+' SKU</button></div>'+
+    return '<div class="whcard'+(EXC_WH===w?' active':'')+'" data-wh="'+esc(w)+'" title="Bấm để lọc bảng SKU chưa lên kệ theo kho này" '+
+      'onclick="toggleExcWh(this.getAttribute(\'data-wh\'))">'+
+      '<div class="whtop"><span class="whname"><span class="dot" style="background:'+WH_COLOR[w]+'"></span>'+esc(w)+'</span>'+
+      '<button class="whnum" data-wh="'+esc(w)+'" onclick="event.stopPropagation();openModal(this.getAttribute(\'data-wh\'))"><b>'+nf(v[0])+'</b> / '+nf(v[0]+v[2])+' SKU</button></div>'+
       '<div class="prog"><div class="progf" data-w="'+rt.toFixed(1)+'" style="background:'+WH_COLOR[w]+'"></div></div>'+
       '<div class="whsub">'+v[3]+' nhóm · còn <b>'+nf(v[2])+'</b> SKU cần lên kệ · lên kệ '+rt.toFixed(0)+'%</div></div>';
   }).join('');
 
-  // detail: 2 divisions -> warehouses (with total qty outside, click to see total)
-  var acc='';
-  DIV_ORDER.forEach(function(div){
-    var members=whKeys.filter(function(w){return wh[w][5]===div;});
-    if(!members.length) return;
-    var dSh=0,dPe=0,dQty=0,dCat=0;
-    members.forEach(function(w){ var v=wh[w]; dSh+=v[0]; dPe+=v[2]; dQty+=v[1]+v[4]; dCat+=v[3]; });
-    var rows=members.map(function(w){
-      var v=wh[w], rt=(v[0]+v[2])?v[0]/(v[0]+v[2])*100:0, qty=v[1]+v[4];
-      return '<tr data-wh="'+esc(w)+'" onclick="openModal(this.getAttribute(\'data-wh\'))">'+
-        '<td class="whn"><span class="dot" style="background:'+WH_COLOR[w]+'"></span>'+esc(w)+'</td>'+
-        '<td class="num">'+nf(v[0])+' / '+nf(v[0]+v[2])+'</td>'+
-        '<td class="num pend">'+nf(v[2])+'</td>'+
-        '<td class="num"><b>'+nf(qty)+'</b></td>'+
-        '<td class="num">'+rt.toFixed(0)+'% <span class="go">Xem chi tiết →</span></td></tr>';
-    }).join('');
-    acc+='<div class="acc"><button class="acchd" onclick="this.parentNode.classList.toggle(\'open\')">'+
-      '<span class="acctitle"><span class="chev"></span>'+esc(div)+'</span>'+
-      '<span class="accmeta">'+members.length+' kho · <b>'+nf(dSh)+'</b> SKU lên kệ · còn '+nf(dPe)+' · Total <b class="q">'+nf(dQty)+'</b></span></button>'+
-      '<div class="accbody"><div class="accinner"><div class="tblscroll"><table class="wtbl"><thead><tr>'+
-      '<th>Kho (stock)</th><th class="num">SKU lên kệ / tổng</th><th class="num">Còn cần lên kệ</th><th class="num">Số lượng Total</th><th class="num">Tỷ lệ</th>'+
-      '</tr></thead><tbody>'+rows+'</tbody></table></div></div></div></div>';
-  });
+  if(EXC_WH && !wh[EXC_WH]) EXC_WH=null;   // kho đang lọc biến mất sau lần tải mới -> reset
 
   var html=
     '<section class="cards">'+
@@ -573,16 +570,54 @@ function render(groups,whDiv){
     '<div class="ratebar" title="Đã lên kệ '+rate.toFixed(1)+'% · còn lại '+(100-rate).toFixed(1)+'%"><div class="ratef" data-w="'+rate.toFixed(1)+'"></div>'+
     '<div class="ratefr" data-w="'+(100-rate).toFixed(1)+'"></div></div></div>'+
     '<div class="grid2">'+
-    '<section class="panel"><h2>Tiến độ lên kệ theo Warehouse <span class="hint">(bấm số lượng SKU để xem chi tiết)</span></h2><div class="whlist">'+whchips+'</div></section>'+
+    '<section class="panel"><h2>Tiến độ lên kệ theo Warehouse <span class="hint">(bấm thẻ kho: lọc bảng bên phải · bấm số SKU: xem chi tiết)</span></h2><div class="whlist">'+whchips+'</div></section>'+
     '<section class="panel"><h2>SKU đã lên kệ theo ngày <span class="hint">(rê chuột vào cột để xem chi tiết)</span> <span class="lg"><span class="sw" style="background:#2563eb"></span>Mastige<span class="sw" style="background:#0d9488;margin-left:6px"></span>Garment</span></h2><div id="histwrap"></div></section>'+
     '<section class="panel"><h2>Category theo số SKU đã lên kệ <span class="hint">('+cats.length+' category — bấm dòng: phân bổ theo kho · bấm số SKU: từng SKU)</span> <span class="lg"><span class="sw sh"></span>đã lên kệ<span class="sw pe" style="margin-left:6px"></span>chưa lên kệ</span></h2><div class="catwrap">'+bars+'</div></section>'+
-    '<section class="panel"><h2>Bảng chi tiết <span class="hint">(bấm nhóm để mở, bấm từng kho để xem chi tiết &amp; total)</span></h2><div class="accwrap">'+acc+'</div></section>'+
+    '<section class="panel"><h2>SKU chưa lên kệ — cần xử lý <span class="hint">(bấm thẻ kho bên trái để lọc theo kho)</span></h2>'+
+      '<div class="excbar"><input id="excq" placeholder="Tìm SKU / tên sản phẩm / category…" oninput="excFilterInput()"><span id="excchip"></span><span id="excsum" class="hint"></span></div>'+
+      '<div class="exctblwrap"><table class="wtbl exctbl"><thead><tr>'+
+      '<th>Mã SKU</th><th>Tên sản phẩm</th><th>Thuộc Kho</th><th>Category</th><th class="num">Số lượng tồn</th>'+
+      '</tr></thead><tbody id="excbody"></tbody></table></div></section>'+
     '</div>';
   document.getElementById('content').innerHTML=html;
   renderHistory();   // container #histwrap vừa được tạo — đổ chart nếu lịch sử đã về
+  renderExc();       // bảng SKU chưa lên kệ (giữ nguyên bộ lọc kho đang chọn nếu còn)
   requestAnimationFrame(function(){ requestAnimationFrame(function(){
     document.querySelectorAll('[data-w]').forEach(function(el){ el.style.width=el.getAttribute('data-w')+'%'; });
   }); });
+}
+
+/* ---------- Exception list: SKU chưa lên kệ + cross-filter theo thẻ kho ---------- */
+var EXC_WH=null, _excDeb=null, EXC_CAP=500;
+function toggleExcWh(w){
+  EXC_WH=(EXC_WH===w)?null:w;   // bấm lại thẻ đang chọn = bỏ lọc
+  document.querySelectorAll('.whcard').forEach(function(el){
+    el.classList.toggle('active', el.getAttribute('data-wh')===EXC_WH);
+  });
+  renderExc();
+}
+function excFilterInput(){ clearTimeout(_excDeb); _excDeb=setTimeout(renderExc,120); }
+function renderExc(){
+  var body=document.getElementById('excbody'); if(!body) return;
+  var q=(document.getElementById('excq').value||'').toLowerCase();
+  var out=[], cnt=0, qsum=0;
+  var whs=EXC_WH?[EXC_WH]:Object.keys(WH_DATA);
+  whs.forEach(function(w){
+    var rows=(WH_DATA[w]&&WH_DATA[w].pend)||[];
+    for(var i=0;i<rows.length;i++){ var r=rows[i];   // [sku,pn,loc,cat,qty,wh]
+      if(q && r[0].toLowerCase().indexOf(q)<0 && r[1].toLowerCase().indexOf(q)<0 && r[3].toLowerCase().indexOf(q)<0) continue;
+      cnt++; qsum+=r[4];
+      if(out.length<EXC_CAP)
+        out.push('<tr><td class="loc">'+esc(r[0])+'</td><td class="pn">'+esc(r[1])+'</td>'+
+          '<td class="whn"><span class="dot" style="background:'+(WH_COLOR[r[5]]||'#94a3b8')+'"></span>'+esc(r[5]||'')+'</td>'+
+          '<td>'+esc(r[3])+'</td><td class="num">'+nf(r[4])+'</td></tr>');
+    }
+  });
+  if(cnt>EXC_CAP) out.push('<tr><td colspan="5" class="empty">Hiển thị '+nf(EXC_CAP)+' / '+nf(cnt)+' dòng — bấm thẻ kho hoặc gõ tìm kiếm để thu hẹp.</td></tr>');
+  body.innerHTML=out.length?out.join(''):'<tr><td colspan="5" class="empty">Không còn SKU chưa lên kệ'+(EXC_WH?' ở kho này':'')+(q?' khớp tìm kiếm':'')+' 🎉</td></tr>';
+  var s=document.getElementById('excsum'); if(s) s.textContent=nf(cnt)+' SKU · tổng tồn '+nf(qsum);
+  var chip=document.getElementById('excchip');
+  if(chip) chip.innerHTML=EXC_WH?'<button class="excwh" onclick="toggleExcWh(EXC_WH)" title="Bỏ lọc kho">'+esc(EXC_WH)+' ✕</button>':'';
 }
 
 /* ---------- modal ---------- */
