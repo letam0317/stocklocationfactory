@@ -154,8 +154,12 @@ h1.brand-title{margin:0;min-width:0}
 .settings-pop a.dropdown-action-btn{text-decoration:none}
 .settings-pop .dropdown-action-btn:disabled{opacity:.55;cursor:not-allowed}
 
-/* ===== Footbar dính đáy: nguồn dữ liệu + link Sheet + số dòng/cập nhật ===== */
-.footbar{position:sticky;bottom:0;z-index:40;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:9px 16px;background:var(--surface);border:1px solid var(--line);border-radius:10px 10px 0 0;box-shadow:0 -2px 10px rgba(16,24,40,.06);font-size:12.5px;margin-top:16px}
+/* ===== Sticky Footer Metadata: ghim đáy, nền theo theme, viền + bóng đổ, không trong suốt ===== */
+.footbar{position:sticky;bottom:0;z-index:100;width:100%;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:9px 16px;
+  background:var(--surface);border-top:1px solid var(--border);border-left:1px solid var(--border);border-right:1px solid var(--border);
+  border-radius:10px 10px 0 0;box-shadow:0 -4px 6px -1px rgba(0,0,0,0.1);font-size:12.5px;margin-top:16px}
+/* chống đè nội dung: khối content cộng đệm đáy để dòng cuối không bị footer che khi cuộn kịch */
+#viewStock,#viewKK{padding-bottom:60px}
 .footbar a{color:var(--brand2);text-decoration:none;font-weight:600}
 .footbar a:hover{text-decoration:underline}
 .footbar .hint{font-variant-numeric:tabular-nums}
@@ -655,12 +659,12 @@ function loadMeta(){
 /* ---------- Lịch sử snapshot theo ngày (tab "history": Date, Division, Warehouse, SkuShelf, SkuPend) ---------- */
 var HIST=[], _histDone=false;
 function loadHistory(){
-  var hit=cacheGet('slf-hist');
-  if(hit){ HIST=hit; _histDone=true; renderHistory(); return; }   // CT5: cache phiên, TTL 10'
+  var hit=cacheGet('slf-hist2');
+  if(hit){ HIST=hit; _histDone=true; renderHistory(); return; }   // cache phiên, TTL 10'
   HIST=[]; _histDone=false;
   window.gviz_hist=function(resp){ onHist(resp); };
   var url="https://docs.google.com/spreadsheets/d/"+SHEET_ID+"/gviz/tq?tqx=out:json;responseHandler:gviz_hist"+
-          "&sheet=history&headers=1&tq="+encodeURIComponent("select A,B,C,D,E");
+          "&sheet=history&headers=1&tq="+encodeURIComponent("select A,B,C,D,E,F");   // F = ApiAt (epoch ms) — lọc mốc chốt sổ 08:01
   var old=document.getElementById('sc_hist'); if(old) old.remove();
   var sc=document.createElement('script'); sc.id='sc_hist'; sc.src=url;
   sc.onerror=function(){ _histDone=true; renderHistory(); };
@@ -686,18 +690,31 @@ function onHist(resp){
         div:(c[1]&&c[1].v!=null)?String(c[1].v):'',
         wh:(c[2]&&c[2].v!=null)?String(c[2].v):'',
         sh:(c[3]&&c[3].v!=null)?(Number(c[3].v)||0):0,
-        pe:(c[4]&&c[4].v!=null)?(Number(c[4].v)||0):0});
+        pe:(c[4]&&c[4].v!=null)?(Number(c[4].v)||0):0,
+        at:(c[5]&&c[5].v!=null)?(Number(c[5].v)||0):0});
     }
   }catch(e){ /* chưa có tab history */ }
-  if(HIST.length) cacheSet('slf-hist',HIST);
+  if(HIST.length) cacheSet('slf-hist2',HIST);
   renderHistory();
+}
+/* Snapshot Constraint: cùng ngày có nhiều bản ghi -> chỉ giữ bản GẦN MỐC CHỐT SỔ 08:01 nhất
+   (theo ApiAt; bản ghi không có ApiAt xếp cuối; hoà nhau lấy bản sau) */
+function histDaily(){
+  var TARGET=8*60+1;   // 08:01 sáng
+  function kc(r){ if(!r.at) return 1e9; var t=new Date(r.at); return Math.abs(t.getHours()*60+t.getMinutes()-TARGET); }
+  var best={};
+  HIST.forEach(function(r){
+    var k=r.d+'|'+r.div+'|'+r.wh, cur=best[k];
+    if(!cur || kc(r)<=kc(cur)) best[k]=r;
+  });
+  return best;
 }
 /* Sparkline 5 ngày trên thẻ kho: nhìn là biết kho đang đi lên hay đi xuống */
 function renderSparks(){
   var els=document.querySelectorAll('.whcard .spark'); if(!els.length) return;
-  var last={}; HIST.forEach(function(r){ last[r.d+'|'+r.div+'|'+r.wh]=r; });
+  var best=histDaily();   // cùng quy tắc mốc chốt sổ 08:01 với chart chính
   var byWh={};
-  Object.keys(last).forEach(function(k){ var r=last[k];
+  Object.keys(best).forEach(function(k){ var r=best[k];
     if(!byWh[r.wh]) byWh[r.wh]={};
     byWh[r.wh][r.d]=(byWh[r.wh][r.d]||0)+r.sh;
   });
@@ -723,35 +740,45 @@ function renderSparks(){
   });
 }
 function renderHistory(){
-  renderSparks();
-  var el=document.getElementById('histwrap'); if(!el) return;
-  if(!_histDone){ el.innerHTML='<div class="histempty">Đang tải lịch sử…</div>'; return; }
-  if(!HIST.length){ el.innerHTML='<div class="histempty">Chưa có dữ liệu lịch sử — snapshot được ghi tự động sau mỗi lần đồng bộ WMS hằng ngày.</div>'; return; }
-  var last={};   // (ngày|division|kho) -> dòng cuối cùng (sync sau cùng trong ngày thắng)
-  HIST.forEach(function(r){ last[r.d+'|'+r.div+'|'+r.wh]=r; });
-  var days={};
-  Object.keys(last).forEach(function(k){ var r=last[k];
-    if(!days[r.d]) days[r.d]={mtg:0,gar:0,pe:0};
-    if(/^gar/i.test(r.div)) days[r.d].gar+=r.sh; else days[r.d].mtg+=r.sh;
-    days[r.d].pe+=r.pe;
-  });
-  var ds=Object.keys(days).sort().slice(-60);   // tối đa 60 ngày gần nhất
-  var max=1; ds.forEach(function(d){ var v=days[d]; if(v.mtg+v.gar>max) max=v.mtg+v.gar; });
-  var H=260;   // khớp chiều cao .hbars trong CSS
-  var html=ds.map(function(d,i){
-    var v=days[d], tot=v.mtg+v.gar;
-    var prev=i>0?(days[ds[i-1]].mtg+days[ds[i-1]].gar):null;
-    var delta=prev==null?'':' · '+(tot>=prev?'+':'-')+nf(Math.abs(tot-prev))+' so với ngày trước';
-    var hg=Math.round(v.gar/max*H), hm=Math.round(v.mtg/max*H);
-    var segs='';
-    if(v.gar>0) segs+='<div class="hseg gar top" style="height:'+hg+'px"></div>';
-    if(v.mtg>0) segs+='<div class="hseg mtg'+(v.gar>0?'':' top')+'" style="height:'+hm+'px"></div>';
-    var lab=(ds.length<=20||i===ds.length-1||tot===max)?nf(tot):'';
-    return '<div class="hcol" title="'+d.slice(8,10)+'/'+d.slice(5,7)+'/'+d.slice(0,4)+': '+nf(tot)+' SKU đã lên kệ (Mastige '+nf(v.mtg)+' · Garment '+nf(v.gar)+') · còn '+nf(v.pe)+' chưa lên kệ'+delta+'">'+
-      '<div class="hval">'+lab+'</div><div class="hbars">'+segs+'</div><div class="hdate">'+d.slice(8,10)+'/'+d.slice(5,7)+'</div></div>';
-  }).join('');
-  el.innerHTML='<div class="histscroll"><div class="histchart">'+html+'</div></div>';
-  var sc=el.querySelector('.histscroll'); if(sc) sc.scrollLeft=sc.scrollWidth;
+  try{
+    renderSparks();
+    var el=document.getElementById('histwrap'); if(!el) return;
+    if(!_histDone){ el.innerHTML='<div class="sk" style="height:280px;border-radius:10px"></div>'; return; }   // Skeleton Loading khi chờ data
+    if(!HIST.length){ el.innerHTML='<div class="histempty">Không tải được lịch sử (hoặc chưa có snapshot) — dữ liệu được ghi tự động sau mỗi lần đồng bộ WMS ~8h sáng.</div>'; return; }
+    var best=histDaily();   // chỉ giữ bản ghi gần mốc chốt sổ 08:01 nhất của mỗi ngày
+    var days={};
+    Object.keys(best).forEach(function(k){ var r=best[k];
+      if(!days[r.d]) days[r.d]={mtg:0,gar:0,pe:0};
+      if(/^gar/i.test(r.div)) days[r.d].gar+=r.sh; else days[r.d].mtg+=r.sh;
+      days[r.d].pe+=r.pe;
+    });
+    // Định tuyến thời gian: từ NGÀY 15 của tháng hiện tại đến hôm nay (chưa tới 15 thì lùi về 15 tháng trước)
+    var now=new Date(), moc=(now.getDate()>=15)?new Date(now.getFullYear(),now.getMonth(),15):new Date(now.getFullYear(),now.getMonth()-1,15);
+    function p(n){ return (n<10?'0':'')+n; }
+    var tuKey=moc.getFullYear()+'-'+p(moc.getMonth()+1)+'-'+p(moc.getDate());
+    var ds=Object.keys(days).sort();
+    var win=ds.filter(function(d){ return d>=tuKey; });
+    if(win.length) ds=win;   // cửa sổ rỗng (dữ liệu quá cũ) -> hiển thị toàn bộ thay vì trống trơn
+    var max=1; ds.forEach(function(d){ var v=days[d]; if(v.mtg+v.gar>max) max=v.mtg+v.gar; });
+    var H=260;   // khớp chiều cao .hbars trong CSS
+    var html=ds.map(function(d,i){
+      var v=days[d], tot=v.mtg+v.gar;
+      var hg=Math.round(v.gar/max*H), hm=Math.round(v.mtg/max*H);
+      var segs='';
+      if(v.gar>0) segs+='<div class="hseg gar top" style="height:'+hg+'px"></div>';
+      if(v.mtg>0) segs+='<div class="hseg mtg'+(v.gar>0?'':' top')+'" style="height:'+hm+'px"></div>';
+      var lab=(ds.length<=20||i===ds.length-1||tot===max)?nf(tot):'';
+      /* Tooltip bắt buộc: Ngày | Mastige | Garment | Tổng */
+      var tip='Ngày '+d.slice(8,10)+'/'+d.slice(5,7)+'/'+d.slice(0,4)+' | Mastige: '+nf(v.mtg)+' | Garment: '+nf(v.gar)+' | Tổng: '+nf(tot);
+      return '<div class="hcol" title="'+tip+'">'+
+        '<div class="hval">'+lab+'</div><div class="hbars">'+segs+'</div><div class="hdate">'+d.slice(8,10)+'/'+d.slice(5,7)+'</div></div>';
+    }).join('');
+    el.innerHTML='<div class="histscroll"><div class="histchart">'+html+'</div></div>';
+    var sc=el.querySelector('.histscroll'); if(sc) sc.scrollLeft=sc.scrollWidth;
+  }catch(e){
+    var el2=document.getElementById('histwrap');
+    if(el2) el2.innerHTML='<div class="histempty">Lỗi dựng biểu đồ: '+esc(e.message)+'</div>';
+  }
 }
 
 function checkDone(){
@@ -1145,7 +1172,7 @@ function kkEval(inv,cnt){ if(cnt==null||cnt==='') return {d:0,counted:false}; va
 var CACHE_TTL=10*60*1000;
 function cacheGet(k){ try{ var o=JSON.parse(sessionStorage.getItem(k)||'null'); if(o&&(Date.now()-o.at)<CACHE_TTL) return o.d; }catch(e){} return null; }
 function cacheSet(k,d){ try{ sessionStorage.setItem(k,JSON.stringify({at:Date.now(),d:d})); }catch(e){ /* quá quota -> bỏ qua, không cache */ } }
-function clearCaches(){ try{ ['slf-kk-sku','slf-kk-loc','slf-hist'].forEach(function(k){ sessionStorage.removeItem(k); }); }catch(e){} }
+function clearCaches(){ try{ ['slf-kk-sku','slf-kk-loc','slf-hist','slf-hist2'].forEach(function(k){ sessionStorage.removeItem(k); }); }catch(e){} }
 function gvizP(sheet,params,cb){
   return new Promise(function(res){
     window[cb]=function(resp){ res(resp); };
