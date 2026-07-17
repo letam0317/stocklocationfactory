@@ -75,6 +75,22 @@ code{background:#eef1f5;padding:1px 7px;border-radius:6px;font-size:12px;color:#
 .bval{font-weight:700;font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums;line-height:1.2}
 .bval b{color:var(--teal)} .bval small{display:block;color:var(--amber);font-size:10px;font-weight:600}
 
+/* Category: mỗi cate 1 khối, bấm mở breakdown theo từng kho */
+.catwrap{display:flex;flex-direction:column;gap:8px}
+.catg{border:1px solid var(--line);border-radius:12px;background:#fff;overflow:hidden}
+.cathd{width:100%;border:0;background:#fff;cursor:pointer;padding:10px 14px;display:grid;grid-template-columns:11px 210px 1fr 104px;align-items:center;gap:12px;text-align:left;font:inherit;color:inherit;transition:background .18s var(--ease)}
+.cathd:hover{background:#f8fafc}
+.cathd .btrack{display:flex}
+.catlab{font-size:12px;font-weight:600;color:#374151;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.catlab small{display:block;color:var(--ink3);font-size:10px;font-weight:400}
+.catg.open .chev{transform:rotate(45deg)}
+.catg.open .accbody{grid-template-rows:1fr}
+.catbody{padding:4px 14px 12px 37px;border-top:1px dashed var(--line)}
+.catbody .barrow{grid-template-columns:198px 1fr 104px;margin:8px 0 0}
+.catbody .blab{text-align:left;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.catbody .btrack{height:14px;border-radius:5px}
+.catbody .bval{font-size:11.5px}
+
 .whlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
 @media(max-width:720px){.whlist{grid-template-columns:1fr}}
 .whcard{background:#fbfcfe;border:1px solid var(--line);border-radius:12px;padding:12px 14px;transition:box-shadow .2s var(--ease),transform .2s var(--ease)}
@@ -199,6 +215,16 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
   .barrow .blab{grid-area:lab;text-align:left}
   .barrow .btrack{grid-area:bar;height:20px}
   .barrow .bval{grid-area:val;text-align:right;white-space:nowrap;line-height:1.3}
+
+  /* Khối Category: header 2 hàng (chev+tên | số), thanh bar full-width */
+  .cathd{grid-template-columns:11px 1fr auto;grid-template-areas:"chev lab val" "bar bar bar";gap:6px 10px;padding:11px 12px}
+  .cathd .chev{grid-area:chev}
+  .cathd .catlab{grid-area:lab;white-space:normal}
+  .cathd .btrack{grid-area:bar;height:18px}
+  .cathd .bval{grid-area:val;text-align:right;white-space:nowrap;line-height:1.3}
+  .catbody{padding:2px 12px 10px}
+  .catbody .barrow{grid-template-columns:1fr auto;grid-template-areas:"lab val" "bar bar";gap:4px 10px;margin:10px 0 0}
+  .catbody .btrack{height:14px}
 
   /* Bảng chi tiết trong accordion: cuộn ngang thay vì tràn ra ngoài */
   .acchd{padding:14px 14px}
@@ -374,15 +400,36 @@ function render(groups,whDiv){
   var gSh=0,gTot=0,gPe=0; groups.forEach(function(d){ gSh+=d[2];gTot+=d[3];gPe+=d[4]; });
   var rate=(gSh+gPe)?gSh/(gSh+gPe)*100:0;
 
-  var top=groups.slice().filter(function(d){return d[2]>0;}).sort(function(a,b){return b[2]-a[2];}).slice(0,12);
-  var bars=top.map(function(d){
-    var tot=d[2]+d[4], g=tot?d[2]/tot*100:0, a=tot?d[4]/tot*100:0;
-    return '<div class="barrow"><div class="blab" title="'+esc(d[0])+'">'+esc(d[1])+'<small>'+esc(d[0])+'</small></div>'+
-      '<div class="btrack" title="Đã lên kệ '+nf(d[2])+' / '+nf(tot)+' · còn '+nf(d[4])+'">'+
-        '<div class="bfill sh" data-w="'+g.toFixed(2)+'"></div>'+
-        '<div class="bfill pe" data-w="'+a.toFixed(2)+'"></div>'+
-      '</div>'+
-      '<div class="bval"><b>'+nf(d[2])+'</b> / '+nf(tot)+'<small>còn '+nf(d[4])+'</small></div></div>';
+  // Top Category: liệt kê TẤT CẢ category (gộp mọi kho), bấm mở xem thống kê từng kho
+  var catAgg={};
+  groups.forEach(function(d){
+    if(!catAgg[d[1]]) catAgg[d[1]]={sh:0,pe:0,whs:[]};
+    var ca=catAgg[d[1]];
+    ca.sh+=d[2]; ca.pe+=d[4]; ca.whs.push([d[0],d[2],d[4]]);
+  });
+  var cats=Object.keys(catAgg).sort(function(a,b){
+    var x=catAgg[a], y=catAgg[b];
+    return (y.sh-x.sh) || ((y.sh+y.pe)-(x.sh+x.pe)) || (a<b?-1:1);
+  });
+  var bars=cats.map(function(cat){
+    var ca=catAgg[cat], tot=ca.sh+ca.pe, g=tot?ca.sh/tot*100:0, a=tot?ca.pe/tot*100:0;
+    var whrows=ca.whs.slice().sort(function(x,y){return (y[1]-x[1]) || ((y[1]+y[2])-(x[1]+x[2]));}).map(function(wr){
+      var wt=wr[1]+wr[2], wg=wt?wr[1]/wt*100:0, wa=wt?wr[2]/wt*100:0;
+      return '<div class="barrow"><div class="blab" title="'+esc(wr[0])+'"><span class="dot" style="background:'+(WH_COLOR[wr[0]]||'#94a3b8')+'"></span>'+esc(wr[0])+'</div>'+
+        '<div class="btrack" title="Đã lên kệ '+nf(wr[1])+' / '+nf(wt)+' · còn '+nf(wr[2])+'">'+
+          '<div class="bfill sh" data-w="'+wg.toFixed(2)+'"></div>'+
+          '<div class="bfill pe" data-w="'+wa.toFixed(2)+'"></div>'+
+        '</div>'+
+        '<div class="bval"><b>'+nf(wr[1])+'</b> / '+nf(wt)+'<small>còn '+nf(wr[2])+'</small></div></div>';
+    }).join('');
+    return '<div class="catg"><button class="cathd" onclick="this.parentNode.classList.toggle(\'open\')">'+
+      '<span class="chev"></span>'+
+      '<span class="catlab" title="'+esc(cat)+'">'+esc(cat)+'<small>'+ca.whs.length+' kho</small></span>'+
+      '<span class="btrack" title="Đã lên kệ '+nf(ca.sh)+' / '+nf(tot)+' · còn '+nf(ca.pe)+'">'+
+        '<span class="bfill sh" data-w="'+g.toFixed(2)+'"></span>'+
+        '<span class="bfill pe" data-w="'+a.toFixed(2)+'"></span></span>'+
+      '<span class="bval"><b>'+nf(ca.sh)+'</b> / '+nf(tot)+'<small>còn '+nf(ca.pe)+'</small></span></button>'+
+      '<div class="accbody"><div class="accinner"><div class="catbody">'+whrows+'</div></div></div></div>';
   }).join('');
 
   var whKeys=Object.keys(wh).sort(function(a,b){return wh[b][0]-wh[a][0];});
@@ -433,7 +480,7 @@ function render(groups,whDiv){
     '<div class="ratefr" data-w="'+(100-rate).toFixed(1)+'">'+(100-rate).toFixed(0)+'%</div></div></div>'+
     '<section class="panel"><h2>Bảng chi tiết <span class="hint">(bấm nhóm để mở, bấm từng kho để xem chi tiết &amp; total)</span></h2><div class="accwrap">'+acc+'</div></section>'+
     '<section class="panel"><h2>Tiến độ lên kệ theo Warehouse <span class="hint">(bấm số lượng SKU để xem chi tiết)</span></h2><div class="whlist">'+whchips+'</div></section>'+
-    '<section class="panel"><h2>Top Category theo số SKU đã lên kệ <span class="lg"><span class="sw sh"></span>đã lên kệ<span class="sw pe" style="margin-left:6px"></span>chưa lên kệ</span></h2>'+bars+'</section>';
+    '<section class="panel"><h2>Category theo số SKU đã lên kệ <span class="hint">('+cats.length+' category — bấm từng dòng để xem thống kê theo từng kho)</span> <span class="lg"><span class="sw sh"></span>đã lên kệ<span class="sw pe" style="margin-left:6px"></span>chưa lên kệ</span></h2><div class="catwrap">'+bars+'</div></section>';
   document.getElementById('content').innerHTML=html;
   requestAnimationFrame(function(){ requestAnimationFrame(function(){
     document.querySelectorAll('[data-w]').forEach(function(el){ el.style.width=el.getAttribute('data-w')+'%'; });
