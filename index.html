@@ -78,7 +78,8 @@ code{background:#eef1f5;padding:1px 7px;border-radius:6px;font-size:12px;color:#
 /* Category: mỗi cate 1 khối, bấm mở breakdown theo từng kho */
 .catwrap{display:flex;flex-direction:column;gap:8px}
 .catg{border:1px solid var(--line);border-radius:12px;background:#fff;overflow:hidden}
-.cathd{width:100%;border:0;background:#fff;cursor:pointer;padding:10px 14px;display:grid;grid-template-columns:11px 210px 1fr 104px;align-items:center;gap:12px;text-align:left;font:inherit;color:inherit;transition:background .18s var(--ease)}
+.cathd{width:100%;border:0;background:#fff;cursor:pointer;padding:10px 14px;display:grid;grid-template-columns:11px 210px 1fr auto;align-items:center;gap:12px;text-align:left;font:inherit;color:inherit;transition:background .18s var(--ease)}
+.catnum{justify-self:end}
 .cathd:hover{background:#f8fafc}
 .cathd .btrack{display:flex}
 .catlab{font-size:12px;font-weight:600;color:#374151;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -176,6 +177,7 @@ code{background:#eef1f5;padding:1px 7px;border-radius:6px;font-size:12px;color:#
 .mtbl tbody tr:hover{background:#f5f9ff}
 .mtbl .empty{text-align:center;color:var(--ink3);padding:28px}
 .mtbl .pn{color:var(--ink2);white-space:normal;min-width:320px;word-break:break-word}
+.mtbl .whn{font-weight:600;color:var(--ink)}
 .loc{font-family:ui-monospace,Consolas,monospace;color:var(--teal);font-size:12px}
 
 footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line-height:1.6}
@@ -221,7 +223,7 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
   .cathd .chev{grid-area:chev}
   .cathd .catlab{grid-area:lab;white-space:normal}
   .cathd .btrack{grid-area:bar;height:18px}
-  .cathd .bval{grid-area:val;text-align:right;white-space:nowrap;line-height:1.3}
+  .cathd .catnum{grid-area:val;width:auto;justify-self:end;padding:7px 11px}
   .catbody{padding:2px 12px 10px}
   .catbody .barrow{grid-template-columns:1fr auto;grid-template-areas:"lab val" "bar bar";gap:4px 10px;margin:10px 0 0}
   .catbody .btrack{height:14px}
@@ -268,8 +270,8 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
   <div class="modalbox">
     <div class="modalhd"><div><div class="mt" id="mtitle"></div><div class="mtsub" id="mtsub"></div></div><button class="mclose" onclick="closeModal()">&times;</button></div>
     <div class="tabs">
-      <button id="tabShelf" class="tab active" onclick="setTab('shelf')">Đã lên kệ (<span id="cShelf">0</span>)</button>
-      <button id="tabPend" class="tab" onclick="setTab('pend')">Chưa lên kệ (<span id="cPend">0</span>)</button>
+      <button id="tabPend" class="tab active" onclick="setTab('pend')">Chưa lên kệ (<span id="cPend">0</span>)</button>
+      <button id="tabShelf" class="tab" onclick="setTab('shelf')">Đã lên kệ (<span id="cShelf">0</span>)</button>
     </div>
     <div class="mfilters">
       <div class="fld"><label>CategoryName</label><div class="combo" id="catCombo"><input id="fCat" autocomplete="off" placeholder="Tất cả category…" oninput="onCatInput()" onfocus="renderCatMenu()"><div class="combo-menu" id="catMenu"></div></div></div>
@@ -279,7 +281,7 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
     </div>
     <div class="msum" id="msum"></div>
     <div class="modalbody"><table class="mtbl"><thead><tr>
-      <th>CategoryName</th><th>Mã vị trí</th><th>SKU</th><th>ProductName</th><th class="num">Số lượng</th>
+      <th>Kho</th><th>CategoryName</th><th>Mã vị trí</th><th>SKU</th><th>ProductName</th><th class="num">Số lượng</th>
     </tr></thead><tbody id="mbody"></tbody></table></div>
   </div>
 </div>
@@ -297,7 +299,8 @@ var LAST_SYNC_MS = 0;                      // mốc đồng bộ WMS cuối — 
 var _syncing = false, _rowCount = 0, _unlockTimer = null;
 var DIV_ORDER = ["Mastige","Garment"];
 var PAL = ["#2563eb","#0ea5e9","#14b8a6","#f59e0b","#8b5cf6","#ef4444","#10b981","#ec4899","#6366f1","#f43f5e","#0891b2","#84cc16"];
-var WH_DATA = {}, WH_COLOR = {}, curWh = null, curTab = 'shelf';
+var WH_DATA = {}, WH_COLOR = {}, curWh = null, curTab = 'pend';
+var MODAL_ROWS = {shelf:[],pend:[]};   // bộ dữ liệu modal đang xem (1 kho hoặc 1 category gộp mọi kho)
 
 document.getElementById('srclink').href = SHEET_URL;
 
@@ -375,8 +378,8 @@ function aggregate(){
     if(!detail[wh]) detail[wh]={shelf:[],pend:[]};
     whset[wh]=1; whDiv[wh]=div;
     var a=agg[wh][cat];
-    if(isShelf(loc)){ a.sh[sku]=1; a.ts+=tot; detail[wh].shelf.push([sku,pn,loc,cat,tot]); }
-    else            { a.pe[sku]=1; a.tp+=tot; detail[wh].pend.push([sku,pn,loc,cat,tot]); }
+    if(isShelf(loc)){ a.sh[sku]=1; a.ts+=tot; detail[wh].shelf.push([sku,pn,loc,cat,tot,wh]); }
+    else            { a.pe[sku]=1; a.tp+=tot; detail[wh].pend.push([sku,pn,loc,cat,tot,wh]); }
   }
   var groups=[]; // wh,cat,skuSh,totSh,skuPe,totPe
   for(var wh in agg){ for(var cat in agg[wh]){ var a=agg[wh][cat];
@@ -422,13 +425,14 @@ function render(groups,whDiv){
         '</div>'+
         '<div class="bval"><b>'+nf(wr[1])+'</b> / '+nf(wt)+'<small>còn '+nf(wr[2])+'</small></div></div>';
     }).join('');
-    return '<div class="catg"><button class="cathd" onclick="this.parentNode.classList.toggle(\'open\')">'+
+    return '<div class="catg"><div class="cathd" onclick="this.parentNode.classList.toggle(\'open\')">'+
       '<span class="chev"></span>'+
-      '<span class="catlab" title="'+esc(cat)+'">'+esc(cat)+'<small>'+ca.whs.length+' kho</small></span>'+
+      '<span class="catlab" title="'+esc(cat)+'">'+esc(cat)+'<small>'+ca.whs.length+' kho · còn '+nf(ca.pe)+' SKU chưa lên kệ</small></span>'+
       '<span class="btrack" title="Đã lên kệ '+nf(ca.sh)+' / '+nf(tot)+' · còn '+nf(ca.pe)+'">'+
         '<span class="bfill sh" data-w="'+g.toFixed(2)+'"></span>'+
         '<span class="bfill pe" data-w="'+a.toFixed(2)+'"></span></span>'+
-      '<span class="bval"><b>'+nf(ca.sh)+'</b> / '+nf(tot)+'<small>còn '+nf(ca.pe)+'</small></span></button>'+
+      '<button class="whnum catnum" data-cat="'+esc(cat)+'" title="Xem chi tiết SKU của category này trên toàn bộ kho" '+
+        'onclick="event.stopPropagation();openCatModal(this.getAttribute(\'data-cat\'))"><b>'+nf(ca.sh)+'</b> / '+nf(tot)+' SKU</button></div>'+
       '<div class="accbody"><div class="accinner"><div class="catbody">'+whrows+'</div></div></div></div>';
   }).join('');
 
@@ -480,7 +484,7 @@ function render(groups,whDiv){
     '<div class="ratefr" data-w="'+(100-rate).toFixed(1)+'">'+(100-rate).toFixed(0)+'%</div></div></div>'+
     '<section class="panel"><h2>Bảng chi tiết <span class="hint">(bấm nhóm để mở, bấm từng kho để xem chi tiết &amp; total)</span></h2><div class="accwrap">'+acc+'</div></section>'+
     '<section class="panel"><h2>Tiến độ lên kệ theo Warehouse <span class="hint">(bấm số lượng SKU để xem chi tiết)</span></h2><div class="whlist">'+whchips+'</div></section>'+
-    '<section class="panel"><h2>Category theo số SKU đã lên kệ <span class="hint">('+cats.length+' category — bấm từng dòng để xem thống kê theo từng kho)</span> <span class="lg"><span class="sw sh"></span>đã lên kệ<span class="sw pe" style="margin-left:6px"></span>chưa lên kệ</span></h2><div class="catwrap">'+bars+'</div></section>';
+    '<section class="panel"><h2>Category theo số SKU đã lên kệ <span class="hint">('+cats.length+' category — bấm dòng để xem từng kho · bấm số SKU để xem chi tiết)</span> <span class="lg"><span class="sw sh"></span>đã lên kệ<span class="sw pe" style="margin-left:6px"></span>chưa lên kệ</span></h2><div class="catwrap">'+bars+'</div></section>';
   document.getElementById('content').innerHTML=html;
   requestAnimationFrame(function(){ requestAnimationFrame(function(){
     document.querySelectorAll('[data-w]').forEach(function(el){ el.style.width=el.getAttribute('data-w')+'%'; });
@@ -490,7 +494,7 @@ function render(groups,whDiv){
 /* ---------- modal ---------- */
 var CUR_CATS=[];
 function fillCatOptions(){
-  var rows=WH_DATA[curWh][curTab], cnt={};
+  var rows=MODAL_ROWS[curTab], cnt={};
   for(var i=0;i<rows.length;i++){ var c=rows[i][3]; cnt[c]=(cnt[c]||0)+1; }
   CUR_CATS=Object.keys(cnt).sort().map(function(c){ return {name:c,n:cnt[c]}; });
 }
@@ -508,13 +512,26 @@ function closeCat(){ document.getElementById('catMenu').classList.remove('show')
 var _deb;
 function qfilter(){ clearTimeout(_deb); _deb=setTimeout(renderRows,110); }
 function openModal(w){
-  curWh=w; curTab='shelf';
-  document.getElementById('mtitle').textContent=w;
-  document.getElementById('mtsub').textContent='Chi tiết SKU theo mã vị trí — lọc theo từng cột bên dưới';
-  document.getElementById('cShelf').textContent=nf(WH_DATA[w].shelf.length);
-  document.getElementById('cPend').textContent=nf(WH_DATA[w].pend.length);
+  curWh=w;
+  MODAL_ROWS=WH_DATA[w];
+  openDetail(w,'Chi tiết SKU theo mã vị trí — lọc theo từng cột bên dưới');
+}
+function openCatModal(cat){
+  var sh=[],pe=[],whn={};
+  for(var w in WH_DATA){
+    WH_DATA[w].shelf.forEach(function(r){ if(r[3]===cat){ sh.push(r); whn[w]=1; } });
+    WH_DATA[w].pend.forEach(function(r){ if(r[3]===cat){ pe.push(r); whn[w]=1; } });
+  }
+  MODAL_ROWS={shelf:sh,pend:pe};
+  openDetail(cat,'Chi tiết SKU của category trên '+Object.keys(whn).length+' kho — lọc theo từng cột bên dưới');
+}
+function openDetail(title,sub){
+  document.getElementById('mtitle').textContent=title;
+  document.getElementById('mtsub').textContent=sub;
+  document.getElementById('cShelf').textContent=nf(MODAL_ROWS.shelf.length);
+  document.getElementById('cPend').textContent=nf(MODAL_ROWS.pend.length);
   document.getElementById('fLoc').value=''; document.getElementById('fSku').value=''; document.getElementById('fName').value='';
-  setTab('shelf',true);
+  setTab('pend',true);   // luôn mở tab "Chưa lên kệ" trước
   var m=document.getElementById('modal'); m.style.display='flex';
   requestAnimationFrame(function(){ m.classList.add('show'); });
 }
@@ -536,18 +553,18 @@ function renderRows(){
   var fl=document.getElementById('fLoc').value.toLowerCase();
   var fs=document.getElementById('fSku').value.toLowerCase();
   var fn=document.getElementById('fName').value.toLowerCase();
-  var rows=WH_DATA[curWh][curTab], out=[], cnt=0, qsum=0;
-  for(var i=0;i<rows.length;i++){ var r=rows[i]; // [sku,pn,loc,cat,qty]
+  var rows=MODAL_ROWS[curTab], out=[], cnt=0, qsum=0;
+  for(var i=0;i<rows.length;i++){ var r=rows[i]; // [sku,pn,loc,cat,qty,wh]
     if(fc && r[3].toLowerCase().indexOf(fc)<0) continue;
     if(fl && r[2].toLowerCase().indexOf(fl)<0) continue;
     if(fs && r[0].toLowerCase().indexOf(fs)<0) continue;
     if(fn && r[1].toLowerCase().indexOf(fn)<0) continue;
     cnt++; qsum+=r[4];
     if(out.length<4000)
-      out.push('<tr><td>'+esc(r[3])+'</td><td class="loc">'+esc(r[2])+'</td><td>'+esc(r[0])+'</td><td class="pn">'+esc(r[1])+'</td><td class="num">'+nf(r[4])+'</td></tr>');
+      out.push('<tr><td class="whn"><span class="dot" style="background:'+(WH_COLOR[r[5]]||'#94a3b8')+'"></span>'+esc(r[5]||'')+'</td><td>'+esc(r[3])+'</td><td class="loc">'+esc(r[2])+'</td><td>'+esc(r[0])+'</td><td class="pn">'+esc(r[1])+'</td><td class="num">'+nf(r[4])+'</td></tr>');
   }
-  if(cnt>4000) out.push('<tr><td colspan="5" class="empty">Hiển thị 4.000 / '+nf(cnt)+' dòng — dùng bộ lọc để thu hẹp.</td></tr>');
-  document.getElementById('mbody').innerHTML=out.length?out.join(''):'<tr><td colspan="5" class="empty">Không có dữ liệu phù hợp</td></tr>';
+  if(cnt>4000) out.push('<tr><td colspan="6" class="empty">Hiển thị 4.000 / '+nf(cnt)+' dòng — dùng bộ lọc để thu hẹp.</td></tr>');
+  document.getElementById('mbody').innerHTML=out.length?out.join(''):'<tr><td colspan="6" class="empty">Không có dữ liệu phù hợp</td></tr>';
   document.getElementById('msum').textContent=nf(cnt)+' dòng · tổng số lượng '+nf(qsum);
 }
 document.addEventListener('keydown',function(e){
