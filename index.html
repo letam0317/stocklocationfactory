@@ -1495,8 +1495,10 @@ function kkUniverse(kind){
 }
 /* CT3: "Đã kiểm" = có Counted Date HOẶC Status thực (khác rỗng/NOT COUNT) */
 function kkIsChecked(r){ return !isNaN(kkParseDate(r.cdate)) || kkStKey(r)!=='NOT COUNT'; }
-/* CT1: ANTI-JOIN — "Còn lại" = [danh sách tồn kho gốc từ Stock Location] loại trừ [tập (kho|mã) đã kiểm] */
-function kkRemaining(kind){
+/* Danh sách tồn kho gộp theo (kho|mã) từ Stock Location — nền tảng cho cả 2 thẻ:
+   "Tổng" (chiChuaKiem=false: TOÀN BỘ universe, kèm cờ đã kiểm) và
+   "Còn lại" (chiChuaKiem=true: ANTI-JOIN loại trừ tập đã kiểm) */
+function kkStockUniverseRows(kind,chiChuaKiem){
   var chk=new Set();
   kkRows(kind).forEach(function(r){ if(kkIsChecked(r)) chk.add(r.wh+'|'+((kind==='sku')?r.sku:r.loc)); });
   var set={}; ['sku','loc'].forEach(function(k){ KK.data[k].forEach(function(r){ if(r.wh) set[r.wh]=1; }); });
@@ -1506,27 +1508,32 @@ function kkRemaining(kind){
     var d=WH_DATA[w]; if(!d) return;
     ['shelf','pend'].forEach(function(t){ d[t].forEach(function(r){   // r = [sku,pn,loc,cat,qty,wh]
       var k=(kind==='sku')?r[0]:r[2];
-      if(chk.has(w+'|'+k)) return;                                    // .filter(x => KHÔNG nằm trong tập đã kiểm)
-      var gk=w+'|'+k, m=map[gk];
-      if(!m) m=map[gk]={wh:w, sku:(kind==='sku')?r[0]:'', loc:r[2], pn:(kind==='sku')?r[1]:'', cat:(kind==='sku')?r[3]:'', qty:0, n:0};
+      var gk=w+'|'+k, daKiem=chk.has(gk);
+      if(chiChuaKiem&&daKiem) return;                                 // .filter(x => KHÔNG nằm trong tập đã kiểm)
+      var m=map[gk];
+      if(!m) m=map[gk]={wh:w, sku:(kind==='sku')?r[0]:'', loc:r[2], pn:(kind==='sku')?r[1]:'', cat:(kind==='sku')?r[3]:'', qty:0, n:0, chk:daKiem, st:daKiem?'Đã kiểm':'Chưa kiểm'};
       m.qty+=r[4]; m.n++;
     }); });
   });
   return Object.keys(map).map(function(k){ return map[k]; });
 }
-/* Bảng riêng cho danh sách anti-join (dòng tồn kho gốc, chưa có phiếu kiểm) */
-function kkTableRemain(kind,rs){
+/* CT1: ANTI-JOIN — "Còn lại" = [danh sách tồn kho gốc từ Stock Location] loại trừ [tập (kho|mã) đã kiểm] */
+function kkRemaining(kind){ return kkStockUniverseRows(kind,true); }
+/* Bảng cho danh sách tồn kho gộp (kho|mã): dùng cho cả "Còn lại" (anti-join) và "Tổng" (coKiem=true thêm cột trạng thái) */
+function kkTableRemain(kind,rs,coKiem){
   var CAP=500, out=[];
+  var cot=function(m){ return coKiem?('<td><span class="badge '+(m.chk?'b-ok':'b-pend')+'">'+(m.chk?'ĐÃ KIỂM':'CHƯA KIỂM')+'</span></td>'):''; };
   for(var i=0;i<rs.length&&out.length<CAP;i++){ var m=rs[i];
     out.push(kind==='sku'
-      ? '<tr><td><b>'+esc(m.sku)+'</b></td><td class="pn2">'+esc(m.pn)+'</td><td>'+kkDash(m.cat)+'</td><td>'+esc(m.wh)+'</td><td class="loc">'+esc(m.loc)+(m.n>1?' <span class="hint">+'+(m.n-1)+' vị trí</span>':'')+'</td><td class="num">'+nf(m.qty)+'</td></tr>'
-      : '<tr><td class="loc">'+esc(m.loc)+'</td><td>'+esc(m.wh)+'</td><td class="num">'+nf(m.n)+'</td><td class="num">'+nf(m.qty)+'</td></tr>');
+      ? '<tr><td><b>'+esc(m.sku)+'</b></td><td class="pn2">'+esc(m.pn)+'</td><td>'+kkDash(m.cat)+'</td><td>'+esc(m.wh)+'</td><td class="loc">'+esc(m.loc)+(m.n>1?' <span class="hint">+'+(m.n-1)+' vị trí</span>':'')+'</td><td class="num">'+nf(m.qty)+'</td>'+cot(m)+'</tr>'
+      : '<tr><td class="loc">'+esc(m.loc)+'</td><td>'+esc(m.wh)+'</td><td class="num">'+nf(m.n)+'</td><td class="num">'+nf(m.qty)+'</td>'+cot(m)+'</tr>');
   }
-  var head=kind==='sku'
+  var head=(kind==='sku'
     ? '<th>SKU</th><th>Tên sản phẩm</th><th>Category</th><th>Kho</th><th>Vị trí hiện tại</th><th class="num">Tồn</th>'
-    : '<th>Mã vị trí</th><th>Kho</th><th class="num">Số SKU tại vị trí</th><th class="num">Tổng tồn</th>';
-  return '<div class="kkwrap"><table><thead><tr>'+head+'</tr></thead><tbody>'+(out.join('')||kkEmpty(kind==='sku'?6:4))+'</tbody></table></div>'+
-    '<div class="kknote">'+(rs.length>CAP?('Hiển thị '+nf(CAP)+' / '+nf(rs.length)+' dòng — lọc để thu hẹp.'):(nf(rs.length)+' dòng tồn kho chưa kiểm.'))+'</div>';
+    : '<th>Mã vị trí</th><th>Kho</th><th class="num">Số SKU tại vị trí</th><th class="num">Tổng tồn</th>')+(coKiem?'<th>Kiểm kê</th>':'');
+  var nCol=(kind==='sku'?6:4)+(coKiem?1:0);
+  return '<div class="kkwrap"><table><thead><tr>'+head+'</tr></thead><tbody>'+(out.join('')||kkEmpty(nCol))+'</tbody></table></div>'+
+    '<div class="kknote">'+(rs.length>CAP?('Hiển thị '+nf(CAP)+' / '+nf(rs.length)+' dòng — lọc để thu hẹp.'):(nf(rs.length)+(coKiem?' dòng tồn kho (distinct kho|mã).':' dòng tồn kho chưa kiểm.')))+'</div>';
 }
 function kkRenderPanel(kind){
   var U=(kind==='loc')?'vị trí':'SKU';
@@ -1687,13 +1694,18 @@ function kkTable(kind,rs){
    nhãn uppercase + combo gõ-để-lọc (menu unique value + số dòng) + dòng tổng kết .msum */
 var KK_MODAL={kind:null,metric:null,rows:[]};
 function kkOpen(kind,metric){
-  /* CT1: "Còn lại" dùng ANTI-JOIN trên danh sách tồn gốc; các metric khác lọc trên phiếu kiểm kê */
-  var rows=(metric==='notcount')?kkRemaining(kind):kkMetricRows(kind,metric);
+  /* CT1: "Tổng" = TOÀN BỘ universe tồn kho (kèm cờ đã kiểm) — khớp 1:1 với số trên dải;
+     "Còn lại" = ANTI-JOIN trên danh sách tồn gốc; các metric khác lọc trên phiếu kiểm kê */
+  var rows=(metric==='total')?kkStockUniverseRows(kind,false)
+          :(metric==='notcount')?kkRemaining(kind)
+          :kkMetricRows(kind,metric);
   KK_MODAL={kind:kind,metric:metric,rows:rows};
   var U=(kind==='loc')?'Mã vị trí':'SKU';
   var lab=(metric.indexOf('st:')===0)?('trạng thái '+kkStMeta(metric.slice(3))[0]):KK_METRIC_LABEL[metric];
   document.getElementById('kkmTitle').textContent=U+' · '+lab+' — '+nf(rows.length)+' dòng';
-  document.getElementById('kkmSub').textContent=(metric==='notcount'
+  document.getElementById('kkmSub').textContent=(metric==='total'
+    ? 'Mẫu số tuyệt đối: distinct (kho|mã) tồn kho từ Stock Location — 1 mã nằm nhiều vị trí chỉ tính 1, kèm cột trạng thái kiểm kê'
+    : metric==='notcount'
     ? 'Anti-join: tồn kho từ Stock Location TRỪ tập (kho|mã) đã kiểm — đây là phần chưa được đụng tới'
     : (metric==='counted'||metric==='negative'||metric==='positive')
     ? 'Đã khử trùng phiếu: mỗi (kho|mã) chỉ tính 1 phiếu đã kiểm MỚI NHẤT (ưu tiên phiếu không bị từ chối/huỷ) · bấm ID để mở WMS'
@@ -1788,7 +1800,9 @@ function kkmRender(){
   var nAct=state.filter(function(f){ return f.v; }).length+(q?1:0);
   document.getElementById('kkmSum').textContent=nf(rs.length)+' / '+nf(KK_MODAL.rows.length)+' dòng'+(nAct?' · '+nAct+' bộ lọc đang áp dụng':'');
   var body=document.getElementById('kkmBody');
-  body.innerHTML=(KK_MODAL.metric==='notcount')?kkTableRemain(KK_MODAL.kind,rs):kkTable(KK_MODAL.kind,rs);
+  body.innerHTML=(KK_MODAL.metric==='notcount')?kkTableRemain(KK_MODAL.kind,rs)
+    :(KK_MODAL.metric==='total')?kkTableRemain(KK_MODAL.kind,rs,true)
+    :kkTable(KK_MODAL.kind,rs);
   kkSwap(body);   // fadeUp — chuẩn animation dự án
 }
 function closeKkModal(){
