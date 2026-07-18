@@ -189,10 +189,15 @@ h1.brand-title{margin:0;min-width:0}
 .devlink:hover{background:var(--accent-hover)}
 
 /* ===== Tab Kiểm kê (Physical Count — port từ QC) ===== */
-/* (thanh lọc pop-up đã chuẩn hoá thành component .fbar dùng chung — xem khối FBAR) */
+.kkbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
 .kktabs{display:flex;gap:4px;flex:none}
 .kktab{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:600;color:var(--ink2);cursor:pointer}
 .kktab.active{background:var(--brand2);border-color:var(--brand2);color:#fff}
+.kkbar input{flex:1;min-width:170px;max-width:320px;height:32px;border:1px solid var(--border);border-radius:8px;padding:0 11px;font-size:12.5px;outline:none}
+.kkbar input:focus{border-color:var(--brand2)}
+.kkbar select{height:32px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--ink);font-size:12.5px;padding:0 8px;cursor:pointer;max-width:220px}
+.kkbar .kklink{color:var(--brand2);font-weight:600;font-size:12.5px;text-decoration:none;white-space:nowrap}
+.kkbar .kklink:hover{text-decoration:underline}
 .kksum{display:flex;gap:0;align-items:stretch;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow-x:auto;margin-bottom:12px;scrollbar-width:none}
 .kksum::-webkit-scrollbar{display:none}
 .kksum .sm{padding:12px 18px;white-space:nowrap;border-right:1px solid var(--line);flex:none}
@@ -231,15 +236,19 @@ h1.brand-title{margin:0;min-width:0}
 .kkstchip b{font-variant-numeric:tabular-nums;font-weight:750;color:inherit}
 /* Smart Modal Kiểm kê: khung co giãn theo nội dung, CẤM cuộn ngang — cột dài tự bẻ dòng */
 .modalbox.kkbox{width:max-content;max-width:95vw;min-width:min(720px,92vw)}
+.kkmbar{padding:12px 22px 0;margin-bottom:0}
 #kkmodal .kkwrap{overflow-x:hidden}
 #kkmodal .kkwrap table{min-width:0;width:100%}
 #kkmodal .kkwrap thead th,#kkmodal .kkwrap tbody td{white-space:normal;word-wrap:break-word}
 #kkmodal .kkwrap .pn2{min-width:140px;max-width:280px}
 #kkmodal .kkwrap .num{white-space:nowrap}
-/* CT4: nội dung đổi theo bộ lọc -> mờ dần + trượt nhẹ, không chớp DOM (mọi bảng pop-up đều kế thừa) */
+/* CT4: nội dung đổi theo bộ lọc -> mờ dần + trượt nhẹ, không chớp DOM */
 .swap{animation:fadeUp .28s ease both}
-.kkstrip,.kkdaily,#kkWhList,#kkStatus-sku,#kkStatus-loc,#kkmBody,.modalbody{transition:opacity .3s ease-in-out}
+.kkstrip,.kkdaily,#kkWhList,#kkStatus-sku,#kkStatus-loc,#kkmBody{transition:opacity .3s ease-in}
 .is-filtering{opacity:.5;pointer-events:none}
+/* dropdown/bộ lọc: đổi trạng thái mượt */
+.kkbar select,.kkbar input{transition:border-color .2s ease-out,box-shadow .2s ease-out,background-color .2s ease-out;transform-origin:top}
+.kkbar select:focus,.kkbar input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)}
 /* Chart mini "Đã kiểm theo ngày" trong từng khối + delta so với ngày kề trước */
 .kkdhead{font-size:12px;font-weight:650;color:var(--ink2);margin:14px 0 8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .kkdaily{min-height:220px;display:flex;flex-direction:column;justify-content:flex-end}
@@ -414,21 +423,24 @@ code{background:var(--surface2);padding:1px 7px;border-radius:6px;font-size:12px
 .tab{border:1px solid var(--line);background:var(--hover);border-radius:10px 10px 0 0;padding:9px 18px;cursor:pointer;font-size:13px;font-weight:600;color:var(--ink2);transition:.18s var(--ease)}
 .tab:hover{color:var(--ink)}
 .tab.active{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
-/* ===== FBAR — Component thanh lọc DÙNG CHUNG cho mọi pop-up (Compact SaaS UI) =====
-   CT1: flex + gap 8px + wrap; control cao 32px, chữ 13px, width:auto co theo nội dung — CẤM giãn 100%
-   CT2: 2 pop-up (Trạng thái + Kiểm kê) cùng 1 markup:  .fbar > input.fq + select[data-fk]  */
-.fbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
-.fbar input,.fbar select{height:32px;padding:4px 12px;font-size:13px;width:auto;background:var(--surface);color:var(--ink);
-  border:1px solid var(--border,#e5e7eb);border-radius:6px;outline:none;
-  transition:border-color .2s ease-out,box-shadow .2s ease-out,background-color .2s ease-out}
-.fbar select{padding:4px 8px;max-width:220px;cursor:pointer}
-.fbar input.fq{flex:0 1 auto;min-width:190px;max-width:300px}
-.fbar input:hover,.fbar select:hover{border-color:color-mix(in srgb,var(--ink) 28%,var(--border))}
-.fbar input:focus,.fbar select:focus{outline:none;border-color:var(--accent,#3b82f6);
-  box-shadow:0 0 0 2px color-mix(in srgb,var(--accent,#3b82f6) 20%,transparent)}
-/* biến thể đặt trong modal: dải chìm giữa header/tabs và bảng — 2 pop-up phản chiếu 1:1 */
-.fbar-modal{padding:10px 22px;margin-bottom:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--surface2)}
-#kkmodal .fbar-modal{border-top:0}   /* header kkmodal đã có kẻ đáy — tránh 2 vạch chồng */
+.mfilters{display:grid;grid-template-columns:1.3fr 1fr 1fr 1.6fr;gap:8px;padding:14px 22px;border-bottom:1px solid var(--line);border-top:1px solid var(--line);background:var(--surface2)}
+@media(max-width:720px){.mfilters{grid-template-columns:1fr 1fr}}
+.mfilters .fld{display:flex;flex-direction:column;gap:3px}
+.mfilters label{font-size:10px;font-weight:650;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;padding-left:2px}
+.mfilters input,.mfilters select{padding:8px 10px;border:1px solid var(--border);border-radius:9px;font-size:12.5px;background:var(--surface);color:var(--ink);transition:border-color .15s var(--ease),box-shadow .15s var(--ease);width:100%}
+.mfilters input:focus,.mfilters select:focus{outline:0;border-color:var(--brand2);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+.combo{position:relative}
+.combo-menu{position:absolute;top:calc(100% + 5px);left:0;right:0;z-index:30;background:var(--surface);border:1px solid var(--line);border-radius:11px;box-shadow:var(--shadow-lg);
+  max-height:250px;overflow-y:auto;overscroll-behavior:contain;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;padding:5px;
+  opacity:0;visibility:hidden;transform:translateY(-6px) scale(.99);transform-origin:top;transition:opacity .16s var(--ease),transform .16s var(--ease),visibility .16s}
+.combo-menu.show{opacity:1;visibility:visible;transform:none;animation:popIn .16s cubic-bezier(.16,1,.3,1)}
+.combo-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 11px;border-radius:8px;font-size:12.5px;cursor:pointer;color:var(--ink);
+  white-space:nowrap;overflow:hidden;transition:background .12s var(--ease),color .12s var(--ease)}
+.combo-item .nm{overflow:hidden;text-overflow:ellipsis}
+.combo-item .c{color:var(--ink3);font-size:11px;font-variant-numeric:tabular-nums;flex:none}
+.combo-item:hover,.combo-item.active{background:#eef4ff;color:var(--brand)}
+.combo-item.all{border-bottom:1px solid var(--line);border-radius:8px 8px 0 0;font-weight:600}
+.combo-empty{padding:12px 11px;font-size:12px;color:var(--ink3);text-align:center}
 .msum{padding:9px 22px;font-size:12px;color:var(--ink2);border-bottom:1px solid var(--line);background:var(--surface2);font-variant-numeric:tabular-nums}
 .modalbody{overflow:auto;padding:0 22px 22px;scroll-behavior:smooth;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .mtbl{width:100%;border-collapse:collapse;font-size:12.5px}
@@ -496,7 +508,7 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
   .modalbox{width:100%;max-height:94vh}
   .modalhd{padding:14px 16px}
   .tabs{padding:12px 16px 0}
-  .fbar-modal{padding:10px 16px}
+  .mfilters{padding:12px 16px}
   .msum{padding:9px 16px}
   .modalbody{padding:0 16px 16px}
 }
@@ -611,10 +623,14 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
       <button id="tabPend" class="tab active" onclick="setTab('pend')">Chưa lên kệ (<span id="cPend">0</span>)</button>
       <button id="tabShelf" class="tab" onclick="setTab('shelf')">Đã lên kệ (<span id="cShelf">0</span>)</button>
     </div>
-    <!-- FBAR component: markup + logic sinh động 100% giống pop-up Kiểm kê (#kkmFilters) -->
-    <div class="fbar fbar-modal" id="mFilters"></div>
+    <div class="mfilters">
+      <div class="fld"><label id="fLbl">CategoryName</label><div class="combo" id="catCombo"><input id="fCat" autocomplete="off" placeholder="Tất cả category…" oninput="onCatInput()" onfocus="renderCatMenu()"><div class="combo-menu" id="catMenu"></div></div></div>
+      <div class="fld"><label>Mã vị trí</label><input id="fLoc" oninput="qfilter()" placeholder="Lọc vị trí…"></div>
+      <div class="fld"><label>SKU</label><input id="fSku" oninput="qfilter()" placeholder="Lọc SKU…"></div>
+      <div class="fld"><label>ProductName</label><input id="fName" oninput="qfilter()" placeholder="Lọc tên sản phẩm…"></div>
+    </div>
     <div class="msum" id="msum"></div>
-    <div class="modalbody" id="mScroll"><table class="mtbl"><thead><tr id="mthead">
+    <div class="modalbody"><table class="mtbl"><thead><tr id="mthead">
       <th>CategoryName</th><th>Mã vị trí</th><th>SKU</th><th>ProductName</th><th class="num">Số lượng</th>
     </tr></thead><tbody id="mbody"></tbody></table></div>
   </div>
@@ -624,7 +640,7 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
 <div id="kkmodal" class="modal" onclick="if(event.target===this)closeKkModal()">
   <div class="modalbox kkbox">
     <div class="modalhd"><div><div class="mt" id="kkmTitle"></div><div class="mtsub" id="kkmSub"></div></div><button class="mclose" onclick="closeKkModal()">&times;</button></div>
-    <div class="fbar fbar-modal" id="kkmFilters"></div>
+    <div class="kkbar kkmbar" id="kkmFilters"></div>
     <div class="modalbody" id="kkmBody" style="padding-top:12px"></div>
   </div>
 </div>
@@ -946,88 +962,29 @@ function render(groups,whDiv){
   }); });
 }
 
-/* ============================================================================
-   FBAR — Reusable Filter Bar Component (DRY: 1 nguồn logic cho MỌI pop-up)
-   cfg = {
-     el     : container .fbar (innerHTML do component quản lý)
-     body   : phần tử bảng — được gắn .is-filtering (fade .3s) trước khi swap DOM
-     ph     : placeholder ô tìm nhanh
-     fields : [{k,lb}] — cột ứng viên sinh dropdown
-     get    : (row,k) => giá trị cột k của row (che khác biệt array/object)
-     qval   : (row)   => chuỗi gộp cho ô tìm nhanh
-     rows   : ()      => mảng dữ liệu GỐC hiện tại của pop-up
-     render : (rowsĐãLọc) => vẽ bảng
-   }
-   CT3: dropdown SINH ĐỘNG từ Set() unique — cột ≤1 giá trị KHÔNG sinh (không dropdown thừa)
-        + CHAIN-FILTERING: option mỗi dropdown co theo các dropdown còn lại (trừ chính nó)
-   CT4: mọi thao tác lọc đi qua apply() → mờ bảng → render → sáng lại, không chớp DOM
-   ============================================================================ */
-function fbarMake(cfg){
-  var deb=null, tm=null;
-  function sels(){ return Array.prototype.slice.call(cfg.el.querySelectorAll('select')); }
-  function q(){ var i=cfg.el.querySelector('.fq'); return ((i&&i.value)||'').toLowerCase(); }
-  function filtered(excludeK){
-    var st=sels().map(function(s){ return {k:s.getAttribute('data-fk'),v:s.value}; }), qq=q();
-    return cfg.rows().filter(function(r){
-      for(var i=0;i<st.length;i++){
-        var f=st[i];
-        if(f.k===excludeK||!f.v) continue;
-        if(String(cfg.get(r,f.k)||'').trim()!==f.v) return false;
-      }
-      if(qq && cfg.qval(r).toLowerCase().indexOf(qq)<0) return false;
-      return true;
-    });
-  }
-  function chan(){   // chain-filtering: co option theo các dropdown còn lại, giữ lựa chọn hiện tại
-    sels().forEach(function(s){
-      var k=s.getAttribute('data-fk'), cur=s.value, uniq=new Set();
-      filtered(k).forEach(function(r){ var v=String(cfg.get(r,k)||'').trim(); if(v) uniq.add(v); });
-      if(cur) uniq.add(cur);
-      s.innerHTML='<option value="">'+s.getAttribute('data-lb')+': tất cả</option>'+
-        Array.from(uniq).sort().map(function(v){ return '<option value="'+esc(v)+'"'+(v===cur?' selected':'')+'>'+esc(v)+'</option>'; }).join('');
-    });
-  }
-  function paint(){ chan(); cfg.render(filtered(null)); }
-  function apply(){
-    if(cfg.body) cfg.body.classList.add('is-filtering');
-    clearTimeout(tm);
-    tm=setTimeout(function(){ paint(); if(cfg.body) cfg.body.classList.remove('is-filtering'); },160);
-  }
-  function quick(){ clearTimeout(deb); deb=setTimeout(apply,120); }
-  function build(){
-    var rows=cfg.rows();
-    var html='<input class="fq" placeholder="'+(cfg.ph||'Tìm nhanh trong danh sách…')+'">';
-    cfg.fields.forEach(function(d){
-      var uniq=new Set();
-      rows.forEach(function(r){ var v=String(cfg.get(r,d.k)||'').trim(); if(v) uniq.add(v); });
-      if(uniq.size>1)   // cột trùng tiêu đề pop-up chỉ có 1 giá trị → tự triệt tiêu, không dropdown thừa
-        html+='<select data-fk="'+d.k+'" data-lb="'+d.lb+'"><option value="">'+d.lb+': tất cả</option>'+
-          Array.from(uniq).sort().map(function(v){ return '<option value="'+esc(v)+'">'+esc(v)+'</option>'; }).join('')+'</select>';
-    });
-    cfg.el.innerHTML=html;
-    cfg.el.querySelector('.fq').addEventListener('input',quick);
-    sels().forEach(function(s){ s.addEventListener('change',apply); });
-    cfg.render(rows);   // lượt vẽ đầu: chưa lọc gì, không cần fade
-  }
-  return {build:build, apply:apply, filtered:filtered};
+/* ---------- modal ---------- */
+var CUR_CATS=[];
+/* CT4: option dropdown SINH TỪ DỮ LIỆU THỰC của pop-up (Set giá trị duy nhất của tab đang xem) —
+   pop-up chỉ có hàng ở 2 kho thì dropdown chỉ được phép có đúng 2 option */
+function fillCatOptions(){
+  var rows=MODAL_ROWS[curTab], uniq=new Set(), cnt={};
+  for(var i=0;i<rows.length;i++){ var v=String(rows[i][MODAL_KEY]||''); uniq.add(v); cnt[v]=(cnt[v]||0)+1; }
+  CUR_CATS=Array.from(uniq).sort().map(function(c){ return {name:c,n:cnt[c]}; });
 }
-
-/* ---------- modal Trạng thái lưu trữ: dùng FBAR component ---------- */
-var MBAR=null;
-function mbarBuild(){
-  MBAR=fbarMake({
-    el: document.getElementById('mFilters'),
-    body: document.getElementById('mScroll'),
-    ph: 'Tìm nhanh SKU / tên / vị trí…',
-    /* khai đủ 2 cột — pop-up mở từ thẻ Kho thì cột Kho chỉ có 1 giá trị nên dropdown tự ẩn (và ngược lại) */
-    fields: [{k:'3',lb:'Category'},{k:'5',lb:'Kho'}],
-    get: function(r,k){ return r[+k]; },                    // row dạng mảng [sku,pn,loc,cat,qty,wh]
-    qval: function(r){ return r[0]+' '+r[1]+' '+r[2]; },    // SKU + ProductName + Mã vị trí
-    rows: function(){ return MODAL_ROWS[curTab]; },
-    render: renderRows
-  });
-  MBAR.build();
+function renderCatMenu(){
+  var isWh=(MODAL_KEY===3);
+  var q=document.getElementById('fCat').value.toLowerCase();
+  var items=CUR_CATS.filter(function(c){ return !q||c.name.toLowerCase().indexOf(q)>=0; });
+  var html='<div class="combo-item all" data-v=""><span class="nm">'+(isWh?'Tất cả category':'Tất cả kho')+'</span><span class="c">'+CUR_CATS.length+(isWh?' nhóm':' kho')+'</span></div>';
+  html+=items.map(function(c){ return '<div class="combo-item" data-v="'+esc(c.name)+'"><span class="nm">'+esc(c.name)+'</span><span class="c">'+nf(c.n)+'</span></div>'; }).join('');
+  if(!items.length) html+='<div class="combo-empty">Không có mục phù hợp</div>';
+  var m=document.getElementById('catMenu'); m.innerHTML=html; m.classList.add('show');
 }
+function onCatInput(){ renderCatMenu(); qfilter(); }
+function pickCat(v){ document.getElementById('fCat').value=v; closeCat(); renderRows(); }
+function closeCat(){ document.getElementById('catMenu').classList.remove('show'); }
+var _deb;
+function qfilter(){ clearTimeout(_deb); _deb=setTimeout(renderRows,110); }
 /* SMART CONTEXT: MODAL_KEY = cột dùng cho bộ lọc + cột đầu bảng.
    Mở từ thẻ KHO  -> tiêu đề đã là kho  -> key=3 (CategoryName), cột "Kho" bị TRIỆT TIÊU khỏi DOM.
    Mở từ thẻ CATE -> tiêu đề đã là cate -> key=5 (Kho/Warehouse), cột "Category" bị TRIỆT TIÊU. */
@@ -1052,13 +1009,17 @@ function openDetail(title,sub){
   var isWh=(MODAL_KEY===3);
   document.getElementById('mtitle').textContent=title;
   document.getElementById('mtsub').textContent=sub;
+  /* CT3: hoán đổi nhãn + chức năng bộ lọc theo ngữ cảnh */
+  document.getElementById('fLbl').textContent=isWh?'CategoryName':'Kho (Warehouse)';
+  document.getElementById('fCat').placeholder=isWh?'Tất cả category…':'Tất cả kho…';
   /* CT2: dựng thead theo ngữ cảnh — cột trùng với tiêu đề KHÔNG được sinh ra */
   document.getElementById('mthead').innerHTML=
     (isWh?'<th>CategoryName</th>':'<th>Kho (Warehouse)</th>')+
     '<th>Mã vị trí</th><th>SKU</th><th>ProductName</th><th class="num">Số lượng</th>';
   document.getElementById('cShelf').textContent=nf(MODAL_ROWS.shelf.length);
   document.getElementById('cPend').textContent=nf(MODAL_ROWS.pend.length);
-  setTab('pend');   // luôn mở tab "Chưa lên kệ" trước — setTab tự dựng lại FBAR theo dữ liệu tab
+  document.getElementById('fLoc').value=''; document.getElementById('fSku').value=''; document.getElementById('fName').value='';
+  setTab('pend',true);   // luôn mở tab "Chưa lên kệ" trước
   var m=document.getElementById('modal'); m.style.display='flex';
   requestAnimationFrame(function(){ m.classList.add('show'); });
 }
@@ -1094,15 +1055,26 @@ function closeCatWhModal(){
   var m=document.getElementById('catmodal'); m.classList.remove('show');
   setTimeout(function(){ m.style.display='none'; },240);
 }
-function setTab(t){
+function setTab(t,skipFill){
   curTab=t;
   document.getElementById('tabShelf').classList.toggle('active',t==='shelf');
   document.getElementById('tabPend').classList.toggle('active',t==='pend');
-  mbarBuild();   // CT3: dropdown sinh lại bằng Set() từ dữ liệu THỰC của tab hiện tại
+  fillCatOptions();
+  document.getElementById('fCat').value='';
+  closeCat();
+  renderRows();
 }
-function renderRows(rows){   // rows đã đi qua FBAR (dropdown + tìm nhanh) — chỉ việc vẽ
-  var out=[], cnt=0, qsum=0, isWh=(MODAL_KEY===3);
+function renderRows(){
+  var fc=document.getElementById('fCat').value.toLowerCase();
+  var fl=document.getElementById('fLoc').value.toLowerCase();
+  var fs=document.getElementById('fSku').value.toLowerCase();
+  var fn=document.getElementById('fName').value.toLowerCase();
+  var rows=MODAL_ROWS[curTab], out=[], cnt=0, qsum=0, isWh=(MODAL_KEY===3);
   for(var i=0;i<rows.length;i++){ var r=rows[i]; // [sku,pn,loc,cat,qty,wh]
+    if(fc && String(r[MODAL_KEY]||'').toLowerCase().indexOf(fc)<0) continue;   // CT3: lọc theo cột ngữ cảnh
+    if(fl && r[2].toLowerCase().indexOf(fl)<0) continue;
+    if(fs && r[0].toLowerCase().indexOf(fs)<0) continue;
+    if(fn && r[1].toLowerCase().indexOf(fn)<0) continue;
     cnt++; qsum+=r[4];
     if(out.length<4000)
       /* CT2: cột đầu theo ngữ cảnh — KHÔNG sinh cột trùng với tiêu đề pop-up */
@@ -1114,15 +1086,24 @@ function renderRows(rows){   // rows đã đi qua FBAR (dropdown + tìm nhanh) �
   if(cnt>4000) out.push('<tr><td colspan="5" class="empty">Hiển thị 4.000 / '+nf(cnt)+' dòng — dùng bộ lọc để thu hẹp.</td></tr>');
   document.getElementById('mbody').innerHTML=out.length?out.join(''):'<tr><td colspan="5" class="empty">Không có dữ liệu phù hợp</td></tr>';
   document.getElementById('msum').textContent=nf(cnt)+' dòng · tổng số lượng '+nf(qsum);
-  kkSwap(document.getElementById('mScroll'));   // CT4: fadeUp đồng bộ với pop-up Kiểm kê
 }
 document.addEventListener('keydown',function(e){
   if(e.key!=='Escape') return;
+  var m=document.getElementById('catMenu');
+  if(m && m.classList.contains('show')){ closeCat(); return; }
   var cm=document.getElementById('catmodal');
   if(cm && cm.classList.contains('show')){ closeCatWhModal(); return; }
   var km=document.getElementById('kkmodal');
   if(km && km.classList.contains('show')){ closeKkModal(); return; }
   closeModal();
+});
+document.getElementById('catMenu').addEventListener('click',function(e){
+  var it=e.target.closest('.combo-item'); if(!it) return;
+  pickCat(it.getAttribute('data-v')||'');
+});
+document.addEventListener('click',function(e){
+  var combo=document.getElementById('catCombo');
+  if(combo && !combo.contains(e.target)) closeCat();
 });
 
 /* ================= Đồng bộ WMS on-demand + cooldown 4h ================= */
@@ -1593,27 +1574,64 @@ function kkOpen(kind,metric){
   document.getElementById('kkmSub').textContent=(metric==='notcount'
     ? 'Anti-join: tồn kho từ Stock Location TRỪ tập (kho|mã) đã kiểm — đây là phần chưa được đụng tới'
     : 'Theo bộ lọc hiện tại của tab Kiểm kê · bấm ID để mở WMS');
-  /* CT2: cùng FBAR component với pop-up Trạng thái — chỉ khác cấu hình cột/render */
-  KKBAR=fbarMake({
-    el: document.getElementById('kkmFilters'),
-    body: document.getElementById('kkmBody'),
-    ph: 'Tìm nhanh trong danh sách…',
-    /* KHÔNG có bộ lọc Ngày trong pop-up — giữ nguyên theo chỉ thị */
-    fields: [{k:'wh',lb:'Warehouse'},{k:'cat',lb:'Category'},{k:'type',lb:'Type'},{k:'st',lb:'Trạng thái'},{k:'by',lb:'Counted by'}],
-    get: function(r,k){ return r[k]; },                     // row dạng object {wh,cat,type,st,by,...}
-    qval: function(r){ return (r.sku||'')+' '+(r.pn||'')+' '+(r.loc||'')+' '+(r.wh||''); },
-    rows: function(){ return KK_MODAL.rows; },
-    render: function(rs){
-      var body=document.getElementById('kkmBody');
-      body.innerHTML=(KK_MODAL.metric==='notcount')?kkTableRemain(KK_MODAL.kind,rs):kkTable(KK_MODAL.kind,rs);
-      kkSwap(body);   // fadeUp — chuẩn animation dự án
-    }
-  });
-  KKBAR.build();
+  kkmBuildFilters();
+  kkmRender();
   var m=document.getElementById('kkmodal'); m.style.display='flex';
   requestAnimationFrame(function(){ m.classList.add('show'); });
 }
-var KKBAR=null;
+function kkmBuildFilters(){
+  var rows=KK_MODAL.rows;
+  /* KHÔNG có bộ lọc Ngày trong pop-up — giữ nguyên theo chỉ thị */
+  var defs=[{k:'wh',lb:'Warehouse'},{k:'cat',lb:'Category'},{k:'type',lb:'Type'},{k:'st',lb:'Trạng thái'},{k:'by',lb:'Counted by'}];
+  var html='<input id="kkmQ" placeholder="Tìm nhanh trong danh sách…" oninput="kkmQuick()">';
+  defs.forEach(function(d){
+    var uniq=new Set();
+    rows.forEach(function(r){ var v=String(r[d.k]||'').trim(); if(v) uniq.add(v); });
+    if(uniq.size>1){   // chỉ sinh dropdown khi cột có >1 giá trị thực — không dropdown thừa/rỗng
+      html+='<select data-fk="'+d.k+'" data-lb="'+d.lb+'" onchange="kkmApply()"><option value="">'+d.lb+': tất cả</option>'+
+        Array.from(uniq).sort().map(function(v){ return '<option value="'+esc(v)+'">'+esc(v)+'</option>'; }).join('')+'</select>';
+    }
+  });
+  document.getElementById('kkmFilters').innerHTML=html;
+}
+/* CT3: đổi lọc trong pop-up -> bảng mờ 0.15s (is-filtering) -> gắn data mới -> sáng lại, không chớp DOM */
+var _kkmDeb=null, _kkmT=null;
+function kkmQuick(){ clearTimeout(_kkmDeb); _kkmDeb=setTimeout(kkmApply,120); }
+function kkmApply(){
+  var b=document.getElementById('kkmBody');
+  if(b) b.classList.add('is-filtering');
+  clearTimeout(_kkmT);
+  _kkmT=setTimeout(function(){ kkmRender(); if(b) b.classList.remove('is-filtering'); },150);
+}
+function kkmRender(){
+  var q=((document.getElementById('kkmQ')||{}).value||'').toLowerCase();
+  var sels=Array.prototype.slice.call(document.querySelectorAll('#kkmFilters select'));
+  var state=sels.map(function(s){ return {k:s.getAttribute('data-fk'),v:s.value}; });
+  function rowsWith(excludeK){
+    return KK_MODAL.rows.filter(function(r){
+      for(var i=0;i<state.length;i++){
+        var f=state[i];
+        if(f.k===excludeK||!f.v) continue;
+        if(String(r[f.k]||'').trim()!==f.v) return false;
+      }
+      if(q&&((r.sku||'')+' '+(r.pn||'')+' '+(r.loc||'')+' '+(r.wh||'')).toLowerCase().indexOf(q)<0) return false;
+      return true;
+    });
+  }
+  /* CHAIN-FILTERING: option của mỗi dropdown co lại theo các dropdown CÒN LẠI (trừ chính nó) */
+  sels.forEach(function(s){
+    var k=s.getAttribute('data-fk'), cur=s.value;
+    var uniq=new Set();
+    rowsWith(k).forEach(function(r){ var v=String(r[k]||'').trim(); if(v) uniq.add(v); });
+    if(cur) uniq.add(cur);   // luôn giữ lựa chọn hiện tại
+    s.innerHTML='<option value="">'+s.getAttribute('data-lb')+': tất cả</option>'+
+      Array.from(uniq).sort().map(function(v){ return '<option value="'+esc(v)+'"'+(v===cur?' selected':'')+'>'+esc(v)+'</option>'; }).join('');
+  });
+  var rs=rowsWith(null);
+  var body=document.getElementById('kkmBody');
+  body.innerHTML=(KK_MODAL.metric==='notcount')?kkTableRemain(KK_MODAL.kind,rs):kkTable(KK_MODAL.kind,rs);
+  kkSwap(body);   // fadeUp — chuẩn animation dự án
+}
 function closeKkModal(){
   var m=document.getElementById('kkmodal'); m.classList.remove('show');
   setTimeout(function(){ m.style.display='none'; document.getElementById('kkmBody').innerHTML=''; document.getElementById('kkmFilters').innerHTML=''; },240);   // dọn DOM khi đóng
