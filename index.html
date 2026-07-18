@@ -1440,6 +1440,24 @@ function kkDiffOf(kind,r){
   if(kind==='loc') return kkIsCounted(kind,r)?(Number(r.diff)||0):null;
   var e=kkEval(r.inv,r.cnt); return e.counted?e.d:null;   // null = chưa kiểm
 }
+/* KHỬ TRÙNG PHIẾU: 1 mã có thể được kiểm NHIỀU LẦN (kiểm lại sau REJECTED / kiểm định kỳ) —
+   dữ liệu thật có 169 SKU >1 phiếu khiến 28 mã bị đếm ở CẢ lệch âm lẫn lệch dương.
+   Mỗi (kho|mã) chỉ lấy 1 PHIẾU ĐẠI DIỆN: phiếu đã kiểm MỚI NHẤT (theo Counted date, fallback Updated At),
+   phiếu hợp lệ luôn thắng phiếu bị REJECTED/CANCELED. */
+function kkLatestByKey(kind){
+  var map={};
+  kkRows(kind).forEach(function(r){
+    if(!kkIsChecked(r)) return;
+    var k=r.wh+'|'+((kind==='sku')?r.sku:r.loc);
+    var st=kkStKey(r), bad=(st==='REJECTED'||st==='CANCELED');
+    var t=kkCountMs(r); if(isNaN(t)) t=0;
+    var cur=map[k];
+    if(!cur){ map[k]={r:r,t:t,bad:bad}; return; }
+    if(cur.bad!==bad){ if(!bad) map[k]={r:r,t:t,bad:bad}; return; }   // phiếu hợp lệ thắng phiếu bị từ chối/huỷ
+    if(t>=cur.t) map[k]={r:r,t:t,bad:bad};                            // cùng hạng -> lấy phiếu mới nhất
+  });
+  return map;
+}
 /* Bảng màu trạng thái — ngữ nghĩa, ăn theo theme */
 /* CT2: nhãn hiển thị = TIẾNG ANH GỐC từ Sheet/WMS; key so sánh giữ đúng enum data (CANCELED 1 chữ L) */
 var KK_ST_META={
@@ -1513,16 +1531,16 @@ function kkTableRemain(kind,rs){
 function kkRenderPanel(kind){
   var U=(kind==='loc')?'vị trí':'SKU';
   var rs=kkRows(kind), stc={};
-  var key=function(r){ return r.wh+'|'+((kind==='sku')?r.sku:r.loc); };   // distinct theo cặp (kho|mã) — khớp 1:1 với anti-join
-  var chk=new Set(), negS=new Set(), posS=new Set();
-  rs.forEach(function(r){
-    var s=kkStKey(r); stc[s]=(stc[s]||0)+1;
-    if(kkIsChecked(r)) chk.add(key(r));
-    var d=kkDiffOf(kind,r);
-    if(d!=null&&d<0) negS.add(key(r));
-    if(d!=null&&d>0) posS.add(key(r));
+  rs.forEach(function(r){ var s=kkStKey(r); stc[s]=(stc[s]||0)+1; });   // chip trạng thái = số PHIẾU (đúng ngữ nghĩa workflow)
+  /* Lệch âm/dương + Đã kiểm: đếm theo PHIẾU ĐẠI DIỆN mới nhất của từng (kho|mã) — hết cảnh
+     1 mã vừa nằm ở "lệch âm" (phiếu cũ) vừa nằm ở "lệch dương" (phiếu kiểm lại) */
+  var latest=kkLatestByKey(kind);
+  var chk=new Set(Object.keys(latest));
+  var neg=0, pos=0;
+  Object.keys(latest).forEach(function(k){
+    var d=kkDiffOf(kind,latest[k].r);
+    if(d!=null){ if(d<0) neg++; else if(d>0) pos++; }
   });
-  var neg=negS.size, pos=posS.size;
   /* Tổng = universe tồn kho; Đã kiểm = |đã kiểm ∩ universe| -> Tổng = Đã kiểm + Còn lại KHỚP 1:1 với anti-join */
   var univ=kkUniverse(kind), denom=univ.size, counted=0;
   chk.forEach(function(k){ if(univ.has(k)) counted++; });
@@ -1638,14 +1656,16 @@ function kkMetricRows(kind,metric){
   var rs=kkRows(kind);
   if(metric==='total') return rs;
   if(metric.indexOf('st:')===0){ var s=metric.slice(3); return rs.filter(function(r){ return kkStKey(r)===s; }); }
-  return rs.filter(function(r){
-    var c=kkIsChecked(r), d=kkDiffOf(kind,r);   // cùng định nghĩa "đã kiểm" với dải chỉ số (CT3)
-    if(metric==='counted') return c;
-    if(metric==='notcount') return !c;
-    if(metric==='negative') return d!=null&&d<0;
-    if(metric==='positive') return d!=null&&d>0;
-    return true;
+  if(metric==='notcount') return rs.filter(function(r){ return !kkIsChecked(r); });   // dự phòng (kkOpen dùng anti-join)
+  /* counted/negative/positive: KHỚP 1:1 với dải chỉ số — mỗi (kho|mã) chỉ 1 phiếu đại diện mới nhất */
+  var latest=kkLatestByKey(kind), out=[];
+  Object.keys(latest).forEach(function(k){
+    var r=latest[k].r, d=kkDiffOf(kind,r);
+    if(metric==='counted'){ out.push(r); return; }
+    if(metric==='negative'&&d!=null&&d<0) out.push(r);
+    if(metric==='positive'&&d!=null&&d>0) out.push(r);
   });
+  return out;
 }
 function kkTable(kind,rs){
   var CAP=300, out=[];
@@ -1675,7 +1695,9 @@ function kkOpen(kind,metric){
   document.getElementById('kkmTitle').textContent=U+' · '+lab+' — '+nf(rows.length)+' dòng';
   document.getElementById('kkmSub').textContent=(metric==='notcount'
     ? 'Anti-join: tồn kho từ Stock Location TRỪ tập (kho|mã) đã kiểm — đây là phần chưa được đụng tới'
-    : 'Theo bộ lọc hiện tại của tab Kiểm kê · bấm ID để mở WMS');
+    : (metric==='counted'||metric==='negative'||metric==='positive')
+    ? 'Đã khử trùng phiếu: mỗi (kho|mã) chỉ tính 1 phiếu đã kiểm MỚI NHẤT (ưu tiên phiếu không bị từ chối/huỷ) · bấm ID để mở WMS'
+    : 'Bấm ID để mở WMS');
   kkmBuildFilters();
   kkmRender();
   var m=document.getElementById('kkmodal'); m.style.display='flex';
