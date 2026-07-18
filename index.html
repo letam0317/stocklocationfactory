@@ -236,7 +236,11 @@ h1.brand-title{margin:0;min-width:0}
 .kkstchip b{font-variant-numeric:tabular-nums;font-weight:750;color:inherit}
 /* Smart Modal Kiểm kê: khung co giãn theo nội dung, CẤM cuộn ngang — cột dài tự bẻ dòng */
 .modalbox.kkbox{width:max-content;max-width:95vw;min-width:min(720px,92vw)}
-.kkmbar{padding:12px 22px 0;margin-bottom:0}
+/* Bộ lọc pop-up Kiểm kê: đồng bộ 100% thiết kế .mfilters của pop-up Trạng thái lưu trữ (nhãn + combo gõ-để-lọc);
+   flex-wrap thay grid vì số bộ lọc SINH ĐỘNG theo dữ liệu (1 tìm nhanh + 0–5 combo) */
+.mfilters.kkmf{display:flex;flex-wrap:wrap;gap:8px}
+.kkmf .fld{flex:1 1 150px;min-width:140px}
+.kkmf .fld.q{flex:1.6 1 200px}
 #kkmodal .kkwrap{overflow-x:hidden}
 #kkmodal .kkwrap table{min-width:0;width:100%}
 #kkmodal .kkwrap thead th,#kkmodal .kkwrap tbody td{white-space:normal;word-wrap:break-word}
@@ -640,7 +644,8 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
 <div id="kkmodal" class="modal" onclick="if(event.target===this)closeKkModal()">
   <div class="modalbox kkbox">
     <div class="modalhd"><div><div class="mt" id="kkmTitle"></div><div class="mtsub" id="kkmSub"></div></div><button class="mclose" onclick="closeKkModal()">&times;</button></div>
-    <div class="kkbar kkmbar" id="kkmFilters"></div>
+    <div class="mfilters kkmf" id="kkmFilters"></div>
+    <div class="msum" id="kkmSum"></div>
     <div class="modalbody" id="kkmBody" style="padding-top:12px"></div>
   </div>
 </div>
@@ -1093,6 +1098,7 @@ document.addEventListener('keydown',function(e){
   if(m && m.classList.contains('show')){ closeCat(); return; }
   var cm=document.getElementById('catmodal');
   if(cm && cm.classList.contains('show')){ closeCatWhModal(); return; }
+  if(document.querySelector('#kkmFilters .combo-menu.show')){ kkmCloseCombos(); return; }
   var km=document.getElementById('kkmodal');
   if(km && km.classList.contains('show')){ closeKkModal(); return; }
   closeModal();
@@ -1562,7 +1568,8 @@ function kkTable(kind,rs){
   return '<div class="kkwrap"><table><thead><tr><th>ID</th><th>Location</th><th>Warehouse</th><th>Type</th><th>Priority</th><th class="num">Diff</th><th>Request</th><th>Counted by</th><th>Counted date</th><th>Plan date</th><th>Status</th></tr></thead><tbody>'+(out.join('')||kkEmpty(11))+'</tbody></table></div>'+
     '<div class="kknote">'+(rs.length>CAP?('Hiển thị '+nf(CAP)+' / '+nf(rs.length)+' dòng — lọc để thu hẹp.'):(nf(rs.length)+' dòng.'))+'</div>';
 }
-/* CT2: Smart Modal — thanh lọc cục bộ TỰ SINH từ dữ liệu bảng (Set unique values, không dropdown thừa) */
+/* CT2: Smart Modal — thanh lọc cục bộ TỰ SINH từ dữ liệu bảng, THIẾT KẾ đồng bộ pop-up Trạng thái lưu trữ:
+   nhãn uppercase + combo gõ-để-lọc (menu unique value + số dòng) + dòng tổng kết .msum */
 var KK_MODAL={kind:null,metric:null,rows:[]};
 function kkOpen(kind,metric){
   /* CT1: "Còn lại" dùng ANTI-JOIN trên danh sách tồn gốc; các metric khác lọc trên phiếu kiểm kê */
@@ -1583,17 +1590,71 @@ function kkmBuildFilters(){
   var rows=KK_MODAL.rows;
   /* KHÔNG có bộ lọc Ngày trong pop-up — giữ nguyên theo chỉ thị */
   var defs=[{k:'wh',lb:'Warehouse'},{k:'cat',lb:'Category'},{k:'type',lb:'Type'},{k:'st',lb:'Trạng thái'},{k:'by',lb:'Counted by'}];
-  var html='<input id="kkmQ" placeholder="Tìm nhanh trong danh sách…" oninput="kkmQuick()">';
+  var html='<div class="fld q"><label>Tìm nhanh</label><input id="kkmQ" autocomplete="off" placeholder="SKU / tên / vị trí / kho…" oninput="kkmQuick()"></div>';
   defs.forEach(function(d){
     var uniq=new Set();
     rows.forEach(function(r){ var v=String(r[d.k]||'').trim(); if(v) uniq.add(v); });
-    if(uniq.size>1){   // chỉ sinh dropdown khi cột có >1 giá trị thực — không dropdown thừa/rỗng
-      html+='<select data-fk="'+d.k+'" data-lb="'+d.lb+'" onchange="kkmApply()"><option value="">'+d.lb+': tất cả</option>'+
-        Array.from(uniq).sort().map(function(v){ return '<option value="'+esc(v)+'">'+esc(v)+'</option>'; }).join('')+'</select>';
+    if(uniq.size>1){   // chỉ sinh combo khi cột có >1 giá trị thực — không bộ lọc thừa/rỗng
+      html+='<div class="fld"><label>'+esc(d.lb)+'</label><div class="combo" data-fk="'+d.k+'" data-lb="'+esc(d.lb)+'">'+
+        '<input data-fk="'+d.k+'" autocomplete="off" placeholder="Tất cả…" oninput="kkmComboInput(this)" onfocus="kkmComboMenu(this.parentNode)">'+
+        '<div class="combo-menu"></div></div></div>';
     }
   });
   document.getElementById('kkmFilters').innerHTML=html;
 }
+function kkmQval(){ return ((document.getElementById('kkmQ')||{}).value||'').trim().toLowerCase(); }
+function kkmState(){
+  return Array.prototype.slice.call(document.querySelectorAll('#kkmFilters .combo input')).map(function(inp){
+    var v=inp.value.trim();
+    return {k:inp.getAttribute('data-fk'),raw:v,v:v.toLowerCase(),exact:!!inp.getAttribute('data-exact')};
+  });
+}
+/* Lọc dòng: CHỌN từ menu = khớp chính xác (không dính "SKU" vào "SKU - Factory"), GÕ TAY = khớp chứa (giống fCat) */
+function kkmRowsWith(excludeK,state,q){
+  return KK_MODAL.rows.filter(function(r){
+    for(var i=0;i<state.length;i++){
+      var f=state[i];
+      if(f.k===excludeK||!f.v) continue;
+      var cell=String(r[f.k]||'').trim();
+      if(f.exact){ if(cell!==f.raw) return false; }
+      else if(cell.toLowerCase().indexOf(f.v)<0) return false;
+    }
+    if(q&&((r.sku||'')+' '+(r.pn||'')+' '+(r.loc||'')+' '+(r.wh||'')).toLowerCase().indexOf(q)<0) return false;
+    return true;
+  });
+}
+/* CHAIN-FILTERING giữ nguyên: menu mỗi combo sinh từ dòng đã lọc bởi các bộ lọc CÒN LẠI (trừ chính nó) + đếm số dòng */
+function kkmComboMenu(combo){
+  var k=combo.getAttribute('data-fk'), lb=combo.getAttribute('data-lb');
+  var inp=combo.querySelector('input'), menu=combo.querySelector('.combo-menu');
+  var uniq=new Set(), cnt={};
+  kkmRowsWith(k,kkmState(),kkmQval()).forEach(function(r){ var v=String(r[k]||'').trim(); if(!v) return; uniq.add(v); cnt[v]=(cnt[v]||0)+1; });
+  var typed=inp.getAttribute('data-exact')?'':inp.value.trim().toLowerCase();   // giá trị đã chọn -> mở menu thấy đủ danh sách
+  var items=Array.from(uniq).sort().filter(function(v){ return !typed||v.toLowerCase().indexOf(typed)>=0; });
+  var html='<div class="combo-item all" data-v=""><span class="nm">Tất cả '+esc(lb)+'</span><span class="c">'+uniq.size+' mục</span></div>';
+  html+=items.map(function(v){ return '<div class="combo-item" data-v="'+esc(v)+'"><span class="nm">'+esc(v)+'</span><span class="c">'+nf(cnt[v])+'</span></div>'; }).join('');
+  if(!items.length) html+='<div class="combo-empty">Không có mục phù hợp</div>';
+  menu.innerHTML=html;
+  kkmCloseCombos(combo);   // mở combo này thì đóng các combo khác
+  menu.classList.add('show');
+}
+function kkmComboInput(inp){ inp.removeAttribute('data-exact'); kkmComboMenu(inp.parentNode); kkmQuick(); }
+function kkmCloseCombos(except){
+  document.querySelectorAll('#kkmFilters .combo-menu.show').forEach(function(m){
+    if(!except||m.parentNode!==except) m.classList.remove('show');
+  });
+}
+/* Delegation 1 lần trên container cố định — innerHTML rebuild mỗi lần mở modal không làm mất listener */
+document.getElementById('kkmFilters').addEventListener('click',function(e){
+  var it=e.target.closest('.combo-item'); if(!it) return;
+  var inp=it.closest('.combo').querySelector('input');
+  inp.value=it.getAttribute('data-v')||'';
+  if(inp.value) inp.setAttribute('data-exact','1'); else inp.removeAttribute('data-exact');
+  kkmCloseCombos(); kkmApply();
+});
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#kkmFilters .combo')) kkmCloseCombos();
+});
 /* CT3: đổi lọc trong pop-up -> bảng mờ 0.15s (is-filtering) -> gắn data mới -> sáng lại, không chớp DOM */
 var _kkmDeb=null, _kkmT=null;
 function kkmQuick(){ clearTimeout(_kkmDeb); _kkmDeb=setTimeout(kkmApply,120); }
@@ -1604,37 +1665,18 @@ function kkmApply(){
   _kkmT=setTimeout(function(){ kkmRender(); if(b) b.classList.remove('is-filtering'); },150);
 }
 function kkmRender(){
-  var q=((document.getElementById('kkmQ')||{}).value||'').toLowerCase();
-  var sels=Array.prototype.slice.call(document.querySelectorAll('#kkmFilters select'));
-  var state=sels.map(function(s){ return {k:s.getAttribute('data-fk'),v:s.value}; });
-  function rowsWith(excludeK){
-    return KK_MODAL.rows.filter(function(r){
-      for(var i=0;i<state.length;i++){
-        var f=state[i];
-        if(f.k===excludeK||!f.v) continue;
-        if(String(r[f.k]||'').trim()!==f.v) return false;
-      }
-      if(q&&((r.sku||'')+' '+(r.pn||'')+' '+(r.loc||'')+' '+(r.wh||'')).toLowerCase().indexOf(q)<0) return false;
-      return true;
-    });
-  }
-  /* CHAIN-FILTERING: option của mỗi dropdown co lại theo các dropdown CÒN LẠI (trừ chính nó) */
-  sels.forEach(function(s){
-    var k=s.getAttribute('data-fk'), cur=s.value;
-    var uniq=new Set();
-    rowsWith(k).forEach(function(r){ var v=String(r[k]||'').trim(); if(v) uniq.add(v); });
-    if(cur) uniq.add(cur);   // luôn giữ lựa chọn hiện tại
-    s.innerHTML='<option value="">'+s.getAttribute('data-lb')+': tất cả</option>'+
-      Array.from(uniq).sort().map(function(v){ return '<option value="'+esc(v)+'"'+(v===cur?' selected':'')+'>'+esc(v)+'</option>'; }).join('');
-  });
-  var rs=rowsWith(null);
+  var state=kkmState(), q=kkmQval();
+  var rs=kkmRowsWith(null,state,q);
+  /* dòng tổng kết .msum — cùng vị trí/kiểu với pop-up Trạng thái lưu trữ */
+  var nAct=state.filter(function(f){ return f.v; }).length+(q?1:0);
+  document.getElementById('kkmSum').textContent=nf(rs.length)+' / '+nf(KK_MODAL.rows.length)+' dòng'+(nAct?' · '+nAct+' bộ lọc đang áp dụng':'');
   var body=document.getElementById('kkmBody');
   body.innerHTML=(KK_MODAL.metric==='notcount')?kkTableRemain(KK_MODAL.kind,rs):kkTable(KK_MODAL.kind,rs);
   kkSwap(body);   // fadeUp — chuẩn animation dự án
 }
 function closeKkModal(){
   var m=document.getElementById('kkmodal'); m.classList.remove('show');
-  setTimeout(function(){ m.style.display='none'; document.getElementById('kkmBody').innerHTML=''; document.getElementById('kkmFilters').innerHTML=''; },240);   // dọn DOM khi đóng
+  setTimeout(function(){ m.style.display='none'; document.getElementById('kkmBody').innerHTML=''; document.getElementById('kkmFilters').innerHTML=''; document.getElementById('kkmSum').textContent=''; },240);   // dọn DOM khi đóng
 }
 
 loadData();
