@@ -352,8 +352,52 @@ code{background:var(--surface2);padding:1px 7px;border-radius:6px;font-size:12px
 .spark i.last{opacity:1}
 .spark .sd{font-size:11px;font-weight:700;line-height:1;margin-left:3px}
 
-/* Chart: SKU đã lên kệ theo ngày (cột chồng Mastige/Garment, cuộn ngang nếu nhiều ngày) */
-#histwrap{min-height:350px;display:flex;flex-direction:column;justify-content:flex-end}
+/* ===== PREMIUM CHART "SKU đã lên kệ theo ngày" — Split Grid 60/40, gradient bar bo góc,
+   gridline gióng hàng, data label in tại chỗ, trục thời gian liên tục, animation mọc cột ===== */
+.phwrap{display:grid;grid-template-columns:1.5fr 1fr;gap:20px;align-items:start}   /* 60% chart | 40% summary */
+@media(max-width:1024px){.phwrap{grid-template-columns:1fr}}
+#histwrap{min-width:0}
+.phbody{display:flex;align-items:flex-end}
+.phy{position:relative;flex:0 0 46px;height:240px;margin-bottom:21px}
+.phy b{position:absolute;right:8px;transform:translateY(50%);font-size:9.5px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.phscroll{flex:1;min-width:0;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+.phplot{position:relative;padding-top:26px}   /* headroom cho số Tổng trên đỉnh cột */
+.phgl{position:absolute;left:0;right:0;bottom:21px;height:240px;pointer-events:none}
+.phgl i{position:absolute;left:0;right:0;border-top:1px dashed color-mix(in srgb,var(--muted) 26%,transparent)}   /* strokeDasharray "3 3" — siêu nhạt, ăn theo theme */
+.phgl i.zero{border-top:1px solid color-mix(in srgb,var(--muted) 42%,transparent)}
+.phcols{position:relative;display:flex;align-items:flex-end;gap:10px;width:max-content;min-width:100%}
+.phcol{flex:0 0 32px;display:flex;flex-direction:column;align-items:center}
+/* Kỳ ít ngày: cột giãn ĐỀU lấp đầy trục (khoảng cách vẫn bằng nhau — đúng logic time-scale) */
+.phcols.spread{width:100%;justify-content:space-around}
+.phcols.spread .phcol{flex:1 1 0;max-width:72px;min-width:0}
+.phstack{position:relative;height:240px;width:26px;display:flex;flex-direction:column;justify-content:flex-end}
+.phseg{width:100%;height:0;position:relative;overflow:hidden;transition:height .8s cubic-bezier(.22,.61,.36,1)}   /* animation mọc từ đáy 800ms ease-out */
+.phseg.top{border-radius:6px 6px 0 0}          /* radius=[6,6,0,0] — đỉnh cột bo tròn */
+.phseg+.phseg{margin-top:2px}
+.phseg.mtg{background:linear-gradient(180deg,#60a5fa,#2563eb 92%)}   /* soft gradient Mastige */
+.phseg.gar{background:linear-gradient(180deg,#2dd4bf,#0d9488 92%)}   /* soft gradient Garment */
+.phcol:hover .phseg{filter:brightness(1.1)}
+.phseg span{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font-size:9px;font-weight:700;color:rgba(255,255,255,.92);text-shadow:0 1px 2px rgba(0,0,0,.25);font-variant-numeric:tabular-nums;opacity:0;transition:opacity .5s .45s}   /* LabelList in chìm trong thân cột */
+.pht{position:absolute;left:50%;transform:translateX(-50%);bottom:0;font-size:10px;font-weight:750;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap;opacity:0;transition:bottom .8s cubic-bezier(.22,.61,.36,1),opacity .45s}   /* số TỔNG đậm bám đỉnh cột, đi lên cùng cột */
+.phd{margin-top:6px;font-size:9.5px;color:var(--ink3);white-space:nowrap}
+.phd.off{opacity:.45}   /* ngày không có snapshot: tick mờ, vẫn chừa đúng chỗ trên trục thời gian */
+/* Panel phải 40%: micro-cards Tóm tắt & Tăng trưởng */
+.phside{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start}
+.phcard{background:color-mix(in srgb,var(--surface2) 55%,var(--surface));border:1px solid var(--border);border-radius:12px;padding:12px 14px;animation:fadeUp .4s ease both}
+.phcard:nth-child(2){animation-delay:.06s}.phcard:nth-child(3){animation-delay:.12s}.phcard:nth-child(4){animation-delay:.18s}.phcard:nth-child(5){animation-delay:.24s}
+.phcard .l{font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.phcard .v{font-size:clamp(19px,1.6vw,24px);font-weight:760;letter-spacing:-.02em;margin-top:3px;font-variant-numeric:tabular-nums;color:var(--ink)}
+.phcard .v.pos{color:var(--good)} .phcard .v.neg{color:var(--bad)} .phcard .v.flat{color:var(--muted)}
+.phcard .s{font-size:11px;color:var(--ink2);margin-top:3px}
+.phcard.span2{grid-column:1/-1}
+.phsplit{display:flex;height:10px;border-radius:99px;overflow:hidden;margin:9px 0 10px;background:var(--surface2)}
+.phsplit i{display:block;height:100%;min-width:2px;width:0;transition:width .8s cubic-bezier(.22,.61,.36,1)}
+.phsplit .mtg{background:linear-gradient(90deg,#60a5fa,#2563eb)}
+.phsplit .gar{background:linear-gradient(90deg,#2dd4bf,#0d9488)}
+.phrow{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--ink);padding:2px 0}
+.phrow .nm{display:flex;align-items:center;gap:7px;font-weight:600}
+.phrow .ct{font-variant-numeric:tabular-nums;color:var(--ink2)} .phrow .ct b{color:var(--ink);font-weight:750}
+@media(max-width:640px){.phside{gap:9px}.phcard{padding:10px 12px}}
 .histscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
 .histchart{display:flex;align-items:flex-end;gap:8px;padding-top:4px}
 .hcol{flex:0 0 34px;display:flex;flex-direction:column;align-items:center;cursor:default}
@@ -810,44 +854,92 @@ function renderSparks(){
     el.innerHTML=bars+arrow;
   });
 }
+/* Trục Y "nice number": làm tròn max lên 1/1.5/2/2.5/3/4/5/6/8×10^k để gridline chia đẹp */
+function phNice(v){ var p=Math.pow(10,Math.floor(Math.log10(Math.max(1,v)))); var m=v/p; var n=m<=1?1:m<=1.5?1.5:m<=2?2:m<=2.5?2.5:m<=3?3:m<=4?4:m<=5?5:m<=6?6:m<=8?8:10; return Math.round(n*p); }
+function phKey(ms){ var t=new Date(ms); function p(n){ return (n<10?'0':'')+n; } return t.getUTCFullYear()+'-'+p(t.getUTCMonth()+1)+'-'+p(t.getUTCDate()); }
+function phDM(d){ return d.slice(8,10)+'/'+d.slice(5,7); }
 function renderHistory(){
   try{
     renderSparks();
-    var el=document.getElementById('histwrap'); if(!el) return;
-    if(!_histDone){ el.innerHTML='<div class="sk" style="height:280px;border-radius:10px"></div>'; return; }   // Skeleton Loading khi chờ data
-    if(!HIST.length){ el.innerHTML='<div class="histempty">Không tải được lịch sử (hoặc chưa có snapshot) — dữ liệu được ghi tự động sau mỗi lần đồng bộ WMS ~8h sáng.</div>'; return; }
+    var el=document.getElementById('histwrap'), side=document.getElementById('histside');
+    if(!el) return;
+    if(!_histDone){ el.innerHTML='<div class="sk" style="height:300px;border-radius:10px"></div>'; if(side) side.innerHTML='<div class="sk" style="height:300px;border-radius:12px;grid-column:1/-1"></div>'; return; }   // Skeleton Loading khi chờ data
+    if(!HIST.length){ el.innerHTML='<div class="histempty">Không tải được lịch sử (hoặc chưa có snapshot) — dữ liệu được ghi tự động sau mỗi lần đồng bộ WMS ~8h sáng.</div>'; if(side) side.innerHTML=''; return; }
     var best=histDaily();   // chỉ giữ bản ghi gần mốc chốt sổ 08:01 nhất của mỗi ngày
     var days={};
     Object.keys(best).forEach(function(k){ var r=best[k];
-      if(!days[r.d]) days[r.d]={mtg:0,gar:0,pe:0};
+      if(!days[r.d]) days[r.d]={mtg:0,gar:0};
       if(/^gar/i.test(r.div)) days[r.d].gar+=r.sh; else days[r.d].mtg+=r.sh;
-      days[r.d].pe+=r.pe;
     });
-    // Định tuyến thời gian: từ NGÀY 15 của tháng hiện tại đến hôm nay — tính theo GIỜ VN set cứng +07:00
+    /* CT3: TRỤC THỜI GIAN LIÊN TỤC — sinh đủ MỌI ngày từ mốc 15 đến hôm nay (giờ VN +07:00);
+       ngày không có snapshot vẫn chừa đúng 1 slot trống để khoảng cách ngày luôn chuẩn */
     var nowVN=vnDate(Date.now());
     var y=nowVN.getUTCFullYear(), mo=nowVN.getUTCMonth(), da=nowVN.getUTCDate();
-    var moc=new Date(Date.UTC(y,(da>=15)?mo:mo-1,15));
-    function p(n){ return (n<10?'0':'')+n; }
-    var tuKey=moc.getUTCFullYear()+'-'+p(moc.getUTCMonth()+1)+'-'+p(moc.getUTCDate());
-    var ds=Object.keys(days).sort();
-    var win=ds.filter(function(d){ return d>=tuKey; });
-    if(win.length) ds=win;   // cửa sổ rỗng (dữ liệu quá cũ) -> hiển thị toàn bộ thay vì trống trơn
-    var max=1; ds.forEach(function(d){ var v=days[d]; if(v.mtg+v.gar>max) max=v.mtg+v.gar; });
-    var H=260;   // khớp chiều cao .hbars trong CSS
-    var html=ds.map(function(d,i){
-      var v=days[d], tot=v.mtg+v.gar;
-      var hg=Math.round(v.gar/max*H), hm=Math.round(v.mtg/max*H);
+    var tuKey=phKey(Date.UTC(y,(da>=15)?mo:mo-1,15));
+    var todayKey=phKey(Date.UTC(y,mo,da));
+    var have=Object.keys(days).sort();
+    var startKey,endKey;
+    if(have.some(function(d){ return d>=tuKey; })){ startKey=tuKey; endKey=(have[have.length-1]>todayKey)?have[have.length-1]:todayKey; }
+    else { startKey=have[0]; endKey=have[have.length-1]; }   // dữ liệu quá cũ -> hiển thị trọn dải (vẫn chèn ngày trống)
+    var ds=[]; for(var ms=Date.parse(startKey+'T00:00:00Z'); ms<=Date.parse(endKey+'T00:00:00Z'); ms+=86400000) ds.push(phKey(ms));
+    if(ds.length>45) ds=ds.slice(-45);   // an toàn: tối đa 45 cột
+    var max=0; ds.forEach(function(d){ var v=days[d]; if(v&&v.mtg+v.gar>max) max=v.mtg+v.gar; });
+    var niceMax=phNice(max||1), H=240;
+    /* CT2: gridline ngang mờ + nhãn trục Y để gióng hàng số lượng */
+    var gl='', yl='';
+    for(var g=0; g<=4; g++){ var b=Math.round(g/4*H);
+      gl+='<i'+(g===0?' class="zero"':'')+' style="bottom:'+b+'px"></i>';
+      yl+='<b style="bottom:'+b+'px">'+nf(Math.round(niceMax*g/4))+'</b>';
+    }
+    var cols=ds.map(function(d,i){
+      var v=days[d], tot=v?(v.mtg+v.gar):0;
+      var dl='transition-delay:'+Math.min(i*16,480)+'ms';   // CT4: liên hoàn — cột sau mọc trễ hơn cột trước
+      if(!tot) return '<div class="phcol" title="Ngày '+phDM(d)+'/'+d.slice(0,4)+' — không có snapshot"><div class="phstack"></div><div class="phd off">'+phDM(d)+'</div></div>';
+      var hg=v.gar?Math.max(2,Math.round(v.gar/niceMax*H)):0;
+      var hm=v.mtg?Math.max(2,Math.round(v.mtg/niceMax*H)):0;
       var segs='';
-      if(v.gar>0) segs+='<div class="hseg gar top" style="height:'+hg+'px"></div>';
-      if(v.mtg>0) segs+='<div class="hseg mtg'+(v.gar>0?'':' top')+'" style="height:'+hm+'px"></div>';
-      var lab=(ds.length<=20||i===ds.length-1||tot===max)?nf(tot):'';
-      /* Tooltip bắt buộc: Ngày | Mastige | Garment | Tổng */
-      var tip='Ngày '+d.slice(8,10)+'/'+d.slice(5,7)+'/'+d.slice(0,4)+' | Mastige: '+nf(v.mtg)+' | Garment: '+nf(v.gar)+' | Tổng: '+nf(tot);
-      return '<div class="hcol" title="'+tip+'">'+
-        '<div class="hval">'+lab+'</div><div class="hbars">'+segs+'</div><div class="hdate">'+d.slice(8,10)+'/'+d.slice(5,7)+'</div></div>';
+      /* CT3: label in chìm trong thân cột (chỉ khi đoạn đủ cao ≥18px để số không tràn) */
+      if(v.gar) segs+='<i class="phseg gar top" data-h="'+hg+'" style="'+dl+'">'+(hg>=18?'<span>'+nf(v.gar)+'</span>':'')+'</i>';
+      if(v.mtg) segs+='<i class="phseg mtg'+(v.gar?'':' top')+'" data-h="'+hm+'" style="'+dl+'">'+(hm>=18?'<span>'+nf(v.mtg)+'</span>':'')+'</i>';
+      var bh=hg+hm+(v.gar&&v.mtg?2:0);
+      var tip='Ngày '+phDM(d)+'/'+d.slice(0,4)+' | Mastige: '+nf(v.mtg)+' | Garment: '+nf(v.gar)+' | Tổng: '+nf(tot);
+      return '<div class="phcol" title="'+tip+'"><div class="phstack"><b class="pht" data-b="'+bh+'" style="'+dl+'">'+nf(tot)+'</b>'+segs+'</div><div class="phd">'+phDM(d)+'</div></div>';
     }).join('');
-    el.innerHTML='<div class="histscroll"><div class="histchart">'+html+'</div></div>';
-    var sc=el.querySelector('.histscroll'); if(sc) sc.scrollLeft=sc.scrollWidth;
+    el.innerHTML='<div class="phbody"><div class="phy">'+yl+'</div><div class="phscroll"><div class="phplot"><div class="phgl">'+gl+'</div><div class="phcols'+(ds.length<=22?' spread':'')+'">'+cols+'</div></div></div></div>';
+    /* CT1: panel phải 40% — micro-cards Tóm tắt & Tăng trưởng */
+    if(side){
+      var hd=ds.filter(function(d){ return days[d]&&(days[d].mtg+days[d].gar)>0; });
+      var lastD=hd[hd.length-1], prevD=hd[hd.length-2];
+      var lastV=lastD?days[lastD]:{mtg:0,gar:0}, lastTot=lastV.mtg+lastV.gar;
+      var prevTot=prevD?(days[prevD].mtg+days[prevD].gar):null;
+      var sum=0, peak=0, peakD=lastD||'';
+      hd.forEach(function(d){ var t=days[d].mtg+days[d].gar; sum+=t; if(t>peak){ peak=t; peakD=d; } });
+      var gTxt='—', gCls='flat', gSub='chưa đủ 2 ngày để so sánh';
+      if(prevTot){
+        var delta=lastTot-prevTot;
+        gTxt=(delta>=0?'+':'')+pct(delta/prevTot*100); gCls=delta>0?'pos':delta<0?'neg':'flat';
+        gSub=(delta>=0?'+':'')+nf(delta)+' SKU so với ngày '+phDM(prevD);
+      }
+      var pm=lastTot?lastV.mtg/lastTot*100:0, pg=lastTot?100-pm:0;
+      side.innerHTML=
+        '<div class="phcard"><div class="l">Tổng SKU luỹ kế</div><div class="v">'+nf(lastTot)+'</div><div class="s">chốt ngày '+(lastD?phDM(lastD):'—')+'</div></div>'+
+        '<div class="phcard"><div class="l">Tăng trưởng theo ngày</div><div class="v '+gCls+'">'+gTxt+'</div><div class="s">'+gSub+'</div></div>'+
+        '<div class="phcard"><div class="l">Trung bình / ngày</div><div class="v">'+nf(hd.length?Math.round(sum/hd.length):0)+'</div><div class="s">'+hd.length+' ngày có snapshot</div></div>'+
+        '<div class="phcard"><div class="l">Đỉnh trong kỳ</div><div class="v">'+nf(peak)+'</div><div class="s">ngày '+(peakD?phDM(peakD):'—')+'</div></div>'+
+        '<div class="phcard span2"><div class="l">Tỷ trọng Mastige · Garment (ngày '+(lastD?phDM(lastD):'—')+')</div>'+
+          '<div class="phsplit"><i class="mtg" data-w="'+pm.toFixed(2)+'"></i><i class="gar" data-w="'+pg.toFixed(2)+'"></i></div>'+
+          '<div class="phrow"><span class="nm"><span class="dot" style="background:#2563eb"></span>Mastige</span><span class="ct"><b>'+nf(lastV.mtg)+'</b> · '+pct(pm)+'</span></div>'+
+          '<div class="phrow"><span class="nm"><span class="dot" style="background:#0d9488"></span>Garment</span><span class="ct"><b>'+nf(lastV.gar)+'</b> · '+pct(pg)+'</span></div>'+
+        '</div>';
+    }
+    /* CT4: kích hoạt animation mọc từ đáy — set height/bottom SAU 2 rAF để transition 800ms chạy */
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){
+      el.querySelectorAll('.phseg').forEach(function(s){ s.style.height=s.getAttribute('data-h')+'px'; });
+      el.querySelectorAll('.pht').forEach(function(t){ t.style.bottom=(Number(t.getAttribute('data-b'))+6)+'px'; t.style.opacity='1'; });
+      el.querySelectorAll('.phseg span').forEach(function(x){ x.style.opacity='1'; });
+      if(side) side.querySelectorAll('.phsplit i').forEach(function(w){ w.style.width=w.getAttribute('data-w')+'%'; });
+    }); });
+    var sc=el.querySelector('.phscroll'); if(sc) sc.scrollLeft=sc.scrollWidth;
   }catch(e){
     var el2=document.getElementById('histwrap');
     if(el2) el2.innerHTML='<div class="histempty">Lỗi dựng biểu đồ: '+esc(e.message)+'</div>';
@@ -956,9 +1048,10 @@ function render(groups,whDiv){
     '<div class="ratebar" title="Đã lên kệ '+rate.toFixed(1)+'% · còn lại '+(100-rate).toFixed(1)+'%"><div class="ratef" data-w="'+rate.toFixed(1)+'"></div>'+
     '<div class="ratefr" data-w="'+(100-rate).toFixed(1)+'"></div></div></div>'+
     '<div class="grid2">'+
-    '<section class="panel"><h2>SKU đã lên kệ theo ngày <span class="hint">(rê chuột vào cột để xem chi tiết)</span> <span class="lg"><span class="sw" style="background:#2563eb"></span>Mastige<span class="sw" style="background:#0d9488;margin-left:6px"></span>Garment</span></h2><div id="histwrap"></div></section>'+
+    '<section class="panel span2"><h2>SKU đã lên kệ theo ngày <span class="hint">(số in trực tiếp trên cột · ngày trống vẫn chừa chỗ trên trục thời gian)</span> <span class="lg"><span class="sw" style="background:linear-gradient(180deg,#60a5fa,#2563eb)"></span>Mastige<span class="sw" style="background:linear-gradient(180deg,#2dd4bf,#0d9488);margin-left:6px"></span>Garment</span></h2>'+
+    '<div class="phwrap"><div id="histwrap"></div><aside class="phside" id="histside"></aside></div></section>'+
+    '<section class="panel"><h2>Category theo số SKU đã lên kệ <span class="hint">('+cats.length+' category — bấm dòng: phân bổ theo kho · bấm số SKU: từng SKU)</span> <span class="lg"><span class="sw sh"></span>đã lên kệ<span class="sw pe" style="margin-left:6px"></span>chưa lên kệ</span></h2><div class="catwrap">'+bars+'</div></section>'+
     '<section class="panel"><h2>Tiến độ lên kệ theo Warehouse <span class="hint">(bấm thẻ kho để xem chi tiết SKU · cột nhỏ = xu hướng 5 ngày)</span></h2><div class="whlist">'+whchips+'</div></section>'+
-    '<section class="panel span2"><h2>Category theo số SKU đã lên kệ <span class="hint">('+cats.length+' category — bấm dòng: phân bổ theo kho · bấm số SKU: từng SKU)</span> <span class="lg"><span class="sw sh"></span>đã lên kệ<span class="sw pe" style="margin-left:6px"></span>chưa lên kệ</span></h2><div class="catwrap">'+bars+'</div></section>'+
     '</div>';
   document.getElementById('content').innerHTML=html;
   renderHistory();   // container #histwrap + sparkline thẻ kho vừa được tạo — đổ nếu lịch sử đã về
