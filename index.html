@@ -223,6 +223,10 @@ h1.brand-title{margin:0;min-width:0}
 .kkstrip .v b{font-weight:300}
 .kkstrip .t{font-size:9.5px;font-weight:650;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kkstrip .v.ok{color:var(--good)} .kkstrip .v.mut{color:var(--muted)} .kkstrip .v.neg{color:var(--bad)} .kkstrip .v.pos{color:var(--info)}
+/* Ô "Dự kiến xong": cùng ngôn ngữ thị giác với dải chỉ số, màu accent, không bấm (tooltip giải thích công thức) */
+.kkstrip .ks.fc{cursor:help}
+.kkstrip .ks.fc:hover{background:transparent}
+.kkstrip .v.fce{color:var(--accent);font-weight:450}
 /* Thanh trạng thái 100%: mỏng 8px, bo tròn hẳn, khe 2px giữa các đoạn */
 .kkstbar{display:flex;height:8px;border-radius:99px;overflow:hidden;background:var(--surface2);margin:2px 0 10px}
 .kkstbar i{display:block;height:100%;min-width:2px}
@@ -1534,6 +1538,41 @@ function kkUniverse(kind){
 }
 /* CT3: "Đã kiểm" = có Counted Date HOẶC Status thực (khác rỗng/NOT COUNT) */
 function kkIsChecked(r){ return !isNaN(kkParseDate(r.cdate)) || kkStKey(r)!=='NOT COUNT'; }
+/* DỰ BÁO HOÀN THÀNH 100%: tốc độ = ĐỘ PHỦ MỚI trung bình theo NGÀY LỊCH
+   — mỗi (kho|mã) tính theo NGÀY KIỂM ĐẦU TIÊN (miễn nhiễm phiếu kiểm lại),
+   ưu tiên nhịp 7 ngày gần nhất, fallback trung bình toàn kỳ; ngày nghỉ tự tính vào.
+   ETA = hôm nay + ⌈còn lại ÷ tốc độ⌉ — đổi theo kho đang lọc (cross-filter). */
+function kkForecastInfo(kind,univ,conLai){
+  if(!conLai) return {done:true};
+  var first={};
+  kkRows(kind).forEach(function(r){
+    if(!kkIsChecked(r)) return;
+    var k=r.wh+'|'+((kind==='sku')?r.sku:r.loc);
+    if(univ.size&&!univ.has(k)) return;
+    var ms=kkCountMs(r); if(isNaN(ms)) return;
+    if(!(k in first)||ms<first[k]) first[k]=ms;
+  });
+  var keys=Object.keys(first);
+  if(!keys.length) return {none:true};
+  var nowVN=vnDate(Date.now());
+  var todayMs=Date.UTC(nowVN.getUTCFullYear(),nowVN.getUTCMonth(),nowVN.getUTCDate());
+  var d7=0, minDay=Infinity;
+  keys.forEach(function(k){
+    var day=Math.floor(first[k]/86400000)*86400000;
+    if(day<minDay) minDay=day;
+    if(todayMs-day<7*86400000) d7++;
+  });
+  var paceAll=keys.length/Math.max(1,(todayMs-minDay)/86400000+1);
+  var pace7=d7/7;
+  var pace=pace7>0?pace7:paceAll, dung7=pace7>0;
+  if(!(pace>0)) return {none:true};
+  var soNgay=Math.ceil(conLai/pace);
+  if(soNgay>180) return {slow:true, ngay:soNgay, pace:pace, dung7:dung7};   // ETA nhiều năm = vô nghĩa -> báo nhịp quá chậm thay vì in năm 2074
+  var eta=new Date(todayMs+soNgay*86400000);
+  function p(n){ return (n<10?'0':'')+n; }
+  return {eta:p(eta.getUTCDate())+'/'+p(eta.getUTCMonth()+1)+(eta.getUTCFullYear()!==nowVN.getUTCFullYear()?('/'+eta.getUTCFullYear()):''),
+    ngay:soNgay, pace:pace, dung7:dung7};
+}
 /* Danh sách tồn kho gộp theo (kho|mã) từ Stock Location — nền tảng cho cả 2 thẻ:
    "Tổng" (chiChuaKiem=false: TOÀN BỘ universe, kèm cờ đã kiểm) và
    "Còn lại" (chiChuaKiem=true: ANTI-JOIN loại trừ tập đã kiểm) */
@@ -1595,13 +1634,20 @@ function kkRenderPanel(kind){
   function it(metric,cls,val,lab){
     return '<div class="ks" data-k="'+kind+'" data-m="'+metric+'" onclick="kkOpen(this.getAttribute(\'data-k\'),this.getAttribute(\'data-m\'))" title="Bấm xem danh sách chi tiết"><div class="v '+cls+'">'+nf(val)+'</div><div class="t">'+lab+'</div></div>';
   }
+  /* Ô thứ 6: DỰ KIẾN HOÀN THÀNH — ngày kiểm hết 100% theo tốc độ phủ trung bình */
+  var fc=kkForecastInfo(kind,univ,notc), fcHtml;
+  if(fc.done)      fcHtml='<div class="ks fc" title="Toàn bộ '+U+' trong phạm vi đã được kiểm."><div class="v ok">✓</div><div class="t">Hoàn thành 100%</div></div>';
+  else if(fc.none) fcHtml='<div class="ks fc" title="Chưa có phiếu kiểm kèm ngày để tính tốc độ — dự báo sẽ tự hiện khi có dữ liệu."><div class="v mut">—</div><div class="t">Dự kiến xong · chưa đủ dữ liệu</div></div>';
+  else if(fc.slow) fcHtml='<div class="ks fc" title="Với tốc độ phủ hiện tại (≈'+fc.pace.toFixed(2)+' '+U+'/ngày, '+(fc.dung7?'TB 7 ngày gần nhất':'TB toàn kỳ')+') cần ≈'+nf(fc.ngay)+' ngày — coi như chưa có kế hoạch kiểm chủ động. Cần ≈'+nf(Math.ceil(notc/30))+' '+U+'/ngày để xong trong 30 ngày."><div class="v neg">&gt;6 tháng</div><div class="t">Dự kiến xong · nhịp quá chậm</div></div>';
+  else             fcHtml='<div class="ks fc" title="Dự báo = Còn lại ('+nf(notc)+' '+U+') ÷ tốc độ phủ mới trung bình '+(fc.dung7?'7 ngày gần nhất':'toàn kỳ')+' ≈ '+fc.pace.toFixed(1)+' '+U+'/ngày (ngày lịch, tính theo ngày kiểm ĐẦU TIÊN của từng mã nên không bị phiếu kiểm lại thổi phồng). Tự tính lại theo kho đang lọc."><div class="v fce">'+fc.eta+'</div><div class="t">Dự kiến xong · ≈'+nf(fc.ngay)+' ngày</div></div>';
   var strip=document.getElementById('kkStrip-'+kind);
   strip.innerHTML=
     it('total','',denom,'Tổng '+U+' tồn kho')+
     it('counted','ok',counted,'Đã kiểm · '+pct(rate))+
     it('notcount','mut',notc,'Còn lại')+
     it('negative','neg',neg,'Lệch âm')+
-    it('positive','pos',pos,'Lệch dương');
+    it('positive','pos',pos,'Lệch dương')+
+    fcHtml;
   kkSwap(strip);
   /* Tầng 2: thanh trạng thái 100% + chips đếm (Verified/Đã duyệt/Đang xử lý/Pending/Đã huỷ...) */
   var keys=KK_ST_ORDER.filter(function(s){ return stc[s]; })
