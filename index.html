@@ -243,6 +243,12 @@ h1.brand-title{margin:0;min-width:0}
 .fcctl label{display:flex;flex-direction:column;gap:5px;font-size:10px;font-weight:750;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .fcctl select,.fcctl input{padding:8px 10px;border:1px solid var(--border);border-radius:9px;background:var(--surface);color:var(--ink);font-size:13px;font-family:inherit}
 .fcctl select:focus,.fcctl input:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}
+/* Dropdown trong pop-up dự báo: TÁI DÙNG combo-menu popIn của dự án (đồng bộ với bộ lọc các pop-up khác) */
+.fccombo{position:relative;text-transform:none;letter-spacing:0;font-weight:400}   /* reset kiểu chữ label uppercase — item menu phải như combo toàn dự án */
+.fccombo input{cursor:pointer;width:100%;padding-right:28px;text-overflow:ellipsis}
+.fccombo .combo-item{font-weight:500}
+.fccombo::after{content:"";position:absolute;right:12px;top:50%;width:7px;height:7px;margin-top:-5px;border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);transform:rotate(45deg);pointer-events:none;transition:transform .2s var(--ease)}
+.fccombo.open::after{transform:rotate(-135deg);margin-top:-1px}
 .fcgroups{display:flex;gap:6px;flex-wrap:wrap}
 .fcg{border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:5px 13px;font-size:12px;font-weight:650;cursor:pointer;color:var(--ink2);font-family:inherit;transition:background .15s var(--ease),color .15s var(--ease)}
 .fcg.on{background:var(--accent);border-color:var(--accent);color:var(--accent-text)}
@@ -1250,6 +1256,7 @@ document.addEventListener('keydown',function(e){
   var cm=document.getElementById('catmodal');
   if(cm && cm.classList.contains('show')){ closeCatWhModal(); return; }
   if(document.querySelector('#kkmFilters .combo-menu.show')){ kkmCloseCombos(); return; }
+  if(document.querySelector('#fcBody .combo-menu.show')){ fcCloseMenus(); return; }
   var fm=document.getElementById('fcmodal');
   if(fm && fm.classList.contains('show')){ closeFcModal(); return; }
   var km=document.getElementById('kkmodal');
@@ -1615,6 +1622,8 @@ function kkTimingModel(kind){
 /* Helper lịch làm việc (Chủ nhật nghỉ) — dùng chung cho dự báo tự tính & mô phỏng người chọn */
 function kkTodayMsVN(){ var n=vnDate(Date.now()); return Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate()); }
 function kkEtaCN(soNgayLam){ var t=kkTodayMsVN(), d=t, lam=0; for(var i=1;i<=800&&lam<soNgayLam;i++){ d=t+i*86400000; if(new Date(d).getUTCDay()!==0) lam++; } return d; }
+/* ETA từ NGÀY BẮT ĐẦU tuỳ chọn: ngày bắt đầu (nếu không phải CN) tính là ngày làm việc thứ 1 */
+function kkEtaFrom(startMs,soNgayLam){ var d=startMs, lam=0; for(var i=0;i<=800&&lam<soNgayLam;i++){ d=startMs+i*86400000; if(new Date(d).getUTCDay()!==0) lam++; } return d; }
 function kkFcFmt(ms){ var t=new Date(ms), nay=new Date(kkTodayMsVN()); function p(n){ return (n<10?'0':'')+n; } return p(t.getUTCDate())+'/'+p(t.getUTCMonth()+1)+(t.getUTCFullYear()!==nay.getUTCFullYear()?('/'+t.getUTCFullYear()):''); }
 function kkForecastInfo(kind,univ,conLai){
   if(!conLai) return {done:true};
@@ -1894,18 +1903,23 @@ function kkFcOpen(kind){
       '<div class="fcfact"><b>≈'+fc.nguoiTB.toFixed(1)+' người/ngày</b><span>nhân sự kiểm TB (ngày có kiểm)</span></div>'+
       '<div class="fcfact"><b>≈'+Math.round(fc.phutNguoi)+' phút/người</b><span>thời lượng kiểm TB 1 người/ngày</span></div>'+
       '</div></div>';
-    var nMac=Math.min(10,Math.max(1,Math.round(fc.nguoiTB)||1)), nOpts='';
-    for(var i=1;i<=10;i++) nOpts+='<option value="'+i+'"'+(i===nMac?' selected':'')+'>'+i+' người</option>';
-    var hOpts='<option value="'+Math.max(60,Math.round(fc.phutNguoi*60))+'" selected>Như thực đo · ≈'+Math.round(fc.phutNguoi)+' phút/người/ngày</option>'+
-      [[120,'2 giờ'],[240,'4 giờ'],[360,'6 giờ'],[480,'8 giờ']].map(function(o){ return '<option value="'+(o[0]*60)+'">'+o[1]+' / người / ngày</option>'; }).join('');
+    var nMac=Math.min(10,Math.max(1,Math.round(fc.nguoiTB)||1));
+    var nItems=[]; for(var i=1;i<=10;i++) nItems.push({v:i,t:i+' người'});
+    var hDo=Math.max(60,Math.round(fc.phutNguoi*60));
+    var hItems=[{v:hDo,t:'Như thực đo · ≈'+Math.round(fc.phutNguoi)+' phút/người/ngày'},
+      {v:7200,t:'2 giờ / người / ngày'},{v:14400,t:'4 giờ / người / ngày'},{v:21600,t:'6 giờ / người / ngày'},{v:28800,t:'8 giờ / người / ngày'}];
+    var homNay=(function(){ var t=new Date(kkTodayMsVN()); function p(n){ return (n<10?'0':'')+n; } return t.getUTCFullYear()+'-'+p(t.getUTCMonth()+1)+'-'+p(t.getUTCDate()); })();
     var gChips=''; for(var g2 in fc.nhom){ if(fc.nhom[g2]) gChips+='<button class="fcg on" data-g="'+g2+'" onclick="this.classList.toggle(\'on\');kkFcSim()">'+KK_NHOM_TEN[g2]+' · '+nf(fc.nhom[g2])+'</button>'; }
     htmlB='<div class="fcsec"><h3>② Người chọn — mô phỏng phương án nhân sự</h3>'+
       '<div class="fcctl">'+
-      '<label>Số nhân sự kiểm<select id="fcN" onchange="kkFcSim()">'+nOpts+'</select></label>'+
-      '<label>Thời lượng kiểm / người / ngày<select id="fcH" onchange="kkFcSim()">'+hOpts+'</select></label>'+
+      '<label>Số nhân sự kiểm'+fcComboHtml('fcN',nItems,nMac)+'</label>'+
+      '<label>Thời lượng kiểm / người / ngày'+fcComboHtml('fcH',hItems,hDo)+'</label>'+
+      '</div>'+
+      '<div class="fcctl">'+
+      '<label>Bắt đầu kiểm từ ngày<input type="date" id="fcS" value="'+homNay+'" onchange="kkFcSim()"></label>'+
+      '<label>Cần xong trước ngày (tính ngược số người)<input type="date" id="fcT" onchange="kkFcSim()"></label>'+
       '</div>'+
       '<div class="fcctl" style="grid-template-columns:1fr"><label>Nhóm hàng đưa vào đợt kiểm<span class="fcgroups" id="fcG">'+gChips+'</span></label></div>'+
-      '<div class="fcctl" style="grid-template-columns:1fr"><label>Cần xong trước ngày (tuỳ chọn — máy tính ngược số người)<input type="date" id="fcT" onchange="kkFcSim()"></label></div>'+
       '<div class="fchero" id="fcSimOut"></div><div class="fcneed" id="fcNeed"></div></div>';
   }else if(fc.none){
     htmlA='<div class="fcsec"><h3>① Máy tự tính</h3><div class="fchero"><span class="d">—</span><span class="n">Chưa có phiếu kiểm kèm ngày giờ để dự báo.</span></div></div>';
@@ -1919,23 +1933,53 @@ function kkFcOpen(kind){
   var m=document.getElementById('fcmodal'); m.style.display='flex';
   requestAnimationFrame(function(){ m.classList.add('show'); });
 }
+/* Combo kiểu dự án (thay <select> trần): input readonly + combo-menu popIn dùng chung CSS toàn dashboard */
+function fcComboHtml(id,items,selV){
+  var sel=null; items.forEach(function(o){ if(String(o.v)===String(selV)) sel=o; }); sel=sel||items[0];
+  return '<div class="combo fccombo" data-id="'+id+'">'+
+    '<input readonly data-v="'+esc(String(sel.v))+'" value="'+esc(sel.t)+'" onclick="fcMenuToggle(this.parentNode)">'+
+    '<div class="combo-menu">'+items.map(function(o){ return '<div class="combo-item" data-v="'+esc(String(o.v))+'"><span class="nm">'+esc(o.t)+'</span></div>'; }).join('')+'</div></div>';
+}
+function fcCloseMenus(except){
+  document.querySelectorAll('#fcBody .combo-menu.show').forEach(function(m){
+    if(!except||m.parentNode!==except){ m.classList.remove('show'); m.parentNode.classList.remove('open'); }
+  });
+}
+function fcMenuToggle(combo){
+  var m=combo.querySelector('.combo-menu'), dang=m.classList.contains('show');
+  fcCloseMenus();
+  if(!dang){ m.classList.add('show'); combo.classList.add('open'); }
+}
+document.getElementById('fcBody').addEventListener('click',function(e){
+  var it=e.target.closest('.combo-item'); if(!it) return;
+  e.preventDefault();   // combo nằm trong <label>: chặn label forward click về input (sẽ mở lại menu vừa đóng)
+  var inp=it.closest('.combo').querySelector('input');
+  inp.value=it.textContent; inp.setAttribute('data-v',it.getAttribute('data-v'));
+  fcCloseMenus(); kkFcSim();
+});
+document.addEventListener('click',function(e){ if(!e.target.closest('#fcBody .combo')) fcCloseMenus(); });
+function fcComboV(id){ var inp=document.querySelector('#fcBody .fccombo[data-id="'+id+'"] input'); return inp?Number(inp.getAttribute('data-v')):NaN; }
 function kkFcSim(){
   var fc=KK_FC.fc; if(!fc||fc.mode!=='effort') return;
   var out=document.getElementById('fcSimOut'), need=document.getElementById('fcNeed');
   if(!out) return;
-  var N=Number((document.getElementById('fcN')||{}).value)||1;
-  var secNguoi=Number((document.getElementById('fcH')||{}).value)||Math.max(60,fc.phutNguoi*60);
+  var N=fcComboV('fcN')||1;
+  var secNguoi=fcComboV('fcH')||Math.max(60,fc.phutNguoi*60);
   var load=0, nMa=0;
   document.querySelectorAll('#fcG .fcg.on').forEach(function(x){ var g=x.getAttribute('data-g'); load+=(fc.nhom[g]||0)*(fc.secG[g]||0); nMa+=fc.nhom[g]||0; });
   if(!nMa){ out.innerHTML='<span class="n">Chọn ít nhất 1 nhóm hàng để mô phỏng.</span>'; need.textContent=''; return; }
+  /* Thời gian BẮT ĐẦU kiểm do người vận hành chọn -> tính ra thời gian KẾT THÚC (né CN) */
+  var sv=(document.getElementById('fcS')||{}).value;
+  var startMs=sv?Date.parse(sv+'T00:00:00Z'):kkTodayMsVN(); if(isNaN(startMs)) startMs=kkTodayMsVN();
   var soLam=Math.ceil(load/(N*secNguoi));
-  out.innerHTML='<span class="d">'+kkFcFmt(kkEtaCN(soLam))+'</span><span class="n">≈'+nf(soLam)+' ngày làm việc · '+nf(nMa)+' mã ≈'+(load/3600).toFixed(1)+' giờ công · '+N+' người × '+Math.round(secNguoi/60)+' phút/ngày</span>';
+  var endMs=kkEtaFrom(startMs,soLam);
+  out.innerHTML='<span class="d">'+kkFcFmt(endMs)+'</span><span class="n">kết thúc dự kiến · bắt đầu '+kkFcFmt(startMs)+' → ≈'+nf(soLam)+' ngày làm việc (né CN) · '+nf(nMa)+' mã ≈'+(load/3600).toFixed(1)+' giờ công · '+N+' người × '+Math.round(secNguoi/60)+' phút/ngày</span>';
   var tv=(document.getElementById('fcT')||{}).value, txt='';
   if(tv){
-    var tms=Date.parse(tv+'T00:00:00Z'), today=kkTodayMsVN(), wd=0;
-    for(var ms=today+86400000;ms<=tms;ms+=86400000) if(new Date(ms).getUTCDay()!==0) wd++;
-    txt=(wd<=0)?'Mốc đã qua hoặc quá gần — chọn ngày sau hôm nay.'
-      :('→ Để xong trước '+tv.slice(8,10)+'/'+tv.slice(5,7)+' ('+wd+' ngày làm việc): cần ≈ '+Math.ceil(load/(wd*secNguoi))+' người với thời lượng đã chọn.');
+    var tms=Date.parse(tv+'T00:00:00Z'), wd=0;
+    for(var ms=startMs;ms<=tms;ms+=86400000) if(new Date(ms).getUTCDay()!==0) wd++;
+    txt=(isNaN(tms)||wd<=0)?'Hạn chót phải sau ngày bắt đầu kiểm.'
+      :('→ Để xong trước '+tv.slice(8,10)+'/'+tv.slice(5,7)+' ('+wd+' ngày làm việc kể từ ngày bắt đầu): cần ≈ '+Math.ceil(load/(wd*secNguoi))+' người với thời lượng đã chọn.');
   }
   need.textContent=txt;
 }
