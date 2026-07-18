@@ -354,39 +354,39 @@ code{background:var(--surface2);padding:1px 7px;border-radius:6px;font-size:12px
 
 /* ===== PREMIUM CHART "SKU đã lên kệ theo ngày" — Split Grid 60/40, gradient bar bo góc,
    gridline gióng hàng, data label in tại chỗ, trục thời gian liên tục, animation mọc cột ===== */
-.phwrap{display:grid;grid-template-columns:1.5fr 1fr;gap:20px;align-items:start}   /* 60% chart | 40% summary */
+.phwrap{display:grid;grid-template-columns:1.5fr 1fr;gap:20px;align-items:center}   /* 60% chart | 40% summary — chart căn giữa dọc cho cân */
 @media(max-width:1024px){.phwrap{grid-template-columns:1fr}}
 #histwrap{min-width:0}
 .phbody{display:flex;align-items:flex-end}
-.phy{position:relative;flex:0 0 46px;height:240px;margin-bottom:21px}
-.phy b{position:absolute;right:8px;transform:translateY(50%);font-size:9.5px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.phy{position:relative;flex:0 0 40px;height:176px;margin-bottom:21px}
+.phy b{position:absolute;right:8px;transform:translateY(50%);font-size:9px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .phscroll{flex:1;min-width:0;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
-.phplot{position:relative;padding-top:26px}   /* headroom cho số Tổng trên đỉnh cột */
-.phgl{position:absolute;left:0;right:0;bottom:21px;height:240px;pointer-events:none}
+.phplot{position:relative;padding-top:24px}   /* headroom cho số Tổng trên đỉnh cột */
+.phgl{position:absolute;left:0;right:0;bottom:21px;height:176px;pointer-events:none}
 .phgl i{position:absolute;left:0;right:0;border-top:1px dashed color-mix(in srgb,var(--muted) 26%,transparent)}   /* strokeDasharray "3 3" — siêu nhạt, ăn theo theme */
 .phgl i.zero{border-top:1px solid color-mix(in srgb,var(--muted) 42%,transparent)}
-.phcols{position:relative;display:flex;align-items:flex-end;gap:10px;width:max-content;min-width:100%}
-.phcol{flex:0 0 32px;display:flex;flex-direction:column;align-items:center}
+.phcols{position:relative;display:flex;align-items:flex-end;gap:8px;width:max-content;min-width:100%}
+.phcol{flex:0 0 28px;display:flex;flex-direction:column;align-items:center}
 /* Kỳ ít ngày: cột giãn ĐỀU lấp đầy trục (khoảng cách vẫn bằng nhau — đúng logic time-scale) */
 .phcols.spread{width:100%;justify-content:space-around}
-.phcols.spread .phcol{flex:1 1 0;max-width:72px;min-width:0}
-.phstack{position:relative;height:240px;width:26px;display:flex;flex-direction:column;justify-content:flex-end}
+.phcols.spread .phcol{flex:1 1 0;max-width:52px;min-width:0}
+.phstack{position:relative;height:176px;width:20px;display:flex;flex-direction:column;justify-content:flex-end}
 .phseg{width:100%;height:0;position:relative;overflow:hidden;transition:height .8s cubic-bezier(.22,.61,.36,1)}   /* animation mọc từ đáy 800ms ease-out */
-.phseg.top{border-radius:6px 6px 0 0}          /* radius=[6,6,0,0] — đỉnh cột bo tròn */
+.phseg.top{border-radius:5px 5px 0 0}          /* radius=[5,5,0,0] — đỉnh cột bo tròn */
 .phseg+.phseg{margin-top:2px}
 .phseg.mtg{background:linear-gradient(180deg,#60a5fa,#2563eb 92%)}   /* soft gradient Mastige */
 .phseg.gar{background:linear-gradient(180deg,#2dd4bf,#0d9488 92%)}   /* soft gradient Garment */
 .phcol:hover .phseg{filter:brightness(1.1)}
-.phseg span{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font-size:9px;font-weight:700;color:rgba(255,255,255,.92);text-shadow:0 1px 2px rgba(0,0,0,.25);font-variant-numeric:tabular-nums;opacity:0;transition:opacity .5s .45s}   /* LabelList in chìm trong thân cột */
+.phseg span{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font-size:8.5px;font-weight:700;color:rgba(255,255,255,.94);text-shadow:0 1px 2px rgba(0,0,0,.3);font-variant-numeric:tabular-nums;opacity:0;transition:opacity .5s .45s}   /* LabelList in chìm trong thân cột — số rút gọn (2.3k) cho cột mảnh */
 .pht{position:absolute;left:50%;transform:translateX(-50%);bottom:0;font-size:10px;font-weight:750;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap;opacity:0;transition:bottom .8s cubic-bezier(.22,.61,.36,1),opacity .45s}   /* số TỔNG đậm bám đỉnh cột, đi lên cùng cột */
 .phd{margin-top:6px;font-size:9.5px;color:var(--ink3);white-space:nowrap}
 .phd.off{opacity:.45}   /* ngày không có snapshot: tick mờ, vẫn chừa đúng chỗ trên trục thời gian */
 /* Panel phải 40%: micro-cards Tóm tắt & Tăng trưởng */
-.phside{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start}
-.phcard{background:color-mix(in srgb,var(--surface2) 55%,var(--surface));border:1px solid var(--border);border-radius:12px;padding:12px 14px;animation:fadeUp .4s ease both}
+.phside{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start}
+.phcard{background:color-mix(in srgb,var(--surface2) 55%,var(--surface));border:1px solid var(--border);border-radius:11px;padding:10px 12px;animation:fadeUp .4s ease both}
 .phcard:nth-child(2){animation-delay:.06s}.phcard:nth-child(3){animation-delay:.12s}.phcard:nth-child(4){animation-delay:.18s}.phcard:nth-child(5){animation-delay:.24s}
 .phcard .l{font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.phcard .v{font-size:clamp(19px,1.6vw,24px);font-weight:760;letter-spacing:-.02em;margin-top:3px;font-variant-numeric:tabular-nums;color:var(--ink)}
+.phcard .v{font-size:clamp(17px,1.4vw,21px);font-weight:760;letter-spacing:-.02em;margin-top:2px;font-variant-numeric:tabular-nums;color:var(--ink)}
 .phcard .v.pos{color:var(--good)} .phcard .v.neg{color:var(--bad)} .phcard .v.flat{color:var(--muted)}
 .phcard .s{font-size:11px;color:var(--ink2);margin-top:3px}
 .phcard.span2{grid-column:1/-1}
@@ -858,6 +858,8 @@ function renderSparks(){
 function phNice(v){ var p=Math.pow(10,Math.floor(Math.log10(Math.max(1,v)))); var m=v/p; var n=m<=1?1:m<=1.5?1.5:m<=2?2:m<=2.5?2.5:m<=3?3:m<=4?4:m<=5?5:m<=6?6:m<=8?8:10; return Math.round(n*p); }
 function phKey(ms){ var t=new Date(ms); function p(n){ return (n<10?'0':'')+n; } return t.getUTCFullYear()+'-'+p(t.getUTCMonth()+1)+'-'+p(t.getUTCDate()); }
 function phDM(d){ return d.slice(8,10)+'/'+d.slice(5,7); }
+/* Số rút gọn cho nhãn trong thân cột mảnh: 2318 -> 2.3k, 580 giữ nguyên (tooltip + số Tổng vẫn đầy đủ) */
+function nfK(x){ if(x<1000) return nf(x); var s=(x/1000).toFixed(1).replace(/\.0$/,''); return s+'k'; }
 function renderHistory(){
   try{
     renderSparks();
@@ -884,7 +886,7 @@ function renderHistory(){
     var ds=[]; for(var ms=Date.parse(startKey+'T00:00:00Z'); ms<=Date.parse(endKey+'T00:00:00Z'); ms+=86400000) ds.push(phKey(ms));
     if(ds.length>45) ds=ds.slice(-45);   // an toàn: tối đa 45 cột
     var max=0; ds.forEach(function(d){ var v=days[d]; if(v&&v.mtg+v.gar>max) max=v.mtg+v.gar; });
-    var niceMax=phNice(max||1), H=240;
+    var niceMax=phNice(max||1), H=176;
     /* CT2: gridline ngang mờ + nhãn trục Y để gióng hàng số lượng */
     var gl='', yl='';
     for(var g=0; g<=4; g++){ var b=Math.round(g/4*H);
@@ -898,9 +900,9 @@ function renderHistory(){
       var hg=v.gar?Math.max(2,Math.round(v.gar/niceMax*H)):0;
       var hm=v.mtg?Math.max(2,Math.round(v.mtg/niceMax*H)):0;
       var segs='';
-      /* CT3: label in chìm trong thân cột (chỉ khi đoạn đủ cao ≥18px để số không tràn) */
-      if(v.gar) segs+='<i class="phseg gar top" data-h="'+hg+'" style="'+dl+'">'+(hg>=18?'<span>'+nf(v.gar)+'</span>':'')+'</i>';
-      if(v.mtg) segs+='<i class="phseg mtg'+(v.gar?'':' top')+'" data-h="'+hm+'" style="'+dl+'">'+(hm>=18?'<span>'+nf(v.mtg)+'</span>':'')+'</i>';
+      /* CT3: label in chìm trong thân cột — số rút gọn (2.3k), chỉ khi đoạn đủ cao ≥15px */
+      if(v.gar) segs+='<i class="phseg gar top" data-h="'+hg+'" style="'+dl+'">'+(hg>=15?'<span>'+nfK(v.gar)+'</span>':'')+'</i>';
+      if(v.mtg) segs+='<i class="phseg mtg'+(v.gar?'':' top')+'" data-h="'+hm+'" style="'+dl+'">'+(hm>=15?'<span>'+nfK(v.mtg)+'</span>':'')+'</i>';
       var bh=hg+hm+(v.gar&&v.mtg?2:0);
       var tip='Ngày '+phDM(d)+'/'+d.slice(0,4)+' | Mastige: '+nf(v.mtg)+' | Garment: '+nf(v.gar)+' | Tổng: '+nf(tot);
       return '<div class="phcol" title="'+tip+'"><div class="phstack"><b class="pht" data-b="'+bh+'" style="'+dl+'">'+nf(tot)+'</b>'+segs+'</div><div class="phd">'+phDM(d)+'</div></div>';
