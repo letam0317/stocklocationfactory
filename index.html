@@ -160,7 +160,7 @@ h1.brand-title{margin:0;min-width:0}
   background:var(--surface);border-top:1px solid var(--border);border-left:1px solid var(--border);border-right:1px solid var(--border);
   border-radius:10px 10px 0 0;box-shadow:0 -4px 6px -1px rgba(0,0,0,0.1);font-size:12.5px;margin-top:16px}
 /* chống đè nội dung: khối content cộng đệm đáy để dòng cuối không bị footer che khi cuộn kịch */
-#viewStock,#viewKK{padding-bottom:60px}
+#viewStock,#viewKK,#viewAbn{padding-bottom:60px}
 .footbar a{color:var(--brand2);text-decoration:none;font-weight:600}
 .footbar a:hover{text-decoration:underline}
 .footbar .hint{font-variant-numeric:tabular-nums}
@@ -226,7 +226,7 @@ h1.brand-title{margin:0;min-width:0}
 /* Ô "Dự kiến xong": bấm mở pop-up dự báo + mô phỏng nhân sự */
 .kkstrip .v.fce{color:var(--accent);font-weight:450}
 /* Pop-up Dự báo hoàn thành: 2 tầng — ① máy tự tính từ quá khứ, ② người chọn mô phỏng */
-.modalbox.fcbox{width:min(700px,94vw)}
+.modalbox.fcbox{width:min(880px,95vw)}
 .fcwrap{padding:16px 22px 22px;display:flex;flex-direction:column;gap:14px}
 .fcsec{border:1px solid var(--border);border-radius:12px;padding:14px 16px;background:color-mix(in srgb,var(--surface2) 40%,var(--surface))}
 .fcsec h3{margin:0 0 10px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:750}
@@ -253,6 +253,36 @@ h1.brand-title{margin:0;min-width:0}
 .fcg{border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:5px 13px;font-size:12px;font-weight:650;cursor:pointer;color:var(--ink2);font-family:inherit;transition:background .15s var(--ease),color .15s var(--ease)}
 .fcg.on{background:var(--accent);border-color:var(--accent);color:var(--accent-text)}
 .fcneed{font-size:12.5px;color:var(--ink);margin-top:8px;font-weight:600}
+/* ===== Bộ chọn KHOẢNG NGÀY gộp (bắt đầu → hạn chót) — bê nguyên thiết kế "Ngày ghi nhận" từ kiemsoatkho ===== */
+.fcdate{position:relative;text-transform:none;letter-spacing:0;font-weight:400}
+.fcdate .date-btn{width:100%;text-align:left;cursor:pointer;padding:8px 30px 8px 10px;border:1px solid var(--border);border-radius:9px;background:var(--surface);color:var(--ink);font-size:13px;font-family:inherit;transition:border-color .15s var(--ease),box-shadow .15s var(--ease)}
+.fcdate .date-btn:hover{border-color:var(--accent)}
+.fcdate .date-btn:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}
+.fcdate::after{content:"";position:absolute;right:12px;top:19px;width:7px;height:7px;margin-top:-5px;border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);transform:rotate(45deg);pointer-events:none;transition:transform .2s var(--ease)}
+.fcdate.open::after{transform:rotate(-135deg);margin-top:-1px}
+.date-pop{position:absolute;top:calc(100% + 6px);left:0;z-index:45;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg);padding:12px;width:max-content;max-width:94vw;
+  transform-origin:top left;animation:popIn .16s cubic-bezier(.16,1,.3,1);will-change:opacity,transform}
+.date-pop.hidden{display:none}
+.date-pop button{border:1px solid var(--border);background:var(--surface);color:var(--ink);border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;padding:5px 12px;font-weight:500;transition:background .15s var(--ease),border-color .15s var(--ease)}
+.date-pop button:hover{border-color:var(--accent);background:var(--hover)}
+.date-pop button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-text);font-weight:650}
+.dp-presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.dp-presets button{border-radius:16px;padding:5px 10px}
+.dp-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+.dp-months{display:flex;gap:20px}
+.dp-mtitle{text-align:center;font-size:12.5px;font-weight:700;margin-bottom:6px}
+.dp-grid{display:grid;grid-template-columns:repeat(7,32px);gap:2px}
+.dp-dow{font-size:10px;color:var(--muted);text-align:center;height:22px;line-height:22px;font-weight:600}
+.dp-day{height:32px;display:flex;align-items:center;justify-content:center;font-size:12px;border-radius:7px;cursor:pointer;user-select:none;transition:background-color .12s ease,color .12s ease}
+.dp-day:hover{background:var(--hover)}
+.dp-day.out{opacity:.35}
+.dp-day.in-range{background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.dp-day.edge{background:var(--accent);color:var(--accent-text);font-weight:700}
+.dp-day.today{box-shadow:inset 0 0 0 1px var(--accent)}
+.dp-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px;border-top:1px solid var(--border);padding-top:10px}
+.dp-foot .dpsel{font-size:12px;color:var(--muted)}
+.dp-foot button{margin-left:6px}
+@media(max-width:640px){.dp-months{flex-direction:column;gap:14px}}
 /* Thanh trạng thái 100%: mỏng 8px, bo tròn hẳn, khe 2px giữa các đoạn */
 .kkstbar{display:flex;height:8px;border-radius:99px;overflow:hidden;background:var(--surface2);margin:2px 0 10px}
 .kkstbar i{display:block;height:100%;min-width:2px}
@@ -622,6 +652,33 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
   #catmodal .mtbl th{white-space:normal;text-align:right}
   #catmodal .mtbl th:first-child,#catmodal .mtbl td:first-child{white-space:normal;width:70%;text-align:left}
 }
+
+/* ===== TAB 3: Tồn kho bất thường — thẻ chỉ số + chart thanh ngang theo kho/loại ===== */
+.abntiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:10px;margin:6px 0 16px}
+.abntile{--cc:var(--accent);background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--cc);border-radius:12px;padding:12px 15px;cursor:pointer;
+  transition:transform .16s var(--ez-apple),box-shadow .25s ease,background .2s ease;animation:fadeUp .3s ease both}
+.abntile:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);background:var(--hover)}
+.abntile .k{font-size:24px;font-weight:780;font-variant-numeric:tabular-nums;line-height:1;color:var(--cc)}
+.abntile.tot .k{color:var(--ink)}
+.abntile .l{font-size:12px;color:var(--ink);margin-top:7px;font-weight:650;line-height:1.25}
+.abntile .s{font-size:10.5px;color:var(--ink3);margin-top:3px}
+.abnlegend{display:inline-flex;flex-wrap:wrap;gap:4px 12px;font-weight:400;font-size:11px;color:var(--ink2)}
+.abnlegend span{display:inline-flex;align-items:center;gap:5px}
+.abnlegend i{width:10px;height:10px;border-radius:3px;display:inline-block;flex:none}
+.abnchart{display:flex;flex-direction:column;gap:2px;max-height:440px;overflow-y:auto;padding-right:6px}
+.abnrow{display:grid;grid-template-columns:184px 1fr 118px;align-items:center;gap:12px;padding:6px 8px;border-radius:8px;cursor:pointer;transition:background .16s var(--ease)}
+.abnrow:hover{background:var(--hover)}
+.abnrl{font-size:11.5px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:7px}
+.abnrl .dot{flex:none}
+.abntrack{background:var(--surface2);border-radius:6px;height:16px;overflow:hidden}
+.abnfill{height:100%;display:flex;width:0;border-radius:6px;overflow:hidden;transition:width .85s var(--ease)}
+.abnfill i{display:block;height:100%;min-width:1px}
+.abnrv{text-align:right;font-variant-numeric:tabular-nums;font-size:12px;line-height:1.15}
+.abnrv b{font-size:13px;color:var(--ink)} .abnrv small{display:block;color:var(--ink3);font-size:10px;font-weight:500}
+.abnempty{color:var(--ink3);font-size:12.5px;padding:18px 2px;text-align:center}
+.abncell0{color:var(--ink3)}
+#abnmodal .mtbl .pn{min-width:190px;max-width:300px}
+@media(max-width:640px){.abnrow{grid-template-columns:120px 1fr 92px;gap:8px}.abnrl{font-size:11px}}
 </style>
 </head>
 <body>
@@ -667,6 +724,7 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
 <div class="toptabs">
   <button class="toptab active" id="ttStock" onclick="showTab('stock')">Trạng thái lưu trữ</button>
   <button class="toptab" id="ttKK" onclick="showTab('kk')">Kiểm kê</button>
+  <button class="toptab" id="ttAbn" onclick="showTab('abn')">Tồn kho bất thường</button>
 </div>
 
 <!-- ===== TAB 1: Trạng thái lưu trữ (dashboard hiện tại) ===== -->
@@ -697,6 +755,15 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
     </section>
     <section class="panel span2"><h2>Tiến độ theo kho <span class="hint">(SKU + mã vị trí · bấm thẻ kho để lọc toàn tab theo kho đó)</span></h2><div class="whlist" id="kkWhList"></div></section>
   </div>
+</div>
+
+<!-- ===== TAB 3: Tồn kho bất thường (báo cáo stock-inventory-beta · Product Type = Normal) ===== -->
+<div id="viewAbn" hidden>
+  <p class="sub"><span class="muted">Chỉ số "bất thường" đọc từ báo cáo <code>stock-inventory-beta</code> — chỉ SKU có <b>Product Type = Normal</b> và có ít nhất 1 loại &gt; 0: Committed · Committed Outbound · Unsuitable product · UID Temp · Conflict · Not Found.</span></p>
+  <!-- Cross-filter KHO: chip kho lọc toàn bộ thẻ chỉ số + chart + pop-up -->
+  <div class="kkbar" id="abnWhBar" style="margin-bottom:12px"></div>
+  <div id="abnContent"></div>
+  <div id="abnState" class="state"><div class="spin"></div>Đang tải dữ liệu tồn kho bất thường…</div>
 </div>
 
 <footer>Dashboard đọc trực tiếp online từ Google Sheet “stocklocationfactory” (gviz API).<br>Trạng thái lưu trữ: SKU đếm distinct theo Kho × Category · Kiểm kê: tab kiemke-sku / kiemke-location · Nút “Tải lại dữ liệu” (trong menu Cài đặt) kéo trực tiếp từ WMS (tối đa 4 giờ/lần).</footer>
@@ -755,6 +822,25 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
     <div class="modalbody" style="padding-top:14px"><table class="mtbl"><thead><tr>
       <th>Tên Kho</th><th class="num">SKU đã lên kệ</th><th class="num">SKU chưa lên kệ</th><th class="num col-tot">Tổng SKU</th><th class="num">Tỷ lệ hoàn thành</th>
     </tr></thead><tbody id="cmbody"></tbody></table></div>
+  </div>
+</div>
+
+<!-- Modal drill-down Tồn kho bất thường: danh sách SKU + đầy đủ chỉ số bất thường, lọc theo kho/category/loại -->
+<div id="abnmodal" class="modal" onclick="if(event.target===this)closeAbnModal()">
+  <div class="modalbox">
+    <div class="modalhd"><div><div class="mt" id="abnmTitle"></div><div class="mtsub" id="abnmSub"></div></div><button class="mclose" onclick="closeAbnModal()">&times;</button></div>
+    <div class="mfilters" style="grid-template-columns:1.6fr 1fr 1fr 1fr">
+      <div class="fld"><label>Tìm nhanh</label><input id="abnmQ" autocomplete="off" placeholder="SKU / tên sản phẩm / thương hiệu…" oninput="abnmRender()"></div>
+      <div class="fld"><label>Kho (Warehouse)</label><select id="abnmWh" onchange="abnmRender()"></select></div>
+      <div class="fld"><label>Category</label><select id="abnmCat" onchange="abnmRender()"></select></div>
+      <div class="fld"><label>Loại bất thường</label><select id="abnmType" onchange="abnmRender()"></select></div>
+    </div>
+    <div class="msum" id="abnmSum"></div>
+    <div class="modalbody"><table class="mtbl"><thead><tr>
+      <th>Kho</th><th>SKU</th><th>ProductName</th><th>Brand</th><th>Category</th>
+      <th class="num">Tồn</th><th class="num">Available</th>
+      <th class="num">Committed</th><th class="num">Committed Outbound</th><th class="num">Unsuitable</th><th class="num">UID Temp</th><th class="num">Conflict</th><th class="num">Not Found</th>
+    </tr></thead><tbody id="abnmBody"></tbody></table></div>
   </div>
 </div>
 
@@ -1256,11 +1342,15 @@ document.addEventListener('keydown',function(e){
   var cm=document.getElementById('catmodal');
   if(cm && cm.classList.contains('show')){ closeCatWhModal(); return; }
   if(document.querySelector('#kkmFilters .combo-menu.show')){ kkmCloseCombos(); return; }
+  var fdp=document.getElementById('fcDatePop');
+  if(fdp && !fdp.classList.contains('hidden')){ fcCloseDatePop(); return; }
   if(document.querySelector('#fcBody .combo-menu.show')){ fcCloseMenus(); return; }
   var fm=document.getElementById('fcmodal');
   if(fm && fm.classList.contains('show')){ closeFcModal(); return; }
   var km=document.getElementById('kkmodal');
   if(km && km.classList.contains('show')){ closeKkModal(); return; }
+  var am=document.getElementById('abnmodal');
+  if(am && am.classList.contains('show')){ closeAbnModal(); return; }
   closeModal();
 });
 document.getElementById('catMenu').addEventListener('click',function(e){
@@ -1324,8 +1414,9 @@ function syncWms(){
       if(j.status==='success'){
         LAST_SYNC_MS=j.at||LAST_SYNC_MS;              // mốc thời gian TỪ BACKEND → khoá nút, mở chu kỳ 4h mới
         toast('Đã đồng bộ WMS thành công!','ok');
-        clearCaches(); KK.loadedOnce=false;            // dữ liệu mới -> huỷ cache phiên
+        clearCaches(); KK.loadedOnce=false; ABN.loadedOnce=false;   // dữ liệu mới -> huỷ cache phiên
         loadData();                                    // tự fetch lại bảng dữ liệu mới
+        if(!document.getElementById('viewAbn').hidden){ ABN.loadedOnce=true; abnLoad(); }   // đang xem tab bất thường -> nạp lại ngay
       }else if(j.code===401){
         toast('Token WMS đã hết hạn. Đang chờ luồng chạy ngầm cập nhật Token mới.','err');
       }else if(j.code===429){
@@ -1384,13 +1475,16 @@ document.getElementById('lnkSheet').href=SHEET_URL;
 
 /* ===== Tab đầu trang: Trạng thái lưu trữ | Kiểm kê (fade mượt, giữ nguyên DOM/trạng thái) ===== */
 function showTab(t){
-  var vs=document.getElementById('viewStock'), vk=document.getElementById('viewKK');
-  vs.hidden=(t!=='stock'); vk.hidden=(t!=='kk');
-  var v=(t==='stock')?vs:vk;
+  var MAP={stock:'viewStock',kk:'viewKK',abn:'viewAbn'};
+  if(!MAP[t]) t='stock';
+  Object.keys(MAP).forEach(function(k){ document.getElementById(MAP[k]).hidden=(k!==t); });
+  var v=document.getElementById(MAP[t]);
   v.classList.remove('vfade'); void v.offsetWidth; v.classList.add('vfade');
   document.getElementById('ttStock').classList.toggle('active',t==='stock');
   document.getElementById('ttKK').classList.toggle('active',t==='kk');
-  if(t==='kk' && !KK.loadedOnce){ KK.loadedOnce=true; kkLoad(); }   // lazy-load lần đầu mở tab
+  document.getElementById('ttAbn').classList.toggle('active',t==='abn');
+  if(t==='kk' && !KK.loadedOnce){ KK.loadedOnce=true; kkLoad(); }    // lazy-load lần đầu mở tab
+  if(t==='abn' && !ABN.loadedOnce){ ABN.loadedOnce=true; abnLoad(); }
 }
 
 /* ===== Tab Kiểm kê (Physical Count) — port nguyên logic từ QC, đọc tab kiemke-sku / kiemke-location ===== */
@@ -1427,7 +1521,7 @@ function kkEval(inv,cnt){ if(cnt==null||cnt==='') return {d:0,counted:false}; va
 var CACHE_TTL=10*60*1000;
 function cacheGet(k){ try{ var o=JSON.parse(sessionStorage.getItem(k)||'null'); if(o&&(Date.now()-o.at)<CACHE_TTL) return o.d; }catch(e){} return null; }
 function cacheSet(k,d){ try{ sessionStorage.setItem(k,JSON.stringify({at:Date.now(),d:d})); }catch(e){ /* quá quota -> bỏ qua, không cache */ } }
-function clearCaches(){ try{ ['slf-kk-sku','slf-kk-loc','slf-kk3-sku','slf-kk3-loc','slf-hist','slf-hist2'].forEach(function(k){ sessionStorage.removeItem(k); }); }catch(e){} }
+function clearCaches(){ try{ ['slf-kk-sku','slf-kk-loc','slf-kk3-sku','slf-kk3-loc','slf-hist','slf-hist2','slf-abn3'].forEach(function(k){ sessionStorage.removeItem(k); }); }catch(e){} }
 function gvizP(sheet,params,cb){
   return new Promise(function(res){
     window[cb]=function(resp){ res(resp); };
@@ -1915,10 +2009,11 @@ function kkFcOpen(kind){
       '<label>Số nhân sự kiểm'+fcComboHtml('fcN',nItems,nMac)+'</label>'+
       '<label>Thời lượng kiểm / người / ngày'+fcComboHtml('fcH',hItems,hDo)+'</label>'+
       '</div>'+
-      '<div class="fcctl">'+
-      '<label>Bắt đầu kiểm từ ngày<input type="date" id="fcS" value="'+homNay+'" onchange="kkFcSim()"></label>'+
-      '<label>Cần xong trước ngày (tính ngược số người)<input type="date" id="fcT" onchange="kkFcSim()"></label>'+
-      '</div>'+
+      '<div class="fcctl" style="grid-template-columns:1fr"><label>Thời gian đợt kiểm — bắt đầu → hạn chót (bấm ngày 1 = bắt đầu, ngày 2 = hạn)'+
+      '<span class="fcdate" id="fcDateWrap">'+
+        '<button type="button" class="date-btn" id="fcDateBtn">'+homNay+'</button>'+
+        '<span class="date-pop hidden" id="fcDatePop"></span>'+
+      '</span></label></div>'+
       '<div class="fcctl" style="grid-template-columns:1fr"><label>Nhóm hàng đưa vào đợt kiểm<span class="fcgroups" id="fcG">'+gChips+'</span></label></div>'+
       '<div class="fchero" id="fcSimOut"></div><div class="fcneed" id="fcNeed"></div></div>';
   }else if(fc.none){
@@ -1929,6 +2024,8 @@ function kkFcOpen(kind){
   }
   if(!htmlB&&!fc.done) htmlB='<div class="fcsec"><h3>② Người chọn — mô phỏng</h3><div class="fchero"><span class="n">Chưa đủ dữ liệu giờ kiểm (Counted date có giờ phút) để đo giây/mã — mô phỏng sẽ mở khi có dữ liệu.</span></div></div>';
   document.getElementById('fcBody').innerHTML=htmlA+htmlB;
+  FC_DP={view:{y:0,m:0},selS:'',selE:'',start:fcTodayISO(),end:''};   // mỗi lần mở: bắt đầu = hôm nay, chưa đặt hạn
+  fcUpdateDateBtn();
   if(fc.mode==='effort'&&!fc.done) kkFcSim();
   var m=document.getElementById('fcmodal'); m.style.display='flex';
   requestAnimationFrame(function(){ m.classList.add('show'); });
@@ -1951,13 +2048,33 @@ function fcMenuToggle(combo){
   if(!dang){ m.classList.add('show'); combo.classList.add('open'); }
 }
 document.getElementById('fcBody').addEventListener('click',function(e){
+  /* Bộ chọn khoảng ngày (mọi nhánh preventDefault — control nằm trong <label>, chặn forward-click) */
+  if(e.target.closest('#fcDateBtn')){ e.preventDefault();
+    var mo=document.getElementById('fcDatePop').classList.contains('hidden');
+    fcCloseMenus(); if(mo) fcOpenDatePop(); else fcCloseDatePop(); return; }
+  var day=e.target.closest('.dp-day');
+  if(day){ e.preventDefault();
+    var iso=day.getAttribute('data-iso');
+    if(!FC_DP.selS||(FC_DP.selS&&FC_DP.selE)){ FC_DP.selS=iso; FC_DP.selE=''; }       // bắt đầu dải MỚI
+    else if(iso<FC_DP.selS){ FC_DP.selE=FC_DP.selS; FC_DP.selS=iso; }                 // chọn ngược -> hoán đổi
+    else FC_DP.selE=iso;                                                              // chốt hạn chót
+    fcPaintSel(); return; }
+  var pr=e.target.closest('.dp-presets button'); if(pr){ e.preventDefault(); fcPreset(pr.getAttribute('data-preset')); return; }
+  if(e.target.closest('#fcDpPrev')){ e.preventDefault(); var v=FC_DP.view, m=v.m-1, y=v.y; if(m<0){m=11;y--;} FC_DP.view={y:y,m:m}; fcRenderCal(); return; }
+  if(e.target.closest('#fcDpNext')){ e.preventDefault(); var v2=FC_DP.view, m2=v2.m+1, y2=v2.y; if(m2>11){m2=0;y2++;} FC_DP.view={y:y2,m:m2}; fcRenderCal(); return; }
+  if(e.target.closest('#fcDpApply')){ e.preventDefault(); fcCommitDate(); return; }
+  if(e.target.closest('#fcDpClear')){ e.preventDefault(); fcClearDate(); return; }
+  if(e.target.closest('#fcDatePop')){ e.preventDefault(); return; }   // click nền lịch: không làm gì, không forward
   var it=e.target.closest('.combo-item'); if(!it) return;
   e.preventDefault();   // combo nằm trong <label>: chặn label forward click về input (sẽ mở lại menu vừa đóng)
   var inp=it.closest('.combo').querySelector('input');
   inp.value=it.textContent; inp.setAttribute('data-v',it.getAttribute('data-v'));
   fcCloseMenus(); kkFcSim();
 });
-document.addEventListener('click',function(e){ if(!e.target.closest('#fcBody .combo')) fcCloseMenus(); });
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#fcBody .combo')) fcCloseMenus();
+  if(!e.target.closest('#fcDateWrap')) fcCloseDatePop();
+});
 function fcComboV(id){ var inp=document.querySelector('#fcBody .fccombo[data-id="'+id+'"] input'); return inp?Number(inp.getAttribute('data-v')):NaN; }
 function kkFcSim(){
   var fc=KK_FC.fc; if(!fc||fc.mode!=='effort') return;
@@ -1968,20 +2085,103 @@ function kkFcSim(){
   var load=0, nMa=0;
   document.querySelectorAll('#fcG .fcg.on').forEach(function(x){ var g=x.getAttribute('data-g'); load+=(fc.nhom[g]||0)*(fc.secG[g]||0); nMa+=fc.nhom[g]||0; });
   if(!nMa){ out.innerHTML='<span class="n">Chọn ít nhất 1 nhóm hàng để mô phỏng.</span>'; need.textContent=''; return; }
-  /* Thời gian BẮT ĐẦU kiểm do người vận hành chọn -> tính ra thời gian KẾT THÚC (né CN) */
-  var sv=(document.getElementById('fcS')||{}).value;
-  var startMs=sv?Date.parse(sv+'T00:00:00Z'):kkTodayMsVN(); if(isNaN(startMs)) startMs=kkTodayMsVN();
+  /* Thời gian đợt kiểm từ BỘ CHỌN KHOẢNG NGÀY (bắt đầu → hạn chót) -> tính KẾT THÚC (né CN) */
+  var startMs=FC_DP.start?Date.parse(FC_DP.start+'T00:00:00Z'):kkTodayMsVN(); if(isNaN(startMs)) startMs=kkTodayMsVN();
   var soLam=Math.ceil(load/(N*secNguoi));
   var endMs=kkEtaFrom(startMs,soLam);
   out.innerHTML='<span class="d">'+kkFcFmt(endMs)+'</span><span class="n">kết thúc dự kiến · bắt đầu '+kkFcFmt(startMs)+' → ≈'+nf(soLam)+' ngày làm việc (né CN) · '+nf(nMa)+' mã ≈'+(load/3600).toFixed(1)+' giờ công · '+N+' người × '+Math.round(secNguoi/60)+' phút/ngày</span>';
-  var tv=(document.getElementById('fcT')||{}).value, txt='';
-  if(tv){
-    var tms=Date.parse(tv+'T00:00:00Z'), wd=0;
+  var txt='';
+  if(FC_DP.end){
+    var tms=Date.parse(FC_DP.end+'T00:00:00Z'), wd=0;
     for(var ms=startMs;ms<=tms;ms+=86400000) if(new Date(ms).getUTCDay()!==0) wd++;
     txt=(isNaN(tms)||wd<=0)?'Hạn chót phải sau ngày bắt đầu kiểm.'
-      :('→ Để xong trước '+tv.slice(8,10)+'/'+tv.slice(5,7)+' ('+wd+' ngày làm việc kể từ ngày bắt đầu): cần ≈ '+Math.ceil(load/(wd*secNguoi))+' người với thời lượng đã chọn.');
+      :('→ Để xong trước '+fcFmtVN(FC_DP.end)+' ('+wd+' ngày làm việc kể từ ngày bắt đầu): cần ≈ '+Math.ceil(load/(wd*secNguoi))+' người với thời lượng đã chọn.');
   }
   need.textContent=txt;
+}
+/* ===== BỘ CHỌN KHOẢNG NGÀY (bắt đầu → hạn chót) — port nguyên pattern "Ngày ghi nhận" của kiemsoatkho =====
+   Click 1 = ngày bắt đầu, click 2 = hạn chót; preset hướng TƯƠNG LAI (lập kế hoạch đợt kiểm); Áp dụng mới chốt. */
+var FC_DP={view:{y:0,m:0},selS:'',selE:'',start:'',end:''};
+function fcIsoOf(y,m,d){ function p(n){ return (n<10?'0':'')+n; } return y+'-'+p(m+1)+'-'+p(d); }
+function fcTodayISO(){ var t=new Date(kkTodayMsVN()); return fcIsoOf(t.getUTCFullYear(),t.getUTCMonth(),t.getUTCDate()); }
+function fcFmtVN(iso){ return iso?iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4):''; }
+function fcDpRange(){ var a=FC_DP.selS||FC_DP.start, b=FC_DP.selE||FC_DP.end||''; if(a&&b&&a>b){ var t=a;a=b;b=t; } return [a,b]; }
+function fcMonthHTML(y,m){
+  var first=Date.UTC(y,m,1), dow=(new Date(first).getUTCDay()+6)%7, start=first-dow*86400000, g='';
+  for(var i=0;i<42;i++){ var dt=new Date(start+i*86400000);
+    var iso=fcIsoOf(dt.getUTCFullYear(),dt.getUTCMonth(),dt.getUTCDate());
+    g+='<span class="dp-day'+(dt.getUTCMonth()!==m?' out':'')+'" data-iso="'+iso+'">'+dt.getUTCDate()+'</span>';
+  }
+  var dows=['T2','T3','T4','T5','T6','T7','CN'].map(function(x){ return '<span class="dp-dow">'+x+'</span>'; }).join('');
+  return '<span class="dp-month"><span class="dp-mtitle" style="display:block">Th'+(m+1)+' '+y+'</span><span class="dp-grid">'+dows+g+'</span></span>';
+}
+function fcRenderCal(){
+  var y=FC_DP.view.y, m=FC_DP.view.m, y2=(m===11)?y+1:y, m2=(m+1)%12;
+  var el=document.getElementById('fcDpMonths'); if(!el) return;
+  el.innerHTML=fcMonthHTML(y,m)+fcMonthHTML(y2,m2);
+  fcPaintSel();
+}
+function fcPaintSel(){
+  var r=fcDpRange(), a=r[0], b=r[1], today=fcTodayISO();
+  document.querySelectorAll('#fcDpMonths .dp-day').forEach(function(el){
+    var iso=el.getAttribute('data-iso');
+    el.classList.remove('in-range','edge');
+    el.classList.toggle('today',iso===today);
+    if(a&&b){ if(iso===a||iso===b) el.classList.add('edge'); else if(iso>a&&iso<b) el.classList.add('in-range'); }
+    else if(a&&iso===a) el.classList.add('edge');
+  });
+  var s=document.querySelector('#fcDatePop .dpsel');
+  if(s) s.textContent=a?(b&&b!==a?fcFmtVN(a)+' → '+fcFmtVN(b):fcFmtVN(a)+' → (không hạn)'):'Chưa chọn';
+}
+function fcUpdateDateBtn(){
+  var b=document.getElementById('fcDateBtn'); if(!b) return;
+  b.textContent=FC_DP.start?(FC_DP.end?fcFmtVN(FC_DP.start)+' → '+fcFmtVN(FC_DP.end):fcFmtVN(FC_DP.start)+' → (không hạn)'):'Hôm nay';
+}
+function fcOpenDatePop(){
+  var base=FC_DP.start||fcTodayISO();
+  FC_DP.view={y:Number(base.slice(0,4)),m:Number(base.slice(5,7))-1};
+  /* chỉ coi là ĐÃ có dải khi user từng chốt hạn — start mặc định "hôm nay" không tính,
+     để click đầu tiên luôn bắt đầu dải mới (không bị kéo dài từ hôm nay) */
+  FC_DP.selS=FC_DP.end?FC_DP.start:''; FC_DP.selE=FC_DP.end;
+  var pop=document.getElementById('fcDatePop');
+  pop.innerHTML=
+    '<span class="dp-presets" style="display:flex">'+
+      '<button type="button" data-preset="today">Hôm nay</button>'+
+      '<button type="button" data-preset="7">+7 ngày</button>'+
+      '<button type="button" data-preset="14">+14 ngày</button>'+
+      '<button type="button" data-preset="30">+30 ngày</button>'+
+      '<button type="button" data-preset="month">Hết tháng</button>'+
+    '</span>'+
+    '<span class="dp-nav" style="display:flex"><button type="button" id="fcDpPrev">‹ Trước</button><span></span><button type="button" id="fcDpNext">Sau ›</button></span>'+
+    '<span class="dp-months" id="fcDpMonths" style="display:flex"></span>'+
+    '<span class="dp-foot" style="display:flex"><span class="dpsel">Chưa chọn</span><span><button type="button" id="fcDpClear">Xoá</button><button type="button" class="primary" id="fcDpApply">Áp dụng</button></span></span>';
+  pop.classList.remove('hidden');
+  document.getElementById('fcDateWrap').classList.add('open');
+  fcRenderCal();
+}
+function fcCloseDatePop(){
+  var pop=document.getElementById('fcDatePop');
+  if(pop&&!pop.classList.contains('hidden')){ pop.classList.add('hidden'); pop.innerHTML=''; }
+  var w=document.getElementById('fcDateWrap'); if(w) w.classList.remove('open');
+}
+function fcPreset(p){
+  var t=fcTodayISO(), tm=Date.parse(t+'T00:00:00Z');
+  function plus(n){ var d=new Date(tm+n*86400000); return fcIsoOf(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()); }
+  FC_DP.selS=t;
+  if(p==='today') FC_DP.selE='';
+  else if(p==='month'){ var d=new Date(tm); FC_DP.selE=fcIsoOf(d.getUTCFullYear(),d.getUTCMonth()+1,0); }
+  else FC_DP.selE=plus(Number(p));
+  FC_DP.view={y:Number(FC_DP.selS.slice(0,4)),m:Number(FC_DP.selS.slice(5,7))-1};
+  fcRenderCal();   // preset chỉ TÔ dải, chưa đóng — bấm Áp dụng mới chốt (đúng hành vi kiemsoatkho)
+}
+function fcCommitDate(){
+  var r=fcDpRange();
+  FC_DP.start=r[0]||fcTodayISO(); FC_DP.end=(r[1]&&r[1]!==r[0])?r[1]:'';
+  fcUpdateDateBtn(); fcCloseDatePop(); kkFcSim();
+}
+function fcClearDate(){
+  FC_DP.selS=FC_DP.selE=''; FC_DP.start=fcTodayISO(); FC_DP.end='';
+  fcUpdateDateBtn(); fcCloseDatePop(); kkFcSim();
 }
 function closeFcModal(){
   var m=document.getElementById('fcmodal'); m.classList.remove('show');
@@ -2138,6 +2338,211 @@ function kkmRender(){
 function closeKkModal(){
   var m=document.getElementById('kkmodal'); m.classList.remove('show');
   setTimeout(function(){ m.style.display='none'; document.getElementById('kkmBody').innerHTML=''; document.getElementById('kkmFilters').innerHTML=''; document.getElementById('kkmSum').textContent=''; },240);   // dọn DOM khi đóng
+}
+
+/* ================= TAB 3: TỒN KHO BẤT THƯỜNG (báo cáo stock-inventory-beta) =================
+   Nguồn: Google Sheet tab ABN_TAB (backend force_sync_wms ghi báo cáo /wms/report-management/stock-inventories).
+   Chỉ tính SKU có Product Type = Normal; "bất thường" = có ít nhất 1 trong 6 loại > 0. */
+var ABN_TAB='stock-inventory-beta';   // đổi tại đây nếu backend đặt tên tab khác
+var ABN_TYPES=[
+  {k:'committed',          lb:'Committed',          c:'#2563eb'},
+  {k:'committed_outbound', lb:'Committed Outbound', c:'#0891b2'},
+  {k:'unsuitable_product', lb:'Unsuitable product', c:'#c0392b'},
+  {k:'uid_temp',           lb:'UID Temp',           c:'#8b5cf6'},
+  {k:'conflict',           lb:'Conflict',           c:'#d97706'},
+  {k:'not_found',          lb:'Not Found',          c:'#e11d48'}
+];
+/* Nhận diện cột theo NHÃN tiêu đề (linh hoạt: chấp nhận snake_case, có dấu cách, tiếng Việt) */
+var ABN_COLS={
+  sku:['sku','mã sku','ma sku'],
+  pn:['product_name','productname','product name','tên sản phẩm','ten san pham','sản phẩm'],
+  brand:['brand_name','brandname','brand','thương hiệu','thuong hieu'],
+  cat:['category_name','categoryname','category','ngành hàng','nganh hang','danh mục','nhóm hàng'],
+  wh:['warehouse_name','warehousename','warehouse','warehouse name','kho'],
+  ptype:['product_type','producttype','product type','loại sản phẩm','loai san pham','phân loại','classifyname','classify name'],
+  in_stock:['in_stock','instock','in stock','tồn kho','tồn','ton'],
+  available:['available','có sẵn','kha dung','khả dụng'],
+  committed:['committed','đang giữ','dang giu'],
+  committed_outbound:['committed_outbound','committedoutbound','committed outbound'],
+  unsuitable_product:['unsuitable_product','unsuitableproduct','unsuitable product','unsuitable','hàng không phù hợp','sp lỗi'],
+  uid_temp:['uid_temp','uidtemp','uid temp'],
+  conflict:['conflict','xung đột','xung dot'],
+  not_found:['not_found','notfound','not found','không tìm thấy','khong tim thay']
+};
+var ABN={loadedOnce:false,ok:false,hasPtype:false,all:[],rows:[],wh:''};
+var ABN_MODAL={base:[]};
+function abnColor(w){ return kkColor(w); }              // dùng chung bảng màu kho với tab Kiểm kê
+function abnType(k){ for(var i=0;i<ABN_TYPES.length;i++) if(ABN_TYPES[i].k===k) return ABN_TYPES[i]; return null; }
+function abnIdx(H,aliases){ for(var i=0;i<aliases.length;i++){ var j=H.indexOf(aliases[i]); if(j>=0) return j; } return -1; }
+function abnNum(v){ if(v==null||v==='') return 0; var n=Number(String(v).replace(/,/g,'')); return isNaN(n)?0:n; }
+function abnWhTot(o){ var s=0; ABN_TYPES.forEach(function(t){ s+=(o[t.k]||0); }); return s; }
+
+async function abnFetch(){
+  var ck='slf-abn3', hit=cacheGet(ck);
+  if(hit) return hit;
+  var resp=await gvizP(ABN_TAB,'&headers=1','abngv');
+  var out={ok:false,rows:[],hasPtype:false};
+  try{
+    if(!resp||resp.status==='error') throw 0;
+    var H=(resp.table&&resp.table.cols||[]).map(function(c){ return String((c&&c.label)||'').replace(/\s+/g,' ').trim().toLowerCase(); });
+    var idx={}; Object.keys(ABN_COLS).forEach(function(k){ idx[k]=abnIdx(H,ABN_COLS[k]); });
+    var anyType=ABN_TYPES.some(function(t){ return idx[t.k]>=0; });
+    if(idx.sku<0 || idx.wh<0 || !anyType) throw 0;   // không phải nguồn báo cáo hợp lệ (vd tab fallback)
+    var rows=(resp.table&&resp.table.rows||[]), arr=[];
+    rows.forEach(function(r){
+      var c=r.c||[];
+      function gv(i){ return (i>=0&&c[i]&&c[i].v!=null)?c[i].v:''; }
+      var sku=String(gv(idx.sku)).trim(); if(!sku) return;
+      var o={sku:sku, pn:String(gv(idx.pn)), brand:String(gv(idx.brand)),
+        cat:String(gv(idx.cat))||'(trống)', wh:String(gv(idx.wh)),
+        ptype:String(gv(idx.ptype)).trim(),
+        in_stock:abnNum(gv(idx.in_stock)), available:abnNum(gv(idx.available))};
+      var s=0; ABN_TYPES.forEach(function(t){ o[t.k]=abnNum(gv(idx[t.k])); s+=o[t.k]; });
+      o._abn=s; arr.push(o);
+    });
+    out={ok:true, rows:arr, hasPtype:idx.ptype>=0};
+  }catch(e){ out={ok:false,rows:[],hasPtype:false}; }
+  if(out.ok) cacheSet(ck,out);
+  return out;
+}
+async function abnLoad(){
+  var st=document.getElementById('abnState');
+  st.style.display='block'; st.innerHTML='<div class="spin"></div>Đang tải dữ liệu tồn kho bất thường…';
+  document.getElementById('abnContent').innerHTML=''; document.getElementById('abnWhBar').innerHTML='';
+  var res=await abnFetch();
+  ABN.ok=res.ok; ABN.hasPtype=res.hasPtype;
+  var norm=res.rows;
+  if(res.ok && res.hasPtype) norm=res.rows.filter(function(r){ return /^normal$/i.test(r.ptype)||r.ptype==='1'; });   // CHỈ Product Type = Normal
+  ABN.all=norm;
+  ABN.rows=norm.filter(function(r){ return r._abn>0; });   // chỉ giữ dòng thực sự bất thường
+  abnRender();
+}
+function abnRowsInScope(){ return ABN.wh?ABN.rows.filter(function(r){ return r.wh===ABN.wh; }):ABN.rows; }
+function abnSetWh(w){ if(ABN.wh===w) w=''; ABN.wh=w; abnRender(); }
+function abnRenderWhBar(){
+  var el=document.getElementById('abnWhBar'); if(!el) return;
+  var set={}; ABN.rows.forEach(function(r){ if(r.wh) set[r.wh]=1; });
+  var ws=Object.keys(set).sort();
+  if(!ws.length){ el.innerHTML=''; return; }
+  el.innerHTML='<span class="hint" style="font-weight:650">Lọc theo kho:</span>'+
+    '<button class="kktab'+(ABN.wh?'':' active')+'" onclick="abnSetWh(\'\')">Tất cả kho</button>'+
+    ws.map(function(w){ return '<button class="kktab'+(ABN.wh===w?' active':'')+'" data-w="'+esc(w)+'" onclick="abnSetWh(this.getAttribute(\'data-w\'))"><span class="dot" style="background:'+abnColor(w)+'"></span>'+esc(w)+'</button>'; }).join('');
+}
+function abnRender(){
+  var st=document.getElementById('abnState'), cont=document.getElementById('abnContent'), bar=document.getElementById('abnWhBar');
+  if(!ABN.ok){
+    bar.innerHTML=''; cont.innerHTML='';
+    st.style.display='block';
+    st.innerHTML='<div style="max-width:720px;margin:0 auto;text-align:left;line-height:1.75;color:var(--ink2)">'+
+      '<b style="color:var(--ink)">Chưa có dữ liệu tồn kho bất thường trong Google Sheet.</b><br>'+
+      'Tab này đọc từ sheet <code>'+esc(ABN_TAB)+'</code>. Cần bổ sung luồng đồng bộ backend (<code>force_sync_wms</code>) để ghi báo cáo '+
+      '<code>/wms/report-management/stock-inventories</code> (trang <i>stock-inventory-beta</i>, <code>company_ids=1002</code>) vào tab đó.<br>'+
+      'Các cột tối thiểu: <b>SKU</b>, <b>Warehouse</b>, <b>Product Type</b>, <b>Committed</b>, <b>Committed Outbound</b>, <b>Unsuitable product</b>, <b>UID Temp</b>, <b>Conflict</b>, <b>Not Found</b> (nên kèm ProductName · Brand · Category · In Stock · Available).'+
+      '</div>';
+    return;
+  }
+  st.style.display='none';
+  abnRenderWhBar();
+  var rows=abnRowsInScope();
+  var tot={}, cnt={}; ABN_TYPES.forEach(function(t){ tot[t.k]=0; cnt[t.k]=0; });
+  var byWh={};
+  rows.forEach(function(r){
+    if(!byWh[r.wh]) byWh[r.wh]={n:0};
+    byWh[r.wh].n++;
+    ABN_TYPES.forEach(function(t){ if(r[t.k]>0){ tot[t.k]+=r[t.k]; cnt[t.k]++; byWh[r.wh][t.k]=(byWh[r.wh][t.k]||0)+r[t.k]; } });
+  });
+  var nSku=rows.length, nWh=Object.keys(byWh).length;
+
+  var tiles='<div class="abntile tot" onclick="abnOpenAll()" title="Xem tất cả SKU bất thường">'+
+      '<div class="k">'+nf(nSku)+'</div><div class="l">SKU bất thường</div><div class="s">Product Type = Normal · '+nf(nWh)+' kho</div></div>'+
+    ABN_TYPES.map(function(t){
+      return '<div class="abntile" style="--cc:'+t.c+'" onclick="abnOpenType(\''+t.k+'\')" title="Xem SKU có '+t.lb+'">'+
+        '<div class="k">'+nf(tot[t.k])+'</div><div class="l">'+t.lb+'</div><div class="s">'+nf(cnt[t.k])+' SKU</div></div>';
+    }).join('');
+  var legend=ABN_TYPES.map(function(t){ return '<span><i style="background:'+t.c+'"></i>'+t.lb+'</span>'; }).join('');
+
+  var html='<div class="abntiles">'+tiles+'</div>';
+  if(!nSku){
+    html+='<section class="panel"><div class="abnempty">Không có SKU bất thường (Product Type = Normal) trong phạm vi'+(ABN.wh?(' kho “'+esc(ABN.wh)+'”'):' này')+'.</div></section>';
+    cont.innerHTML=html; return;
+  }
+  // Chart 1 — theo kho: thanh ngang xếp chồng (độ dài = tổng SL bất thường, màu = loại)
+  var whKeys=Object.keys(byWh).sort(function(a,b){ return abnWhTot(byWh[b])-abnWhTot(byWh[a]); });
+  var maxWh=1; whKeys.forEach(function(w){ maxWh=Math.max(maxWh,abnWhTot(byWh[w])); });
+  var whBars=whKeys.map(function(w){
+    var o=byWh[w], t=abnWhTot(o), wp=t/maxWh*100;
+    var segs=ABN_TYPES.map(function(ty){ var v=o[ty.k]||0; if(!v||!t) return ''; return '<i style="width:'+(v/t*100).toFixed(3)+'%;background:'+ty.c+'" title="'+ty.lb+': '+nf(v)+'"></i>'; }).join('');
+    return '<div class="abnrow" data-w="'+esc(w)+'" onclick="abnOpenWh(this.getAttribute(\'data-w\'))" title="Bấm xem chi tiết SKU của kho '+esc(w)+'">'+
+      '<span class="abnrl"><span class="dot" style="background:'+abnColor(w)+'"></span>'+esc(w)+'</span>'+
+      '<span class="abntrack"><span class="abnfill" data-w="'+wp.toFixed(2)+'">'+segs+'</span></span>'+
+      '<span class="abnrv"><b>'+nf(t)+'</b><small>'+nf(o.n)+' SKU</small></span></div>';
+  }).join('');
+  // Chart 2 — theo loại: mỗi loại 1 thanh (độ dài = tổng SL loại đó)
+  var maxT=1; ABN_TYPES.forEach(function(t){ maxT=Math.max(maxT,tot[t.k]); });
+  var typeBars=ABN_TYPES.map(function(t){
+    var wp=tot[t.k]/maxT*100;
+    return '<div class="abnrow" onclick="abnOpenType(\''+t.k+'\')" title="Bấm xem SKU có '+t.lb+'">'+
+      '<span class="abnrl"><span class="dot" style="background:'+t.c+'"></span>'+t.lb+'</span>'+
+      '<span class="abntrack"><span class="abnfill" data-w="'+wp.toFixed(2)+'" style="background:'+t.c+'"></span></span>'+
+      '<span class="abnrv"><b>'+nf(tot[t.k])+'</b><small>'+nf(cnt[t.k])+' SKU</small></span></div>';
+  }).join('');
+
+  html+='<section class="panel"><h2>Bất thường theo kho <span class="hint">(độ dài cột = tổng SL bất thường · màu = loại · bấm dòng xem chi tiết SKU)</span> <span class="lg abnlegend">'+legend+'</span></h2><div class="abnchart">'+whBars+'</div></section>'+
+    '<section class="panel"><h2>Phân bổ theo loại bất thường <span class="hint">(tổng số lượng · số SKU liên quan · bấm để xem danh sách)</span></h2><div class="abnchart" style="max-height:none">'+typeBars+'</div></section>';
+  cont.innerHTML=html;
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){
+    cont.querySelectorAll('.abnfill').forEach(function(f){ f.style.width=f.getAttribute('data-w')+'%'; });
+  }); });
+}
+/* ---------- Modal drill-down: danh sách SKU + đầy đủ chỉ số ---------- */
+function abnOpenAll(){ abnShowModal(abnRowsInScope(),'Tất cả SKU bất thường'+(ABN.wh?(' · '+ABN.wh):''),'',''); }
+function abnOpenWh(w){ abnShowModal(ABN.rows.filter(function(r){ return r.wh===w; }),'Bất thường tại kho: '+w,'',w); }
+function abnOpenType(k){ var ty=abnType(k); if(!ty) return; abnShowModal(abnRowsInScope().filter(function(r){ return r[k]>0; }),'SKU có '+ty.lb+(ABN.wh?(' · '+ABN.wh):''),k,''); }
+function abnShowModal(base,title,typeSel,whSel){
+  ABN_MODAL.base=base||[];
+  document.getElementById('abnmTitle').textContent=title;
+  document.getElementById('abnmSub').textContent=nf(ABN_MODAL.base.length)+' dòng (kho | SKU) — lọc theo cột bên dưới';
+  var whs={},cats={};
+  ABN_MODAL.base.forEach(function(r){ if(r.wh)whs[r.wh]=1; if(r.cat)cats[r.cat]=1; });
+  function opts(o,sel){ return '<option value="">Tất cả</option>'+Object.keys(o).sort().map(function(v){ return '<option value="'+esc(v)+'"'+(v===sel?' selected':'')+'>'+esc(v)+'</option>'; }).join(''); }
+  document.getElementById('abnmWh').innerHTML=opts(whs,whSel);
+  document.getElementById('abnmCat').innerHTML=opts(cats,'');
+  document.getElementById('abnmType').innerHTML='<option value="">Tất cả loại</option>'+ABN_TYPES.map(function(t){ return '<option value="'+t.k+'"'+(t.k===typeSel?' selected':'')+'>'+t.lb+'</option>'; }).join('');
+  document.getElementById('abnmQ').value='';
+  abnmRender();
+  var m=document.getElementById('abnmodal'); m.style.display='flex';
+  requestAnimationFrame(function(){ m.classList.add('show'); });
+}
+function abnmRender(){
+  function val(id){ var e=document.getElementById(id); return e?e.value:''; }
+  var q=val('abnmQ').trim().toLowerCase(), fw=val('abnmWh'), fc=val('abnmCat'), ft=val('abnmType');
+  var rows=ABN_MODAL.base.filter(function(r){
+    if(fw && r.wh!==fw) return false;
+    if(fc && r.cat!==fc) return false;
+    if(ft && !(r[ft]>0)) return false;
+    if(q && ((r.sku+' '+r.pn+' '+r.brand+' '+r.cat).toLowerCase().indexOf(q)<0)) return false;
+    return true;
+  });
+  rows=rows.slice().sort(function(a,b){ return ft?(b[ft]-a[ft]):(b._abn-a._abn); });
+  var NCOL=7+ABN_TYPES.length, cap=3000, out=[];
+  var sums={in_stock:0,available:0}; ABN_TYPES.forEach(function(t){ sums[t.k]=0; });
+  for(var i=0;i<rows.length;i++){ var r=rows[i];
+    sums.in_stock+=r.in_stock; sums.available+=r.available; ABN_TYPES.forEach(function(t){ sums[t.k]+=r[t.k]; });
+    if(out.length<cap){
+      var tds=ABN_TYPES.map(function(t){ var v=r[t.k]; return v>0?('<td class="num" style="color:'+t.c+';font-weight:700">'+nf(v)+'</td>'):'<td class="num abncell0">0</td>'; }).join('');
+      out.push('<tr><td class="whn"><span class="dot" style="background:'+abnColor(r.wh)+'"></span>'+esc(r.wh)+'</td>'+
+        '<td>'+esc(r.sku)+'</td><td class="pn">'+esc(r.pn)+'</td><td>'+esc(r.brand)+'</td><td>'+esc(r.cat)+'</td>'+
+        '<td class="num">'+nf(r.in_stock)+'</td><td class="num">'+nf(r.available)+'</td>'+tds+'</tr>');
+    }
+  }
+  if(rows.length>cap) out.push('<tr><td colspan="'+NCOL+'" class="empty">Hiển thị '+nf(cap)+' / '+nf(rows.length)+' dòng — dùng bộ lọc để thu hẹp.</td></tr>');
+  document.getElementById('abnmBody').innerHTML=out.length?out.join(''):'<tr><td colspan="'+NCOL+'" class="empty">Không có dòng phù hợp</td></tr>';
+  var parts=ABN_TYPES.map(function(t){ return t.lb+': '+nf(sums[t.k]); });
+  document.getElementById('abnmSum').textContent=nf(rows.length)+' dòng · Tồn '+nf(sums.in_stock)+' · '+parts.join(' · ');
+}
+function closeAbnModal(){
+  var m=document.getElementById('abnmodal'); m.classList.remove('show');
+  setTimeout(function(){ m.style.display='none'; },240);
 }
 
 loadData();
