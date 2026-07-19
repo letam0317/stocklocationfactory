@@ -226,8 +226,12 @@ h1.brand-title{margin:0;min-width:0}
 /* Ô "Dự kiến xong": bấm mở pop-up dự báo + mô phỏng nhân sự */
 .kkstrip .v.fce{color:var(--accent);font-weight:450}
 /* Pop-up Dự báo hoàn thành: 2 tầng — ① máy tự tính từ quá khứ, ② người chọn mô phỏng */
-.modalbox.fcbox{width:min(880px,95vw)}
-.fcwrap{padding:16px 22px 22px;display:flex;flex-direction:column;gap:14px}
+.modalbox.fcbox{width:min(1080px,96vw)}
+/* 2 tầng ① máy tự tính | ② người chọn xếp CẠNH NHAU trên màn rộng -> pop-up rộng, thấp, dễ đối chiếu */
+.fcwrap{padding:16px 22px 22px;display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+.fcwrap.one{grid-template-columns:1fr}
+@media(max-width:820px){.fcwrap{grid-template-columns:1fr}}
+.fcwrap>.fcsec{margin:0}
 .fcsec{border:1px solid var(--border);border-radius:12px;padding:14px 16px;background:color-mix(in srgb,var(--surface2) 40%,var(--surface))}
 .fcsec h3{margin:0 0 10px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:750}
 .fchero{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
@@ -855,6 +859,7 @@ var META_TAB = "Metadata";                 // A1 = giờ hiển thị, B1 = epoc
 var COOLDOWN_MS = 4 * 60 * 60 * 1000;      // anti-spam: chỉ được gọi WMS 4 giờ/lần
 var LAST_SYNC_MS = 0;                      // mốc đồng bộ WMS cuối — LẤY TỪ BACKEND, không dùng new Date() local
 var _syncing = false, _rowCount = 0, _unlockTimer = null;
+var TOPTAB = 'stock';   // tab đầu trang đang xem — footer hiển thị số liệu theo tab này
 var DIV_ORDER = ["Mastige","Garment"];
 var PAL = ["#2563eb","#0ea5e9","#14b8a6","#f59e0b","#8b5cf6","#ef4444","#10b981","#ec4899","#6366f1","#f43f5e","#0891b2","#84cc16"];
 var WH_DATA = {}, WH_COLOR = {}, curWh = null, curTab = 'pend';
@@ -1368,11 +1373,20 @@ function fmtTime(ms){  // HH:mm:ss DD/MM/YYYY
   var d=new Date(ms); function p(n){return (n<10?'0':'')+n;}
   return p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds())+' '+p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear();
 }
+/* Footer "· N dòng · cập nhật …": số dòng NEO theo tab đang xem, mốc cập nhật CHUNG (LAST_SYNC_MS)
+   -> đồng bộ giữa 3 tab, tab Tồn kho bất thường không còn hiện nhầm số dòng của Trạng thái lưu trữ. */
 function capNhatThongTin(){
   var t='';
-  if(_rowCount) t='· '+nf(_rowCount)+' dòng';
+  if(TOPTAB==='abn'){
+    if(typeof ABN!=='undefined' && ABN.ok) t='· '+nf(ABN.rows.length)+' SKU bất thường';
+  }else if(TOPTAB==='kk'){
+    var n=((KK.data.sku||[]).length)+((KK.data.loc||[]).length);
+    if(n) t='· '+nf(n)+' dòng kiểm kê';
+  }else{
+    if(_rowCount) t='· '+nf(_rowCount)+' dòng';
+  }
   if(LAST_SYNC_MS) t+=(t?' ':'')+'· cập nhật '+fmtTime(LAST_SYNC_MS);
-  if(_failed) t+=' · '+_failed+' tab lỗi';
+  if(TOPTAB==='stock' && _failed) t+=' · '+_failed+' tab lỗi';
   document.getElementById('loadinfo').textContent=t;
 }
 /* Nút chỉ "sáng" khi đã qua 4h kể từ lần đồng bộ WMS cuối; còn lại khoá + hint (nút 2 tầng kiểu kiemsoatkho) */
@@ -1478,6 +1492,7 @@ document.getElementById('lnkSheet').href=SHEET_URL;
 function showTab(t){
   var MAP={stock:'viewStock',kk:'viewKK',abn:'viewAbn'};
   if(!MAP[t]) t='stock';
+  TOPTAB=t;
   Object.keys(MAP).forEach(function(k){ document.getElementById(MAP[k]).hidden=(k!==t); });
   var v=document.getElementById(MAP[t]);
   v.classList.remove('vfade'); void v.offsetWidth; v.classList.add('vfade');
@@ -1486,6 +1501,7 @@ function showTab(t){
   document.getElementById('ttAbn').classList.toggle('active',t==='abn');
   if(t==='kk' && !KK.loadedOnce){ KK.loadedOnce=true; kkLoad(); }    // lazy-load lần đầu mở tab
   if(t==='abn' && !ABN.loadedOnce){ ABN.loadedOnce=true; abnLoad(); }
+  capNhatThongTin();   // footer neo theo tab đang xem (số dòng đúng tab + cùng mốc cập nhật)
 }
 
 /* ===== Tab Kiểm kê (Physical Count) — port nguyên logic từ QC, đọc tab kiemke-sku / kiemke-location ===== */
@@ -1640,6 +1656,7 @@ function kkRender(){
   kkRenderPanel('sku');
   kkRenderPanel('loc');
   kkRenderWh();
+  if(TOPTAB==='kk') capNhatThongTin();   // dữ liệu kiểm kê vừa về -> cập nhật số dòng ở footer
 }
 /* Thanh chip lọc kho đầu tab: "Tất cả kho" + từng kho (chấm màu đồng bộ thẻ kho) */
 function kkRenderWhBar(){
@@ -2024,7 +2041,9 @@ function kkFcOpen(kind){
       '<div class="fchero"><span class="d'+(fc.slow?' bad':'')+'">'+(fc.slow?'&gt;6 tháng':fc.eta)+'</span><span class="n">≈'+nf(fc.ngay)+' ngày làm việc · tốc độ ≈'+fc.pace.toFixed(1)+' '+U+'/ngày làm việc</span></div></div>';
   }
   if(!htmlB&&!fc.done) htmlB='<div class="fcsec"><h3>② Người chọn — mô phỏng</h3><div class="fchero"><span class="n">Chưa đủ dữ liệu giờ kiểm (Counted date có giờ phút) để đo giây/mã — mô phỏng sẽ mở khi có dữ liệu.</span></div></div>';
-  document.getElementById('fcBody').innerHTML=htmlA+htmlB;
+  var fcb=document.getElementById('fcBody');
+  fcb.className='modalbody fcwrap'+(htmlB?'':' one');   // 100% (chỉ 1 tầng) -> 1 cột; còn lại 2 cột cạnh nhau
+  fcb.innerHTML=htmlA+htmlB;
   FC_DP={view:{y:0,m:0},selS:'',selE:'',start:fcTodayISO(),end:''};   // mỗi lần mở: bắt đầu = hôm nay, chưa đặt hạn
   fcUpdateDateBtn();
   if(fc.mode==='effort'&&!fc.done) kkFcSim();
@@ -2419,6 +2438,7 @@ async function abnLoad(){
   ABN.all=norm;
   ABN.rows=norm.filter(function(r){ return r._abn>0; });   // chỉ giữ dòng thực sự bất thường
   abnRender();
+  if(TOPTAB==='abn') capNhatThongTin();   // dữ liệu vừa về -> cập nhật số dòng ở footer
 }
 function abnRowsInScope(){ return ABN.wh?ABN.rows.filter(function(r){ return r.wh===ABN.wh; }):ABN.rows; }
 function abnSetWh(w){ if(ABN.wh===w) w=''; ABN.wh=w; abnRender(); }
