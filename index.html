@@ -86,7 +86,9 @@ body{margin:0;background:var(--bg);color:var(--ink);
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
   font-size:14px;line-height:1.55;letter-spacing:-.003em}
-.wrap{max-width:1720px;margin:0 auto;padding:20px clamp(20px,3.2vw,52px) 40px}
+/* flex-column + min-height 100vh: footer/footbar luôn NEO xuống ĐÁY màn hình kể cả khi nội dung ngắn */
+.wrap{max-width:1720px;margin:0 auto;padding:20px clamp(20px,3.2vw,52px) 40px;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+.wrap>footer{margin-top:auto}   /* đẩy footer + footbar xuống đáy khi còn khoảng trống */
 header.hdr{display:flex;align-items:flex-start;gap:12px}
 header.hdr .hgrow{flex:1;min-width:0}
 .sub{margin:0 0 10px;color:var(--ink2);font-size:12.5px}
@@ -204,6 +206,10 @@ h1.brand-title{margin:0;min-width:0}
 #kkWhBar::-webkit-scrollbar,#abnWhBar::-webkit-scrollbar{display:none}
 #kkWhBar>*,#abnWhBar>*{flex:0 0 auto}
 #kkWhBar .kktab,#abnWhBar .kktab{white-space:nowrap}
+/* Tab bất thường: 2 tầng — công ty (Mastige/Garment) rồi tới kho; chip nhỏ hơn + vạch ngăn mảnh */
+#abnWhBar .kktab{padding:5px 11px;font-size:12px}
+#abnWhBar .kktab b{font-weight:750;margin-left:2px}
+#abnWhBar .abnwsep{width:1px;height:18px;background:var(--border);margin:0 5px;align-self:center}
 .kksum{display:flex;gap:0;align-items:stretch;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow-x:auto;margin-bottom:12px;scrollbar-width:none}
 .kksum::-webkit-scrollbar{display:none}
 .kksum .sm{padding:12px 18px;white-space:nowrap;border-right:1px solid var(--line);flex:none}
@@ -2425,7 +2431,11 @@ var ABN_COLS={
   conflict:['conflict','xung đột','xung dot'],
   not_found:['not_found','notfound','not found','không tìm thấy','khong tim thay']
 };
-var ABN={loadedOnce:false,ok:false,hasPtype:false,all:[],rows:[],wh:''};
+var ABN={loadedOnce:false,ok:false,hasPtype:false,all:[],rows:[],wh:'',company:''};
+/* Công ty suy từ hậu tố tên kho: …- MTG => Mastige, …- GARMENT => Garment (còn lại: Khác) */
+function abnCompanyOf(wh){ var s=String(wh||'').toUpperCase(); if(/GARMENT/.test(s)) return 'Garment'; if(/\bMTG\b|MASTIGE/.test(s)) return 'Mastige'; return 'Khác'; }
+/* Rút gọn nhãn chip kho: bỏ hậu tố công ty (đã chọn ở tầng trên) cho đỡ dài */
+function abnWhShort(w){ return String(w).replace(/\s*[-–]\s*(MTG|MASTIGE|GARMENT)\s*$/i,'').trim()||String(w); }
 var ABN_MODAL={base:[]};
 function abnColor(w){ return kkColor(w); }              // dùng chung bảng màu kho với tab Kiểm kê
 function abnType(k){ for(var i=0;i<ABN_TYPES.length;i++) if(ABN_TYPES[i].k===k) return ABN_TYPES[i]; return null; }
@@ -2474,16 +2484,32 @@ async function abnLoad(){
   abnRender();
   if(TOPTAB==='abn') capNhatThongTin();   // dữ liệu vừa về -> cập nhật số dòng ở footer
 }
-function abnRowsInScope(){ return ABN.wh?ABN.rows.filter(function(r){ return r.wh===ABN.wh; }):ABN.rows; }
+function abnRowsInScope(){
+  return ABN.rows.filter(function(r){
+    if(ABN.company && abnCompanyOf(r.wh)!==ABN.company) return false;   // lọc theo công ty
+    if(ABN.wh && r.wh!==ABN.wh) return false;                          // lọc theo kho
+    return true;
+  });
+}
+function abnSetCompany(c){ if(ABN.company===c) c=''; ABN.company=c; ABN.wh=''; abnRender(); }   // đổi công ty -> bỏ lọc kho
 function abnSetWh(w){ if(ABN.wh===w) w=''; ABN.wh=w; abnRender(); }
+/* Thanh lọc 2 tầng: ① công ty (Mastige/Garment) luôn hiện — gọn; ② kho của công ty đó chỉ hiện khi đã chọn công ty */
 function abnRenderWhBar(){
   var el=document.getElementById('abnWhBar'); if(!el) return;
-  var set={}; ABN.rows.forEach(function(r){ if(r.wh) set[r.wh]=1; });
-  var ws=Object.keys(set).sort();
-  if(!ws.length){ el.innerHTML=''; return; }
-  el.innerHTML='<span class="hint" style="font-weight:650">Lọc theo kho:</span>'+
-    '<button class="kktab'+(ABN.wh?'':' active')+'" onclick="abnSetWh(\'\')">Tất cả kho</button>'+
-    ws.map(function(w){ return '<button class="kktab'+(ABN.wh===w?' active':'')+'" data-w="'+esc(w)+'" onclick="abnSetWh(this.getAttribute(\'data-w\'))"><span class="dot" style="background:'+abnColor(w)+'"></span>'+esc(w)+'</button>'; }).join('');
+  var byCo={}; ABN.rows.forEach(function(r){ if(!r.wh) return; var co=abnCompanyOf(r.wh); (byCo[co]=byCo[co]||{})[r.wh]=1; });
+  var ord={Mastige:0,Garment:1,'Khác':2};
+  var cos=Object.keys(byCo).sort(function(a,b){ return (ord[a]==null?9:ord[a])-(ord[b]==null?9:ord[b]); });
+  if(!cos.length){ el.innerHTML=''; return; }
+  var html='<span class="hint" style="font-weight:650">Lọc:</span>'+
+    '<button class="kktab'+(ABN.company?'':' active')+'" onclick="abnSetCompany(\'\')">Tất cả</button>'+
+    cos.map(function(co){ return '<button class="kktab'+(ABN.company===co?' active':'')+'" data-c="'+esc(co)+'" onclick="abnSetCompany(this.getAttribute(\'data-c\'))">'+esc(co)+' <b>'+Object.keys(byCo[co]).length+'</b></button>'; }).join('');
+  if(ABN.company && byCo[ABN.company]){   // đã chọn công ty -> hiện kho của công ty đó
+    var ws=Object.keys(byCo[ABN.company]).sort();
+    html+='<span class="abnwsep"></span>'+
+      '<button class="kktab'+(ABN.wh?'':' active')+'" onclick="abnSetWh(\'\')">Tất cả kho</button>'+
+      ws.map(function(w){ return '<button class="kktab'+(ABN.wh===w?' active':'')+'" data-w="'+esc(w)+'" title="'+esc(w)+'" onclick="abnSetWh(this.getAttribute(\'data-w\'))"><span class="dot" style="background:'+abnColor(w)+'"></span>'+esc(abnWhShort(w))+'</button>'; }).join('');
+  }
+  el.innerHTML=html;
 }
 function abnRender(){
   var st=document.getElementById('abnState'), cont=document.getElementById('abnContent'), bar=document.getElementById('abnWhBar');
