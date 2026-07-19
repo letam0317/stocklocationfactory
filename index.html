@@ -308,7 +308,7 @@ h1.brand-title{margin:0;min-width:0}
 #kkmodal .kkwrap .num{white-space:nowrap}
 /* CT4: nội dung đổi theo bộ lọc -> mờ dần + trượt nhẹ, không chớp DOM */
 .swap{animation:fadeUp .28s ease both}
-.kkstrip,.kkdaily,#kkWhList,#kkStatus-sku,#kkStatus-loc,#kkmBody{transition:opacity .3s ease-in}
+.kkstrip,.kkdaily,#kkWhList,#kkStatus-sku,#kkStatus-loc,#kkmBody,#abnmBody{transition:opacity .3s ease-in}
 .is-filtering{opacity:.5;pointer-events:none}
 /* dropdown/bộ lọc: đổi trạng thái mượt */
 .kkbar select,.kkbar input{transition:border-color .2s ease-out,box-shadow .2s ease-out,background-color .2s ease-out;transform-origin:top}
@@ -759,7 +759,7 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
 
 <!-- ===== TAB 3: Tồn kho bất thường (báo cáo stock-inventory-beta · Product Type = Normal) ===== -->
 <div id="viewAbn" hidden>
-  <p class="sub"><span class="muted">Chỉ số "bất thường" đọc từ báo cáo <code>stock-inventory-beta</code> — chỉ SKU có <b>Product Type = Normal</b> và có ít nhất 1 loại &gt; 0: Committed · Committed Outbound · Unsuitable product · UID Temp · Conflict · Not Found.</span></p>
+  <p class="sub"><span class="muted">Chỉ số "bất thường" đọc từ báo cáo <code>stock-inventory-beta</code> — chỉ SKU có <b>Product Type = Normal</b> và có ít nhất 1 loại &gt; 0: Conflict · UID Temp · Not Found · Unsuitable product · Committed · Committed Outbound.</span></p>
   <!-- Cross-filter KHO: chip kho lọc toàn bộ thẻ chỉ số + chart + pop-up -->
   <div class="kkbar" id="abnWhBar" style="margin-bottom:12px"></div>
   <div id="abnContent"></div>
@@ -825,21 +825,17 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
   </div>
 </div>
 
-<!-- Modal drill-down Tồn kho bất thường: danh sách SKU + đầy đủ chỉ số bất thường, lọc theo kho/category/loại -->
+<!-- Modal drill-down Tồn kho bất thường: danh sách SKU + đầy đủ chỉ số bất thường.
+     Bộ lọc dùng combo chain-filter đồng bộ pop-up Kiểm kê (#kkmFilters) — combo sinh động, gõ-để-lọc, đếm số dòng. -->
 <div id="abnmodal" class="modal" onclick="if(event.target===this)closeAbnModal()">
   <div class="modalbox">
     <div class="modalhd"><div><div class="mt" id="abnmTitle"></div><div class="mtsub" id="abnmSub"></div></div><button class="mclose" onclick="closeAbnModal()">&times;</button></div>
-    <div class="mfilters" style="grid-template-columns:1.6fr 1fr 1fr 1fr">
-      <div class="fld"><label>Tìm nhanh</label><input id="abnmQ" autocomplete="off" placeholder="SKU / tên sản phẩm / thương hiệu…" oninput="abnmRender()"></div>
-      <div class="fld"><label>Kho (Warehouse)</label><select id="abnmWh" onchange="abnmRender()"></select></div>
-      <div class="fld"><label>Category</label><select id="abnmCat" onchange="abnmRender()"></select></div>
-      <div class="fld"><label>Loại bất thường</label><select id="abnmType" onchange="abnmRender()"></select></div>
-    </div>
+    <div class="mfilters kkmf" id="abnmFilters"></div>
     <div class="msum" id="abnmSum"></div>
     <div class="modalbody"><table class="mtbl"><thead><tr>
       <th>Kho</th><th>SKU</th><th>ProductName</th><th>Brand</th><th>Category</th>
       <th class="num">Tồn</th><th class="num">Available</th>
-      <th class="num">Committed</th><th class="num">Committed Outbound</th><th class="num">Unsuitable</th><th class="num">UID Temp</th><th class="num">Conflict</th><th class="num">Not Found</th>
+      <th class="num">Conflict</th><th class="num">UID Temp</th><th class="num">Not Found</th><th class="num">Unsuitable</th><th class="num">Committed</th><th class="num">Committed Outbound</th>
     </tr></thead><tbody id="abnmBody"></tbody></table></div>
   </div>
 </div>
@@ -1349,6 +1345,7 @@ document.addEventListener('keydown',function(e){
   if(fm && fm.classList.contains('show')){ closeFcModal(); return; }
   var km=document.getElementById('kkmodal');
   if(km && km.classList.contains('show')){ closeKkModal(); return; }
+  if(document.querySelector('#abnmFilters .combo-menu.show')){ abnmCloseCombos(); return; }
   var am=document.getElementById('abnmodal');
   if(am && am.classList.contains('show')){ closeAbnModal(); return; }
   closeModal();
@@ -2344,13 +2341,15 @@ function closeKkModal(){
    Nguồn: Google Sheet tab ABN_TAB (backend force_sync_wms ghi báo cáo /wms/report-management/stock-inventories).
    Chỉ tính SKU có Product Type = Normal; "bất thường" = có ít nhất 1 trong 6 loại > 0. */
 var ABN_TAB='stock-inventory-beta';   // đổi tại đây nếu backend đặt tên tab khác
+/* Thứ tự hiển thị: ưu tiên loại cần xử lý (Conflict → UID Temp → Not Found → Unsuitable) rồi tới Committed.
+   Thứ tự này quyết định: thẻ chỉ số, chú giải, đoạn chart xếp chồng, chart theo loại, VÀ thứ tự cột trong pop-up. */
 var ABN_TYPES=[
-  {k:'committed',          lb:'Committed',          c:'#2563eb'},
-  {k:'committed_outbound', lb:'Committed Outbound', c:'#0891b2'},
-  {k:'unsuitable_product', lb:'Unsuitable product', c:'#c0392b'},
-  {k:'uid_temp',           lb:'UID Temp',           c:'#8b5cf6'},
   {k:'conflict',           lb:'Conflict',           c:'#d97706'},
-  {k:'not_found',          lb:'Not Found',          c:'#e11d48'}
+  {k:'uid_temp',           lb:'UID Temp',           c:'#8b5cf6'},
+  {k:'not_found',          lb:'Not Found',          c:'#e11d48'},
+  {k:'unsuitable_product', lb:'Unsuitable product', c:'#c0392b'},
+  {k:'committed',          lb:'Committed',          c:'#2563eb'},
+  {k:'committed_outbound', lb:'Committed Outbound', c:'#0891b2'}
 ];
 /* Nhận diện cột theo NHÃN tiêu đề (linh hoạt: chấp nhận snake_case, có dấu cách, tiếng Việt) */
 var ABN_COLS={
@@ -2494,36 +2493,94 @@ function abnRender(){
     cont.querySelectorAll('.abnfill').forEach(function(f){ f.style.width=f.getAttribute('data-w')+'%'; });
   }); });
 }
-/* ---------- Modal drill-down: danh sách SKU + đầy đủ chỉ số ---------- */
-function abnOpenAll(){ abnShowModal(abnRowsInScope(),'Tất cả SKU bất thường'+(ABN.wh?(' · '+ABN.wh):''),'',''); }
-function abnOpenWh(w){ abnShowModal(ABN.rows.filter(function(r){ return r.wh===w; }),'Bất thường tại kho: '+w,'',w); }
-function abnOpenType(k){ var ty=abnType(k); if(!ty) return; abnShowModal(abnRowsInScope().filter(function(r){ return r[k]>0; }),'SKU có '+ty.lb+(ABN.wh?(' · '+ABN.wh):''),k,''); }
-function abnShowModal(base,title,typeSel,whSel){
-  ABN_MODAL.base=base||[];
+/* ---------- Modal drill-down: danh sách SKU + đầy đủ chỉ số ----------
+   Bộ lọc = combo chain-filter đồng bộ pop-up Kiểm kê (kkm*): 1 ô Tìm nhanh + combo sinh động
+   (chỉ hiện khi cột có >1 giá trị), CHỌN từ menu = khớp chính xác, GÕ tay = khớp chứa,
+   menu mỗi combo sinh từ dòng đã lọc bởi các combo CÒN LẠI (trừ chính nó) + đếm số dòng. */
+var ABN_FDEF=[
+  {k:'wh',  lb:'Kho (Warehouse)', vals:function(r){ return r.wh?[r.wh]:[]; }},
+  {k:'cat', lb:'Category',        vals:function(r){ return r.cat?[r.cat]:[]; }},
+  {k:'type',lb:'Loại bất thường', vals:function(r){ var a=[]; ABN_TYPES.forEach(function(t){ if(r[t.k]>0) a.push(t.lb); }); return a; }}   // 1 SKU có thể thuộc nhiều loại
+];
+function abnmFdef(k){ for(var i=0;i<ABN_FDEF.length;i++) if(ABN_FDEF[i].k===k) return ABN_FDEF[i]; return null; }
+function abnTypeByLb(lb){ for(var i=0;i<ABN_TYPES.length;i++) if(ABN_TYPES[i].lb===lb) return ABN_TYPES[i]; return null; }
+function abnTypeOrder(lb){ for(var i=0;i<ABN_TYPES.length;i++) if(ABN_TYPES[i].lb===lb) return i; return 99; }
+function abnOpenAll(){ abnShowModal(abnRowsInScope(),'Tất cả SKU bất thường'+(ABN.wh?(' · '+ABN.wh):''),null); }
+function abnOpenWh(w){ abnShowModal(ABN.rows.filter(function(r){ return r.wh===w; }),'Bất thường tại kho: '+w,null); }
+function abnOpenType(k){ var ty=abnType(k); if(!ty) return; abnShowModal(abnRowsInScope(),'SKU có '+ty.lb+(ABN.wh?(' · '+ABN.wh):''),{k:'type',raw:ty.lb}); }   // preset combo Loại = loại vừa bấm
+function abnShowModal(base,title,preset){
+  ABN_MODAL.base=base||[]; ABN_MODAL.preset=preset||null;
   document.getElementById('abnmTitle').textContent=title;
-  document.getElementById('abnmSub').textContent=nf(ABN_MODAL.base.length)+' dòng (kho | SKU) — lọc theo cột bên dưới';
-  var whs={},cats={};
-  ABN_MODAL.base.forEach(function(r){ if(r.wh)whs[r.wh]=1; if(r.cat)cats[r.cat]=1; });
-  function opts(o,sel){ return '<option value="">Tất cả</option>'+Object.keys(o).sort().map(function(v){ return '<option value="'+esc(v)+'"'+(v===sel?' selected':'')+'>'+esc(v)+'</option>'; }).join(''); }
-  document.getElementById('abnmWh').innerHTML=opts(whs,whSel);
-  document.getElementById('abnmCat').innerHTML=opts(cats,'');
-  document.getElementById('abnmType').innerHTML='<option value="">Tất cả loại</option>'+ABN_TYPES.map(function(t){ return '<option value="'+t.k+'"'+(t.k===typeSel?' selected':'')+'>'+t.lb+'</option>'; }).join('');
-  document.getElementById('abnmQ').value='';
+  document.getElementById('abnmSub').textContent=nf(ABN_MODAL.base.length)+' dòng (kho | SKU) — combo lọc sinh động, gõ để lọc, đếm số dòng';
+  abnmBuildFilters();
   abnmRender();
   var m=document.getElementById('abnmodal'); m.style.display='flex';
   requestAnimationFrame(function(){ m.classList.add('show'); });
 }
-function abnmRender(){
-  function val(id){ var e=document.getElementById(id); return e?e.value:''; }
-  var q=val('abnmQ').trim().toLowerCase(), fw=val('abnmWh'), fc=val('abnmCat'), ft=val('abnmType');
-  var rows=ABN_MODAL.base.filter(function(r){
-    if(fw && r.wh!==fw) return false;
-    if(fc && r.cat!==fc) return false;
-    if(ft && !(r[ft]>0)) return false;
-    if(q && ((r.sku+' '+r.pn+' '+r.brand+' '+r.cat).toLowerCase().indexOf(q)<0)) return false;
+function abnmBuildFilters(){
+  var rows=ABN_MODAL.base;
+  var html='<div class="fld q"><label>Tìm nhanh</label><input id="abnmQ" autocomplete="off" placeholder="SKU / tên sản phẩm / thương hiệu…" oninput="abnmQuick()"></div>';
+  ABN_FDEF.forEach(function(d){
+    var uniq=new Set();
+    rows.forEach(function(r){ d.vals(r).forEach(function(v){ if(v) uniq.add(v); }); });
+    if(uniq.size>1){   // chỉ sinh combo khi cột có >1 giá trị thực
+      html+='<div class="fld"><label>'+esc(d.lb)+'</label><div class="combo" data-fk="'+d.k+'" data-lb="'+esc(d.lb)+'">'+
+        '<input data-fk="'+d.k+'" autocomplete="off" placeholder="Tất cả…" oninput="abnmComboInput(this)" onfocus="abnmComboMenu(this.parentNode)">'+
+        '<div class="combo-menu"></div></div></div>';
+    }
+  });
+  var el=document.getElementById('abnmFilters'); el.innerHTML=html;
+  if(ABN_MODAL.preset){   // áp preset: combo Loại (hoặc kho) được chọn sẵn = khớp chính xác
+    var p=ABN_MODAL.preset, inp=el.querySelector('.combo[data-fk="'+p.k+'"] input');
+    if(inp){ inp.value=p.raw; inp.setAttribute('data-exact','1'); }
+  }
+}
+function abnmQval(){ return ((document.getElementById('abnmQ')||{}).value||'').trim().toLowerCase(); }
+function abnmState(){
+  return Array.prototype.slice.call(document.querySelectorAll('#abnmFilters .combo input')).map(function(inp){
+    var v=inp.value.trim();
+    return {k:inp.getAttribute('data-fk'),raw:v,v:v.toLowerCase(),exact:!!inp.getAttribute('data-exact')};
+  });
+}
+function abnmRowsWith(excludeK,state,q){
+  return ABN_MODAL.base.filter(function(r){
+    for(var i=0;i<state.length;i++){ var f=state[i];
+      if(f.k===excludeK||!f.v) continue;
+      var vs=abnmFdef(f.k).vals(r).map(String);
+      if(f.exact){ if(vs.indexOf(f.raw)<0) return false; }
+      else if(!vs.some(function(v){ return v.toLowerCase().indexOf(f.v)>=0; })) return false;
+    }
+    if(q&&((r.sku+' '+r.pn+' '+r.brand+' '+r.cat).toLowerCase().indexOf(q)<0)) return false;
     return true;
   });
-  rows=rows.slice().sort(function(a,b){ return ft?(b[ft]-a[ft]):(b._abn-a._abn); });
+}
+function abnmComboMenu(combo){
+  var k=combo.getAttribute('data-fk'), lb=combo.getAttribute('data-lb');
+  var inp=combo.querySelector('input'), menu=combo.querySelector('.combo-menu');
+  var uniq=new Set(), cnt={};
+  abnmRowsWith(k,abnmState(),abnmQval()).forEach(function(r){ abnmFdef(k).vals(r).forEach(function(v){ if(!v) return; uniq.add(v); cnt[v]=(cnt[v]||0)+1; }); });
+  var typed=inp.getAttribute('data-exact')?'':inp.value.trim().toLowerCase();
+  var items=Array.from(uniq).filter(function(v){ return !typed||v.toLowerCase().indexOf(typed)>=0; });
+  items.sort(k==='type' ? function(a,b){ return abnTypeOrder(a)-abnTypeOrder(b); } : function(a,b){ return a<b?-1:a>b?1:0; });
+  var html='<div class="combo-item all" data-v=""><span class="nm">Tất cả '+esc(lb)+'</span><span class="c">'+uniq.size+' mục</span></div>';
+  html+=items.map(function(v){ return '<div class="combo-item" data-v="'+esc(v)+'"><span class="nm">'+esc(v)+'</span><span class="c">'+nf(cnt[v])+'</span></div>'; }).join('');
+  if(!items.length) html+='<div class="combo-empty">Không có mục phù hợp</div>';
+  menu.innerHTML=html;
+  abnmCloseCombos(combo);
+  menu.classList.add('show');
+}
+function abnmComboInput(inp){ inp.removeAttribute('data-exact'); abnmComboMenu(inp.parentNode); abnmQuick(); }
+function abnmCloseCombos(except){
+  document.querySelectorAll('#abnmFilters .combo-menu.show').forEach(function(m){ if(!except||m.parentNode!==except) m.classList.remove('show'); });
+}
+var _abnmDeb=null,_abnmT=null;
+function abnmQuick(){ clearTimeout(_abnmDeb); _abnmDeb=setTimeout(abnmApply,120); }
+function abnmApply(){ var b=document.getElementById('abnmBody'); if(b) b.classList.add('is-filtering'); clearTimeout(_abnmT); _abnmT=setTimeout(function(){ abnmRender(); if(b) b.classList.remove('is-filtering'); },150); }
+function abnmRender(){
+  var state=abnmState(), q=abnmQval();
+  var rows=abnmRowsWith(null,state,q);
+  var tk=null; state.forEach(function(f){ if(f.k==='type'&&f.exact&&f.raw){ var ty=abnTypeByLb(f.raw); if(ty) tk=ty.k; } });   // đang lọc 1 loại -> sắp theo loại đó
+  rows=rows.slice().sort(function(a,b){ return tk?(b[tk]-a[tk]):(b._abn-a._abn); });
   var NCOL=7+ABN_TYPES.length, cap=3000, out=[];
   var sums={in_stock:0,available:0}; ABN_TYPES.forEach(function(t){ sums[t.k]=0; });
   for(var i=0;i<rows.length;i++){ var r=rows[i];
@@ -2536,14 +2593,25 @@ function abnmRender(){
     }
   }
   if(rows.length>cap) out.push('<tr><td colspan="'+NCOL+'" class="empty">Hiển thị '+nf(cap)+' / '+nf(rows.length)+' dòng — dùng bộ lọc để thu hẹp.</td></tr>');
-  document.getElementById('abnmBody').innerHTML=out.length?out.join(''):'<tr><td colspan="'+NCOL+'" class="empty">Không có dòng phù hợp</td></tr>';
+  var body=document.getElementById('abnmBody');
+  body.innerHTML=out.length?out.join(''):'<tr><td colspan="'+NCOL+'" class="empty">Không có dòng phù hợp</td></tr>';
+  var nAct=state.filter(function(f){ return f.v; }).length+(q?1:0);
   var parts=ABN_TYPES.map(function(t){ return t.lb+': '+nf(sums[t.k]); });
-  document.getElementById('abnmSum').textContent=nf(rows.length)+' dòng · Tồn '+nf(sums.in_stock)+' · '+parts.join(' · ');
+  document.getElementById('abnmSum').textContent=nf(rows.length)+' / '+nf(ABN_MODAL.base.length)+' dòng'+(nAct?(' · '+nAct+' bộ lọc đang áp dụng'):'')+' · Tồn '+nf(sums.in_stock)+' · '+parts.join(' · ');
 }
 function closeAbnModal(){
   var m=document.getElementById('abnmodal'); m.classList.remove('show');
-  setTimeout(function(){ m.style.display='none'; },240);
+  setTimeout(function(){ m.style.display='none'; document.getElementById('abnmFilters').innerHTML=''; document.getElementById('abnmBody').innerHTML=''; },240);
 }
+/* Delegation 1 lần trên container cố định — innerHTML rebuild mỗi lần mở modal không mất listener */
+document.getElementById('abnmFilters').addEventListener('click',function(e){
+  var it=e.target.closest('.combo-item'); if(!it) return;
+  var inp=it.closest('.combo').querySelector('input');
+  inp.value=it.getAttribute('data-v')||'';
+  if(inp.value) inp.setAttribute('data-exact','1'); else inp.removeAttribute('data-exact');
+  abnmCloseCombos(); abnmApply();
+});
+document.addEventListener('click',function(e){ if(!e.target.closest('#abnmFilters .combo')) abnmCloseCombos(); });
 
 loadData();
 </script>
