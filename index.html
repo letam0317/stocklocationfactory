@@ -653,20 +653,24 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
   #catmodal .mtbl th:first-child,#catmodal .mtbl td:first-child{white-space:normal;width:70%;text-align:left}
 }
 
-/* ===== TAB 3: Tồn kho bất thường — thẻ chỉ số + chart thanh ngang theo kho/loại ===== */
-.abntiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:10px;margin:6px 0 16px}
-.abntile{--cc:var(--accent);background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--cc);border-radius:12px;padding:12px 15px;cursor:pointer;
+/* ===== TAB 3: Tồn kho bất thường — thẻ chỉ số gọn + 2 chart cạnh nhau (theo kho | theo loại) ===== */
+.abntiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(136px,1fr));gap:8px;margin:4px 0 12px}
+.abntile{--cc:var(--accent);background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--cc);border-radius:10px;padding:9px 12px;cursor:pointer;
   transition:transform .16s var(--ez-apple),box-shadow .25s ease,background .2s ease;animation:fadeUp .3s ease both}
 .abntile:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);background:var(--hover)}
-.abntile .k{font-size:24px;font-weight:780;font-variant-numeric:tabular-nums;line-height:1;color:var(--cc)}
+.abntile .k{font-size:20px;font-weight:780;font-variant-numeric:tabular-nums;line-height:1;color:var(--cc)}
 .abntile.tot .k{color:var(--ink)}
-.abntile .l{font-size:12px;color:var(--ink);margin-top:7px;font-weight:650;line-height:1.25}
-.abntile .s{font-size:10.5px;color:var(--ink3);margin-top:3px}
-.abnlegend{display:inline-flex;flex-wrap:wrap;gap:4px 12px;font-weight:400;font-size:11px;color:var(--ink2)}
+.abntile .l{font-size:11px;color:var(--ink);margin-top:4px;font-weight:650;line-height:1.2}
+.abntile .s{font-size:10px;color:var(--ink3);margin-top:1px}
+/* 2 chart cạnh nhau: theo kho (rộng) | theo loại (hẹp); dồn dọc dưới 1024px */
+.grid2.abn2{grid-template-columns:1.55fr 1fr}
+.grid2.abn2 .panel{padding:14px 16px}
+@media(max-width:1024px){.grid2.abn2{grid-template-columns:1fr}}
+.abnlegend{display:inline-flex;flex-wrap:wrap;gap:3px 10px;font-weight:400;font-size:10.5px;color:var(--ink2)}
 .abnlegend span{display:inline-flex;align-items:center;gap:5px}
-.abnlegend i{width:10px;height:10px;border-radius:3px;display:inline-block;flex:none}
-.abnchart{display:flex;flex-direction:column;gap:2px;max-height:440px;overflow-y:auto;padding-right:6px}
-.abnrow{display:grid;grid-template-columns:184px 1fr 118px;align-items:center;gap:12px;padding:6px 8px;border-radius:8px;cursor:pointer;transition:background .16s var(--ease)}
+.abnlegend i{width:9px;height:9px;border-radius:3px;display:inline-block;flex:none}
+.abnchart{display:flex;flex-direction:column;gap:1px;max-height:330px;overflow-y:auto;padding-right:6px}
+.abnrow{display:grid;grid-template-columns:150px 1fr 104px;align-items:center;gap:10px;padding:5px 6px;border-radius:8px;cursor:pointer;transition:background .16s var(--ease)}
 .abnrow:hover{background:var(--hover)}
 .abnrl{font-size:11.5px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:7px}
 .abnrl .dot{flex:none}
@@ -2486,8 +2490,10 @@ function abnRender(){
       '<span class="abnrv"><b>'+nf(tot[t.k])+'</b><small>'+nf(cnt[t.k])+' SKU</small></span></div>';
   }).join('');
 
-  html+='<section class="panel"><h2>Bất thường theo kho <span class="hint">(độ dài cột = tổng SL bất thường · màu = loại · bấm dòng xem chi tiết SKU)</span> <span class="lg abnlegend">'+legend+'</span></h2><div class="abnchart">'+whBars+'</div></section>'+
-    '<section class="panel"><h2>Phân bổ theo loại bất thường <span class="hint">(tổng số lượng · số SKU liên quan · bấm để xem danh sách)</span></h2><div class="abnchart" style="max-height:none">'+typeBars+'</div></section>';
+  html+='<div class="grid2 abn2">'+
+    '<section class="panel"><h2>Theo kho <span class="hint">(độ dài = tổng SL · màu = loại · bấm để xem SKU)</span> <span class="lg abnlegend">'+legend+'</span></h2><div class="abnchart">'+whBars+'</div></section>'+
+    '<section class="panel"><h2>Theo loại <span class="hint">(bấm để xem SKU)</span></h2><div class="abnchart">'+typeBars+'</div></section>'+
+  '</div>';
   cont.innerHTML=html;
   requestAnimationFrame(function(){ requestAnimationFrame(function(){
     cont.querySelectorAll('.abnfill').forEach(function(f){ f.style.width=f.getAttribute('data-w')+'%'; });
