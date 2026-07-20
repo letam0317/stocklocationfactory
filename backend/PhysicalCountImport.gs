@@ -18,8 +18,10 @@
  *  import tay — luồng vẫn dùng được ngay khi chưa bắt được endpoint.
  *
  *  GẮN VÀO WEB APP: project bộ 5S đã có doPost (force_sync_wms) — KHÔNG định
- *  nghĩa doPost ở file này (đè nhau). Thêm 1 dòng vào doPost hiện có:
- *      if (data.action === 'pc_import') return pcJson_(pcImport_(data));
+ *  nghĩa doPost ở file này (đè nhau). Thêm vào doPost hiện có 3 dòng:
+ *      if (data.action === 'pc_import') return pcJson_(pcKeyOK_(data) ? pcImport_(data) : pcKeyErr_());
+ *      if (data.action === 'pc_sync_whcode') return pcJson_(pcKeyOK_(data) ? pcSyncWarehouses() : pcKeyErr_());
+ *      if (data.action === 'pc_set_key') return pcJson_(pcSetKey_(data));
  *  Nếu deploy project RIÊNG: bỏ comment hàm doPost mẫu ở cuối file.
  *
  *  CÀI ĐẶT: xem backend/README.md (mục PhysicalCountImport).
@@ -41,11 +43,43 @@ function pcCFG_() {
     TEMPLATE_ID: P.getProperty('PC_TEMPLATE_SHEET_ID') || '',
     FILE_NAME:   P.getProperty('PC_FILE_NAME') || 'WMS_INVENTORY_KEY_TEMPLATE_CP_CHECKLIST_SKU.xlsx',
     MAX_ROWS:    Number(P.getProperty('PC_MAX_ROWS') || 5000),
+    // Đồng bộ tab "Warehouse code": Sheet đích + danh sách warehouse_ids (union 2 công ty, lấy từ cấu hình sync 5S)
+    SHEET_ID:    P.getProperty('PC_SHEET_ID') || '1eY_oo9fAvWCTXp24x-Z0FXq9mp_jJPlTHg09qdemETs',
+    WHCODE_SHEET:P.getProperty('PC_WHCODE_SHEET') || 'Warehouse code',
+    STOCKLOC_API:P.getProperty('PC_STOCKLOC_API') || 'https://wms-gw.inshasaki.com/api/v1/wms/report-management/stock-locations/bins/count/v3',
+    WH_IDS:      P.getProperty('PC_WAREHOUSE_IDS') || '1458,1441,1307,1250,1179,1178,1177,1151,1516,1341,1340,1339,1266',
+    COMPANY_IDS: P.getProperty('PC_COMPANY_IDS') || '1002,1005',
     TZ:          P.getProperty('TZ') || 'Asia/Ho_Chi_Minh'
   };
 }
 
 var PC_HEADERS = ['Warehouse Code', 'Type', 'Sku', 'Plan Date', 'Executed By'];
+
+/* ------------------------- KHÓA RIÊNG PC_KEY -------------------------
+ * Chính sách project 5S: action khiến GAS gọi WMS bằng token nội bộ PHẢI khóa.
+ * Không dùng chung SECRET 5S (tránh lộ khóa chủ cho operator dashboard public).
+ * - pcKeyOK_: so key trong body với Script Property PC_KEY.
+ * - pcSetKey_ (action pc_set_key): TOFU — CHỈ đặt được khi PC_KEY đang trống;
+ *   đổi khóa phải kèm oldKey đúng. Operator nhập khóa 1 lần trên dashboard
+ *   (lưu localStorage), khóa KHÔNG nằm trong mã nguồn trang. */
+function pcKeyOK_(duLieu) {
+  var k = PropertiesService.getScriptProperties().getProperty('PC_KEY') || '';
+  if (!k) return false;   // chưa cấu hình -> từ chối (gọi pc_set_key trước)
+  return String((duLieu && duLieu.key) || '') === k;
+}
+function pcKeyErr_() {
+  var co = !!(PropertiesService.getScriptProperties().getProperty('PC_KEY') || '');
+  return pcErr_('auth', co ? 'Sai khóa PC_KEY.' : 'PC_KEY chưa cấu hình — gọi action pc_set_key để đặt khóa.', { code: 403 });
+}
+function pcSetKey_(duLieu) {
+  var P = PropertiesService.getScriptProperties();
+  var cur = P.getProperty('PC_KEY') || '';
+  var moi = String((duLieu && duLieu.newKey) || '').trim();
+  if (!moi || moi.length < 12) return pcErr_('config', 'newKey phải ≥ 12 ký tự.');
+  if (cur && String((duLieu && duLieu.oldKey) || '') !== cur) return pcErr_('auth', 'oldKey không đúng — không đổi được PC_KEY.', { code: 403 });
+  P.setProperty('PC_KEY', moi);
+  return { status: 'success', message: cur ? 'Đã đổi PC_KEY.' : 'Đã đặt PC_KEY lần đầu.' };
+}
 
 /* --------------------------- TOKEN (như StockAbnormalSync) --------------------------- */
 // Bản pc_ riêng để file tự chạy được cả khi deploy project độc lập; cùng đọc/ghi
@@ -71,9 +105,10 @@ function pcGetToken_() {
     P.setProperty('WMS_ACCESS_TOKEN', data.access_token);
     return data.access_token;
   }
-  var at = P.getProperty('WMS_ACCESS_TOKEN');
-  if (at) return at;
-  throw new Error('Chưa cấu hình WMS_REFRESH_TOKEN trong Script Properties.');
+  // Fallback: token sống do luồng nền của project 5S nuôi (property WMS_TOKEN, có thể kèm tiền tố "Bearer ")
+  var at = P.getProperty('WMS_ACCESS_TOKEN') || P.getProperty('WMS_TOKEN');
+  if (at) return String(at).replace(/^Bearer /i, '').trim();
+  throw new Error('Chưa có token WMS (WMS_REFRESH_TOKEN / WMS_TOKEN) trong Script Properties — chờ luồng nền cập nhật hoặc đăng nhập lại.');
 }
 
 /* ------------------------------ XỬ LÝ CHÍNH ------------------------------ */
@@ -213,10 +248,63 @@ function pcJson_(obj) {
 /* Deploy project RIÊNG (không chung bộ 5S) thì bỏ comment: web app cần doPost.
 function doPost(e) {
   var data = {}; try { data = JSON.parse(e.postData.contents || '{}'); } catch (err) {}
-  if (data.action === 'pc_import') return pcJson_(pcImport_(data));
+  if (data.action === 'pc_import') return pcJson_(pcKeyOK_(data) ? pcImport_(data) : pcKeyErr_());
+  if (data.action === 'pc_sync_whcode') return pcJson_(pcKeyOK_(data) ? pcSyncWarehouses() : pcKeyErr_());
+  if (data.action === 'pc_set_key') return pcJson_(pcSetKey_(data));
   return pcJson_({ status: 'error', stage: 'config', message: 'action không hỗ trợ: ' + data.action });
 }
 */
+
+/* ------------------- ĐỒNG BỘ TAB "Warehouse code" TỪ WMS -------------------
+ * Dashboard tra mã kho theo tên từ tab này. Tự dựng bằng cách hỏi WMS tên kho của
+ * từng warehouse_id đã biết (report stock-locations, size=1 -> rất nhẹ).
+ * MERGE với dữ liệu sẵn có: dòng dán tay (vd 1436 SHOP...) được GIỮ NGUYÊN,
+ * mã trùng thì cập nhật tên, mã mới thì thêm. Chạy lại bất kỳ lúc nào (idempotent). */
+function pcSyncWarehouses() {
+  var cfg = pcCFG_();
+  try {
+    var token = pcGetToken_(), got = [];
+    var ids = cfg.WH_IDS.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+    // fetchAll SONG SONG — báo cáo này chậm, gọi tuần tự 13 kho vượt trần 6 phút/lượt chạy của GAS
+    var reqs = ids.map(function (id) {
+      return { url: cfg.STOCKLOC_API + '?company_ids=' + encodeURIComponent(cfg.COMPANY_IDS) +
+          '&warehouse_ids=' + encodeURIComponent(id) + '&ignore_zero_total=1&page=1&size=1',
+        headers: { 'Authorization': 'Bearer ' + token }, muteHttpExceptions: true };
+    });
+    var resps = [];
+    try { resps = UrlFetchApp.fetchAll(reqs); } catch (e) { return pcErr_('wms', 'Gọi WMS thất bại: ' + e.message); }
+    resps.forEach(function (res, i) {
+      try {
+        if (res.getResponseCode() !== 200) return;
+        var j = JSON.parse(res.getContentText() || '{}');
+        var recs = j.records || (j.data && j.data.records) || [];
+        var name = recs.length ? String(recs[0].warehouse_name || '').replace(/\s+/g, ' ').trim() : '';
+        if (name) got.push([ids[i], name]);
+      } catch (e) {}
+    });
+    if (!got.length) return pcErr_('wms', 'Không lấy được tên kho nào từ WMS (token hết hạn hoặc endpoint đổi?).');
+    var ss = SpreadsheetApp.openById(cfg.SHEET_ID);
+    var sh = ss.getSheetByName(cfg.WHCODE_SHEET) || ss.insertSheet(cfg.WHCODE_SHEET);
+    var cur = {}, order = [];
+    var last = sh.getLastRow();
+    if (last >= 2) sh.getRange(2, 1, last - 1, 4).getValues().forEach(function (r) {
+      var code = String(r[0]).trim(); if (!code || cur[code]) return;
+      cur[code] = [code, String(r[1] || ''), String(r[2] || ''), String(r[3] || '')]; order.push(code);
+    });
+    got.forEach(function (g) {
+      if (cur[g[0]]) cur[g[0]][1] = g[1];
+      else { cur[g[0]] = [g[0], g[1], '', '']; order.push(g[0]); }
+    });
+    var values = [['Warehouse Code', 'Warehouse Name', 'Type', 'City Name']]
+      .concat(order.sort().map(function (c) { return cur[c]; }));
+    sh.clearContents();
+    sh.getRange(1, 1, values.length, 4).setNumberFormat('@').setValues(values);
+    return { status: 'success', rows: values.length - 1, synced: got.length,
+      message: 'Tab "' + cfg.WHCODE_SHEET + '": ' + (values.length - 1) + ' kho (WMS trả tên cho ' + got.length + ' mã).' };
+  } catch (err) {
+    return pcErr_('build', String(err && err.message || err));
+  }
+}
 
 /* ------------------------------- TEST TAY ------------------------------- */
 /** Run tay trong editor: dựng file mẫu 2 dòng (dryRun) để kiểm tra cấu trúc trước khi nối endpoint. */

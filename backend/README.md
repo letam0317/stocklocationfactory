@@ -75,37 +75,38 @@ Dashboard cho tick chọn SKU trong pop-up 2 tab (Kiểm kê + Tồn kho bất t
 Script dựng file `.xlsx` đúng template `WMS_INVENTORY_KEY_TEMPLATE_CP_CHECKLIST_SKU`
 (mỗi SKU 1 dòng: Warehouse Code | Type | Sku | Plan Date | Executed By) và upload lên WMS.
 
-### Cài đặt
-1. **Thêm file** `PhysicalCountImport.gs` vào chính project bộ 5S (project đang chạy `force_sync_wms`).
-2. **Nối router**: trong `doPost` hiện có của project, thêm 1 dòng:
-   ```js
-   if (data.action === 'pc_import') return pcJson_(pcImport_(data));
-   ```
-   (Deploy project riêng thì bỏ comment hàm `doPost` mẫu cuối file.)
-3. **Bắt endpoint import** (1 lần): vào `https://wms.inshasaki.com/physical-count/request/import/sku`,
-   mở DevTools → Network, import tay 1 file mẫu → mở request POST vừa xuất hiện:
-   - Copy **URL đầy đủ** → Script Property `PC_IMPORT_URL`.
-   - Xem tab Payload: tên field chứa file (thường là `file`) → `PC_FILE_FIELD` (bỏ qua nếu là `file`).
-4. **(Khuyến nghị) Template gốc**: upload file `.xlsx` template lên Drive → mở bằng Google Sheets
-   (File → Save as Google Sheets) → copy ID → `PC_TEMPLATE_SHEET_ID`. Có ID này script sẽ COPY
-   template mà điền (giữ nguyên tên sheet + sheet tham chiếu); không có thì dựng file trơn 5 cột.
-5. **Deploy lại web app**: Manage deployments → Edit → Version: New → Deploy (giữ nguyên URL).
-6. Chạy tay `pcSelfTest` 1 lần để cấp quyền (Drive/Sheets/UrlFetch) và kiểm tra file dựng ra.
+### Trạng thái triển khai (đã làm qua clasp — 2026-07-20)
+- ✅ `PhysicalCountImport.js` đã push vào project 5S, router `pc_import / pc_sync_whcode / pc_set_key`
+  đã nối vào `doPost` của `sa.js`, deployment `AKfycbzIE6E…` cập nhật version mới (URL không đổi).
+- ✅ `PC_KEY` đã đặt (TOFU qua action `pc_set_key`). Operator nhập khóa 1 lần trên dashboard
+  (lưu localStorage) — khóa KHÔNG nằm trong mã nguồn trang. Đổi khóa: gọi `pc_set_key` kèm
+  `oldKey` + `newKey`.
+- ⏳ **Còn thiếu duy nhất `PC_IMPORT_URL`** (cần phiên đăng nhập WMS trên trình duyệt):
+  vào `https://wms.inshasaki.com/physical-count/request/import/sku`, DevTools → Network,
+  import tay 1 file mẫu → copy **URL** request POST vào Script Property `PC_IMPORT_URL`
+  (+ tên field file nếu khác `file` → `PC_FILE_FIELD`). Chưa có thì dashboard tự chuyển sang
+  chế độ tạo file `.xlsx` tải về import tay — luồng không bị chặn.
+- (Khuyến nghị) Template gốc: upload `.xlsx` lên Drive → mở bằng Google Sheets → copy ID →
+  `PC_TEMPLATE_SHEET_ID` (script sẽ COPY template mà điền, giữ nguyên tên sheet + sheet tham chiếu).
 
-### Script Properties bổ sung
+### Script Properties
 | Property | Bắt buộc | Giá trị |
 |---|---|---|
-| `PC_IMPORT_URL` | ✅ (để import tự động) | endpoint API import bắt từ DevTools; **chưa có** → dashboard vẫn tạo được file `.xlsx` tải về import tay |
+| `PC_KEY` | ✅ (đã đặt) | khóa riêng cho action `pc_*` — chính sách "GAS gọi WMS phải khóa", không dùng chung SECRET 5S |
+| `PC_IMPORT_URL` | ✅ (để import tự động) | endpoint API import bắt từ DevTools; **chưa có** → trả file `.xlsx` về cho tải tay |
 | `PC_FILE_FIELD` | — | tên field multipart chứa file, mặc định `file` |
 | `PC_TEMPLATE_SHEET_ID` | — | ID bản Google Sheets của template gốc |
 | `PC_FILE_NAME` | — | mặc định `WMS_INVENTORY_KEY_TEMPLATE_CP_CHECKLIST_SKU.xlsx` |
 | `PC_MAX_ROWS` | — | trần số dòng 1 lệnh, mặc định 5000 |
+| `PC_WAREHOUSE_IDS` / `PC_COMPANY_IDS` | — | danh sách id cho đồng bộ tab Warehouse code (mặc định = union cấu hình 5S) |
 
-### Dữ liệu phía Google Sheet
-Tạo tab **`Warehouse code`** (4 cột: `Warehouse Code | Warehouse Name | Type | City Name`, dán từ
-danh mục kho WMS) — dashboard tra mã kho theo TÊN kho của từng dòng SKU. Tên kho phải khớp tên
-hiển thị trên dashboard; dòng không khớp sẽ bị chặn import và báo đỏ. *SKU type không cần tab
-riêng* (quy ước cố định: SKU = 1, SKU factory = 2, đã nhúng trong dashboard).
+### Tab `Warehouse code` (tự động)
+Action `pc_sync_whcode` (kèm `key`) tự dựng tab `Warehouse code` (4 cột: Warehouse Code |
+Warehouse Name | Type | City Name) bằng cách hỏi WMS tên kho của từng `warehouse_id`
+(fetchAll song song, size=1/kho). **Merge an toàn**: dòng dán tay (vd `1436 | SHOP - 170 QUOC LO 1A`)
+được giữ nguyên, mã trùng chỉ cập nhật tên, chạy lại lúc nào cũng được. Dashboard tra mã kho
+theo TÊN kho của từng dòng SKU; dòng không khớp bị chặn import và báo đỏ. *SKU type không cần
+tab riêng* (quy ước cố định: SKU = 1, SKU factory = 2, đã nhúng trong dashboard).
 
 ### Phân loại lỗi trả về dashboard
 `stage: config | build | auth | upload` = lỗi phía trung gian (script) — dashboard báo "Lỗi trung gian".

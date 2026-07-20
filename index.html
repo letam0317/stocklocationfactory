@@ -2946,7 +2946,19 @@ document.getElementById('pcBody').addEventListener('click',function(e){
   pcRefreshChecks(); pcRender();
 });
 
-/* ---------- Gửi backend: dryRun=true chỉ tạo file .xlsx tải về; false = upload thẳng WMS ---------- */
+/* ---------- Gửi backend: dryRun=true chỉ tạo file .xlsx tải về; false = upload thẳng WMS ----------
+   Khóa PC_KEY: action pc_* phía GAS bắt buộc khóa (chính sách: GAS gọi WMS bằng token nội bộ phải khóa).
+   Khóa KHÔNG nằm trong mã nguồn trang — operator nhập 1 lần, lưu localStorage, sai thì tự xoá để nhập lại. */
+function pcKeyGet(){
+  var k=''; try{ k=localStorage.getItem('pc-key')||''; }catch(e){}
+  if(!k){
+    k=(prompt('Nhập khóa tạo lệnh kiểm kê (PC_KEY — do quản trị cấp):')||'').trim();
+    if(k){ try{ localStorage.setItem('pc-key',k); }catch(e){} }
+  }
+  if(!k) toast('Cần khóa PC_KEY để gửi lệnh kiểm kê.','warn');
+  return k;
+}
+function pcKeyForget(){ try{ localStorage.removeItem('pc-key'); }catch(e){} }
 var _pcBusy=false;
 function pcSubmit(dry){
   if(_pcBusy) return;
@@ -2958,11 +2970,12 @@ function pcSubmit(dry){
     list.push({code:code,type:(tSel||String(r.t||1)),sku:r.sku,plan:plan,by:by});
   });
   if(!list.length||miss||!plan){ pcRender(); return; }
+  var khoa=pcKeyGet(); if(!khoa) return;
   _pcBusy=true;
   var st=document.getElementById('pcStatus');
   st.textContent=dry?'Đang tạo file template…':'Đang tạo file & import lên WMS…';
   document.getElementById('pcBtnGo').disabled=true; document.getElementById('pcBtnFile').disabled=true;
-  fetch(APPSCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'pc_import',dryRun:!!dry,rows:list})})
+  fetch(APPSCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'pc_import',dryRun:!!dry,key:khoa,rows:list})})
     .then(function(r){ return r.json(); })
     .then(function(j){
       var w=document.getElementById('pcWarn'); w.className='pcwarn'; w.textContent='';
@@ -2980,6 +2993,7 @@ function pcSubmit(dry){
         var isWms=j.stage==='wms';   // lỗi từ WMS -> hiện ghi chú thất bại WMS trả về; còn lại là lỗi trung gian
         var msg=(isWms?'WMS từ chối: ':'Lỗi trung gian ('+(j.stage||'?')+'): ')+(j.message||'không rõ nguyên nhân');
         if(isWms&&j.errors&&j.errors.length) msg+=' — '+j.errors.slice(0,5).join(' · ')+(j.errors.length>5?' …':'');
+        if(j.code===403){ pcKeyForget(); msg+=' — khóa đã xoá khỏi máy, bấm gửi lại để nhập khóa đúng.'; }
         toast(isWms?'WMS từ chối lệnh import.':'Import thất bại ở bước trung gian.','err');
         w.classList.add('bad','show'); w.textContent=msg;
         st.textContent='Thất bại';
