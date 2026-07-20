@@ -563,15 +563,28 @@ code{background:var(--surface2);padding:1px 7px;border-radius:6px;font-size:12px
 .tab{border:1px solid var(--line);background:var(--hover);border-radius:10px 10px 0 0;padding:9px 18px;cursor:pointer;font-size:13px;font-weight:600;color:var(--ink2);transition:.18s var(--ease)}
 .tab:hover{color:var(--ink)}
 .tab.active{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
-/* Ô LỌC GỌN — CHUẨN CHUNG MỌI POP-UP (đổi ở đây = đổi tất cả): nhãn nằm CÙNG HÀNG với ô nhập
-   (gộp "Tìm nhanh" + placeholder thành 1 dòng), padding mỏng — khối lọc thấp còn ~1/2 so với bản nhãn xếp trên */
-.mfilters{display:grid;grid-template-columns:1.3fr 1fr 1fr 1.6fr;gap:6px 8px;padding:8px 14px;border-bottom:1px solid var(--line);border-top:1px solid var(--line);background:var(--surface2)}
+/* Ô LỌC "PILL" — CHUẨN CHUNG MỌI POP-UP (đổi ở đây = đổi tất cả):
+   mỗi ô lọc = 1 viên bo tròn [NHÃN ┊ ô nhập] — bên trong không viền, focus sáng vòng quanh viên;
+   bỏ dải nền xám nặng, khối lọc nhẹ và thoáng kiểu filter-bar hiện đại (Linear/Stripe) */
+.mfilters{display:grid;grid-template-columns:1.3fr 1fr 1fr 1.6fr;gap:6px 8px;padding:10px 16px 8px;border-bottom:1px solid var(--line);background:transparent}
 @media(max-width:720px){.mfilters{grid-template-columns:1fr}}
-.mfilters .fld{display:flex;flex-direction:row;align-items:center;gap:6px;min-width:0}
-.mfilters label{font-size:9.5px;font-weight:650;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;flex:0 0 auto;white-space:nowrap}
+.mfilters .fld{display:flex;align-items:center;min-width:0;height:32px;padding:0 5px 0 12px;border-radius:999px;
+  background:color-mix(in srgb,var(--surface2) 62%,var(--surface));border:1px solid transparent;
+  transition:background .15s var(--ease),border-color .15s var(--ease),box-shadow .15s var(--ease)}
+.mfilters .fld:hover{background:var(--surface2)}
+.mfilters .fld:focus-within{background:var(--surface);border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 13%,transparent)}
+.mfilters label{font-size:9px;font-weight:750;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;flex:0 0 auto;white-space:nowrap;padding-right:9px;margin-right:2px;border-right:1px solid var(--border)}
 .mfilters .fld .combo{flex:1;min-width:0}
-.mfilters input,.mfilters select{padding:6px 9px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--surface);color:var(--ink);transition:border-color .15s var(--ease),box-shadow .15s var(--ease);width:100%;flex:1 1 auto;min-width:0}
-.mfilters input:focus,.mfilters select:focus{outline:0;border-color:var(--brand2);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+.mfilters input,.mfilters select{padding:6px 7px;border:0;border-radius:999px;font-size:12px;background:transparent;color:var(--ink);width:100%;flex:1 1 auto;min-width:0}
+.mfilters input:focus,.mfilters select:focus{outline:0;box-shadow:none}
+.mfilters input::placeholder{color:var(--ink3);opacity:.75}
+.mfilters .fld.bare{background:transparent;border:0;padding:0;height:auto}   /* fld chỉ chứa nút (vd Làm mới) — không bọc pill */
+/* Menu combo neo theo CẢ VIÊN pill (không lệch theo ô nhập bên trong) — combo trong .mfilters position:static */
+.mfilters .fld{position:relative}
+.mfilters .fld .combo{position:static}
+/* Ô "Tìm nhanh": icon kính lúp mờ đứng trước nhãn */
+.mfilters .fld.q::before{content:"";width:13px;height:13px;flex:0 0 auto;margin-right:7px;opacity:.5;
+  background:no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23788a80' stroke-width='2.6' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.8-3.8'/%3E%3C/svg%3E")}
 .combo{position:relative}
 .combo-menu{position:absolute;top:calc(100% + 5px);left:0;right:0;z-index:30;background:var(--surface);border:1px solid var(--line);border-radius:11px;box-shadow:var(--shadow-lg);
   max-height:250px;overflow-y:auto;overscroll-behavior:contain;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;padding:5px;
@@ -584,7 +597,7 @@ code{background:var(--surface2);padding:1px 7px;border-radius:6px;font-size:12px
 .combo-item:hover,.combo-item.active{background:#eef4ff;color:var(--brand)}
 .combo-item.all{border-bottom:1px solid var(--line);border-radius:8px 8px 0 0;font-weight:600}
 .combo-empty{padding:12px 11px;font-size:12px;color:var(--ink3);text-align:center}
-.msum{padding:5px 14px;font-size:11.5px;color:var(--ink2);border-bottom:1px solid var(--line);background:var(--surface2);font-variant-numeric:tabular-nums}
+.msum{padding:5px 16px 7px;font-size:11.5px;color:var(--ink3);border-bottom:1px solid var(--line);background:transparent;font-variant-numeric:tabular-nums}
 .modalbody{overflow:auto;padding:0 22px 22px;scroll-behavior:smooth;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .mtbl{width:100%;border-collapse:collapse;font-size:12.5px}
 .mtbl thead th{position:sticky;top:0;background:var(--surface2);color:var(--text);padding:9px 11px;text-align:left;font-weight:600;font-size:11px;z-index:1;white-space:nowrap}
@@ -882,7 +895,7 @@ body.pcm-open #pcbar,body.pcm-open #pcprev{display:none}   /* modal tạo lệnh
     <div class="modalhd"><div><div class="mt">Kế hoạch kiểm kê trên WMS <span class="hint">(counting plan · type SKU)</span></div><div class="mtsub">Pending = chờ WMS push thành phiếu · Processing = đã push, đang kiểm · đọc trực tiếp từ WMS</div></div><button class="mclose" onclick="closePlModal()">&times;</button></div>
     <div class="mfilters kkmf">
       <div class="fld q"><label>Tìm nhanh</label><input id="plQ" autocomplete="off" placeholder="SKU / tên / kho / người push / ngày…" oninput="plRender()"></div>
-      <div class="fld" style="flex:0 0 auto"><button class="fcg" onclick="PL.at=0;plLoad()">⟳ Làm mới từ WMS</button></div>
+      <div class="fld bare" style="flex:0 0 auto"><button class="fcg" onclick="PL.at=0;plLoad()">⟳ Làm mới từ WMS</button></div>
     </div>
     <div class="msum" style="padding-top:8px;padding-bottom:8px"><div class="kkstchips" id="plChips"></div></div>
     <div class="msum" id="plSum"></div>
