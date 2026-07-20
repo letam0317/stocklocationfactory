@@ -941,7 +941,8 @@ body.pcm-open #pcbar,body.pcm-open #pcprev{display:none}   /* modal tạo lệnh
     </div>
     <div class="pcfoot">
       <span class="hint" id="pcStatus"></span><span class="sp"></span>
-      <button class="primary" onclick="pcSubmit(true)" id="pcBtnFile" title="Dựng file template chuẩn để bạn tự import trong WMS">⬇ Tải file .xlsx</button>
+      <button onclick="pcSubmit(true)" id="pcBtnFile" title="Dựng file template chuẩn để bạn tự import trong WMS">⬇ Tải file .xlsx</button>
+      <button class="primary" id="pcBtnDirect" style="display:none" onclick="pcSubmitDirect()" title="Upload thẳng bằng phiên WMS của chính bạn (qua extension) — ghi đúng tên bạn, không đá phiên">⚡ Import bằng tài khoản của bạn</button>
     </div>
   </div>
 </div>
@@ -3155,6 +3156,8 @@ function pcRender(){
   }
   var block=!inc||!plan||miss>0;
   document.getElementById('pcBtnFile').disabled=block;
+  var bd=document.getElementById('pcBtnDirect');
+  bd.style.display=WMSEXT.ok?'':'none'; bd.disabled=block;   // chỉ hiện khi có extension Token Bridge
 }
 document.getElementById('pcBody').addEventListener('click',function(e){
   var b=e.target.closest('.pcx'); if(!b) return;
@@ -3207,10 +3210,29 @@ function pcWmsRowErrs(res){
   return errs;
 }
 function pcWmsMsg2(res){ var j=res.j||{}, d=j.data||{}; return String(j.message||j.error_message||j.error||d.message||d.error||('HTTP '+res.http)); }
+/* ===== CẦU NỐI EXTENSION "WMS Token Bridge" — cho phép Import 1-CLICK ghi đúng tên operator =====
+   Extension chạy trong CHÍNH trình duyệt operator, nghe token phiên WMS họ đang dùng rồi đưa cho trang.
+   Không có extension thì mọi thứ vẫn chạy (chỉ tải file tự import). CÓ extension -> hiện nút ⚡. */
+var WMSEXT={ok:false};
+window.addEventListener('message',function(e){
+  if(e.source!==window||!e.data)return;
+  if(e.data.__wmsbridge==='hello'){ WMSEXT.ok=true; var b=document.getElementById('pcBtnDirect'); if(b&&document.getElementById('pcmodal').classList.contains('show')) pcRender(); }
+});
+function wmsExtToken(){
+  return new Promise(function(res){
+    if(!WMSEXT.ok){ res(''); return; }
+    var done=false;
+    function on(e){ if(e.source!==window||!e.data||e.data.__wmsbridge!=='resp')return; done=true; window.removeEventListener('message',on); res(e.data.token||''); }
+    window.addEventListener('message',on);
+    window.postMessage({__wmsbridge:'req'},'*');
+    setTimeout(function(){ if(!done){ window.removeEventListener('message',on); res(''); } },1500);
+  });
+}
 var _pcBusy=false;
-/* LUỒNG ÍT RỦI RO NHẤT (chốt 2026-07-20): dashboard CHỈ dựng file .xlsx qua GAS (build dùng
-   Google OAuth của script, KHÔNG đụng token WMS) rồi tải về. Operator tự import trong WMS bằng
-   CHÍNH tài khoản họ -> created_by = họ. Không capture token -> không đá phiên ai, không cướp chuột. */
+/* LUỒNG MẶC ĐỊNH — ÍT RỦI RO NHẤT: dashboard CHỈ dựng file .xlsx qua GAS (build dùng Google OAuth
+   của script, KHÔNG đụng token WMS) rồi tải về. Operator tự import trong WMS bằng CHÍNH tài khoản họ
+   -> created_by = họ. Không capture token -> không đá phiên ai, không cướp chuột.
+   (Có extension WMS Token Bridge thì thêm nút ⚡ import 1-click cũng ghi đúng tên họ — xem pcSubmitDirect.) */
 function pcSubmit(dry){
   if(_pcBusy) return;
   var rows=pcRows(), pick=pcWhPick(), manual=pcWhManual();
@@ -3254,6 +3276,51 @@ function pcSubmit(dry){
     }
   })();
 }
+/* Import 1-CLICK bằng token phiên WMS của CHÍNH operator (qua extension) -> created_by = họ,
+   không đăng nhập lại -> KHÔNG đá phiên ai. Chuỗi: dựng file (GAS) -> validate -> import bằng token operator. */
+function pcSubmitDirect(){
+  if(_pcBusy) return;
+  var rows=pcRows(), pick=pcWhPick(), manual=pcWhManual();
+  var tSel=pcTypeVal(), plan=document.getElementById('pcDate').value;
+  var by=document.getElementById('pcBy').value.trim(), list=[], miss=0, used=[];
+  rows.forEach(function(r){
+    if(pick&&r.wh!==pick) return;
+    var code=pcCodeByName(r.wh)||manual; if(!code){ miss++; return; }
+    list.push({code:code,type:(tSel||String(r.t||1)),sku:r.sku,plan:plan,by:by});
+    used.push(pcKey(r.wh,r.sku));
+  });
+  if(!list.length||miss||!plan){ pcRender(); return; }
+  var khoa=pcKeyGet(); if(!khoa) return;
+  _pcBusy=true;
+  var st=document.getElementById('pcStatus'), w=document.getElementById('pcWarn');
+  document.getElementById('pcBtnFile').disabled=true; document.getElementById('pcBtnDirect').disabled=true;
+  function xong(cls,html,tt){ w.className=('pcwarn '+cls+' show').trim(); w.innerHTML=html; st.textContent=tt; _pcBusy=false; pcRender(); }
+  (async function(){
+    try{
+      st.textContent='Đang lấy token phiên WMS của bạn…';
+      var tok=await wmsExtToken();
+      if(!tok) return xong('bad','Không lấy được token từ extension. Hãy MỞ 1 tab WMS (wms.inshasaki.com) và đăng nhập bằng tài khoản của bạn, thao tác một chút rồi bấm lại — hoặc dùng nút "⬇ Tải file .xlsx" để tự import.','Chưa có token');
+      st.textContent='Đang dựng file template…';
+      var jf=await pcGas({action:'pc_import',dryRun:true,key:khoa,rows:list});
+      if(jf.status!=='file'){ if(jf.code===403) pcKeyForget(); return xong('bad','Lỗi dựng file ('+esc(jf.stage||'?')+'): '+esc(jf.message||'')+(jf.code===403?' — khóa đã xoá, bấm lại để nhập.':''),'Thất bại'); }
+      var bin=atob(jf.fileB64), u=new Uint8Array(bin.length); for(var i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i);
+      var blob=new Blob([u],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}), ten=jf.fileName||'CHECKLIST_SKU.xlsx';
+      st.textContent='Đang VALIDATE trên WMS (tài khoản của bạn)…';
+      var rv=await pcWmsUpload(PC_URL_VALIDATE,blob,ten,tok);
+      if(rv.http===401){ pcDownloadB64(jf.fileB64,ten); return xong('bad','Token phiên WMS đã hết hạn — đã tải file về, hãy mở lại WMS rồi thử lại (hoặc tự import file).','Token hết hạn'); }
+      var ev=pcWmsRowErrs(rv), dv=(rv.j&&(rv.j.data||rv.j))||{}, thieu=(typeof dv.valid==='number'&&typeof dv.total==='number'&&dv.valid<dv.total);
+      if(rv.http>=400||dv.error===true||ev.length||thieu){ pcDownloadB64(jf.fileB64,ten); return xong('bad','WMS từ chối (validate): '+esc(thieu?('chỉ '+nf(dv.valid)+'/'+nf(dv.total)+' dòng hợp lệ'):pcWmsMsg2(rv))+(ev.length?('<br>• '+ev.slice(0,8).map(esc).join('<br>• ')):'')+'<br>File .xlsx đã tải về để đối chiếu.','WMS từ chối'); }
+      st.textContent='Validate OK — đang IMPORT…';
+      var ri=await pcWmsUpload(PC_URL_IMPORT,blob,ten,tok);
+      var ei=pcWmsRowErrs(ri), di=(ri.j&&(ri.j.data||ri.j))||{};
+      if(ri.http>=400||di.error===true||ei.length){ pcDownloadB64(jf.fileB64,ten); return xong('bad','WMS từ chối (import): '+esc(pcWmsMsg2(ri))+(ei.length?('<br>• '+ei.slice(0,8).map(esc).join('<br>• ')):'')+'<br>File .xlsx đã tải về.','WMS từ chối'); }
+      toast('Import thành công — ghi tên chính bạn ('+nf(list.length)+' dòng).','ok');
+      used.forEach(function(k){ delete PC.sel[k]; }); pcSave(); pcSyncBar(); pcRefreshChecks();
+      var conlai=pcCount();
+      return xong('ok','✓ WMS đã nhận kế hoạch ('+nf(list.length)+' dòng) — <b>created_by = tài khoản của bạn</b>, không đá phiên ai. <button class="fcg" onclick="closePcModal();plOpen()">📋 Xem kế hoạch</button>'+(conlai?('<br>Giỏ còn '+nf(conlai)+' SKU kho khác — chọn kho nguồn tiếp để tạo lệnh tiếp.'):''),'Hoàn tất');
+    }catch(e){ toast('Import thất bại.','err'); return xong('bad','Lỗi: '+esc(String(e&&e.message||e)),'Thất bại'); }
+  })();
+}
 /* CẢNH BÁO NGHIỆP VỤ (sự cố 2026-07-20): warehouse_id của API BÁO CÁO ≠ Warehouse Code của template
    IMPORT — trùng số nhưng KHÁC kho (id 1177 báo cáo = WH-MATERIAL-MTG, code 1177 import = WH-313 PHAN
    HUY ICH KT2). Danh mục mã kho vì thế CHỈ được lấy từ sheet "Warehouse code" trong CHÍNH template
@@ -3291,9 +3358,9 @@ async function plLoad(){
   var body=document.getElementById('plBody');
   body.innerHTML='<tr><td colspan="8" class="empty"><div class="spin"></div>Đang tải sổ kế hoạch từ WMS…</td></tr>';
   document.getElementById('plSum').textContent=''; document.getElementById('plChips').innerHTML='';
-  var khoa=pcKeyGet(); if(!khoa){ body.innerHTML='<tr><td colspan="8" class="empty">Cần khóa PC_KEY để đọc WMS.</td></tr>'; return; }
   try{
-    var tok=await pcWmsToken(khoa);
+    var tok=await wmsExtToken();   // ưu tiên token phiên của chính operator (extension) — không phụ thuộc token robot
+    if(!tok){ var khoa=pcKeyGet(); if(!khoa){ body.innerHTML='<tr><td colspan="8" class="empty">Cần extension WMS Token Bridge, hoặc khóa PC_KEY để đọc qua token robot.</td></tr>'; return; } tok=await pcWmsToken(khoa); }
     var all=[], SIZE=200, MAXP=5;   // 5 trang × 200 = 1.000 kế hoạch mới nhất (API trả mới -> cũ)
     for(var page=1;page<=MAXP;page++){
       var r=await fetch(PC_WMS_BASE+'/wms/counting-plans/type-sku?page='+page+'&size='+SIZE,{headers:{'Authorization':'Bearer '+tok}});

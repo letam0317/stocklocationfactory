@@ -94,8 +94,18 @@ Ràng buộc nền:
 - `pc_token` chỉ còn phục vụ mục ĐỌC "Kế hoạch chờ push" (dùng token robot đã lưu, read-only,
   KHÔNG capture → không đá phiên). Capture token chỉ chạy ở cụm 7h / `pc-whcode-bootstrap` thủ công
   (nên chạy ngoài giờ làm; đã thêm `--window-position` off-screen để không cướp chuột).
-- Nâng cấp 1-click ghi đúng tên (nếu sau này muốn): extension MV3 đọc `auth_store` tab WMS của
-  operator → chưa làm (chờ quyết định cài extension mỗi máy).
+**Nâng cấp 1-click ghi đúng tên + KHÔNG đá phiên — extension `wms-bridge/` (đã dựng 2026-07-20):**
+- Nghiên cứu auth WMS: token KHÔNG ở localStorage (`auth_store.state` rỗng) — access token giữ trong
+  bộ nhớ SPA; phiên SSO ở cookie httpOnly `AUTH_SESSION_ID` trên **auth-gateway** (không phải wms-gw);
+  gọi credentialed tới wms-gw bị CORS `*`+credentials chặn → refresh-im-lặng-không-cài-gì KHÔNG khả thi.
+- → Cách hiệu quả + không thể đá phiên: extension MV3 chạy trong trình duyệt operator, QUAN SÁT header
+  `Authorization` của chính request WMS họ đang dùng (webRequest onSendHeaders, không can thiệp) → đưa
+  token cho dashboard qua content-script bridge (postMessage). Không đăng nhập lại → không phiên mới →
+  không đá phiên; upload bằng token đó → `created_by` = operator. Cài: `wms-bridge/README.md`.
+- Dashboard feature-detect: có extension → hiện nút "⚡ Import bằng tài khoản của bạn" + "Kế hoạch chờ
+  push" đọc bằng token operator; KHÔNG có extension → vẫn chạy luồng "⬇ Tải file .xlsx" tự import.
+- LƯU Ý CHƯA KIỂM CHỨNG LIVE: chuỗi extension→token→validate/import cần operator cài + xác nhận 1 lần
+  (mở WMS đăng nhập, bấm ⚡). Cơ chế bắt header đã đúng chuẩn nhưng chưa test trên máy có extension.
 
 ### Endpoint WMS (trích từ bundle SPA — counting-plan = "CP" trong tên template)
 ```
