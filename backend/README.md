@@ -68,6 +68,49 @@ cáo WMS về ghi vào tab đó, chạy tự động **mỗi ngày 07:00 (giờ 
 - Mở dashboard → tab **Tồn kho bất thường** → phải thấy dữ liệu (thay cho thông báo
   "chưa có dữ liệu").
 
+## Import lệnh kiểm kê từ dashboard (PhysicalCountImport.gs)
+
+Dashboard cho tick chọn SKU trong pop-up 2 tab (Kiểm kê + Tồn kho bất thường) rồi bấm
+**Tạo lệnh kiểm kê** → gửi `{action:'pc_import', rows:[{code,type,sku,plan,by}]}` lên web app.
+Script dựng file `.xlsx` đúng template `WMS_INVENTORY_KEY_TEMPLATE_CP_CHECKLIST_SKU`
+(mỗi SKU 1 dòng: Warehouse Code | Type | Sku | Plan Date | Executed By) và upload lên WMS.
+
+### Cài đặt
+1. **Thêm file** `PhysicalCountImport.gs` vào chính project bộ 5S (project đang chạy `force_sync_wms`).
+2. **Nối router**: trong `doPost` hiện có của project, thêm 1 dòng:
+   ```js
+   if (data.action === 'pc_import') return pcJson_(pcImport_(data));
+   ```
+   (Deploy project riêng thì bỏ comment hàm `doPost` mẫu cuối file.)
+3. **Bắt endpoint import** (1 lần): vào `https://wms.inshasaki.com/physical-count/request/import/sku`,
+   mở DevTools → Network, import tay 1 file mẫu → mở request POST vừa xuất hiện:
+   - Copy **URL đầy đủ** → Script Property `PC_IMPORT_URL`.
+   - Xem tab Payload: tên field chứa file (thường là `file`) → `PC_FILE_FIELD` (bỏ qua nếu là `file`).
+4. **(Khuyến nghị) Template gốc**: upload file `.xlsx` template lên Drive → mở bằng Google Sheets
+   (File → Save as Google Sheets) → copy ID → `PC_TEMPLATE_SHEET_ID`. Có ID này script sẽ COPY
+   template mà điền (giữ nguyên tên sheet + sheet tham chiếu); không có thì dựng file trơn 5 cột.
+5. **Deploy lại web app**: Manage deployments → Edit → Version: New → Deploy (giữ nguyên URL).
+6. Chạy tay `pcSelfTest` 1 lần để cấp quyền (Drive/Sheets/UrlFetch) và kiểm tra file dựng ra.
+
+### Script Properties bổ sung
+| Property | Bắt buộc | Giá trị |
+|---|---|---|
+| `PC_IMPORT_URL` | ✅ (để import tự động) | endpoint API import bắt từ DevTools; **chưa có** → dashboard vẫn tạo được file `.xlsx` tải về import tay |
+| `PC_FILE_FIELD` | — | tên field multipart chứa file, mặc định `file` |
+| `PC_TEMPLATE_SHEET_ID` | — | ID bản Google Sheets của template gốc |
+| `PC_FILE_NAME` | — | mặc định `WMS_INVENTORY_KEY_TEMPLATE_CP_CHECKLIST_SKU.xlsx` |
+| `PC_MAX_ROWS` | — | trần số dòng 1 lệnh, mặc định 5000 |
+
+### Dữ liệu phía Google Sheet
+Tạo tab **`Warehouse code`** (4 cột: `Warehouse Code | Warehouse Name | Type | City Name`, dán từ
+danh mục kho WMS) — dashboard tra mã kho theo TÊN kho của từng dòng SKU. Tên kho phải khớp tên
+hiển thị trên dashboard; dòng không khớp sẽ bị chặn import và báo đỏ. *SKU type không cần tab
+riêng* (quy ước cố định: SKU = 1, SKU factory = 2, đã nhúng trong dashboard).
+
+### Phân loại lỗi trả về dashboard
+`stage: config | build | auth | upload` = lỗi phía trung gian (script) — dashboard báo "Lỗi trung gian".
+`stage: wms` = WMS từ chối — dashboard hiển thị message + danh sách ghi chú lỗi từng dòng WMS trả về.
+
 ## Mở rộng work / hr
 Module đăng nhập ở đây (refresh-token → access_token của `wms-gw`) tái dụng được cho các
 hệ khác **cùng cụm SSO**. Khi làm dashboard work/hr, chỉ cần đổi `API_BASE` + đường dẫn
