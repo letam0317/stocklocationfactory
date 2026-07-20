@@ -815,6 +815,7 @@ body.pcm-open #pcbar,body.pcm-open #pcprev{display:none}   /* modal tạo lệnh
 <!-- ===== TAB 2: Kiểm kê — 2 khối song song: theo SKU & theo mã vị trí ===== -->
 <div id="viewKK" hidden>
   <!-- Cross-filter KHO cấp tab: chip kho lọc toàn bộ dải chỉ số/thanh trạng thái/chart/pop-up; lọc chi tiết vẫn nằm TRONG pop-up -->
+  <div class="kkbar" style="margin-bottom:6px"><span class="hint" style="flex:1">Lệnh tạo từ dashboard nằm ở "sổ kế hoạch" WMS trước khi thành phiếu</span><button class="kktab" onclick="plOpen()">📋 Kế hoạch chờ push (WMS)</button></div>
   <div class="kkbar" id="kkWhBar" style="margin-bottom:12px"></div>
   <div class="grid2 even">
     <section class="panel">
@@ -839,6 +840,7 @@ body.pcm-open #pcbar,body.pcm-open #pcprev{display:none}   /* modal tạo lệnh
 <div id="viewAbn" hidden>
   <p class="sub"><span class="muted">Chỉ số "bất thường" đọc từ báo cáo <code>stock-inventory-beta</code> — chỉ SKU có <b>Product Type = Normal</b> và có ít nhất 1 loại &gt; 0: Conflict · UID Temp · Not Found · Unsuitable product · Committed · Committed Outbound.</span></p>
   <!-- Cross-filter KHO: chip kho lọc toàn bộ thẻ chỉ số + chart + pop-up -->
+  <div class="kkbar" style="margin-bottom:6px"><span class="hint" style="flex:1"></span><button class="kktab" onclick="plOpen()">📋 Kế hoạch chờ push (WMS)</button></div>
   <div class="kkbar" id="abnWhBar" style="margin-bottom:12px"></div>
   <div id="abnContent"></div>
   <div id="abnState" class="state"><div class="spin"></div>Đang tải dữ liệu tồn kho bất thường…</div>
@@ -869,6 +871,22 @@ body.pcm-open #pcbar,body.pcm-open #pcprev{display:none}   /* modal tạo lệnh
   <div class="pb"><table><thead><tr>
     <th>Kho</th><th>SKU</th><th>Tên sản phẩm</th><th>Lý do chọn</th><th></th>
   </tr></thead><tbody id="pcprevB"></tbody></table></div>
+</div>
+
+<!-- Modal "Kế hoạch kiểm kê trên WMS": đọc LIVE /wms/counting-plans/type-sku — Pending = chờ push, Processing = đã push; kèm ai push, lúc nào -->
+<div id="plmodal" class="modal" onclick="if(event.target===this)closePlModal()">
+  <div class="modalbox">
+    <div class="modalhd"><div><div class="mt">Kế hoạch kiểm kê trên WMS <span class="hint">(counting plan · type SKU)</span></div><div class="mtsub">Pending = chờ WMS push thành phiếu · Processing = đã push, đang kiểm · đọc trực tiếp từ WMS</div></div><button class="mclose" onclick="closePlModal()">&times;</button></div>
+    <div class="mfilters kkmf">
+      <div class="fld q"><label>Tìm nhanh</label><input id="plQ" autocomplete="off" placeholder="SKU / tên / kho / người push / ngày…" oninput="plRender()"></div>
+      <div class="fld" style="flex:0 0 auto;justify-content:flex-end"><label>&nbsp;</label><button class="fcg" onclick="PL.at=0;plLoad()">⟳ Làm mới từ WMS</button></div>
+    </div>
+    <div class="msum" style="padding-top:8px;padding-bottom:8px"><div class="kkstchips" id="plChips"></div></div>
+    <div class="msum" id="plSum"></div>
+    <div class="modalbody"><table class="mtbl"><thead><tr>
+      <th>SKU</th><th class="pn">Tên sản phẩm</th><th>Kho</th><th>Plan date</th><th>Trạng thái</th><th>Người push</th><th>Lúc push</th><th>Cập nhật</th>
+    </tr></thead><tbody id="plBody"></tbody></table></div>
+  </div>
 </div>
 
 <!-- Modal tạo lệnh kiểm kê WMS: điền template WMS_INVENTORY_KEY_TEMPLATE_CP_CHECKLIST_SKU rồi import qua backend GAS -->
@@ -1465,6 +1483,8 @@ document.addEventListener('keydown',function(e){
   if(pv && !pv.classList.contains('hidden')){ pv.classList.add('hidden'); return; }
   var pm=document.getElementById('pcmodal');   // modal tạo lệnh mở ĐÈ lên pop-up khác -> đóng trước tiên
   if(pm && pm.classList.contains('show')){ closePcModal(); return; }
+  var plm=document.getElementById('plmodal');
+  if(plm && plm.classList.contains('show')){ closePlModal(); return; }
   var m=document.getElementById('catMenu');
   if(m && m.classList.contains('show')){ closeCat(); return; }
   var cm=document.getElementById('catmodal');
@@ -3234,7 +3254,7 @@ function pcSubmit(dry){
       pcSave(); pcSyncBar(); pcRefreshChecks();
       var conlai=pcCount();
       // endpoint counting-plan/checklists = tạo KẾ HOẠCH; phiếu request do WMS tự sinh theo Plan Date (push count) — KHÔNG hiện PENDING ngay
-      return xong('ok','✓ WMS đã nhận <b>kế hoạch kiểm kê</b> ('+nf(list.length)+' dòng). Phiếu request sẽ do WMS tự sinh theo Plan Date (cơ chế push count) — có thể chưa hiện PENDING ngay; theo dõi ở WMS → Physical Count → Daily Checklist / Counting plan.'+(conlai?('<br>Giỏ còn '+nf(conlai)+' SKU thuộc kho khác — chọn kho nguồn tiếp theo ở ô "Kho kiểm" để tạo lệnh tiếp.'):''),'Hoàn tất');
+      return xong('ok','✓ WMS đã nhận <b>kế hoạch kiểm kê</b> ('+nf(list.length)+' dòng). Phiếu request sẽ do WMS tự sinh theo Plan Date (cơ chế push count). <button class="fcg" onclick="closePcModal();plOpen()">📋 Xem hàng chờ push</button>'+(conlai?('<br>Giỏ còn '+nf(conlai)+' SKU thuộc kho khác — chọn kho nguồn tiếp theo ở ô "Kho kiểm" để tạo lệnh tiếp.'):''),'Hoàn tất');
     }catch(e){
       toast('Import thất bại.','err');
       return xong('bad','Không gọi được máy chủ ('+esc(String(e&&e.message||e))+').','Thất bại');
@@ -3263,6 +3283,71 @@ function pcDownloadB64(b64,name){
   a.download=name; document.body.appendChild(a); a.click();
   setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },800);
 }
+/* ===== "KẾ HOẠCH CHỜ PUSH" — đọc LIVE sổ counting plan của WMS (type SKU) ===================
+   Trả lời 3 câu: SKU nào đang CHỜ push (Pending), đã push (Processing/...), và AI push (created_by).
+   Đọc trực tiếp API bằng token GAS (PC_KEY) — token bị chiếm phiên thì báo rõ, không đoán. */
+var PL={rows:[],at:0,st:''};
+function plOpen(){
+  var m=document.getElementById('plmodal'); m.style.display='flex';
+  requestAnimationFrame(function(){ m.classList.add('show'); });
+  if(PL.rows.length&&Date.now()-PL.at<120000){ plRender(); return; }   // cache 2 phút — bấm "Làm mới" để ép tải
+  plLoad();
+}
+function closePlModal(){ var m=document.getElementById('plmodal'); m.classList.remove('show'); setTimeout(function(){ m.style.display='none'; },240); }
+async function plLoad(){
+  var body=document.getElementById('plBody');
+  body.innerHTML='<tr><td colspan="8" class="empty"><div class="spin"></div>Đang tải sổ kế hoạch từ WMS…</td></tr>';
+  document.getElementById('plSum').textContent=''; document.getElementById('plChips').innerHTML='';
+  var khoa=pcKeyGet(); if(!khoa){ body.innerHTML='<tr><td colspan="8" class="empty">Cần khóa PC_KEY để đọc WMS.</td></tr>'; return; }
+  try{
+    var tok=await pcWmsToken(khoa);
+    var all=[], SIZE=200, MAXP=5;   // 5 trang × 200 = 1.000 kế hoạch mới nhất (API trả mới -> cũ)
+    for(var page=1;page<=MAXP;page++){
+      var r=await fetch(PC_WMS_BASE+'/wms/counting-plans/type-sku?page='+page+'&size='+SIZE,{headers:{'Authorization':'Bearer '+tok}});
+      if(r.status===401){ _pcTok=''; throw new Error('Token WMS đang bị chiếm phiên — chạy pc-whcode-bootstrap trên máy tự động hoá hoặc thử sau cụm 7h.'); }
+      if(!r.ok) throw new Error('WMS trả HTTP '+r.status);
+      var j=await r.json(), d=j.data||j, recs=d.records||[];
+      all=all.concat(recs);
+      if(recs.length<SIZE) break;
+    }
+    PL.rows=all; PL.at=Date.now();
+    plRender();
+  }catch(e){
+    if(e&&e.pc){ if(e.j&&e.j.code===403) pcKeyForget(); body.innerHTML='<tr><td colspan="8" class="empty">Không lấy được token WMS: '+esc((e.j&&e.j.message)||'')+'</td></tr>'; }
+    else body.innerHTML='<tr><td colspan="8" class="empty">'+esc(String(e&&e.message||e))+'</td></tr>';
+  }
+}
+function plStColor(s){ s=String(s).toUpperCase();
+  if(/PEND/.test(s)) return 'var(--warn)';
+  if(/PROCESS/.test(s)) return 'var(--info)';
+  if(/DONE|COMPLET|VERIF|APPROV/.test(s)) return 'var(--good)';
+  if(/CANCEL|REJECT|FAIL/.test(s)) return 'var(--bad)';
+  return 'var(--muted)';
+}
+function plSetSt(s){ PL.st=(PL.st===s)?'':s; plRender(); }
+function plRender(){
+  var q=((document.getElementById('plQ')||{}).value||'').trim().toLowerCase();
+  var rows=PL.rows.filter(function(x){
+    if(PL.st&&String(x.status_name||'')!==PL.st) return false;
+    if(q){ var s=(x.plan_object_code+' '+(x.product_name||'')+' '+(x.warehouse_name||'')+' '+(x.created_by_name||'')+' '+(x.plan_date||'')+' '+(x.status_name||'')).toLowerCase(); if(s.indexOf(q)<0) return false; }
+    return true;
+  });
+  var cnt={}; PL.rows.forEach(function(x){ var s=String(x.status_name||'?'); cnt[s]=(cnt[s]||0)+1; });
+  document.getElementById('plChips').innerHTML=
+    '<button class="kkstchip" style="--cc:var(--accent)" onclick="plSetSt(\'\')"><span class="dot2"></span>Tất cả <b>'+nf(PL.rows.length)+'</b></button>'+
+    Object.keys(cnt).sort().map(function(s){
+      return '<button class="kkstchip" style="--cc:'+plStColor(s)+';'+(PL.st===s?'outline:2px solid '+plStColor(s)+';':'')+'" data-s="'+esc(s)+'" onclick="plSetSt(this.getAttribute(\'data-s\'))"><span class="dot2"></span>'+esc(s)+' <b>'+nf(cnt[s])+'</b></button>';
+    }).join('');
+  var out=[], cap=500;
+  for(var i=0;i<rows.length&&out.length<cap;i++){ var x=rows[i];
+    out.push('<tr><td><b>'+esc(x.plan_object_code||'')+'</b></td><td class="pn">'+esc(x.product_name||'')+'</td><td class="whn">'+esc(x.warehouse_name||'')+'</td><td>'+esc(x.plan_date||'')+'</td>'+
+      '<td><span class="badge '+kkBadge(String(x.status_name||'').toUpperCase())+'">'+esc(x.status_name||'—')+'</span></td>'+
+      '<td>'+esc(x.created_by_name||'—')+'</td><td>'+esc(x.created_at||'')+'</td><td>'+esc(x.updated_at||'')+'</td></tr>');
+  }
+  document.getElementById('plBody').innerHTML=out.join('')||'<tr><td colspan="8" class="empty">Không có kế hoạch phù hợp</td></tr>';
+  document.getElementById('plSum').textContent=nf(rows.length)+' / '+nf(PL.rows.length)+' kế hoạch (tải mới nhất từ WMS lúc '+new Date(PL.at).toLocaleTimeString('vi-VN')+')'+(rows.length>cap?(' · hiển thị '+nf(cap)+' dòng đầu'):'');
+}
+
 /* Khôi phục giỏ từ phiên (F5 không mất lựa chọn) */
 try{ PC.sel=JSON.parse(sessionStorage.getItem('pc-sel')||'{}')||{}; }catch(e){ PC.sel={}; }
 pcSyncBar();
