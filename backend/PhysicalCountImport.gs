@@ -255,6 +255,26 @@ function doPost(e) {
 }
 */
 
+/* --------------------- CHO TRÌNH DUYỆT MƯỢN TOKEN (pc_token) ---------------------
+ * WMS chặn IP ngoài (GAS không gọi WMS được) nhưng gateway mở CORS `*` → TRÌNH DUYỆT
+ * operator (IP nội bộ) upload thẳng WMS. GAS chỉ còn 2 vai: dựng file .xlsx + phát token.
+ * Phát token = "cho mượn token nội bộ" → BẮT BUỘC PC_KEY; dashboard chỉ giữ trong RAM. */
+function pcToken_() {
+  try { return { status: 'success', token: pcGetToken_() }; }
+  catch (err) { return pcErr_('auth', String(err && err.message || err), { code: 401 }); }
+}
+
+/* Ghi tab "Warehouse code" từ dữ liệu TRÌNH DUYỆT gửi lên (rows=[[code,name],...]) —
+ * trình duyệt tự hỏi WMS tên kho (GAS bị chặn IP nên không tự hỏi được). */
+function pcSaveWhcode_(duLieu) {
+  var got = ((duLieu && duLieu.rows) || []).map(function (r) {
+    return [String(r[0] == null ? '' : r[0]).trim(), String(r[1] == null ? '' : r[1]).replace(/\s+/g, ' ').trim()];
+  }).filter(function (r) { return r[0] && r[1]; });
+  if (!got.length) return pcErr_('config', 'Không có dòng [code, name] hợp lệ.');
+  try { return pcMergeWhcode_(pcCFG_(), got); }
+  catch (err) { return pcErr_('build', String(err && err.message || err)); }
+}
+
 /* ------------------- ĐỒNG BỘ TAB "Warehouse code" TỪ WMS -------------------
  * Dashboard tra mã kho theo tên từ tab này. Tự dựng bằng cách hỏi WMS tên kho của
  * từng warehouse_id đã biết (report stock-locations, size=1 -> rất nhẹ).
@@ -283,27 +303,31 @@ function pcSyncWarehouses() {
       } catch (e) {}
     });
     if (!got.length) return pcErr_('wms', 'Không lấy được tên kho nào từ WMS (token hết hạn hoặc endpoint đổi?).');
-    var ss = SpreadsheetApp.openById(cfg.SHEET_ID);
-    var sh = ss.getSheetByName(cfg.WHCODE_SHEET) || ss.insertSheet(cfg.WHCODE_SHEET);
-    var cur = {}, order = [];
-    var last = sh.getLastRow();
-    if (last >= 2) sh.getRange(2, 1, last - 1, 4).getValues().forEach(function (r) {
-      var code = String(r[0]).trim(); if (!code || cur[code]) return;
-      cur[code] = [code, String(r[1] || ''), String(r[2] || ''), String(r[3] || '')]; order.push(code);
-    });
-    got.forEach(function (g) {
-      if (cur[g[0]]) cur[g[0]][1] = g[1];
-      else { cur[g[0]] = [g[0], g[1], '', '']; order.push(g[0]); }
-    });
-    var values = [['Warehouse Code', 'Warehouse Name', 'Type', 'City Name']]
-      .concat(order.sort().map(function (c) { return cur[c]; }));
-    sh.clearContents();
-    sh.getRange(1, 1, values.length, 4).setNumberFormat('@').setValues(values);
-    return { status: 'success', rows: values.length - 1, synced: got.length,
-      message: 'Tab "' + cfg.WHCODE_SHEET + '": ' + (values.length - 1) + ' kho (WMS trả tên cho ' + got.length + ' mã).' };
+    return pcMergeWhcode_(cfg, got);
   } catch (err) {
     return pcErr_('build', String(err && err.message || err));
   }
+}
+/* Merge [code,name] vào tab Warehouse code: dòng dán tay GIỮ NGUYÊN, mã trùng cập nhật tên, mã mới thêm. */
+function pcMergeWhcode_(cfg, got) {
+  var ss = SpreadsheetApp.openById(cfg.SHEET_ID);
+  var sh = ss.getSheetByName(cfg.WHCODE_SHEET) || ss.insertSheet(cfg.WHCODE_SHEET);
+  var cur = {}, order = [];
+  var last = sh.getLastRow();
+  if (last >= 2) sh.getRange(2, 1, last - 1, 4).getValues().forEach(function (r) {
+    var code = String(r[0]).trim(); if (!code || cur[code]) return;
+    cur[code] = [code, String(r[1] || ''), String(r[2] || ''), String(r[3] || '')]; order.push(code);
+  });
+  got.forEach(function (g) {
+    if (cur[g[0]]) cur[g[0]][1] = g[1];
+    else { cur[g[0]] = [g[0], g[1], '', '']; order.push(g[0]); }
+  });
+  var values = [['Warehouse Code', 'Warehouse Name', 'Type', 'City Name']]
+    .concat(order.sort().map(function (c) { return cur[c]; }));
+  sh.clearContents();
+  sh.getRange(1, 1, values.length, 4).setNumberFormat('@').setValues(values);
+  return { status: 'success', rows: values.length - 1, synced: got.length,
+    message: 'Tab "' + cfg.WHCODE_SHEET + '": ' + (values.length - 1) + ' kho (cập nhật ' + got.length + ' mã).' };
 }
 
 /* ------------------------------- TEST TAY ------------------------------- */

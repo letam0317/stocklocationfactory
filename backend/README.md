@@ -71,46 +71,62 @@ cáo WMS về ghi vào tab đó, chạy tự động **mỗi ngày 07:00 (giờ 
 ## Import lệnh kiểm kê từ dashboard (PhysicalCountImport.gs)
 
 Dashboard cho tick chọn SKU trong pop-up 2 tab (Kiểm kê + Tồn kho bất thường) rồi bấm
-**Tạo lệnh kiểm kê** → gửi `{action:'pc_import', rows:[{code,type,sku,plan,by}]}` lên web app.
-Script dựng file `.xlsx` đúng template `WMS_INVENTORY_KEY_TEMPLATE_CP_CHECKLIST_SKU`
-(mỗi SKU 1 dòng: Warehouse Code | Type | Sku | Plan Date | Executed By) và upload lên WMS.
+**Tạo lệnh kiểm kê** → dựng file `.xlsx` đúng template `WMS_INVENTORY_KEY_TEMPLATE_CP_CHECKLIST_SKU`
+(mỗi SKU 1 dòng: Warehouse Code | Type | Sku | Plan Date | Executed By) và import lên WMS.
+
+### Kiến trúc (ràng buộc thực tế quyết định)
+- **WMS chặn IP ngoài** → GAS (IP Google) KHÔNG gọi được `wms-gw` (đã kiểm chứng: UrlFetch
+  "Địa chỉ không khả dụng"; máy nội bộ gọi được bình thường).
+- **Gateway mở CORS `*`** → TRÌNH DUYỆT operator (IP nội bộ) upload thẳng WMS được.
+- → Phân vai: **GAS** dựng file `.xlsx` (`pc_import` dryRun) + phát token (`pc_token`) + ghi tab
+  Warehouse code (`pc_save_whcode`); **trình duyệt** upload: `validate/type-sku` trước, đạt thì
+  `import/type-sku`, đọc lỗi từng dòng (`error_message`) từ body WMS trả về.
+
+### Endpoint WMS (trích từ bundle SPA — counting-plan = "CP" trong tên template)
+```
+base:      https://wms-gw.inshasaki.com/api/v1
+validate:  POST /wms/counting-plan/checklists/validate/type-sku
+import:    POST /wms/counting-plan/checklists/import/type-sku
+           (multipart, file trong field "chunk"; import trang location: .../type-location)
+template:  GET  /wms/counting-plan/checklists/download-template/type-sku
+```
 
 ### Trạng thái triển khai (đã làm qua clasp — 2026-07-20)
-- ✅ `PhysicalCountImport.js` đã push vào project 5S, router `pc_import / pc_sync_whcode / pc_set_key`
-  đã nối vào `doPost` của `sa.js`, deployment `AKfycbzIE6E…` cập nhật version mới (URL không đổi).
-- ✅ `PC_KEY` đã đặt (TOFU qua action `pc_set_key`). Operator nhập khóa 1 lần trên dashboard
-  (lưu localStorage) — khóa KHÔNG nằm trong mã nguồn trang. Đổi khóa: gọi `pc_set_key` kèm
-  `oldKey` + `newKey`.
-- ⏳ **Còn thiếu duy nhất `PC_IMPORT_URL`** (cần phiên đăng nhập WMS trên trình duyệt):
-  vào `https://wms.inshasaki.com/physical-count/request/import/sku`, DevTools → Network,
-  import tay 1 file mẫu → copy **URL** request POST vào Script Property `PC_IMPORT_URL`
-  (+ tên field file nếu khác `file` → `PC_FILE_FIELD`). Chưa có thì dashboard tự chuyển sang
-  chế độ tạo file `.xlsx` tải về import tay — luồng không bị chặn.
+- ✅ `PhysicalCountImport.js` đã push vào project 5S; router `pc_import / pc_token /
+  pc_save_whcode / pc_sync_whcode / pc_set_key` đã nối vào `doPost` của `sa.js`;
+  deployment `AKfycbzIE6E…` cập nhật version mới (URL web app KHÔNG đổi).
+- ✅ `PC_KEY` đã đặt (TOFU qua `pc_set_key`; đổi khóa cần `oldKey`+`newKey`). Operator nhập
+  khóa 1 lần trên dashboard (lưu localStorage) — khóa KHÔNG nằm trong mã nguồn trang.
+- ✅ Tab `Warehouse code` đã tạo (seed `1436 | SHOP - 170 QUOC LO 1A`); danh mục 13 kho material
+  đồng bộ bằng nút "⟳ Đồng bộ danh mục kho từ WMS" ngay trong modal (cần token WMS còn phiên).
+- ✅ Test end-to-end phần GAS: `pc_import` dryRun trả file `.xlsx` chuẩn (header + dòng text đúng
+  thứ tự cột); `pc_token`, `pc_save_whcode` hoạt động.
+- ⚠️ **Token WMS 1 phiên/tài khoản** (`auth_session_displaced`): token robot chết khi có đăng nhập
+  đè. Import thất bại 401 → dashboard tự tải file `.xlsx` về để import tay + hướng dẫn chạy lại
+  sau khi robot đăng nhập (cụm 7h / LOGIN-HASAKI).
 - (Khuyến nghị) Template gốc: upload `.xlsx` lên Drive → mở bằng Google Sheets → copy ID →
   `PC_TEMPLATE_SHEET_ID` (script sẽ COPY template mà điền, giữ nguyên tên sheet + sheet tham chiếu).
 
 ### Script Properties
 | Property | Bắt buộc | Giá trị |
 |---|---|---|
-| `PC_KEY` | ✅ (đã đặt) | khóa riêng cho action `pc_*` — chính sách "GAS gọi WMS phải khóa", không dùng chung SECRET 5S |
-| `PC_IMPORT_URL` | ✅ (để import tự động) | endpoint API import bắt từ DevTools; **chưa có** → trả file `.xlsx` về cho tải tay |
-| `PC_FILE_FIELD` | — | tên field multipart chứa file, mặc định `file` |
+| `PC_KEY` | ✅ (đã đặt) | khóa riêng cho action `pc_*` — chính sách "đụng token WMS phải khóa", không dùng chung SECRET 5S |
 | `PC_TEMPLATE_SHEET_ID` | — | ID bản Google Sheets của template gốc |
 | `PC_FILE_NAME` | — | mặc định `WMS_INVENTORY_KEY_TEMPLATE_CP_CHECKLIST_SKU.xlsx` |
 | `PC_MAX_ROWS` | — | trần số dòng 1 lệnh, mặc định 5000 |
 | `PC_WAREHOUSE_IDS` / `PC_COMPANY_IDS` | — | danh sách id cho đồng bộ tab Warehouse code (mặc định = union cấu hình 5S) |
+| `PC_IMPORT_URL` / `PC_FILE_FIELD` | (bỏ) | chỉ dùng nếu sau này WMS mở IP cho GAS upload trực tiếp |
 
-### Tab `Warehouse code` (tự động)
-Action `pc_sync_whcode` (kèm `key`) tự dựng tab `Warehouse code` (4 cột: Warehouse Code |
-Warehouse Name | Type | City Name) bằng cách hỏi WMS tên kho của từng `warehouse_id`
-(fetchAll song song, size=1/kho). **Merge an toàn**: dòng dán tay (vd `1436 | SHOP - 170 QUOC LO 1A`)
-được giữ nguyên, mã trùng chỉ cập nhật tên, chạy lại lúc nào cũng được. Dashboard tra mã kho
-theo TÊN kho của từng dòng SKU; dòng không khớp bị chặn import và báo đỏ. *SKU type không cần
-tab riêng* (quy ước cố định: SKU = 1, SKU factory = 2, đã nhúng trong dashboard).
+### Tab `Warehouse code`
+4 cột: Warehouse Code | Warehouse Name | Type | City Name. Dashboard tra mã kho theo TÊN kho
+của từng dòng SKU; dòng không khớp bị chặn import và báo đỏ kèm nút đồng bộ. **Merge an toàn**:
+dòng dán tay giữ nguyên, mã trùng chỉ cập nhật tên, chạy lại lúc nào cũng được. *SKU type không
+cần tab riêng* (quy ước cố định: SKU = 1, SKU factory = 2, đã nhúng trong dashboard).
 
-### Phân loại lỗi trả về dashboard
-`stage: config | build | auth | upload` = lỗi phía trung gian (script) — dashboard báo "Lỗi trung gian".
-`stage: wms` = WMS từ chối — dashboard hiển thị message + danh sách ghi chú lỗi từng dòng WMS trả về.
+### Phân loại lỗi hiển thị trên dashboard
+- `Lỗi trung gian (config|build|auth)` = lỗi phía GAS/khóa/token.
+- `WMS từ chối (validate|import)` = WMS trả lỗi — hiện message + ghi chú lỗi TỪNG DÒNG
+  (`error_message`) từ body WMS; đồng thời tự tải file `.xlsx` về làm phương án import tay.
 
 ## Mở rộng work / hr
 Module đăng nhập ở đây (refresh-token → access_token của `wms-gw`) tái dụng được cho các

@@ -2929,12 +2929,13 @@ function pcRender(){
   document.getElementById('pcSub').textContent=nf(rows.length)+' SKU đã chọn · mỗi SKU 1 dòng lệnh import';
   document.getElementById('pcSum').textContent=nf(rows.length)+' dòng · '+nf(Object.keys(whs).length)+' mã kho'+(miss?(' · '+nf(miss)+' dòng CHƯA tra được mã kho'):'');
   var w=document.getElementById('pcWarn'); w.className='pcwarn'; w.textContent='';
+  var nutSync=' <button class="fcg" style="margin-left:6px" onclick="pcWhSyncUI()">⟳ Đồng bộ danh mục kho từ WMS</button>';
   if(rows.length&&!(PC.whcode&&PC.whcode.length)&&!whSel){
     w.classList.add('show');
-    w.innerHTML='Google Sheet chưa có tab <code>Warehouse code</code> (4 cột: Warehouse Code | Warehouse Name | Type | City Name) nên không tự tra được mã kho theo tên — tạo tab đó, hoặc nhập mã kho thủ công ở ô "Kho kiểm".';
+    w.innerHTML='Google Sheet chưa có tab <code>Warehouse code</code> nên không tự tra được mã kho theo tên — bấm đồng bộ, hoặc nhập mã kho thủ công ở ô "Kho kiểm".'+nutSync;
   }else if(miss){
     w.classList.add('bad','show');
-    w.innerHTML=nf(miss)+' dòng có tên kho không khớp tab <code>Warehouse code</code> — bổ sung tên kho vào tab đó, hoặc chọn 1 kho cụ thể ở ô "Kho kiểm" để áp cho toàn bộ dòng.';
+    w.innerHTML=nf(miss)+' dòng có tên kho không khớp tab <code>Warehouse code</code> — bấm đồng bộ lại danh mục, bổ sung tên kho vào tab đó, hoặc chọn 1 kho cụ thể ở ô "Kho kiểm" để áp cho toàn bộ dòng.'+nutSync;
   }
   var block=!rows.length||!plan||miss>0;
   document.getElementById('pcBtnGo').disabled=block;
@@ -2959,6 +2960,39 @@ function pcKeyGet(){
   return k;
 }
 function pcKeyForget(){ try{ localStorage.removeItem('pc-key'); }catch(e){} }
+/* KIẾN TRÚC UPLOAD: WMS chặn IP ngoài -> GAS KHÔNG gọi WMS được, nhưng gateway mở CORS `*`
+   -> TRÌNH DUYỆT operator (IP nội bộ) upload thẳng. GAS chỉ dựng file .xlsx + phát token (pc_token).
+   Endpoint lấy từ bundle SPA WMS: counting-plan/checklists (CP_CHECKLIST) — file gửi qua field "chunk". */
+var PC_WMS_BASE='https://wms-gw.inshasaki.com/api/v1';
+var PC_URL_VALIDATE=PC_WMS_BASE+'/wms/counting-plan/checklists/validate/type-sku';
+var PC_URL_IMPORT=PC_WMS_BASE+'/wms/counting-plan/checklists/import/type-sku';
+var PC_WH_IDS=['1458','1441','1307','1250','1179','1178','1177','1151','1516','1341','1340','1339','1266'];
+var _pcTok='';   // token WMS chỉ giữ trong RAM trang — không ghi localStorage
+function pcGas(body){
+  return fetch(APPSCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)})
+    .then(function(r){ return r.json(); });
+}
+function pcWmsToken(khoa){
+  if(_pcTok) return Promise.resolve(_pcTok);
+  return pcGas({action:'pc_token',key:khoa}).then(function(j){
+    if(j.status!=='success'||!j.token) throw {pc:1,j:j};
+    _pcTok=j.token; return _pcTok;
+  });
+}
+function pcWmsUpload(url,blob,ten,token){
+  var fd=new FormData(); fd.append('chunk',blob,ten);
+  return fetch(url,{method:'POST',headers:{'Authorization':'Bearer '+token},body:fd})
+    .then(function(r){ return r.text().then(function(t){ var j=null; try{ j=JSON.parse(t); }catch(e){} return {http:r.status,j:j,raw:t}; }); });
+}
+/* Gom ghi chú lỗi TỪNG DÒNG từ body validate/import của WMS (cột error_message) */
+function pcWmsRowErrs(res){
+  var j=res.j||{}, d=j.data||j;
+  var rows=d.records||d.items||d.rows||(Array.isArray(d)?d:[]);
+  var errs=[];
+  (rows||[]).forEach(function(r){ if(r&&r.error_message) errs.push((r.plan_object_code||r.sku||'?')+': '+r.error_message); });
+  return errs;
+}
+function pcWmsMsg2(res){ var j=res.j||{}, d=j.data||{}; return String(j.message||j.error_message||j.error||d.message||d.error||('HTTP '+res.http)); }
 var _pcBusy=false;
 function pcSubmit(dry){
   if(_pcBusy) return;
@@ -2972,40 +3006,96 @@ function pcSubmit(dry){
   if(!list.length||miss||!plan){ pcRender(); return; }
   var khoa=pcKeyGet(); if(!khoa) return;
   _pcBusy=true;
-  var st=document.getElementById('pcStatus');
-  st.textContent=dry?'Đang tạo file template…':'Đang tạo file & import lên WMS…';
+  var st=document.getElementById('pcStatus'), w=document.getElementById('pcWarn');
   document.getElementById('pcBtnGo').disabled=true; document.getElementById('pcBtnFile').disabled=true;
-  fetch(APPSCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'pc_import',dryRun:!!dry,key:khoa,rows:list})})
-    .then(function(r){ return r.json(); })
-    .then(function(j){
-      var w=document.getElementById('pcWarn'); w.className='pcwarn'; w.textContent='';
-      if(j.status==='file'){
-        pcDownloadB64(j.fileB64,j.fileName||'WMS_INVENTORY_KEY_TEMPLATE_CP_CHECKLIST_SKU.xlsx');
-        toast('Đã tạo file template ('+nf(j.rows||list.length)+' dòng).','ok');
-        if(j.note){ w.classList.add('show'); w.textContent=j.note; }
-        st.textContent='Đã tải file .xlsx';
-      }else if(j.status==='success'){
-        toast('Import WMS thành công — '+(j.message||nf(list.length)+' dòng.'),'ok');
-        w.classList.add('ok','show'); w.textContent='✓ '+(j.message||'WMS đã nhận lệnh kiểm kê.');
-        st.textContent='Hoàn tất';
-        pcClear();   // giỏ đã thành lệnh -> dọn để chọn đợt mới
-      }else{
-        var isWms=j.stage==='wms';   // lỗi từ WMS -> hiện ghi chú thất bại WMS trả về; còn lại là lỗi trung gian
-        var msg=(isWms?'WMS từ chối: ':'Lỗi trung gian ('+(j.stage||'?')+'): ')+(j.message||'không rõ nguyên nhân');
-        if(isWms&&j.errors&&j.errors.length) msg+=' — '+j.errors.slice(0,5).join(' · ')+(j.errors.length>5?' …':'');
-        if(j.code===403){ pcKeyForget(); msg+=' — khóa đã xoá khỏi máy, bấm gửi lại để nhập khóa đúng.'; }
-        toast(isWms?'WMS từ chối lệnh import.':'Import thất bại ở bước trung gian.','err');
-        w.classList.add('bad','show'); w.textContent=msg;
-        st.textContent='Thất bại';
+  function xong(cls,html,tt){ w.className=('pcwarn '+cls+' show').trim(); w.innerHTML=html; st.textContent=tt; _pcBusy=false; pcRender(); }
+  (async function(){
+    try{
+      st.textContent='Đang tạo file template…';
+      var jf=await pcGas({action:'pc_import',dryRun:true,key:khoa,rows:list});
+      if(jf.status!=='file'){
+        if(jf.code===403) pcKeyForget();
+        toast('Không tạo được file template.','err');
+        return xong('bad','Lỗi trung gian ('+esc(jf.stage||'?')+'): '+esc(jf.message||'không tạo được file')+(jf.code===403?' — khóa đã xoá khỏi máy, bấm lại để nhập.':''),'Thất bại');
       }
-    })
-    .catch(function(e){
-      var w=document.getElementById('pcWarn'); w.className='pcwarn bad show';
-      w.textContent='Không gọi được máy chủ trung gian (Apps Script): '+e.message;
-      toast('Không gọi được máy chủ trung gian.','err');
-      document.getElementById('pcStatus').textContent='Thất bại';
-    })
-    .then(function(){ _pcBusy=false; pcRender(); });
+      var bin=atob(jf.fileB64), u=new Uint8Array(bin.length);
+      for(var i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i);
+      var blob=new Blob([u],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+      var ten=jf.fileName||'WMS_INVENTORY_KEY_TEMPLATE_CP_CHECKLIST_SKU.xlsx';
+      if(dry){
+        pcDownloadB64(jf.fileB64,ten);
+        toast('Đã tạo file template ('+nf(list.length)+' dòng).','ok');
+        return xong('','Đã tải file .xlsx — import tay tại <b>WMS → Physical Count → Request → Import SKU</b> nếu cần.','Đã tải file');
+      }
+      st.textContent='Đang lấy token WMS…';
+      var tok;
+      try{ tok=await pcWmsToken(khoa); }
+      catch(e){
+        if(e&&e.j&&e.j.code===403) pcKeyForget();
+        toast('Không lấy được token WMS.','err');
+        return xong('bad','Lỗi trung gian (auth): '+esc((e.j&&e.j.message)||'không lấy được token')+((e.j&&e.j.code===403)?' — khóa đã xoá khỏi máy, bấm lại để nhập.':''),'Thất bại');
+      }
+      st.textContent='Đang VALIDATE file trên WMS…';
+      var rv=await pcWmsUpload(PC_URL_VALIDATE,blob,ten,tok);
+      if(rv.http===401){
+        _pcTok=''; pcDownloadB64(jf.fileB64,ten);
+        toast('Token WMS bị chiếm phiên.','err');
+        return xong('bad','Token WMS của robot đang bị đăng nhập khác chiếm phiên (WMS chỉ cho 1 phiên/tài khoản). Đã tải file .xlsx về — import tay tại WMS, hoặc thử lại sau khi robot đăng nhập lại (cụm 7h sáng / LOGIN-HASAKI).','Thất bại');
+      }
+      var ev=pcWmsRowErrs(rv), dv=(rv.j&&(rv.j.data||rv.j))||{};
+      if(rv.http>=400||dv.error===true||ev.length){
+        pcDownloadB64(jf.fileB64,ten);
+        toast('WMS từ chối ở bước validate.','err');
+        return xong('bad','WMS từ chối (validate): '+esc(pcWmsMsg2(rv))+(ev.length?('<br>• '+ev.slice(0,8).map(esc).join('<br>• ')+(ev.length>8?'<br>…còn '+(ev.length-8)+' dòng lỗi':'')):'')+'<br>File .xlsx đã tải về để đối chiếu.','WMS từ chối');
+      }
+      st.textContent='Validate OK — đang IMPORT lên WMS…';
+      var ri=await pcWmsUpload(PC_URL_IMPORT,blob,ten,tok);
+      if(ri.http===401){
+        _pcTok=''; pcDownloadB64(jf.fileB64,ten);
+        return xong('bad','Token WMS hết phiên ngay lúc import — đã tải file về import tay.','Thất bại');
+      }
+      var ei=pcWmsRowErrs(ri), di=(ri.j&&(ri.j.data||ri.j))||{};
+      if(ri.http>=400||di.error===true||ei.length){
+        pcDownloadB64(jf.fileB64,ten);
+        toast('WMS từ chối ở bước import.','err');
+        return xong('bad','WMS từ chối (import): '+esc(pcWmsMsg2(ri))+(ei.length?('<br>• '+ei.slice(0,8).map(esc).join('<br>• ')):'')+'<br>File .xlsx đã tải về.','WMS từ chối');
+      }
+      toast('Import WMS thành công — '+nf(list.length)+' dòng.','ok');
+      pcClear();   // giỏ đã thành lệnh -> dọn để chọn đợt mới
+      return xong('ok','✓ WMS đã nhận lệnh kiểm kê ('+nf(list.length)+' dòng). Kiểm tra tại WMS → Physical Count → Request.','Hoàn tất');
+    }catch(e){
+      toast('Import thất bại.','err');
+      return xong('bad','Không gọi được máy chủ ('+esc(String(e&&e.message||e))+').','Thất bại');
+    }
+  })();
+}
+/* Đồng bộ danh mục mã kho: trình duyệt hỏi WMS tên từng warehouse_id -> GAS ghi tab "Warehouse code" */
+async function pcWhSyncUI(){
+  var khoa=pcKeyGet(); if(!khoa) return;
+  var w=document.getElementById('pcWarn'); w.className='pcwarn show'; w.textContent='Đang hỏi WMS tên của '+PC_WH_IDS.length+' mã kho…';
+  try{
+    var tok=await pcWmsToken(khoa), rows=[];
+    await Promise.all(PC_WH_IDS.map(async function(id){
+      try{
+        var r=await fetch(PC_WMS_BASE+'/wms/report-management/stock-locations/bins/count/v3?company_ids=1002,1005&warehouse_ids='+id+'&ignore_zero_total=1&page=1&size=1',{headers:{'Authorization':'Bearer '+tok}});
+        if(!r.ok) return;
+        var j=await r.json(), d=j.data||j, recs=d.records||[];
+        var name=recs.length?String(recs[0].warehouse_name||'').replace(/\s+/g,' ').trim():'';
+        if(name) rows.push([id,name]);
+      }catch(e){}
+    }));
+    if(!rows.length) throw new Error('WMS không trả tên kho nào — token có thể đang bị chiếm phiên, thử lại sau khi robot đăng nhập lại.');
+    var j2=await pcGas({action:'pc_save_whcode',key:khoa,rows:rows});
+    if(j2.status!=='success'){ if(j2.code===403) pcKeyForget(); throw new Error(j2.message||'không ghi được tab'); }
+    try{ sessionStorage.removeItem('slf-whcode'); }catch(e){}
+    PC.whcode=null;
+    await pcFetchWhcode();
+    w.className='pcwarn ok show'; w.textContent='✓ '+j2.message;
+    pcRender();
+  }catch(e){
+    if(e&&e.pc){ if(e.j&&e.j.code===403) pcKeyForget(); w.className='pcwarn bad show'; w.textContent='Không lấy được token WMS: '+((e.j&&e.j.message)||''); }
+    else{ w.className='pcwarn bad show'; w.textContent='Đồng bộ danh mục kho thất bại: '+(e&&e.message||e); }
+  }
 }
 function pcDownloadB64(b64,name){
   var bin=atob(b64||''), u=new Uint8Array(bin.length);
