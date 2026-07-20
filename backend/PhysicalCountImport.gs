@@ -270,8 +270,8 @@ function pcSaveWhcode_(duLieu) {
   var got = ((duLieu && duLieu.rows) || []).map(function (r) {
     return [String(r[0] == null ? '' : r[0]).trim(), String(r[1] == null ? '' : r[1]).replace(/\s+/g, ' ').trim()];
   }).filter(function (r) { return r[0] && r[1]; });
-  if (!got.length) return pcErr_('config', 'Không có dòng [code, name] hợp lệ.');
-  try { return pcMergeWhcode_(pcCFG_(), got); }
+  if (!got.length && !(duLieu && duLieu.replace)) return pcErr_('config', 'Không có dòng [code, name] hợp lệ.');
+  try { return pcMergeWhcode_(pcCFG_(), got, !!(duLieu && duLieu.replace)); }   // replace=true: ghi đè toàn tab (dọn dòng cũ/sai)
   catch (err) { return pcErr_('build', String(err && err.message || err)); }
 }
 
@@ -308,13 +308,14 @@ function pcSyncWarehouses() {
     return pcErr_('build', String(err && err.message || err));
   }
 }
-/* Merge [code,name] vào tab Warehouse code: dòng dán tay GIỮ NGUYÊN, mã trùng cập nhật tên, mã mới thêm. */
-function pcMergeWhcode_(cfg, got) {
+/* Merge [code,name] vào tab Warehouse code: dòng dán tay GIỮ NGUYÊN, mã trùng cập nhật tên, mã mới thêm.
+ * replace=true: bỏ qua dữ liệu cũ — dùng để dọn dòng sai/thừa. */
+function pcMergeWhcode_(cfg, got, replace) {
   var ss = SpreadsheetApp.openById(cfg.SHEET_ID);
   var sh = ss.getSheetByName(cfg.WHCODE_SHEET) || ss.insertSheet(cfg.WHCODE_SHEET);
   var cur = {}, order = [];
   var last = sh.getLastRow();
-  if (last >= 2) sh.getRange(2, 1, last - 1, 4).getValues().forEach(function (r) {
+  if (last >= 2 && !replace) sh.getRange(2, 1, last - 1, 4).getValues().forEach(function (r) {
     var code = String(r[0]).trim(); if (!code || cur[code]) return;
     cur[code] = [code, String(r[1] || ''), String(r[2] || ''), String(r[3] || '')]; order.push(code);
   });

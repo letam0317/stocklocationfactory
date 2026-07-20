@@ -200,16 +200,16 @@ h1.brand-title{margin:0;min-width:0}
 .kkbar select{height:32px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--ink);font-size:12.5px;padding:0 8px;cursor:pointer;max-width:220px}
 .kkbar .kklink{color:var(--brand2);font-weight:600;font-size:12.5px;text-decoration:none;white-space:nowrap}
 .kkbar .kklink:hover{text-decoration:underline}
-/* Thanh chip "Lọc theo kho" (Kiểm kê + Tồn kho bất thường): ép 1 hàng, cuộn ngang, ẩn thanh cuộn
-   (cùng kiểu .toptabs/.kksum của dự án — tinh tế, không xuống dòng, không màu mè) */
-#kkWhBar,#abnWhBar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-#kkWhBar::-webkit-scrollbar,#abnWhBar::-webkit-scrollbar{display:none}
-#kkWhBar>*,#abnWhBar>*{flex:0 0 auto}
-#kkWhBar .kktab,#abnWhBar .kktab{white-space:nowrap}
-/* Tab bất thường: 2 tầng — công ty (Mastige/Garment) rồi tới kho; chip nhỏ hơn + vạch ngăn mảnh */
+/* Thanh chip "Lọc theo kho" (Kiểm kê + Tồn kho bất thường): CHO PHÉP xuống dòng —
+   bản 1 hàng cuộn ngang cũ khó bấm (nhất là điện thoại), chip đầy đủ chữ dễ chọn hơn */
+#kkWhBar,#abnWhBar{flex-wrap:wrap;row-gap:6px}
+#kkWhBar .kktab,#abnWhBar .kktab{white-space:nowrap;flex:0 0 auto}
+/* Tab bất thường: 2 tầng — công ty (Mastige/Garment) hàng trên, kho hàng dưới, ngăn bằng vạch mảnh full-width */
 #abnWhBar .kktab{padding:5px 11px;font-size:12px}
 #abnWhBar .kktab b{font-weight:750;margin-left:2px}
-#abnWhBar .abnwsep{width:1px;height:18px;background:var(--border);margin:0 5px;align-self:center}
+#abnWhBar .abnwsep{flex-basis:100%;height:1px;background:var(--border);margin:3px 0}
+/* Điện thoại: chip to hơn cho dễ chạm */
+@media(max-width:640px){#kkWhBar .kktab,#abnWhBar .kktab{padding:7px 13px;font-size:12.5px}}
 .kksum{display:flex;gap:0;align-items:stretch;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow-x:auto;margin-bottom:12px;scrollbar-width:none}
 .kksum::-webkit-scrollbar{display:none}
 .kksum .sm{padding:12px 18px;white-space:nowrap;border-right:1px solid var(--line);flex:none}
@@ -687,9 +687,10 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
 .abnlegend span{display:inline-flex;align-items:center;gap:5px}
 .abnlegend i{width:9px;height:9px;border-radius:3px;display:inline-block;flex:none}
 .abnchart{display:flex;flex-direction:column;gap:1px;max-height:330px;overflow-y:auto;padding-right:6px}
-.abnrow{display:grid;grid-template-columns:150px 1fr 104px;align-items:center;gap:10px;padding:5px 6px;border-radius:8px;cursor:pointer;transition:background .16s var(--ease)}
+.abnrow{display:grid;grid-template-columns:210px 1fr 92px;align-items:center;gap:10px;padding:5px 6px;border-radius:8px;cursor:pointer;transition:background .16s var(--ease)}
 .abnrow:hover{background:var(--hover)}
-.abnrl{font-size:11.5px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:7px}
+/* Tên kho hiển thị ĐẦY ĐỦ (xuống dòng nếu dài) — thanh bar tự co lại nhường chỗ */
+.abnrl{font-size:11.5px;font-weight:600;color:var(--ink);white-space:normal;word-break:break-word;line-height:1.3;display:flex;align-items:center;gap:7px}
 .abnrl .dot{flex:none}
 .abntrack{background:var(--surface2);border-radius:6px;height:16px;overflow:hidden}
 .abnfill{height:100%;display:flex;width:0;border-radius:6px;overflow:hidden;transition:width .85s var(--ease)}
@@ -699,7 +700,13 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
 .abnempty{color:var(--ink3);font-size:12.5px;padding:18px 2px;text-align:center}
 .abncell0{color:var(--ink3)}
 #abnmodal .mtbl .pn{min-width:190px;max-width:300px}
-@media(max-width:640px){.abnrow{grid-template-columns:120px 1fr 92px;gap:8px}.abnrl{font-size:11px}}
+/* Điện thoại: tên kho 1 hàng riêng (đủ chữ), thanh bar + số xếp hàng dưới — không còn cắt chữ */
+@media(max-width:640px){
+  .abnrow{grid-template-columns:1fr 84px;grid-template-areas:"l l" "t v";row-gap:5px;gap:8px;padding:7px 6px}
+  .abnrl{grid-area:l;font-size:11.5px}
+  .abntrack{grid-area:t}
+  .abnrv{grid-area:v}
+}
 
 /* ===== Chọn SKU từ pop-up (2 tab) -> tạo lệnh kiểm kê WMS (template CHECKLIST_SKU) ===== */
 .pcc{width:34px;text-align:center !important}
@@ -719,8 +726,9 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
 body.pcm-open #pcbar,body.pcm-open #pcprev{display:none}   /* modal tạo lệnh mở -> ẩn giỏ nổi cho sạch */
 /* Bộ lọc modal Tạo lệnh: TÁI DÙNG nguyên .mfilters + .combo gõ-để-lọc của dự án — chỉ thêm 2 chi tiết nhỏ */
 .combo-head{padding:7px 11px 3px;font-size:9.5px;font-weight:750;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.combo-item.dis{opacity:.5;cursor:default}
+.combo-item.sync .nm b{color:var(--warn)}   /* mục "chưa có mã" — bấm để đồng bộ danh mục */
 #pcFilters .combo-menu{max-height:280px;overflow:auto}
+#pcType{cursor:pointer}
 .pcwarn{margin:10px 22px 0;padding:9px 12px;border-radius:9px;font-size:12px;line-height:1.6;display:none;background:color-mix(in srgb,var(--warn) 14%,var(--surface));color:var(--warn)}
 .pcwarn.bad{background:color-mix(in srgb,var(--bad) 12%,var(--surface));color:var(--bad)}
 .pcwarn.ok{background:color-mix(in srgb,var(--good) 13%,var(--surface));color:var(--good)}
@@ -873,7 +881,9 @@ body.pcm-open #pcbar,body.pcm-open #pcprev{display:none}   /* modal tạo lệnh
       <div class="fld"><label>Kho kiểm (Warehouse Code)</label><div class="combo">
         <input id="pcWh" autocomplete="off" placeholder="Theo kho gốc từng SKU (tự tra mã)…" oninput="pcWhInput(this)" onfocus="pcWhMenu()">
         <div class="combo-menu" id="pcWhMenu"></div></div></div>
-      <div class="fld"><label>Loại SKU (Type)</label><select id="pcType" onchange="pcRender()"><option value="">— Theo nguồn từng dòng —</option><option value="1">SKU = 1</option><option value="2">SKU factory = 2</option></select></div>
+      <div class="fld"><label>Loại SKU (Type)</label><div class="combo">
+        <input id="pcType" autocomplete="off" readonly placeholder="— Theo nguồn từng dòng —" onfocus="pcTypeMenu()" onclick="pcTypeMenu()">
+        <div class="combo-menu" id="pcTypeMenu"></div></div></div>
       <div class="fld"><label>Plan Date</label><input type="date" id="pcDate" onchange="pcRender()"></div>
       <div class="fld"><label>Executed By</label><div class="combo">
         <input id="pcBy" autocomplete="off" placeholder="— Để trống —" oninput="pcByInput(this)" onfocus="pcByMenu()">
@@ -2982,6 +2992,8 @@ async function pcOpen(){
   await pcFetchWhcode();
   pcRender();            // có danh mục -> tra lại mã kho cho các dòng
   PC.mails=await pcEmails();
+  var bm=document.getElementById('pcByMenu');
+  if(bm&&bm.classList.contains('show')) pcByMenu();   // menu đang mở chờ dữ liệu -> đổ lại danh sách email
 }
 function closePcModal(){
   document.body.classList.remove('pcm-open');
@@ -3013,7 +3025,7 @@ function pcWhMenu(){
     if(!hit(w)&&!hit(code)) return;
     out1.push(code
       ? '<div class="combo-item" data-v="'+esc(code)+'" data-lb="'+esc(code+' · '+w)+'"><span class="nm">'+esc(code)+' · '+esc(w)+'</span><span class="c">'+nf(byWh[w])+' SKU</span></div>'
-      : '<div class="combo-item dis"><span class="nm">'+esc(w)+' <span class="hint">(chưa có mã — bấm đồng bộ danh mục)</span></span><span class="c">'+nf(byWh[w])+' SKU</span></div>');
+      : '<div class="combo-item sync" data-sync="1" title="Danh mục Warehouse code chưa có kho này — bấm để đồng bộ từ WMS"><span class="nm">'+esc(w)+' — <b>chưa có mã · bấm để đồng bộ từ WMS</b></span><span class="c">'+nf(byWh[w])+' SKU</span></div>');
   });
   if(out1.length) html+='<div class="combo-head">Kho nguồn của SKU đã chọn — đề xuất</div>'+out1.join('');
   var out2=[];
@@ -3037,8 +3049,20 @@ function pcByMenu(){
     if(typed&&e2.mail.toLowerCase().indexOf(typed)<0) return;
     html+='<div class="combo-item" data-v="'+esc(e2.mail)+'" data-lb="'+esc(e2.mail)+'"><span class="nm">'+esc(e2.mail)+'</span><span class="c">'+nf(e2.n)+' phiếu</span></div>';
   });
-  if(!(PC.mails||[]).length) html+='<div class="combo-empty">Chưa nạp được lịch sử Counted by — gõ trực tiếp email</div>';
+  if(PC.mails==null) html+='<div class="combo-empty">Đang tải danh sách email từ lịch sử kiểm kê…</div>';
+  else if(!PC.mails.length) html+='<div class="combo-empty">Chưa có lịch sử Counted by — gõ trực tiếp email</div>';
   menu.innerHTML=html;
+  pcCloseCombos(menu.parentNode);
+  menu.classList.add('show');
+}
+/* Combo Loại SKU: 3 lựa chọn cố định — cùng menu popIn như mọi combo của dự án */
+function pcTypeVal(){ return document.getElementById('pcType').getAttribute('data-tv')||''; }
+function pcTypeMenu(){
+  var menu=document.getElementById('pcTypeMenu'), cur=pcTypeVal();
+  var items=[['','— Theo nguồn từng dòng —','mặc định SKU = 1'],['1','SKU = 1',''],['2','SKU factory = 2','']];
+  menu.innerHTML=items.map(function(o,i){
+    return '<div class="combo-item'+(i===0?' all':'')+(cur===o[0]?' active':'')+'" data-v="'+o[0]+'"'+(o[0]?(' data-lb="'+esc(o[1])+'"'):'')+'><span class="nm">'+esc(o[1])+'</span><span class="c">'+esc(o[2])+'</span></div>';
+  }).join('');
   pcCloseCombos(menu.parentNode);
   menu.classList.add('show');
 }
@@ -3047,17 +3071,19 @@ function pcCloseCombos(except){
 }
 /* Delegation 1 lần — innerHTML rebuild menu không mất listener (chuẩn dự án) */
 document.getElementById('pcFilters').addEventListener('click',function(e){
-  var it=e.target.closest('.combo-item'); if(!it||it.classList.contains('dis')) return;
+  var it=e.target.closest('.combo-item'); if(!it) return;
+  if(it.getAttribute('data-sync')){ pcCloseCombos(); pcWhSyncUI(); return; }   // mục "chưa có mã" -> đồng bộ danh mục ngay
   var inp=it.closest('.combo').querySelector('input');
   inp.value=it.getAttribute('data-lb')||it.getAttribute('data-v')||'';
   if(inp.id==='pcWh'){ var cv=it.getAttribute('data-v'); if(cv) inp.setAttribute('data-code',cv); else inp.removeAttribute('data-code'); }
+  if(inp.id==='pcType'){ var tv=it.getAttribute('data-v'); if(tv) inp.setAttribute('data-tv',tv); else inp.removeAttribute('data-tv'); }
   pcCloseCombos(); pcRender();
 });
 document.addEventListener('click',function(e){ if(!e.target.closest('#pcFilters .combo')) pcCloseCombos(); });
 function pcRows(){ return Object.keys(PC.sel).sort().map(function(k){ return PC.sel[k]; }); }
 function pcRender(){
   var rows=pcRows(), whSel=pcWhVal();
-  var tSel=document.getElementById('pcType').value, plan=document.getElementById('pcDate').value;
+  var tSel=pcTypeVal(), plan=document.getElementById('pcDate').value;
   var by=document.getElementById('pcBy').value.trim();
   var out=[], miss=0, whs={};
   rows.forEach(function(r){
@@ -3138,7 +3164,7 @@ var _pcBusy=false;
 function pcSubmit(dry){
   if(_pcBusy) return;
   var rows=pcRows(), whSel=pcWhVal();
-  var tSel=document.getElementById('pcType').value, plan=document.getElementById('pcDate').value;
+  var tSel=pcTypeVal(), plan=document.getElementById('pcDate').value;
   var by=document.getElementById('pcBy').value.trim(), list=[], miss=0;
   rows.forEach(function(r){
     var code=whSel||pcCodeByName(r.wh); if(!code){ miss++; return; }
