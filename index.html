@@ -2455,7 +2455,7 @@ function kkmBuildFilters(){
   var rows=KK_MODAL.rows;
   /* KHÔNG có bộ lọc Ngày trong pop-up — giữ nguyên theo chỉ thị */
   var defs=[{k:'wh',lb:'Warehouse'},{k:'cat',lb:'Category'},{k:'type',lb:'Type'},{k:'st',lb:'Trạng thái'},{k:'by',lb:'Counted by'}];
-  var html='<div class="fld q"><label>Tìm nhanh</label><input id="kkmQ" autocomplete="off" placeholder="SKU / tên / vị trí / kho…" oninput="kkmQuick()"></div>';
+  var html='';
   defs.forEach(function(d){
     var uniq=new Set();
     rows.forEach(function(r){ var v=String(r[d.k]||'').trim(); if(v) uniq.add(v); });
@@ -2465,6 +2465,8 @@ function kkmBuildFilters(){
         '<div class="combo-menu"></div></div></div>';
     }
   });
+  // Ô Tìm nhanh đứng CUỐI hàng lọc (quy ước chung mọi pop-up: combo cột trước, tìm tự do sau)
+  html+='<div class="fld q"><label>Tìm nhanh</label><input id="kkmQ" autocomplete="off" placeholder="SKU / tên / vị trí / kho…" oninput="kkmQuick()"></div>';
   document.getElementById('kkmFilters').innerHTML=html;
 }
 function kkmQval(){ return ((document.getElementById('kkmQ')||{}).value||'').trim().toLowerCase(); }
@@ -2754,7 +2756,7 @@ function abnShowModal(base,title,preset){
 }
 function abnmBuildFilters(){
   var rows=ABN_MODAL.base;
-  var html='<div class="fld q"><label>Tìm nhanh</label><input id="abnmQ" autocomplete="off" placeholder="SKU / tên sản phẩm / thương hiệu…" oninput="abnmQuick()"></div>';
+  var html='';
   ABN_FDEF.forEach(function(d){
     var uniq=new Set();
     rows.forEach(function(r){ d.vals(r).forEach(function(v){ if(v) uniq.add(v); }); });
@@ -2764,6 +2766,8 @@ function abnmBuildFilters(){
         '<div class="combo-menu"></div></div></div>';
     }
   });
+  // Ô Tìm nhanh đứng CUỐI hàng lọc (quy ước chung mọi pop-up: combo cột trước, tìm tự do sau)
+  html+='<div class="fld q"><label>Tìm nhanh</label><input id="abnmQ" autocomplete="off" placeholder="SKU / tên sản phẩm / thương hiệu…" oninput="abnmQuick()"></div>';
   var el=document.getElementById('abnmFilters'); el.innerHTML=html;
   if(ABN_MODAL.preset){   // áp preset: combo Loại (hoặc kho) được chọn sẵn = khớp chính xác
     var p=ABN_MODAL.preset, inp=el.querySelector('.combo[data-fk="'+p.k+'"] input');
