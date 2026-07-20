@@ -2987,7 +2987,8 @@ async function pcOpen(){
   var m=document.getElementById('pcmodal'); m.style.display='flex';
   requestAnimationFrame(function(){ m.classList.add('show'); });
   var d=document.getElementById('pcDate');
-  if(!d.value){ var t=new Date(); d.value=t.getFullYear()+'-'+kkP2(t.getMonth()+1)+'-'+kkP2(t.getDate()); }
+  // mặc định NGÀY MAI: job push count của WMS sinh phiếu theo ngày kế hoạch — plan đặt hôm nay lúc giữa ngày dễ bị job (đã chạy đầu ngày) bỏ qua
+  if(!d.value){ var t=new Date(); t.setDate(t.getDate()+1); d.value=t.getFullYear()+'-'+kkP2(t.getMonth()+1)+'-'+kkP2(t.getDate()); }
   pcRender();            // hiện preview ngay; danh mục kho + email nạp nền cho combo (menu dựng lúc focus)
   await pcFetchWhcode();
   pcRender();            // có danh mục -> tra lại mã kho cho các dòng
@@ -3233,7 +3234,8 @@ function pcSubmit(dry){
       used.forEach(function(k){ delete PC.sel[k]; });   // CHỈ dọn SKU đã vào lệnh; SKU kho khác giữ lại cho lệnh tiếp
       pcSave(); pcSyncBar(); pcRefreshChecks();
       var conlai=pcCount();
-      return xong('ok','✓ WMS đã nhận lệnh kiểm kê ('+nf(list.length)+' dòng).'+(conlai?(' Giỏ còn '+nf(conlai)+' SKU thuộc kho khác — chọn kho nguồn tiếp theo ở ô "Kho kiểm" để tạo lệnh tiếp.'):' Kiểm tra tại WMS → Physical Count → Request.'),'Hoàn tất');
+      // endpoint counting-plan/checklists = tạo KẾ HOẠCH; phiếu request do WMS tự sinh theo Plan Date (push count) — KHÔNG hiện PENDING ngay
+      return xong('ok','✓ WMS đã nhận <b>kế hoạch kiểm kê</b> ('+nf(list.length)+' dòng). Phiếu request sẽ do WMS tự sinh theo Plan Date (cơ chế push count) — có thể chưa hiện PENDING ngay; theo dõi ở WMS → Physical Count → Daily Checklist / Counting plan.'+(conlai?('<br>Giỏ còn '+nf(conlai)+' SKU thuộc kho khác — chọn kho nguồn tiếp theo ở ô "Kho kiểm" để tạo lệnh tiếp.'):''),'Hoàn tất');
     }catch(e){
       toast('Import thất bại.','err');
       return xong('bad','Không gọi được máy chủ ('+esc(String(e&&e.message||e))+').','Thất bại');
