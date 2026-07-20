@@ -74,13 +74,28 @@ Dashboard cho tick chọn SKU trong pop-up 2 tab (Kiểm kê + Tồn kho bất t
 **Tạo lệnh kiểm kê** → dựng file `.xlsx` đúng template `WMS_INVENTORY_KEY_TEMPLATE_CP_CHECKLIST_SKU`
 (mỗi SKU 1 dòng: Warehouse Code | Type | Sku | Plan Date | Executed By) và import lên WMS.
 
-### Kiến trúc (ràng buộc thực tế quyết định)
-- **WMS chặn IP ngoài** → GAS (IP Google) KHÔNG gọi được `wms-gw` (đã kiểm chứng: UrlFetch
-  "Địa chỉ không khả dụng"; máy nội bộ gọi được bình thường).
-- **Gateway mở CORS `*`** → TRÌNH DUYỆT operator (IP nội bộ) upload thẳng WMS được.
-- → Phân vai: **GAS** dựng file `.xlsx` (`pc_import` dryRun) + phát token (`pc_token`) + ghi tab
-  Warehouse code (`pc_save_whcode`); **trình duyệt** upload: `validate/type-sku` trước, đạt thì
-  `import/type-sku`, đọc lỗi từng dòng (`error_message`) từ body WMS trả về.
+### Kiến trúc (chốt 2026-07-20 — ưu tiên ÍT RỦI RO + GHI ĐÚNG NGƯỜI TẠO)
+Ràng buộc nền:
+- **WMS chặn IP ngoài** → GAS không gọi được `wms-gw` (máy nội bộ gọi được).
+- **created_by server luôn = chủ token upload** (API import chỉ nhận file `chunk`, không có
+  field on-behalf) → muốn ghi tên operator thì phải upload bằng token của chính họ.
+- **Token operator ở `localStorage["auth_store"]` origin wms** (OIDC PKCE + OTP) → trang
+  github.io không đọc được (khác origin); không tự động login hộ được (2FA).
+- **"Văng ra" = WMS 1 phiên/tài khoản**: chỉ xảy ra khi CAPTURE token mới (SSO login), KHÔNG
+  xảy ra khi dùng token đã lưu. "Cướp chuột" = cửa sổ puppeteer hiện khi phải login lại.
+
+**Luồng chốt — tự import (token-free), ghi đúng người tạo:**
+- Dashboard chỉ **dựng file `.xlsx`** qua GAS (`pc_import` dryRun — build dùng Google OAuth của
+  script, KHÔNG đụng token WMS) rồi tải về. Operator tự import file trong WMS bằng **chính tài
+  khoản họ** → `created_by` = họ, không capture token → không đá phiên ai, không cướp chuột.
+- Dashboard **không còn auto-upload** (auto-upload buộc dùng token robot → sai created_by + rủi ro
+  đá phiên). Nút "Import lên WMS" đã gỡ; chỉ còn "⬇ Tải file .xlsx" + hướng dẫn 3 bước + link
+  `/physical-count/request/import/sku`.
+- `pc_token` chỉ còn phục vụ mục ĐỌC "Kế hoạch chờ push" (dùng token robot đã lưu, read-only,
+  KHÔNG capture → không đá phiên). Capture token chỉ chạy ở cụm 7h / `pc-whcode-bootstrap` thủ công
+  (nên chạy ngoài giờ làm; đã thêm `--window-position` off-screen để không cướp chuột).
+- Nâng cấp 1-click ghi đúng tên (nếu sau này muốn): extension MV3 đọc `auth_store` tab WMS của
+  operator → chưa làm (chờ quyết định cài extension mỗi máy).
 
 ### Endpoint WMS (trích từ bundle SPA — counting-plan = "CP" trong tên template)
 ```

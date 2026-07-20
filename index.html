@@ -759,6 +759,11 @@ body.pcm-open #pcbar,body.pcm-open #pcprev{display:none}   /* modal tạo lệnh
 .pcfoot button:disabled{opacity:.55;cursor:not-allowed}
 .pcx{border:0;background:0;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:2px 6px;border-radius:6px}
 .pcx:hover{color:var(--bad);background:var(--hover)}
+/* Dải hướng dẫn 3 bước tự-import (ghi đúng người tạo) */
+.pcsteps{padding:10px 16px;border-top:1px solid var(--line);background:color-mix(in srgb,var(--good) 8%,var(--surface));font-size:12px;line-height:1.6;color:var(--ink2)}
+.pcsteps b{color:var(--ink)}
+.pcsteps a{color:var(--brand2);font-weight:600;text-decoration:none}
+.pcsteps a:hover{text-decoration:underline}
 /* Bảng preview giỏ chọn (bật từ nút "Xem" trên #pcbar): kho · SKU · tên · LÝ DO CHỌN · bỏ từng dòng */
 #pcprev{position:fixed;left:50%;bottom:106px;transform:translateX(-50%);z-index:110;width:min(820px,94vw);max-height:48vh;display:flex;flex-direction:column;
   background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow-lg);animation:popIn .2s var(--ez-spring)}
@@ -928,10 +933,15 @@ body.pcm-open #pcbar,body.pcm-open #pcprev{display:none}   /* modal tạo lệnh
     <div class="modalbody"><table class="mtbl"><thead><tr>
       <th>Warehouse Code</th><th class="num">Type</th><th>Sku</th><th class="pn">Tên sản phẩm</th><th>Kho nguồn</th><th>Lý do chọn</th><th>Plan Date</th><th>Executed By</th><th></th>
     </tr></thead><tbody id="pcBody"></tbody></table></div>
+    <!-- Luồng ÍT RỦI RO NHẤT: dashboard chỉ dựng file .xlsx (không đụng token WMS) -> operator tự import
+         trong WMS bằng CHÍNH tài khoản họ -> WMS ghi created_by = họ, không đá phiên ai, không cướp chuột. -->
+    <div class="pcsteps" id="pcSteps">
+      <b>Cách tạo lệnh (ghi đúng tên bạn):</b>
+      <span>① Bấm <b>Tải file .xlsx</b> → ② vào <a id="pcWmsLink" href="https://wms.inshasaki.com/physical-count/request/import/sku" target="_blank" rel="noopener">trang Import SKU của WMS ↗</a> (đang đăng nhập bằng tài khoản của bạn) → ③ thả file vừa tải vào. Lệnh sẽ mang tên <b>chính bạn</b>.</span>
+    </div>
     <div class="pcfoot">
       <span class="hint" id="pcStatus"></span><span class="sp"></span>
-      <button onclick="pcSubmit(true)" id="pcBtnFile" title="Chỉ tạo file template để kiểm tra / import tay — không gửi WMS">Tải file .xlsx</button>
-      <button class="primary" onclick="pcSubmit(false)" id="pcBtnGo">Import lên WMS</button>
+      <button class="primary" onclick="pcSubmit(true)" id="pcBtnFile" title="Dựng file template chuẩn để bạn tự import trong WMS">⬇ Tải file .xlsx</button>
     </div>
   </div>
 </div>
@@ -3144,7 +3154,6 @@ function pcRender(){
     w.innerHTML=nf(miss)+' dòng chưa tra được mã kho (tên kho chưa có trong tab <code>Warehouse code</code>) — bấm đồng bộ danh mục, hoặc gõ MÃ SỐ kho vào ô "Kho kiểm" để điền cho các dòng thiếu.'+nutSync;
   }
   var block=!inc||!plan||miss>0;
-  document.getElementById('pcBtnGo').disabled=block;
   document.getElementById('pcBtnFile').disabled=block;
 }
 document.getElementById('pcBody').addEventListener('click',function(e){
@@ -3199,85 +3208,49 @@ function pcWmsRowErrs(res){
 }
 function pcWmsMsg2(res){ var j=res.j||{}, d=j.data||{}; return String(j.message||j.error_message||j.error||d.message||d.error||('HTTP '+res.http)); }
 var _pcBusy=false;
+/* LUỒNG ÍT RỦI RO NHẤT (chốt 2026-07-20): dashboard CHỈ dựng file .xlsx qua GAS (build dùng
+   Google OAuth của script, KHÔNG đụng token WMS) rồi tải về. Operator tự import trong WMS bằng
+   CHÍNH tài khoản họ -> created_by = họ. Không capture token -> không đá phiên ai, không cướp chuột. */
 function pcSubmit(dry){
   if(_pcBusy) return;
   var rows=pcRows(), pick=pcWhPick(), manual=pcWhManual();
   var tSel=pcTypeVal(), plan=document.getElementById('pcDate').value;
   var by=document.getElementById('pcBy').value.trim(), list=[], miss=0, used=[];
   rows.forEach(function(r){
-    if(pick&&r.wh!==pick) return;                       // ngoài kho nguồn đang chọn -> giữ lại trong giỏ cho lệnh sau
+    if(pick&&r.wh!==pick) return;                       // ngoài kho nguồn đang chọn -> giữ lại trong giỏ cho file sau
     var code=pcCodeByName(r.wh)||manual; if(!code){ miss++; return; }
     list.push({code:code,type:(tSel||String(r.t||1)),sku:r.sku,plan:plan,by:by});
-    used.push(pcKey(r.wh,r.sku));                       // dòng đã vào lệnh -> xoá khỏi giỏ KHI import thành công
+    used.push(pcKey(r.wh,r.sku));
   });
   if(!list.length||miss||!plan){ pcRender(); return; }
   var khoa=pcKeyGet(); if(!khoa) return;
   _pcBusy=true;
   var st=document.getElementById('pcStatus'), w=document.getElementById('pcWarn');
-  document.getElementById('pcBtnGo').disabled=true; document.getElementById('pcBtnFile').disabled=true;
+  document.getElementById('pcBtnFile').disabled=true;
   function xong(cls,html,tt){ w.className=('pcwarn '+cls+' show').trim(); w.innerHTML=html; st.textContent=tt; _pcBusy=false; pcRender(); }
   (async function(){
     try{
-      st.textContent='Đang tạo file template…';
+      st.textContent='Đang dựng file template…';
       var jf=await pcGas({action:'pc_import',dryRun:true,key:khoa,rows:list});
       if(jf.status!=='file'){
         if(jf.code===403) pcKeyForget();
-        toast('Không tạo được file template.','err');
-        return xong('bad','Lỗi trung gian ('+esc(jf.stage||'?')+'): '+esc(jf.message||'không tạo được file')+(jf.code===403?' — khóa đã xoá khỏi máy, bấm lại để nhập.':''),'Thất bại');
+        toast('Không dựng được file template.','err');
+        return xong('bad','Lỗi dựng file ('+esc(jf.stage||'?')+'): '+esc(jf.message||'không rõ')+(jf.code===403?' — khóa đã xoá khỏi máy, bấm lại để nhập.':''),'Thất bại');
       }
-      var bin=atob(jf.fileB64), u=new Uint8Array(bin.length);
-      for(var i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i);
-      var blob=new Blob([u],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
       var ten=jf.fileName||'WMS_INVENTORY_KEY_TEMPLATE_CP_CHECKLIST_SKU.xlsx';
-      if(dry){
-        pcDownloadB64(jf.fileB64,ten);
-        toast('Đã tạo file template ('+nf(list.length)+' dòng).','ok');
-        return xong('','Đã tải file .xlsx — import tay tại <b>WMS → Physical Count → Request → Import SKU</b> nếu cần.','Đã tải file');
-      }
-      st.textContent='Đang lấy token WMS…';
-      var tok;
-      try{ tok=await pcWmsToken(khoa); }
-      catch(e){
-        if(e&&e.j&&e.j.code===403) pcKeyForget();
-        toast('Không lấy được token WMS.','err');
-        return xong('bad','Lỗi trung gian (auth): '+esc((e.j&&e.j.message)||'không lấy được token')+((e.j&&e.j.code===403)?' — khóa đã xoá khỏi máy, bấm lại để nhập.':''),'Thất bại');
-      }
-      st.textContent='Đang VALIDATE file trên WMS…';
-      var rv=await pcWmsUpload(PC_URL_VALIDATE,blob,ten,tok);
-      if(rv.http===401){
-        _pcTok=''; pcDownloadB64(jf.fileB64,ten);
-        toast('Token WMS bị chiếm phiên.','err');
-        return xong('bad','Token WMS của robot đang bị đăng nhập khác chiếm phiên (WMS chỉ cho 1 phiên/tài khoản). Đã tải file .xlsx về — import tay tại WMS, hoặc thử lại sau khi robot đăng nhập lại (cụm 7h sáng / LOGIN-HASAKI).','Thất bại');
-      }
-      var ev=pcWmsRowErrs(rv), dv=(rv.j&&(rv.j.data||rv.j))||{};
-      // validate trả {total, valid} — valid đủ total mới được import (đã kiểm chứng bằng file mẫu: {"total":2,"valid":2})
-      var thieu=(typeof dv.valid==='number'&&typeof dv.total==='number'&&dv.valid<dv.total);
-      if(rv.http>=400||dv.error===true||ev.length||thieu){
-        pcDownloadB64(jf.fileB64,ten);
-        toast('WMS từ chối ở bước validate.','err');
-        return xong('bad','WMS từ chối (validate): '+esc(thieu?('chỉ '+nf(dv.valid)+' / '+nf(dv.total)+' dòng hợp lệ'):pcWmsMsg2(rv))+(ev.length?('<br>• '+ev.slice(0,8).map(esc).join('<br>• ')+(ev.length>8?'<br>…còn '+(ev.length-8)+' dòng lỗi':'')):'')+'<br>File .xlsx đã tải về để đối chiếu.','WMS từ chối');
-      }
-      st.textContent='Validate OK — đang IMPORT lên WMS…';
-      var ri=await pcWmsUpload(PC_URL_IMPORT,blob,ten,tok);
-      if(ri.http===401){
-        _pcTok=''; pcDownloadB64(jf.fileB64,ten);
-        return xong('bad','Token WMS hết phiên ngay lúc import — đã tải file về import tay.','Thất bại');
-      }
-      var ei=pcWmsRowErrs(ri), di=(ri.j&&(ri.j.data||ri.j))||{};
-      if(ri.http>=400||di.error===true||ei.length){
-        pcDownloadB64(jf.fileB64,ten);
-        toast('WMS từ chối ở bước import.','err');
-        return xong('bad','WMS từ chối (import): '+esc(pcWmsMsg2(ri))+(ei.length?('<br>• '+ei.slice(0,8).map(esc).join('<br>• ')):'')+'<br>File .xlsx đã tải về.','WMS từ chối');
-      }
-      toast('Import WMS thành công — '+nf(list.length)+' dòng.','ok');
-      used.forEach(function(k){ delete PC.sel[k]; });   // CHỈ dọn SKU đã vào lệnh; SKU kho khác giữ lại cho lệnh tiếp
+      pcDownloadB64(jf.fileB64,ten);
+      used.forEach(function(k){ delete PC.sel[k]; });   // đã xuất file -> dọn SKU khỏi giỏ; kho khác giữ lại cho file tiếp
       pcSave(); pcSyncBar(); pcRefreshChecks();
       var conlai=pcCount();
-      // endpoint counting-plan/checklists = tạo KẾ HOẠCH; phiếu request do WMS tự sinh theo Plan Date (push count) — KHÔNG hiện PENDING ngay
-      return xong('ok','✓ WMS đã nhận <b>kế hoạch kiểm kê</b> ('+nf(list.length)+' dòng). Phiếu request sẽ do WMS tự sinh theo Plan Date (cơ chế push count). <button class="fcg" onclick="closePcModal();plOpen()">📋 Xem hàng chờ push</button>'+(conlai?('<br>Giỏ còn '+nf(conlai)+' SKU thuộc kho khác — chọn kho nguồn tiếp theo ở ô "Kho kiểm" để tạo lệnh tiếp.'):''),'Hoàn tất');
+      toast('Đã tải file .xlsx ('+nf(list.length)+' dòng).','ok');
+      return xong('ok','✓ Đã tải <b>'+esc(ten)+'</b> ('+nf(list.length)+' dòng). Giờ mở '+
+        '<a href="https://wms.inshasaki.com/physical-count/request/import/sku" target="_blank" rel="noopener">trang Import SKU của WMS ↗</a> '+
+        '(đăng nhập bằng tài khoản của bạn) và thả file này vào — lệnh sẽ ghi tên <b>chính bạn</b>. '+
+        '<button class="fcg" onclick="closePcModal();plOpen()">📋 Xem kế hoạch trên WMS</button>'+
+        (conlai?('<br>Giỏ còn '+nf(conlai)+' SKU thuộc kho khác — chọn kho nguồn tiếp theo ở ô "Kho kiểm" để xuất file tiếp.'):''),'Đã tải file');
     }catch(e){
-      toast('Import thất bại.','err');
-      return xong('bad','Không gọi được máy chủ ('+esc(String(e&&e.message||e))+').','Thất bại');
+      toast('Dựng file thất bại.','err');
+      return xong('bad','Không gọi được máy chủ dựng file ('+esc(String(e&&e.message||e))+').','Thất bại');
     }
   })();
 }

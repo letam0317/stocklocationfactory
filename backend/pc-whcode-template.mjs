@@ -25,7 +25,7 @@ const nghi = (ms) => new Promise((r) => setTimeout(r, ms));
 if (!PC_KEY) { console.error("✗ Thiếu PC_KEY."); process.exit(3); }
 
 async function getWmsToken() {
-  const browser = await puppeteer.launch({ headless: true, executablePath: EDGE_PATH, userDataDir: PROFILE_DIR, args: ["--disable-blink-features=AutomationControlled"] });
+  const browser = await puppeteer.launch({ headless: true, executablePath: EDGE_PATH, userDataDir: PROFILE_DIR, args:["--disable-blink-features=AutomationControlled","--window-position=-32000,-32000","--window-size=1280,900","--no-startup-window"] });
   try {
     const page = (await browser.pages())[0] || (await browser.newPage());
     let token = null;
