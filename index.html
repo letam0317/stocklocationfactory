@@ -714,11 +714,13 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
 #pcbar .go{background:var(--accent);color:var(--accent-text)} #pcbar .go:hover{background:var(--accent-hover)}
 #pcbar .rm{background:transparent;color:var(--muted)} #pcbar .rm:hover{color:var(--bad)}
 .modalbox.pcbox{width:min(1100px,96vw)}
-.pcctl{display:grid;grid-template-columns:1.3fr 1fr .9fr 1.3fr;gap:10px;padding:14px 22px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--surface2)}
-@media(max-width:860px){.pcctl{grid-template-columns:1fr 1fr}}
-.pcctl label{display:flex;flex-direction:column;gap:4px;font-size:10px;font-weight:650;letter-spacing:.04em;text-transform:uppercase;color:var(--ink3)}
-.pcctl select,.pcctl input{padding:8px 10px;border:1px solid var(--border);border-radius:9px;background:var(--surface);color:var(--ink);font-size:12.5px;font-family:inherit;width:100%;min-width:0}
-.pcctl select:focus,.pcctl input:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}
+/* Modal tạo lệnh nổi TRÊN pop-up chi tiết (kkmodal/abnmodal cùng z-index 99 nhưng đứng sau trong DOM) */
+#pcmodal{z-index:105}
+body.pcm-open #pcbar,body.pcm-open #pcprev{display:none}   /* modal tạo lệnh mở -> ẩn giỏ nổi cho sạch */
+/* Bộ lọc modal Tạo lệnh: TÁI DÙNG nguyên .mfilters + .combo gõ-để-lọc của dự án — chỉ thêm 2 chi tiết nhỏ */
+.combo-head{padding:7px 11px 3px;font-size:9.5px;font-weight:750;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.combo-item.dis{opacity:.5;cursor:default}
+#pcFilters .combo-menu{max-height:280px;overflow:auto}
 .pcwarn{margin:10px 22px 0;padding:9px 12px;border-radius:9px;font-size:12px;line-height:1.6;display:none;background:color-mix(in srgb,var(--warn) 14%,var(--surface));color:var(--warn)}
 .pcwarn.bad{background:color-mix(in srgb,var(--bad) 12%,var(--surface));color:var(--bad)}
 .pcwarn.ok{background:color-mix(in srgb,var(--good) 13%,var(--surface));color:var(--good)}
@@ -865,11 +867,17 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
 <div id="pcmodal" class="modal" onclick="if(event.target===this)closePcModal()">
   <div class="modalbox pcbox">
     <div class="modalhd"><div><div class="mt">Tạo lệnh kiểm kê WMS <span class="hint">(template CHECKLIST_SKU · mỗi SKU 1 dòng)</span></div><div class="mtsub" id="pcSub"></div></div><button class="mclose" onclick="closePcModal()">&times;</button></div>
-    <div class="pcctl">
-      <label>Kho kiểm (Warehouse Code)<select id="pcWh" onchange="pcRender()"><option value="">Đang tải danh mục kho…</option></select></label>
-      <label>Loại SKU (Type)<select id="pcType" onchange="pcRender()"><option value="">— Theo nguồn từng dòng —</option><option value="1">SKU = 1</option><option value="2">SKU factory = 2</option></select></label>
-      <label>Plan Date<input type="date" id="pcDate" onchange="pcRender()"></label>
-      <label>Executed By<select id="pcBy" onchange="pcRender()"><option value="">— Để trống —</option></select></label>
+    <!-- Bộ lọc đồng bộ 100% thiết kế .mfilters + combo gõ-để-lọc của dự án (như pop-up Trạng thái lưu trữ / Kiểm kê).
+         Combo "Kho kiểm": nhóm ĐỀ XUẤT = kho nguồn của chính các SKU đã chọn (kèm số SKU), rồi mới tới kho khác. -->
+    <div class="mfilters" id="pcFilters">
+      <div class="fld"><label>Kho kiểm (Warehouse Code)</label><div class="combo">
+        <input id="pcWh" autocomplete="off" placeholder="Theo kho gốc từng SKU (tự tra mã)…" oninput="pcWhInput(this)" onfocus="pcWhMenu()">
+        <div class="combo-menu" id="pcWhMenu"></div></div></div>
+      <div class="fld"><label>Loại SKU (Type)</label><select id="pcType" onchange="pcRender()"><option value="">— Theo nguồn từng dòng —</option><option value="1">SKU = 1</option><option value="2">SKU factory = 2</option></select></div>
+      <div class="fld"><label>Plan Date</label><input type="date" id="pcDate" onchange="pcRender()"></div>
+      <div class="fld"><label>Executed By</label><div class="combo">
+        <input id="pcBy" autocomplete="off" placeholder="— Để trống —" oninput="pcByInput(this)" onfocus="pcByMenu()">
+        <div class="combo-menu" id="pcByMenu"></div></div></div>
     </div>
     <div class="pcwarn" id="pcWarn"></div>
     <div class="msum" id="pcSum"></div>
@@ -1442,6 +1450,7 @@ function renderRows(){
 }
 document.addEventListener('keydown',function(e){
   if(e.key!=='Escape') return;
+  if(document.querySelector('#pcFilters .combo-menu.show')){ pcCloseCombos(); return; }   // menu combo modal tạo lệnh
   var pv=document.getElementById('pcprev');    // preview giỏ chọn nổi trên cùng -> Escape đóng trước nhất
   if(pv && !pv.classList.contains('hidden')){ pv.classList.add('hidden'); return; }
   var pm=document.getElementById('pcmodal');   // modal tạo lệnh mở ĐÈ lên pop-up khác -> đóng trước tiên
@@ -2964,37 +2973,92 @@ async function pcEmails(){
 async function pcOpen(){
   if(!pcCount()){ toast('Chưa chọn SKU nào — tick chọn trong pop-up trước.','warn'); return; }
   document.getElementById('pcprev').classList.add('hidden');   // preview nổi trên modal -> đóng trước khi mở
+  document.body.classList.add('pcm-open');                     // ẩn giỏ nổi khi modal tạo lệnh mở
   var m=document.getElementById('pcmodal'); m.style.display='flex';
   requestAnimationFrame(function(){ m.classList.add('show'); });
   var d=document.getElementById('pcDate');
   if(!d.value){ var t=new Date(); d.value=t.getFullYear()+'-'+kkP2(t.getMonth()+1)+'-'+kkP2(t.getDate()); }
-  pcRender();   // hiện preview ngay, danh mục kho + email đổ bổ sung khi tải xong
-  var list=await pcFetchWhcode();
-  var sel=document.getElementById('pcWh');
-  if(sel.tagName==='SELECT'){
-    if(list.length){
-      var keep=sel.value;
-      sel.innerHTML='<option value="">— Theo kho gốc của từng SKU (tự tra mã) —</option>'+
-        list.map(function(w){ return '<option value="'+esc(w.code)+'">'+esc(w.code)+' · '+esc(w.name)+'</option>'; }).join('');
-      if(keep) sel.value=keep;
-    }else{
-      // chưa có tab Warehouse code -> thay select bằng ô nhập mã tay để luồng không bị chặn
-      sel.outerHTML='<input id="pcWh" placeholder="Nhập mã kho (vd 1436)" inputmode="numeric" oninput="pcRender()">';
-    }
-  }
-  pcRender();
-  var ems=await pcEmails();
-  var bys=document.getElementById('pcBy'), keepB=bys.value;
-  bys.innerHTML='<option value="">— Để trống —</option>'+
-    ems.map(function(e2){ return '<option value="'+esc(e2.mail)+'">'+esc(e2.mail)+' ('+nf(e2.n)+' phiếu)</option>'; }).join('');
-  if(keepB) bys.value=keepB;
+  pcRender();            // hiện preview ngay; danh mục kho + email nạp nền cho combo (menu dựng lúc focus)
+  await pcFetchWhcode();
+  pcRender();            // có danh mục -> tra lại mã kho cho các dòng
+  PC.mails=await pcEmails();
 }
-function closePcModal(){ var m=document.getElementById('pcmodal'); m.classList.remove('show'); setTimeout(function(){ m.style.display='none'; },240); }
+function closePcModal(){
+  document.body.classList.remove('pcm-open');
+  pcCloseCombos();
+  var m=document.getElementById('pcmodal'); m.classList.remove('show');
+  setTimeout(function(){ m.style.display='none'; },240);
+}
+/* ---------- Combo "Kho kiểm" + "Executed By" — đồng bộ pattern combo gõ-để-lọc của dự án ----------
+   Kho kiểm: chọn từ menu = data-code (giá trị thật); gõ tay TOÀN SỐ = mã kho thủ công; trống = theo kho gốc từng SKU. */
+function pcWhVal(){
+  var inp=document.getElementById('pcWh'), c=inp.getAttribute('data-code')||'';
+  if(c) return c;
+  var v=inp.value.trim();
+  return /^\d{2,}$/.test(v)?v:'';
+}
+function pcWhInput(inp){ inp.removeAttribute('data-code'); pcWhMenu(); pcRender(); }
+function pcWhMenu(){
+  var menu=document.getElementById('pcWhMenu'), inp=document.getElementById('pcWh');
+  var typed=inp.getAttribute('data-code')?'':inp.value.trim().toLowerCase();
+  var hit=function(s){ return !typed||String(s).toLowerCase().indexOf(typed)>=0; };
+  var rows=pcRows(), byWh={};
+  rows.forEach(function(r){ byWh[r.wh]=(byWh[r.wh]||0)+1; });
+  var html='<div class="combo-item all" data-v=""><span class="nm">— Theo kho gốc của từng SKU (tự tra mã) —</span><span class="c">'+nf(rows.length)+' dòng</span></div>';
+  // Nhóm ĐỀ XUẤT: đúng các kho mà SKU đã chọn đang có tồn (theo pop-up chi tiết), nhiều SKU xếp trước
+  var goc=Object.keys(byWh).sort(function(a,b){ return byWh[b]-byWh[a]; }), gocN={}, out1=[];
+  goc.forEach(function(w){
+    gocN[pcNorm(w)]=1;
+    var code=pcCodeByName(w);
+    if(!hit(w)&&!hit(code)) return;
+    out1.push(code
+      ? '<div class="combo-item" data-v="'+esc(code)+'" data-lb="'+esc(code+' · '+w)+'"><span class="nm">'+esc(code)+' · '+esc(w)+'</span><span class="c">'+nf(byWh[w])+' SKU</span></div>'
+      : '<div class="combo-item dis"><span class="nm">'+esc(w)+' <span class="hint">(chưa có mã — bấm đồng bộ danh mục)</span></span><span class="c">'+nf(byWh[w])+' SKU</span></div>');
+  });
+  if(out1.length) html+='<div class="combo-head">Kho nguồn của SKU đã chọn — đề xuất</div>'+out1.join('');
+  var out2=[];
+  (PC.whcode||[]).forEach(function(w2){
+    if(gocN[pcNorm(w2.name)]) return;   // đã nằm nhóm đề xuất
+    if(!hit(w2.name)&&!hit(w2.code)) return;
+    out2.push('<div class="combo-item" data-v="'+esc(w2.code)+'" data-lb="'+esc(w2.code+' · '+w2.name)+'"><span class="nm">'+esc(w2.code)+' · '+esc(w2.name)+'</span><span class="c">'+esc(w2.type||'')+'</span></div>');
+  });
+  if(out2.length) html+='<div class="combo-head">Kho khác</div>'+out2.join('');
+  if(!out1.length&&!out2.length) html+='<div class="combo-empty">Không có kho phù hợp'+((PC.whcode&&PC.whcode.length)?'':' — danh mục mã kho trống: bấm nút đồng bộ, hoặc gõ thẳng mã số (vd 1436)')+'</div>';
+  menu.innerHTML=html;
+  pcCloseCombos(menu.parentNode);
+  menu.classList.add('show');
+}
+function pcByInput(inp){ pcByMenu(); pcRender(); }
+function pcByMenu(){
+  var menu=document.getElementById('pcByMenu'), inp=document.getElementById('pcBy');
+  var typed=inp.value.trim().toLowerCase();
+  var html='<div class="combo-item all" data-v=""><span class="nm">— Để trống —</span><span class="c">WMS tự phân công</span></div>';
+  (PC.mails||[]).forEach(function(e2){
+    if(typed&&e2.mail.toLowerCase().indexOf(typed)<0) return;
+    html+='<div class="combo-item" data-v="'+esc(e2.mail)+'" data-lb="'+esc(e2.mail)+'"><span class="nm">'+esc(e2.mail)+'</span><span class="c">'+nf(e2.n)+' phiếu</span></div>';
+  });
+  if(!(PC.mails||[]).length) html+='<div class="combo-empty">Chưa nạp được lịch sử Counted by — gõ trực tiếp email</div>';
+  menu.innerHTML=html;
+  pcCloseCombos(menu.parentNode);
+  menu.classList.add('show');
+}
+function pcCloseCombos(except){
+  document.querySelectorAll('#pcFilters .combo-menu.show').forEach(function(m2){ if(!except||m2.parentNode!==except) m2.classList.remove('show'); });
+}
+/* Delegation 1 lần — innerHTML rebuild menu không mất listener (chuẩn dự án) */
+document.getElementById('pcFilters').addEventListener('click',function(e){
+  var it=e.target.closest('.combo-item'); if(!it||it.classList.contains('dis')) return;
+  var inp=it.closest('.combo').querySelector('input');
+  inp.value=it.getAttribute('data-lb')||it.getAttribute('data-v')||'';
+  if(inp.id==='pcWh'){ var cv=it.getAttribute('data-v'); if(cv) inp.setAttribute('data-code',cv); else inp.removeAttribute('data-code'); }
+  pcCloseCombos(); pcRender();
+});
+document.addEventListener('click',function(e){ if(!e.target.closest('#pcFilters .combo')) pcCloseCombos(); });
 function pcRows(){ return Object.keys(PC.sel).sort().map(function(k){ return PC.sel[k]; }); }
 function pcRender(){
-  var rows=pcRows(), whSel=(document.getElementById('pcWh').value||'').trim();
+  var rows=pcRows(), whSel=pcWhVal();
   var tSel=document.getElementById('pcType').value, plan=document.getElementById('pcDate').value;
-  var by=document.getElementById('pcBy').value;
+  var by=document.getElementById('pcBy').value.trim();
   var out=[], miss=0, whs={};
   rows.forEach(function(r){
     var code=whSel||pcCodeByName(r.wh), ty=tSel||String(r.t||1);
@@ -3073,9 +3137,9 @@ function pcWmsMsg2(res){ var j=res.j||{}, d=j.data||{}; return String(j.message|
 var _pcBusy=false;
 function pcSubmit(dry){
   if(_pcBusy) return;
-  var rows=pcRows(), whSel=(document.getElementById('pcWh').value||'').trim();
+  var rows=pcRows(), whSel=pcWhVal();
   var tSel=document.getElementById('pcType').value, plan=document.getElementById('pcDate').value;
-  var by=document.getElementById('pcBy').value, list=[], miss=0;
+  var by=document.getElementById('pcBy').value.trim(), list=[], miss=0;
   rows.forEach(function(r){
     var code=whSel||pcCodeByName(r.wh); if(!code){ miss++; return; }
     list.push({code:code,type:(tSel||String(r.t||1)),sku:r.sku,plan:plan,by:by});
