@@ -879,7 +879,7 @@ body.pcm-open #pcbar,body.pcm-open #pcprev{display:none}   /* modal tạo lệnh
          Combo "Kho kiểm": nhóm ĐỀ XUẤT = kho nguồn của chính các SKU đã chọn (kèm số SKU), rồi mới tới kho khác. -->
     <div class="mfilters" id="pcFilters">
       <div class="fld"><label>Kho kiểm (Warehouse Code)</label><div class="combo">
-        <input id="pcWh" autocomplete="off" placeholder="Theo kho gốc từng SKU (tự tra mã)…" oninput="pcWhInput(this)" onfocus="pcWhMenu()">
+        <input id="pcWh" autocomplete="off" placeholder="Tất cả kho nguồn (mỗi SKU theo kho phát sinh)…" oninput="pcWhInput(this)" onfocus="pcWhMenu()">
         <div class="combo-menu" id="pcWhMenu"></div></div></div>
       <div class="fld"><label>Loại SKU (Type)</label><div class="combo">
         <input id="pcType" autocomplete="off" readonly placeholder="— Theo nguồn từng dòng —" onfocus="pcTypeMenu()" onclick="pcTypeMenu()">
@@ -3003,39 +3003,35 @@ function closePcModal(){
 }
 /* ---------- Combo "Kho kiểm" + "Executed By" — đồng bộ pattern combo gõ-để-lọc của dự án ----------
    Kho kiểm: chọn từ menu = data-code (giá trị thật); gõ tay TOÀN SỐ = mã kho thủ công; trống = theo kho gốc từng SKU. */
-function pcWhVal(){
-  var inp=document.getElementById('pcWh'), c=inp.getAttribute('data-code')||'';
-  if(c) return c;
+/* KHO KIỂM = KHO NGUỒN PHÁT SINH (nghiệp vụ): SKU có thể tồn ở nhiều kho nhưng lệnh kiểm
+   tạo tại kho phát sinh vấn đề (chưa kiểm / bất thường). Chọn kho A trong menu = LỌC lệnh
+   về các SKU phát sinh tại A (không ghi đè mã kho khác); không có nhóm "kho khác". */
+function pcWhPick(){ return document.getElementById('pcWh').getAttribute('data-wh')||''; }
+/* Gõ tay TOÀN SỐ = mã kho dự phòng — CHỈ điền cho dòng chưa tra được mã, không đè kho nguồn đã có mã */
+function pcWhManual(){
+  var inp=document.getElementById('pcWh');
+  if(inp.getAttribute('data-wh')) return '';
   var v=inp.value.trim();
   return /^\d{2,}$/.test(v)?v:'';
 }
-function pcWhInput(inp){ inp.removeAttribute('data-code'); pcWhMenu(); pcRender(); }
+function pcWhInput(inp){ inp.removeAttribute('data-wh'); pcWhMenu(); pcRender(); }
 function pcWhMenu(){
   var menu=document.getElementById('pcWhMenu'), inp=document.getElementById('pcWh');
-  var typed=inp.getAttribute('data-code')?'':inp.value.trim().toLowerCase();
+  var typed=inp.getAttribute('data-wh')?'':inp.value.trim().toLowerCase();
   var hit=function(s){ return !typed||String(s).toLowerCase().indexOf(typed)>=0; };
   var rows=pcRows(), byWh={};
   rows.forEach(function(r){ byWh[r.wh]=(byWh[r.wh]||0)+1; });
-  var html='<div class="combo-item all" data-v=""><span class="nm">— Theo kho gốc của từng SKU (tự tra mã) —</span><span class="c">'+nf(rows.length)+' dòng</span></div>';
-  // Nhóm ĐỀ XUẤT: đúng các kho mà SKU đã chọn đang có tồn (theo pop-up chi tiết), nhiều SKU xếp trước
-  var goc=Object.keys(byWh).sort(function(a,b){ return byWh[b]-byWh[a]; }), gocN={}, out1=[];
+  var html='<div class="combo-item all" data-v=""><span class="nm">— Tất cả kho nguồn (mỗi SKU theo kho phát sinh) —</span><span class="c">'+nf(rows.length)+' dòng</span></div>';
+  var goc=Object.keys(byWh).sort(function(a,b){ return byWh[b]-byWh[a]; }), out1=[];
   goc.forEach(function(w){
-    gocN[pcNorm(w)]=1;
     var code=pcCodeByName(w);
     if(!hit(w)&&!hit(code)) return;
     out1.push(code
-      ? '<div class="combo-item" data-v="'+esc(code)+'" data-lb="'+esc(code+' · '+w)+'"><span class="nm">'+esc(code)+' · '+esc(w)+'</span><span class="c">'+nf(byWh[w])+' SKU</span></div>'
+      ? '<div class="combo-item" data-wh="'+esc(w)+'" data-lb="'+esc(code+' · '+w)+'"><span class="nm">'+esc(code)+' · '+esc(w)+'</span><span class="c">'+nf(byWh[w])+' SKU</span></div>'
       : '<div class="combo-item sync" data-sync="1" title="Danh mục Warehouse code chưa có kho này — bấm để đồng bộ từ WMS"><span class="nm">'+esc(w)+' — <b>chưa có mã · bấm để đồng bộ từ WMS</b></span><span class="c">'+nf(byWh[w])+' SKU</span></div>');
   });
-  if(out1.length) html+='<div class="combo-head">Kho nguồn của SKU đã chọn — đề xuất</div>'+out1.join('');
-  var out2=[];
-  (PC.whcode||[]).forEach(function(w2){
-    if(gocN[pcNorm(w2.name)]) return;   // đã nằm nhóm đề xuất
-    if(!hit(w2.name)&&!hit(w2.code)) return;
-    out2.push('<div class="combo-item" data-v="'+esc(w2.code)+'" data-lb="'+esc(w2.code+' · '+w2.name)+'"><span class="nm">'+esc(w2.code)+' · '+esc(w2.name)+'</span><span class="c">'+esc(w2.type||'')+'</span></div>');
-  });
-  if(out2.length) html+='<div class="combo-head">Kho khác</div>'+out2.join('');
-  if(!out1.length&&!out2.length) html+='<div class="combo-empty">Không có kho phù hợp'+((PC.whcode&&PC.whcode.length)?'':' — danh mục mã kho trống: bấm nút đồng bộ, hoặc gõ thẳng mã số (vd 1436)')+'</div>';
+  if(out1.length) html+='<div class="combo-head">Kho nguồn của SKU đã chọn — chọn để tạo lệnh riêng kho đó</div>'+out1.join('');
+  else html+='<div class="combo-empty">Không khớp — Kho kiểm luôn theo kho NGUỒN của SKU đã chọn'+((PC.whcode&&PC.whcode.length)?'':'; danh mục mã trống: bấm nút đồng bộ, hoặc gõ mã số (vd 1436) điền cho dòng thiếu')+'</div>';
   menu.innerHTML=html;
   pcCloseCombos(menu.parentNode);
   menu.classList.add('show');
@@ -3075,36 +3071,38 @@ document.getElementById('pcFilters').addEventListener('click',function(e){
   if(it.getAttribute('data-sync')){ pcCloseCombos(); pcWhSyncUI(); return; }   // mục "chưa có mã" -> đồng bộ danh mục ngay
   var inp=it.closest('.combo').querySelector('input');
   inp.value=it.getAttribute('data-lb')||it.getAttribute('data-v')||'';
-  if(inp.id==='pcWh'){ var cv=it.getAttribute('data-v'); if(cv) inp.setAttribute('data-code',cv); else inp.removeAttribute('data-code'); }
+  if(inp.id==='pcWh'){ var wv=it.getAttribute('data-wh'); if(wv) inp.setAttribute('data-wh',wv); else inp.removeAttribute('data-wh'); }
   if(inp.id==='pcType'){ var tv=it.getAttribute('data-v'); if(tv) inp.setAttribute('data-tv',tv); else inp.removeAttribute('data-tv'); }
   pcCloseCombos(); pcRender();
 });
 document.addEventListener('click',function(e){ if(!e.target.closest('#pcFilters .combo')) pcCloseCombos(); });
 function pcRows(){ return Object.keys(PC.sel).sort().map(function(k){ return PC.sel[k]; }); }
 function pcRender(){
-  var rows=pcRows(), whSel=pcWhVal();
+  var rows=pcRows(), pick=pcWhPick(), manual=pcWhManual();
   var tSel=pcTypeVal(), plan=document.getElementById('pcDate').value;
   var by=document.getElementById('pcBy').value.trim();
-  var out=[], miss=0, whs={};
+  var out=[], miss=0, whs={}, excl=0, inc=0;
   rows.forEach(function(r){
-    var code=whSel||pcCodeByName(r.wh), ty=tSel||String(r.t||1);
+    if(pick&&r.wh!==pick){ excl++; return; }   // chọn kho A -> lệnh CHỈ gồm SKU phát sinh tại A, SKU kho khác chờ lệnh sau
+    inc++;
+    var code=pcCodeByName(r.wh)||manual, ty=tSel||String(r.t||1);   // mã LUÔN theo kho nguồn; gõ tay chỉ vá dòng thiếu mã
     if(!code) miss++; else whs[code]=1;
     out.push('<tr><td class="'+(code?'whn':'codebad')+'">'+(code?esc(code):'✗ chưa có mã')+'</td><td class="num">'+esc(ty)+'</td><td><b>'+esc(r.sku)+'</b></td><td class="pn">'+esc(r.pn)+'</td><td>'+esc(r.wh)+'</td><td class="pcrsn">'+esc(r.src||'—')+'</td><td>'+esc(plan||'—')+'</td><td>'+(by?esc(by):'<span class="hint">(trống)</span>')+'</td>'+
       '<td><button class="pcx" data-w="'+esc(r.wh)+'" data-s="'+esc(r.sku)+'" title="Bỏ SKU này khỏi lệnh">&times;</button></td></tr>');
   });
-  document.getElementById('pcBody').innerHTML=out.join('')||'<tr><td colspan="9" class="empty">Giỏ trống — tick chọn SKU từ pop-up tab Kiểm kê / Tồn kho bất thường.</td></tr>';
-  document.getElementById('pcSub').textContent=nf(rows.length)+' SKU đã chọn · mỗi SKU 1 dòng lệnh import';
-  document.getElementById('pcSum').textContent=nf(rows.length)+' dòng · '+nf(Object.keys(whs).length)+' mã kho'+(miss?(' · '+nf(miss)+' dòng CHƯA tra được mã kho'):'');
+  document.getElementById('pcBody').innerHTML=out.join('')||'<tr><td colspan="9" class="empty">'+(rows.length?('Giỏ không có SKU nào phát sinh tại kho “'+esc(pick)+'”.'):'Giỏ trống — tick chọn SKU từ pop-up tab Kiểm kê / Tồn kho bất thường.')+'</td></tr>';
+  document.getElementById('pcSub').textContent=nf(rows.length)+' SKU đã chọn · lệnh tạo theo KHO NGUỒN phát sinh · mỗi SKU 1 dòng';
+  document.getElementById('pcSum').textContent=nf(inc)+' dòng vào lệnh · '+nf(Object.keys(whs).length)+' mã kho'+(miss?(' · '+nf(miss)+' dòng CHƯA có mã kho'):'')+(excl?(' · '+nf(excl)+' SKU kho khác chờ lệnh sau'):'');
   var w=document.getElementById('pcWarn'); w.className='pcwarn'; w.textContent='';
   var nutSync=' <button class="fcg" style="margin-left:6px" onclick="pcWhSyncUI()">⟳ Đồng bộ danh mục kho từ WMS</button>';
-  if(rows.length&&!(PC.whcode&&PC.whcode.length)&&!whSel){
+  if(inc&&!(PC.whcode&&PC.whcode.length)&&!manual){
     w.classList.add('show');
-    w.innerHTML='Google Sheet chưa có tab <code>Warehouse code</code> nên không tự tra được mã kho theo tên — bấm đồng bộ, hoặc nhập mã kho thủ công ở ô "Kho kiểm".'+nutSync;
+    w.innerHTML='Danh mục <code>Warehouse code</code> đang trống nên chưa tra được mã kho theo tên — bấm đồng bộ, hoặc gõ MÃ SỐ kho vào ô "Kho kiểm" để điền cho các dòng thiếu.'+nutSync;
   }else if(miss){
     w.classList.add('bad','show');
-    w.innerHTML=nf(miss)+' dòng có tên kho không khớp tab <code>Warehouse code</code> — bấm đồng bộ lại danh mục, bổ sung tên kho vào tab đó, hoặc chọn 1 kho cụ thể ở ô "Kho kiểm" để áp cho toàn bộ dòng.'+nutSync;
+    w.innerHTML=nf(miss)+' dòng chưa tra được mã kho (tên kho chưa có trong tab <code>Warehouse code</code>) — bấm đồng bộ danh mục, hoặc gõ MÃ SỐ kho vào ô "Kho kiểm" để điền cho các dòng thiếu.'+nutSync;
   }
-  var block=!rows.length||!plan||miss>0;
+  var block=!inc||!plan||miss>0;
   document.getElementById('pcBtnGo').disabled=block;
   document.getElementById('pcBtnFile').disabled=block;
 }
@@ -3120,7 +3118,7 @@ document.getElementById('pcBody').addEventListener('click',function(e){
 function pcKeyGet(){
   var k=''; try{ k=localStorage.getItem('pc-key')||''; }catch(e){}
   if(!k){
-    k=(prompt('Nhập khóa tạo lệnh kiểm kê (PC_KEY — do quản trị cấp):')||'').trim();
+    k=(prompt('Nhập khóa tạo lệnh kiểm kê (PC_KEY — do quản trị cấp).\nDán NGUYÊN VĂN, không thừa khoảng trắng/ký tự:')||'').trim();
     if(k){ try{ localStorage.setItem('pc-key',k); }catch(e){} }
   }
   if(!k) toast('Cần khóa PC_KEY để gửi lệnh kiểm kê.','warn');
@@ -3163,12 +3161,14 @@ function pcWmsMsg2(res){ var j=res.j||{}, d=j.data||{}; return String(j.message|
 var _pcBusy=false;
 function pcSubmit(dry){
   if(_pcBusy) return;
-  var rows=pcRows(), whSel=pcWhVal();
+  var rows=pcRows(), pick=pcWhPick(), manual=pcWhManual();
   var tSel=pcTypeVal(), plan=document.getElementById('pcDate').value;
-  var by=document.getElementById('pcBy').value.trim(), list=[], miss=0;
+  var by=document.getElementById('pcBy').value.trim(), list=[], miss=0, used=[];
   rows.forEach(function(r){
-    var code=whSel||pcCodeByName(r.wh); if(!code){ miss++; return; }
+    if(pick&&r.wh!==pick) return;                       // ngoài kho nguồn đang chọn -> giữ lại trong giỏ cho lệnh sau
+    var code=pcCodeByName(r.wh)||manual; if(!code){ miss++; return; }
     list.push({code:code,type:(tSel||String(r.t||1)),sku:r.sku,plan:plan,by:by});
+    used.push(pcKey(r.wh,r.sku));                       // dòng đã vào lệnh -> xoá khỏi giỏ KHI import thành công
   });
   if(!list.length||miss||!plan){ pcRender(); return; }
   var khoa=pcKeyGet(); if(!khoa) return;
@@ -3228,8 +3228,10 @@ function pcSubmit(dry){
         return xong('bad','WMS từ chối (import): '+esc(pcWmsMsg2(ri))+(ei.length?('<br>• '+ei.slice(0,8).map(esc).join('<br>• ')):'')+'<br>File .xlsx đã tải về.','WMS từ chối');
       }
       toast('Import WMS thành công — '+nf(list.length)+' dòng.','ok');
-      pcClear();   // giỏ đã thành lệnh -> dọn để chọn đợt mới
-      return xong('ok','✓ WMS đã nhận lệnh kiểm kê ('+nf(list.length)+' dòng). Kiểm tra tại WMS → Physical Count → Request.','Hoàn tất');
+      used.forEach(function(k){ delete PC.sel[k]; });   // CHỈ dọn SKU đã vào lệnh; SKU kho khác giữ lại cho lệnh tiếp
+      pcSave(); pcSyncBar(); pcRefreshChecks();
+      var conlai=pcCount();
+      return xong('ok','✓ WMS đã nhận lệnh kiểm kê ('+nf(list.length)+' dòng).'+(conlai?(' Giỏ còn '+nf(conlai)+' SKU thuộc kho khác — chọn kho nguồn tiếp theo ở ô "Kho kiểm" để tạo lệnh tiếp.'):' Kiểm tra tại WMS → Physical Count → Request.'),'Hoàn tất');
     }catch(e){
       toast('Import thất bại.','err');
       return xong('bad','Không gọi được máy chủ ('+esc(String(e&&e.message||e))+').','Thất bại');
