@@ -733,6 +733,20 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
 .pcfoot button:disabled{opacity:.55;cursor:not-allowed}
 .pcx{border:0;background:0;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:2px 6px;border-radius:6px}
 .pcx:hover{color:var(--bad);background:var(--hover)}
+/* Bảng preview giỏ chọn (bật từ nút "Xem" trên #pcbar): kho · SKU · tên · LÝ DO CHỌN · bỏ từng dòng */
+#pcprev{position:fixed;left:50%;bottom:106px;transform:translateX(-50%);z-index:110;width:min(820px,94vw);max-height:48vh;display:flex;flex-direction:column;
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow-lg);animation:popIn .2s var(--ez-spring)}
+#pcprev.hidden{display:none}
+#pcprev .ph{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);font-size:12.5px;font-weight:700}
+#pcprev .ph b{color:var(--accent);font-variant-numeric:tabular-nums}
+#pcprev .ph .sp{flex:1}
+#pcprev .pb{overflow:auto;padding:0 6px 8px}
+#pcprev table{width:100%;border-collapse:collapse;font-size:12px}
+#pcprev th{position:sticky;top:0;z-index:1;background:var(--surface2);text-align:left;padding:7px 9px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--ink3);white-space:nowrap}
+#pcprev td{padding:6px 9px;border-bottom:1px solid var(--border);vertical-align:top}
+#pcprev tbody tr:hover td{background:var(--hover)}
+.pcrsn{color:var(--ink2);font-size:11.5px;white-space:normal;max-width:280px;line-height:1.4}
+#pcprev td.pn3{color:var(--ink2);font-size:11.5px;max-width:230px;white-space:normal}
 </style>
 </head>
 <body>
@@ -834,8 +848,17 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
 <!-- Giỏ SKU đã tick từ pop-up 2 tab (Kiểm kê + Tồn kho bất thường) — giữ nguyên khi chuyển tab/bộ lọc -->
 <div id="pcbar" class="hidden">
   <span>Đã chọn <b id="pcbarN">0</b> SKU</span>
+  <button class="rm" onclick="pcPrevToggle()" title="Xem lại danh sách SKU đã chọn + lý do chọn">Xem</button>
   <button class="go" onclick="pcOpen()">Tạo lệnh kiểm kê</button>
   <button class="rm" onclick="pcClear()" title="Bỏ chọn tất cả">Xoá</button>
+</div>
+
+<!-- Preview giỏ chọn: xem lại SKU + lý do chọn (bất thường loại nào / còn lại chưa kiểm...) trước khi tạo lệnh -->
+<div id="pcprev" class="hidden">
+  <div class="ph">Đã chọn <b id="pcprevN">0</b> SKU — xem lại trước khi tạo lệnh<span class="sp"></span><button class="pcx" onclick="pcPrevToggle()" title="Đóng">&times;</button></div>
+  <div class="pb"><table><thead><tr>
+    <th>Kho</th><th>SKU</th><th>Tên sản phẩm</th><th>Lý do chọn</th><th></th>
+  </tr></thead><tbody id="pcprevB"></tbody></table></div>
 </div>
 
 <!-- Modal tạo lệnh kiểm kê WMS: điền template WMS_INVENTORY_KEY_TEMPLATE_CP_CHECKLIST_SKU rồi import qua backend GAS -->
@@ -851,7 +874,7 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
     <div class="pcwarn" id="pcWarn"></div>
     <div class="msum" id="pcSum"></div>
     <div class="modalbody"><table class="mtbl"><thead><tr>
-      <th>Warehouse Code</th><th class="num">Type</th><th>Sku</th><th class="pn">Tên sản phẩm</th><th>Kho nguồn</th><th>Plan Date</th><th>Executed By</th><th></th>
+      <th>Warehouse Code</th><th class="num">Type</th><th>Sku</th><th class="pn">Tên sản phẩm</th><th>Kho nguồn</th><th>Lý do chọn</th><th>Plan Date</th><th>Executed By</th><th></th>
     </tr></thead><tbody id="pcBody"></tbody></table></div>
     <div class="pcfoot">
       <span class="hint" id="pcStatus"></span><span class="sp"></span>
@@ -1419,6 +1442,8 @@ function renderRows(){
 }
 document.addEventListener('keydown',function(e){
   if(e.key!=='Escape') return;
+  var pv=document.getElementById('pcprev');    // preview giỏ chọn nổi trên cùng -> Escape đóng trước nhất
+  if(pv && !pv.classList.contains('hidden')){ pv.classList.add('hidden'); return; }
   var pm=document.getElementById('pcmodal');   // modal tạo lệnh mở ĐÈ lên pop-up khác -> đóng trước tiên
   if(pm && pm.classList.contains('show')){ closePcModal(); return; }
   var m=document.getElementById('catMenu');
@@ -1918,7 +1943,7 @@ function kkTableRemain(kind,rs,coKiem){
   var cot=function(m){ return coKiem?('<td><span class="badge '+(m.chk?'b-ok':'b-pend')+'">'+(m.chk?'ĐÃ KIỂM':'CHƯA KIỂM')+'</span></td>'):''; };
   for(var i=0;i<rs.length&&out.length<CAP;i++){ var m=rs[i];
     out.push(kind==='sku'
-      ? '<tr>'+pcCell(m.wh,m.sku,m.pn,0)+'<td><b>'+esc(m.sku)+'</b></td><td class="pn2">'+esc(m.pn)+'</td><td>'+kkDash(m.cat)+'</td><td>'+esc(m.wh)+'</td><td class="loc">'+esc(m.loc)+(m.n>1?' <span class="hint">+'+(m.n-1)+' vị trí</span>':'')+'</td><td class="num">'+nf(m.qty)+'</td>'+cot(m)+'</tr>'
+      ? '<tr>'+pcCell(m.wh,m.sku,m.pn,0,kkReason(m))+'<td><b>'+esc(m.sku)+'</b></td><td class="pn2">'+esc(m.pn)+'</td><td>'+kkDash(m.cat)+'</td><td>'+esc(m.wh)+'</td><td class="loc">'+esc(m.loc)+(m.n>1?' <span class="hint">+'+(m.n-1)+' vị trí</span>':'')+'</td><td class="num">'+nf(m.qty)+'</td>'+cot(m)+'</tr>'
       : '<tr><td class="loc">'+esc(m.loc)+'</td><td>'+esc(m.wh)+'</td><td class="num">'+nf(m.n)+'</td><td class="num">'+nf(m.qty)+'</td>'+cot(m)+'</tr>');
   }
   var head=(kind==='sku'
@@ -2334,7 +2359,7 @@ function kkTable(kind,rs){
   var CAP=300, out=[];
   if(kind==='sku'){
     for(var i=0;i<rs.length&&out.length<CAP;i++){ var r=rs[i], e=kkEval(r.inv,r.cnt);
-      out.push('<tr>'+pcCell(r.wh,r.sku,r.pn,pcTypeOf(r.type))+'<td>'+kkIdLink(r.id,'sku')+'</td><td><b>'+esc(r.sku)+'</b><div class="pn2">'+esc(r.pn)+'</div></td><td>'+kkDash(r.cat)+'</td>'+
+      out.push('<tr>'+pcCell(r.wh,r.sku,r.pn,pcTypeOf(r.type),kkReason(r))+'<td>'+kkIdLink(r.id,'sku')+'</td><td><b>'+esc(r.sku)+'</b><div class="pn2">'+esc(r.pn)+'</div></td><td>'+kkDash(r.cat)+'</td>'+
         kkDcell(r.cnt==null?0:e.d)+'<td class="num">'+nf(r.inv)+'</td><td class="num">'+(r.cnt==null?'—':nf(r.cnt))+'</td><td>'+kkDash(r.type)+'</td><td>'+kkDash(r.req)+'</td><td>'+kkDash(r.by)+'</td><td>'+kkFmtD(kkParseDate(r.cdate))+'</td><td>'+kkFmtD(kkParseDate(r.plan),true)+'</td><td><span class="badge '+kkBadge(r.st)+'">'+(r.st?esc(r.st):'—')+'</span></td></tr>');
     }
     return '<div class="kkwrap"><table><thead><tr>'+pcHeadCell()+'<th>ID</th><th>SKU</th><th>Category</th><th class="num">Diff</th><th class="num">Inventory</th><th class="num">Qty count</th><th>Type</th><th>Request</th><th>Counted by</th><th>Counted date</th><th>Plan date</th><th>Status</th></tr></thead><tbody>'+(out.join('')||kkEmpty(13))+'</tbody></table></div>'+
@@ -2742,7 +2767,7 @@ function abnmRender(){
     sums.in_stock+=r.in_stock; sums.available+=r.available; ABN_TYPES.forEach(function(t){ sums[t.k]+=r[t.k]; });
     if(out.length<cap){
       var tds=ABN_TYPES.map(function(t){ var v=r[t.k]; return v>0?('<td class="num" style="color:'+t.c+';font-weight:700">'+nf(v)+'</td>'):'<td class="num abncell0">0</td>'; }).join('');
-      out.push('<tr>'+pcCell(r.wh,r.sku,r.pn,0)+'<td class="whn"><span class="dot" style="background:'+abnColor(r.wh)+'"></span>'+esc(r.wh)+'</td>'+
+      out.push('<tr>'+pcCell(r.wh,r.sku,r.pn,0,abnReason(r))+'<td class="whn"><span class="dot" style="background:'+abnColor(r.wh)+'"></span>'+esc(r.wh)+'</td>'+
         '<td>'+esc(r.sku)+'</td><td class="pn">'+esc(r.pn)+'</td><td>'+esc(r.brand)+'</td><td>'+esc(r.cat)+'</td>'+
         '<td class="num">'+nf(r.in_stock)+'</td><td class="num">'+nf(r.available)+'</td>'+tds+'</tr>');
     }
@@ -2783,15 +2808,37 @@ function pcCount(){ return Object.keys(PC.sel).length; }
 function pcSave(){ try{ sessionStorage.setItem('pc-sel',JSON.stringify(PC.sel)); }catch(e){} }
 function pcTypeOf(t){ var k=kkTypeKey(t); return k==='SKU'?1:(k==='SKU_FACTORY'?2:0); }
 /* Ô checkbox nhúng vào bảng pop-up (dùng chung 3 bảng) — data-* mang đủ dữ liệu, xử lý bằng delegation */
-function pcCell(w,s,pn,t){
-  return '<td class="pcc"><input type="checkbox" class="pcr" data-w="'+esc(w)+'" data-s="'+esc(s)+'" data-p="'+esc(pn||'')+'" data-t="'+(t||0)+'"'+(pcHas(w,s)?' checked':'')+'></td>';
+function pcCell(w,s,pn,t,src){
+  return '<td class="pcc"><input type="checkbox" class="pcr" data-w="'+esc(w)+'" data-s="'+esc(s)+'" data-p="'+esc(pn||'')+'" data-t="'+(t||0)+'" data-r="'+esc(src||'')+'"'+(pcHas(w,s)?' checked':'')+'></td>';
 }
 function pcHeadCell(){ return '<th class="pcc"><input type="checkbox" class="pcall" title="Chọn/bỏ chọn tất cả dòng đang lọc (kể cả ngoài số dòng hiển thị)"></th>'; }
-function pcAdd(w,s,pn,t){
+/* LÝ DO CHỌN — ghi vào giỏ lúc tick để preview/modal giải thích được "vì sao SKU này nằm trong lệnh" */
+function abnReason(r){
+  var a=[]; ABN_TYPES.forEach(function(t){ if(r[t.k]>0) a.push(t.lb+' '+nf(r[t.k])); });
+  return a.length?('Bất thường: '+a.join(' · ')):'Bất thường';
+}
+function kkReason(r){
+  var m=(typeof KK_MODAL!=='undefined'&&KK_MODAL.metric)||'';
+  if(m==='notcount') return 'Còn lại chưa kiểm';
+  if(m==='total') return r.chk?'Tồn kho · đã kiểm':'Tồn kho · chưa kiểm';
+  if(m.indexOf('st:')===0) return 'Kiểm kê: trạng thái '+m.slice(3);
+  var lab=KK_METRIC_LABEL[m]||m||'kiểm kê';
+  var d=(r.cnt==null)?null:((Number(r.cnt)||0)-(Number(r.inv)||0));
+  return 'Kiểm kê: '+lab+(((m==='negative'||m==='positive')&&d!=null)?(' ('+(d>0?'+':'')+nf(d)+')'):'');
+}
+/* Ghi 1 SKU vào giỏ (không save/sync — dùng chung cho pcAdd/pcBulk); trùng key thì GỘP lý do */
+function pcPut(w,s,pn,t,src){
+  var k=pcKey(w,s), old=PC.sel[k], moi=!old;
+  var nsrc=String(src||'');
+  if(old&&old.src) nsrc=(nsrc&&old.src.indexOf(nsrc)<0)?(old.src+' + '+nsrc):old.src;
+  if(nsrc.length>150) nsrc=nsrc.slice(0,147)+'…';
+  PC.sel[k]={wh:w,sku:s,pn:pn||(old&&old.pn)||'',t:(Number(t)||0)||(old&&old.t)||0,src:nsrc};
+  return moi;
+}
+function pcAdd(w,s,pn,t,src){
   if(!w||!s) return;
   if(!pcHas(w,s)&&pcCount()>=PC_LIMIT){ toast('Giỏ chọn tối đa '+nf(PC_LIMIT)+' SKU.','warn'); return; }
-  var k=pcKey(w,s), old=PC.sel[k];
-  PC.sel[k]={wh:w,sku:s,pn:pn||(old&&old.pn)||'',t:(Number(t)||0)||(old&&old.t)||0};
+  pcPut(w,s,pn,t,src);
   pcSave(); pcSyncBar();
 }
 function pcDel(w,s){ delete PC.sel[pcKey(w,s)]; pcSave(); pcSyncBar(); }
@@ -2804,18 +2851,47 @@ function pcBulk(items,on){
   if(on){
     var room=PC_LIMIT-pcCount(), tran=false;
     items.forEach(function(r){
-      var k=pcKey(r.wh,r.sku);
-      if(!PC.sel[k]){ if(room<=0){ tran=true; return; } room--; }
-      PC.sel[k]={wh:r.wh,sku:r.sku,pn:r.pn||'',t:r._t||0};
+      if(!PC.sel[pcKey(r.wh,r.sku)]&&room<=0){ tran=true; return; }
+      if(pcPut(r.wh,r.sku,r.pn,r._t,r.src)) room--;
     });
     if(tran) toast('Giỏ chọn tối đa '+nf(PC_LIMIT)+' SKU — phần vượt không được thêm.','warn');
   }else items.forEach(function(r){ delete PC.sel[pcKey(r.wh,r.sku)]; });
   pcSave(); pcSyncBar(); pcRefreshChecks();
 }
 function pcSyncBar(){
-  document.getElementById('pcbarN').textContent=nf(pcCount());
-  document.getElementById('pcbar').classList.toggle('hidden',!pcCount());
+  var n=pcCount();
+  document.getElementById('pcbarN').textContent=nf(n);
+  document.getElementById('pcbar').classList.toggle('hidden',!n);
+  var p=document.getElementById('pcprev');
+  if(p&&!p.classList.contains('hidden')){ if(!n) p.classList.add('hidden'); else pcPrevRender(); }   // preview mở -> luôn khớp giỏ
 }
+/* ---------- Bảng preview giỏ chọn: SKU + lý do chọn, bỏ được từng dòng ---------- */
+function pcPrevToggle(force){
+  var p=document.getElementById('pcprev');
+  var show=(force!=null)?force:p.classList.contains('hidden');
+  if(show&&!pcCount()){ toast('Chưa chọn SKU nào.','warn'); return; }
+  p.classList.toggle('hidden',!show);
+  if(show) pcPrevRender();
+}
+function pcPrevRender(){
+  var rows=pcRows();
+  document.getElementById('pcprevN').textContent=nf(rows.length);
+  document.getElementById('pcprevB').innerHTML=rows.map(function(r){
+    return '<tr><td style="white-space:nowrap"><span class="dot" style="background:'+kkColor(r.wh)+'"></span>'+esc(r.wh)+'</td>'+
+      '<td><b>'+esc(r.sku)+'</b></td><td class="pn3">'+esc(r.pn)+'</td><td class="pcrsn">'+esc(r.src||'—')+'</td>'+
+      '<td><button class="pcx" data-w="'+esc(r.wh)+'" data-s="'+esc(r.sku)+'" title="Bỏ SKU này khỏi giỏ">&times;</button></td></tr>';
+  }).join('')||'<tr><td colspan="5" style="text-align:center;color:var(--ink3);padding:16px">Giỏ trống</td></tr>';
+}
+document.getElementById('pcprevB').addEventListener('click',function(e){
+  var b=e.target.closest('.pcx'); if(!b) return;
+  pcDel(b.getAttribute('data-w'),b.getAttribute('data-s'));
+  pcRefreshChecks(); pcPrevRender();
+});
+/* Bấm ra ngoài (không phải preview / thanh giỏ) -> đóng preview */
+document.addEventListener('click',function(e){
+  var p=document.getElementById('pcprev');
+  if(p&&!p.classList.contains('hidden')&&!e.target.closest('#pcprev')&&!e.target.closest('#pcbar')) p.classList.add('hidden');
+});
 /* Cập nhật checkbox đang hiển thị theo giỏ (sau chọn lô / xoá giỏ) — không rebuild bảng */
 function pcRefreshChecks(){
   document.querySelectorAll('.pcr').forEach(function(c){ c.checked=pcHas(c.getAttribute('data-w'),c.getAttribute('data-s')); });
@@ -2830,21 +2906,21 @@ function pcSyncAll(container,rows){
 /* Tick từng dòng: delegation trên 2 vùng body pop-up (innerHTML rebuild không mất listener) */
 function pcRowChange(e){
   var c=e.target; if(!c.classList||!c.classList.contains('pcr')) return;
-  if(c.checked) pcAdd(c.getAttribute('data-w'),c.getAttribute('data-s'),c.getAttribute('data-p'),c.getAttribute('data-t'));
+  if(c.checked) pcAdd(c.getAttribute('data-w'),c.getAttribute('data-s'),c.getAttribute('data-p'),c.getAttribute('data-t'),c.getAttribute('data-r'));
   else pcDel(c.getAttribute('data-w'),c.getAttribute('data-s'));
 }
 document.getElementById('abnmBody').addEventListener('change',pcRowChange);
 document.getElementById('kkmBody').addEventListener('change',pcRowChange);
 /* Chọn tất cả pop-up BẤT THƯỜNG: thead tĩnh ngoài tbody -> gắn thẳng; tập = toàn bộ dòng ĐANG LỌC */
 document.querySelector('#abnmodal .pcall').addEventListener('change',function(){
-  var rows=abnmRowsWith(null,abnmState(),abnmQval()).map(function(r){ return {wh:r.wh,sku:r.sku,pn:r.pn,_t:0}; });
+  var rows=abnmRowsWith(null,abnmState(),abnmQval()).map(function(r){ return {wh:r.wh,sku:r.sku,pn:r.pn,_t:0,src:abnReason(r)}; });
   pcBulk(rows,this.checked);
 });
 /* Chọn tất cả pop-up KIỂM KÊ: thead sinh trong kkmBody -> delegation chung ô change */
 document.getElementById('kkmBody').addEventListener('change',function(e){
   var a=e.target; if(!a.classList||!a.classList.contains('pcall')) return;
   var rows=kkmRowsWith(null,kkmState(),kkmQval()).filter(function(r){ return r.sku; })
-    .map(function(r){ return {wh:r.wh,sku:r.sku,pn:r.pn||'',_t:pcTypeOf(r.type)}; });
+    .map(function(r){ return {wh:r.wh,sku:r.sku,pn:r.pn||'',_t:pcTypeOf(r.type),src:kkReason(r)}; });
   pcBulk(rows,a.checked);
 });
 
@@ -2887,6 +2963,7 @@ async function pcEmails(){
 /* ---------- Modal tạo lệnh ---------- */
 async function pcOpen(){
   if(!pcCount()){ toast('Chưa chọn SKU nào — tick chọn trong pop-up trước.','warn'); return; }
+  document.getElementById('pcprev').classList.add('hidden');   // preview nổi trên modal -> đóng trước khi mở
   var m=document.getElementById('pcmodal'); m.style.display='flex';
   requestAnimationFrame(function(){ m.classList.add('show'); });
   var d=document.getElementById('pcDate');
@@ -2922,10 +2999,10 @@ function pcRender(){
   rows.forEach(function(r){
     var code=whSel||pcCodeByName(r.wh), ty=tSel||String(r.t||1);
     if(!code) miss++; else whs[code]=1;
-    out.push('<tr><td class="'+(code?'whn':'codebad')+'">'+(code?esc(code):'✗ chưa có mã')+'</td><td class="num">'+esc(ty)+'</td><td><b>'+esc(r.sku)+'</b></td><td class="pn">'+esc(r.pn)+'</td><td>'+esc(r.wh)+'</td><td>'+esc(plan||'—')+'</td><td>'+(by?esc(by):'<span class="hint">(trống)</span>')+'</td>'+
+    out.push('<tr><td class="'+(code?'whn':'codebad')+'">'+(code?esc(code):'✗ chưa có mã')+'</td><td class="num">'+esc(ty)+'</td><td><b>'+esc(r.sku)+'</b></td><td class="pn">'+esc(r.pn)+'</td><td>'+esc(r.wh)+'</td><td class="pcrsn">'+esc(r.src||'—')+'</td><td>'+esc(plan||'—')+'</td><td>'+(by?esc(by):'<span class="hint">(trống)</span>')+'</td>'+
       '<td><button class="pcx" data-w="'+esc(r.wh)+'" data-s="'+esc(r.sku)+'" title="Bỏ SKU này khỏi lệnh">&times;</button></td></tr>');
   });
-  document.getElementById('pcBody').innerHTML=out.join('')||'<tr><td colspan="8" class="empty">Giỏ trống — tick chọn SKU từ pop-up tab Kiểm kê / Tồn kho bất thường.</td></tr>';
+  document.getElementById('pcBody').innerHTML=out.join('')||'<tr><td colspan="9" class="empty">Giỏ trống — tick chọn SKU từ pop-up tab Kiểm kê / Tồn kho bất thường.</td></tr>';
   document.getElementById('pcSub').textContent=nf(rows.length)+' SKU đã chọn · mỗi SKU 1 dòng lệnh import';
   document.getElementById('pcSum').textContent=nf(rows.length)+' dòng · '+nf(Object.keys(whs).length)+' mã kho'+(miss?(' · '+nf(miss)+' dòng CHƯA tra được mã kho'):'');
   var w=document.getElementById('pcWarn'); w.className='pcwarn'; w.textContent='';
