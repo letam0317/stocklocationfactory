@@ -117,6 +117,18 @@ template:  GET  /wms/counting-plan/checklists/download-template/type-sku
 | `PC_WAREHOUSE_IDS` / `PC_COMPANY_IDS` | — | danh sách id cho đồng bộ tab Warehouse code (mặc định = union cấu hình 5S) |
 | `PC_IMPORT_URL` / `PC_FILE_FIELD` | (bỏ) | chỉ dùng nếu sau này WMS mở IP cho GAS upload trực tiếp |
 
+### Bootstrap / làm tươi token khi bị chiếm phiên (`pc-whcode-bootstrap.mjs`)
+Chạy trên máy tự động hoá (thư mục `New folder/hasaki` — script đã copy sẵn ở đó):
+```
+node pc-whcode-bootstrap.mjs <file-chứa-PC_KEY> [file-xlsx-test-validate]
+```
+Script sẽ: chụp token WMS từ profile robot (SSO im lặng, y hệt cụm 7h) → điền tab
+`Warehouse code` (12/13 kho, kho không có tồn bị bỏ qua) → đẩy token tươi lên GAS
+(`saveWmsToken`) để nút import trên dashboard dùng ngay → test endpoint VALIDATE
+(read-only). **Đã chạy thành công 2026-07-20**: validate file mẫu trả `{"total":2,"valid":2}`
+— chuỗi endpoint/field `chunk`/cấu trúc file/token đều được WMS chấp nhận.
+Lưu ý: chụp token sẽ CHIẾM PHIÊN của phiên WMS cùng tài khoản đang mở (WMS 1 phiên/tài khoản).
+
 ### Tab `Warehouse code`
 4 cột: Warehouse Code | Warehouse Name | Type | City Name. Dashboard tra mã kho theo TÊN kho
 của từng dòng SKU; dòng không khớp bị chặn import và báo đỏ kèm nút đồng bộ. **Merge an toàn**:

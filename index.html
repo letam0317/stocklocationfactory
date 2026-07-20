@@ -3210,10 +3210,12 @@ function pcSubmit(dry){
         return xong('bad','Token WMS của robot đang bị đăng nhập khác chiếm phiên (WMS chỉ cho 1 phiên/tài khoản). Đã tải file .xlsx về — import tay tại WMS, hoặc thử lại sau khi robot đăng nhập lại (cụm 7h sáng / LOGIN-HASAKI).','Thất bại');
       }
       var ev=pcWmsRowErrs(rv), dv=(rv.j&&(rv.j.data||rv.j))||{};
-      if(rv.http>=400||dv.error===true||ev.length){
+      // validate trả {total, valid} — valid đủ total mới được import (đã kiểm chứng bằng file mẫu: {"total":2,"valid":2})
+      var thieu=(typeof dv.valid==='number'&&typeof dv.total==='number'&&dv.valid<dv.total);
+      if(rv.http>=400||dv.error===true||ev.length||thieu){
         pcDownloadB64(jf.fileB64,ten);
         toast('WMS từ chối ở bước validate.','err');
-        return xong('bad','WMS từ chối (validate): '+esc(pcWmsMsg2(rv))+(ev.length?('<br>• '+ev.slice(0,8).map(esc).join('<br>• ')+(ev.length>8?'<br>…còn '+(ev.length-8)+' dòng lỗi':'')):'')+'<br>File .xlsx đã tải về để đối chiếu.','WMS từ chối');
+        return xong('bad','WMS từ chối (validate): '+esc(thieu?('chỉ '+nf(dv.valid)+' / '+nf(dv.total)+' dòng hợp lệ'):pcWmsMsg2(rv))+(ev.length?('<br>• '+ev.slice(0,8).map(esc).join('<br>• ')+(ev.length>8?'<br>…còn '+(ev.length-8)+' dòng lỗi':'')):'')+'<br>File .xlsx đã tải về để đối chiếu.','WMS từ chối');
       }
       st.textContent='Validate OK — đang IMPORT lên WMS…';
       var ri=await pcWmsUpload(PC_URL_IMPORT,blob,ten,tok);
@@ -3243,17 +3245,20 @@ async function pcWhSyncUI(){
   var khoa=pcKeyGet(); if(!khoa) return;
   var w=document.getElementById('pcWarn'); w.className='pcwarn show'; w.textContent='Đang hỏi WMS tên của '+PC_WH_IDS.length+' mã kho…';
   try{
-    var tok=await pcWmsToken(khoa), rows=[];
+    var tok=await pcWmsToken(khoa), rows=[], e401=0;
     await Promise.all(PC_WH_IDS.map(async function(id){
       try{
         var r=await fetch(PC_WMS_BASE+'/wms/report-management/stock-locations/bins/count/v3?company_ids=1002,1005&warehouse_ids='+id+'&ignore_zero_total=1&page=1&size=1',{headers:{'Authorization':'Bearer '+tok}});
-        if(!r.ok) return;
+        if(!r.ok){ if(r.status===401) e401++; return; }
         var j=await r.json(), d=j.data||j, recs=d.records||[];
         var name=recs.length?String(recs[0].warehouse_name||'').replace(/\s+/g,' ').trim():'';
         if(name) rows.push([id,name]);
       }catch(e){}
     }));
-    if(!rows.length) throw new Error('WMS không trả tên kho nào — token có thể đang bị chiếm phiên, thử lại sau khi robot đăng nhập lại.');
+    if(e401){ _pcTok=''; }   // token chết -> bỏ cache RAM để lần sau lấy lại từ GAS
+    if(!rows.length) throw new Error(e401
+      ?('WMS trả 401 cho '+e401+' request — token robot đang bị chiếm phiên. Chạy lại pc-whcode-bootstrap / LOGIN-HASAKI trên máy tự động hoá, hoặc thử sau cụm 7h sáng.')
+      :'WMS không trả tên kho nào — kiểm tra mạng nội bộ hoặc quyền tài khoản.');
     var j2=await pcGas({action:'pc_save_whcode',key:khoa,rows:rows});
     if(j2.status!=='success'){ if(j2.code===403) pcKeyForget(); throw new Error(j2.message||'không ghi được tab'); }
     try{ sessionStorage.removeItem('slf-whcode'); }catch(e){}
