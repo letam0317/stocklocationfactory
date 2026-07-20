@@ -117,17 +117,30 @@ template:  GET  /wms/counting-plan/checklists/download-template/type-sku
 | `PC_WAREHOUSE_IDS` / `PC_COMPANY_IDS` | — | danh sách id cho đồng bộ tab Warehouse code (mặc định = union cấu hình 5S) |
 | `PC_IMPORT_URL` / `PC_FILE_FIELD` | (bỏ) | chỉ dùng nếu sau này WMS mở IP cho GAS upload trực tiếp |
 
-### Bootstrap / làm tươi token khi bị chiếm phiên (`pc-whcode-bootstrap.mjs`)
-Chạy trên máy tự động hoá (thư mục `New folder/hasaki` — script đã copy sẵn ở đó):
+### ⚠ SỰ CỐ 2026-07-20 — hai hệ mã kho KHÁC NHAU (đã khắc phục)
+`warehouse_id` của API **báo cáo** ≠ `Warehouse Code` của template **import** — trùng số nhưng
+khác kho (id 1177 báo cáo = WH - MATERIAL - MTG, code 1177 import = WH - 313 PHAN HUY ICH KT2
+→ đã tạo nhầm 1 kế hoạch sai kho, phải Cancel tay). Mã ĐÚNG cho nhà máy: **1631** = WH -
+MATERIAL - MTG, 1632 = SEMI MTG, 1633 = FINISHED MTG, 1721/1722/1723 = MATERIAL/SEMI/FINISHED
+GARMENT. Từ nay danh mục mã kho CHỈ nạp từ sheet `Warehouse code` trong CHÍNH template
+(mọi đường đồng bộ từ API báo cáo đã vô hiệu ở cả GAS lẫn dashboard).
+
+### Nạp/làm mới danh mục mã kho (`pc-whcode-template.mjs`)
+```
+node pc-whcode-template.mjs <file-chứa-PC_KEY>
+```
+Tải template gốc qua `download-template/type-sku` (trả ZIP bọc file .xlsx) → parse sheet
+`Warehouse code` (ô kiểu inlineStr) → ghi ĐÈ tab bằng `pc_save_whcode` (đủ 4 cột).
+**Đã chạy 2026-07-20: 1.563 kho.** Warehouse master ít đổi — chỉ cần chạy lại khi WMS thêm kho.
+
+### Làm tươi token khi bị chiếm phiên (`pc-whcode-bootstrap.mjs`)
 ```
 node pc-whcode-bootstrap.mjs <file-chứa-PC_KEY> [file-xlsx-test-validate]
 ```
-Script sẽ: chụp token WMS từ profile robot (SSO im lặng, y hệt cụm 7h) → điền tab
-`Warehouse code` (12/13 kho, kho không có tồn bị bỏ qua) → đẩy token tươi lên GAS
-(`saveWmsToken`) để nút import trên dashboard dùng ngay → test endpoint VALIDATE
-(read-only). **Đã chạy thành công 2026-07-20**: validate file mẫu trả `{"total":2,"valid":2}`
-— chuỗi endpoint/field `chunk`/cấu trúc file/token đều được WMS chấp nhận.
-Lưu ý: chụp token sẽ CHIẾM PHIÊN của phiên WMS cùng tài khoản đang mở (WMS 1 phiên/tài khoản).
+Chụp token WMS từ profile robot (SSO im lặng, y hệt cụm 7h) → đẩy token tươi lên GAS
+(`saveWmsToken`) → (tuỳ chọn) test VALIDATE read-only. Validate file mẫu đã trả
+`{"total":2,"valid":2}` — chuỗi endpoint/field `chunk`/cấu trúc file/token được WMS chấp nhận.
+Lưu ý: chụp token sẽ CHIẾM PHIÊN WMS cùng tài khoản đang mở (WMS 1 phiên/tài khoản).
 
 ### Tab `Warehouse code`
 4 cột: Warehouse Code | Warehouse Name | Type | City Name. Dashboard tra mã kho theo TÊN kho

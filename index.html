@@ -3132,7 +3132,6 @@ function pcKeyForget(){ try{ localStorage.removeItem('pc-key'); }catch(e){} }
 var PC_WMS_BASE='https://wms-gw.inshasaki.com/api/v1';
 var PC_URL_VALIDATE=PC_WMS_BASE+'/wms/counting-plan/checklists/validate/type-sku';
 var PC_URL_IMPORT=PC_WMS_BASE+'/wms/counting-plan/checklists/import/type-sku';
-var PC_WH_IDS=['1458','1441','1307','1250','1179','1178','1177','1151','1516','1341','1340','1339','1266'];
 var _pcTok='';   // token WMS chỉ giữ trong RAM trang — không ghi localStorage
 function pcGas(body){
   return fetch(APPSCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)})
@@ -3242,36 +3241,19 @@ function pcSubmit(dry){
     }
   })();
 }
-/* Đồng bộ danh mục mã kho: trình duyệt hỏi WMS tên từng warehouse_id -> GAS ghi tab "Warehouse code" */
+/* CẢNH BÁO NGHIỆP VỤ (sự cố 2026-07-20): warehouse_id của API BÁO CÁO ≠ Warehouse Code của template
+   IMPORT — trùng số nhưng KHÁC kho (id 1177 báo cáo = WH-MATERIAL-MTG, code 1177 import = WH-313 PHAN
+   HUY ICH KT2). Danh mục mã kho vì thế CHỈ được lấy từ sheet "Warehouse code" trong CHÍNH template
+   (script pc-whcode-template.mjs đã nạp đủ 1.563 kho) — TUYỆT ĐỐI không đồng bộ từ API báo cáo nữa. */
 async function pcWhSyncUI(){
-  var khoa=pcKeyGet(); if(!khoa) return;
-  var w=document.getElementById('pcWarn'); w.className='pcwarn show'; w.textContent='Đang hỏi WMS tên của '+PC_WH_IDS.length+' mã kho…';
-  try{
-    var tok=await pcWmsToken(khoa), rows=[], e401=0;
-    await Promise.all(PC_WH_IDS.map(async function(id){
-      try{
-        var r=await fetch(PC_WMS_BASE+'/wms/report-management/stock-locations/bins/count/v3?company_ids=1002,1005&warehouse_ids='+id+'&ignore_zero_total=1&page=1&size=1',{headers:{'Authorization':'Bearer '+tok}});
-        if(!r.ok){ if(r.status===401) e401++; return; }
-        var j=await r.json(), d=j.data||j, recs=d.records||[];
-        var name=recs.length?String(recs[0].warehouse_name||'').replace(/\s+/g,' ').trim():'';
-        if(name) rows.push([id,name]);
-      }catch(e){}
-    }));
-    if(e401){ _pcTok=''; }   // token chết -> bỏ cache RAM để lần sau lấy lại từ GAS
-    if(!rows.length) throw new Error(e401
-      ?('WMS trả 401 cho '+e401+' request — token robot đang bị chiếm phiên. Chạy lại pc-whcode-bootstrap / LOGIN-HASAKI trên máy tự động hoá, hoặc thử sau cụm 7h sáng.')
-      :'WMS không trả tên kho nào — kiểm tra mạng nội bộ hoặc quyền tài khoản.');
-    var j2=await pcGas({action:'pc_save_whcode',key:khoa,rows:rows});
-    if(j2.status!=='success'){ if(j2.code===403) pcKeyForget(); throw new Error(j2.message||'không ghi được tab'); }
-    try{ sessionStorage.removeItem('slf-whcode'); }catch(e){}
-    PC.whcode=null;
-    await pcFetchWhcode();
-    w.className='pcwarn ok show'; w.textContent='✓ '+j2.message;
-    pcRender();
-  }catch(e){
-    if(e&&e.pc){ if(e.j&&e.j.code===403) pcKeyForget(); w.className='pcwarn bad show'; w.textContent='Không lấy được token WMS: '+((e.j&&e.j.message)||''); }
-    else{ w.className='pcwarn bad show'; w.textContent='Đồng bộ danh mục kho thất bại: '+(e&&e.message||e); }
-  }
+  var w=document.getElementById('pcWarn'); w.className='pcwarn show';
+  w.innerHTML='Danh mục mã kho lấy từ sheet <code>Warehouse code</code> trong CHÍNH template WMS (đã nạp đủ 1.563 kho). '+
+    'Nếu kho vẫn thiếu mã (WMS mới thêm kho): chạy <code>node pc-whcode-template.mjs</code> trên máy tự động hoá để làm mới — '+
+    'không đồng bộ từ API báo cáo vì mã báo cáo ≠ mã import (trùng số, khác kho).';
+  try{ sessionStorage.removeItem('slf-whcode'); }catch(e){}
+  PC.whcode=null;
+  await pcFetchWhcode();   // đọc lại tab (phòng khi vừa được script cập nhật)
+  pcRender();
 }
 function pcDownloadB64(b64,name){
   var bin=atob(b64||''), u=new Uint8Array(bin.length);

@@ -1,9 +1,12 @@
 /**
- * pc-whcode-bootstrap.mjs — chạy 1 lần (hoặc khi cần làm tươi):
+ * pc-whcode-bootstrap.mjs — LÀM TƯƠI TOKEN khi bị chiếm phiên:
  *   ① chụp token WMS từ profile robot (SSO im lặng — y hệt cụm 7h)
- *   ② hỏi tên 13 kho theo warehouse_id -> ghi tab "Warehouse code" (GAS pc_save_whcode, replace)
- *   ③ đẩy token tươi lên GAS (saveWmsToken) -> nút import trên dashboard dùng được ngay
- *   ④ (tuỳ chọn) test endpoint VALIDATE type-sku bằng file mẫu — chỉ validate, KHÔNG tạo lệnh
+ *   ② đẩy token tươi lên GAS (saveWmsToken) -> nút import trên dashboard dùng được ngay
+ *   ③ (tuỳ chọn) test endpoint VALIDATE type-sku bằng file mẫu — chỉ validate, KHÔNG tạo lệnh
+ *
+ * ⚠ ĐÃ GỠ phần nạp danh mục kho theo warehouse_id BÁO CÁO (sự cố 2026-07-20: id báo cáo ≠
+ *   Warehouse Code của template import — trùng số, KHÁC kho). Danh mục kho: dùng
+ *   pc-whcode-template.mjs (nguồn = sheet "Warehouse code" trong CHÍNH template).
  *
  * Cách chạy:  node pc-whcode-bootstrap.mjs <đường-dẫn-file-pc_key.txt> [file-xlsx-test]
  */
@@ -75,24 +78,9 @@ const gasPost = async (body) => {
   const ai = me.data || me;
   log("✓ Token sống — tài khoản:", ai.email || ai.username || ai.name || "?");
 
-  // ② tên 13 kho (song song, size=1/kho)
-  const rows = [];
-  await Promise.all(IDS.map(async (id) => {
-    const u = `${STOCKLOC}?company_ids=1002,1005&warehouse_ids=${id}&ignore_zero_total=1&page=1&size=1`;
-    try {
-      const r = await fetch(u, { headers: { authorization: token } });
-      if (!r.ok) { log(`  kho ${id}: HTTP ${r.status}`); return; }
-      const j = await r.json(); const d = j.data || j; const recs = d.records || [];
-      const name = recs.length ? String(recs[0].warehouse_name || "").replace(/\s+/g, " ").trim() : "";
-      if (name) { rows.push([id, name]); log(`  kho ${id}: ${name}`); }
-      else log(`  kho ${id}: (không có bản ghi tồn — bỏ qua)`);
-    } catch (e) { log(`  kho ${id}: lỗi ${e.message}`); }
-  }));
-  if (!rows.length) { log("✗ Không lấy được tên kho nào."); process.exit(2); }
-  const r2 = await gasPost({ action: "pc_save_whcode", key: PC_KEY, replace: true, rows });
-  log("pc_save_whcode:", JSON.stringify(r2));
+  // (phần nạp danh mục kho theo id báo cáo ĐÃ GỠ — xem cảnh báo đầu file; dùng pc-whcode-template.mjs)
 
-  // ③ token tươi lên GAS -> dashboard import dùng được ngay
+  // ② token tươi lên GAS -> dashboard import dùng được ngay
   if (APPSCRIPT_KEY) {
     const r3 = await gasPost({ action: "saveWmsToken", key: APPSCRIPT_KEY, token });
     log("saveWmsToken:", JSON.stringify(r3).slice(0, 160));

@@ -268,45 +268,23 @@ function pcToken_() {
  * trình duyệt tự hỏi WMS tên kho (GAS bị chặn IP nên không tự hỏi được). */
 function pcSaveWhcode_(duLieu) {
   var got = ((duLieu && duLieu.rows) || []).map(function (r) {
-    return [String(r[0] == null ? '' : r[0]).trim(), String(r[1] == null ? '' : r[1]).replace(/\s+/g, ' ').trim()];
+    return [String(r[0] == null ? '' : r[0]).trim(), String(r[1] == null ? '' : r[1]).replace(/\s+/g, ' ').trim(),
+            String(r[2] == null ? '' : r[2]).trim(), String(r[3] == null ? '' : r[3]).trim()];   // Type + City (sheet template có đủ 4 cột)
   }).filter(function (r) { return r[0] && r[1]; });
   if (!got.length && !(duLieu && duLieu.replace)) return pcErr_('config', 'Không có dòng [code, name] hợp lệ.');
   try { return pcMergeWhcode_(pcCFG_(), got, !!(duLieu && duLieu.replace)); }   // replace=true: ghi đè toàn tab (dọn dòng cũ/sai)
   catch (err) { return pcErr_('build', String(err && err.message || err)); }
 }
 
-/* ------------------- ĐỒNG BỘ TAB "Warehouse code" TỪ WMS -------------------
- * Dashboard tra mã kho theo tên từ tab này. Tự dựng bằng cách hỏi WMS tên kho của
- * từng warehouse_id đã biết (report stock-locations, size=1 -> rất nhẹ).
- * MERGE với dữ liệu sẵn có: dòng dán tay (vd 1436 SHOP...) được GIỮ NGUYÊN,
- * mã trùng thì cập nhật tên, mã mới thì thêm. Chạy lại bất kỳ lúc nào (idempotent). */
+/* ------------------- pc_sync_whcode: ĐÃ VÔ HIỆU (sự cố 2026-07-20) -------------------
+ * Bản cũ lấy tên kho theo warehouse_id của API BÁO CÁO — nhưng id báo cáo ≠ Warehouse Code
+ * của template IMPORT (trùng số, KHÁC kho: id 1177 báo cáo = WH-MATERIAL-MTG, code 1177
+ * import = WH-313 PHAN HUY ICH KT2) -> đã tạo nhầm 1 kế hoạch sai kho. Danh mục mã kho
+ * CHỈ được nạp từ sheet "Warehouse code" trong CHÍNH template (pc-whcode-template.mjs
+ * chạy trên máy nội bộ -> gửi rows qua pc_save_whcode). Giữ hàm để route cũ trả lỗi rõ. */
 function pcSyncWarehouses() {
-  var cfg = pcCFG_();
-  try {
-    var token = pcGetToken_(), got = [];
-    var ids = cfg.WH_IDS.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
-    // fetchAll SONG SONG — báo cáo này chậm, gọi tuần tự 13 kho vượt trần 6 phút/lượt chạy của GAS
-    var reqs = ids.map(function (id) {
-      return { url: cfg.STOCKLOC_API + '?company_ids=' + encodeURIComponent(cfg.COMPANY_IDS) +
-          '&warehouse_ids=' + encodeURIComponent(id) + '&ignore_zero_total=1&page=1&size=1',
-        headers: { 'Authorization': 'Bearer ' + token }, muteHttpExceptions: true };
-    });
-    var resps = [];
-    try { resps = UrlFetchApp.fetchAll(reqs); } catch (e) { return pcErr_('wms', 'Gọi WMS thất bại: ' + e.message); }
-    resps.forEach(function (res, i) {
-      try {
-        if (res.getResponseCode() !== 200) return;
-        var j = JSON.parse(res.getContentText() || '{}');
-        var recs = j.records || (j.data && j.data.records) || [];
-        var name = recs.length ? String(recs[0].warehouse_name || '').replace(/\s+/g, ' ').trim() : '';
-        if (name) got.push([ids[i], name]);
-      } catch (e) {}
-    });
-    if (!got.length) return pcErr_('wms', 'Không lấy được tên kho nào từ WMS (token hết hạn hoặc endpoint đổi?).');
-    return pcMergeWhcode_(cfg, got);
-  } catch (err) {
-    return pcErr_('build', String(err && err.message || err));
-  }
+  return pcErr_('config', 'pc_sync_whcode đã vô hiệu: mã kho báo cáo ≠ mã kho import. ' +
+    'Làm mới danh mục bằng: node pc-whcode-template.mjs (máy tự động hoá) — nguồn là sheet "Warehouse code" trong template gốc.');
 }
 /* Merge [code,name] vào tab Warehouse code: dòng dán tay GIỮ NGUYÊN, mã trùng cập nhật tên, mã mới thêm.
  * replace=true: bỏ qua dữ liệu cũ — dùng để dọn dòng sai/thừa. */
@@ -320,8 +298,8 @@ function pcMergeWhcode_(cfg, got, replace) {
     cur[code] = [code, String(r[1] || ''), String(r[2] || ''), String(r[3] || '')]; order.push(code);
   });
   got.forEach(function (g) {
-    if (cur[g[0]]) cur[g[0]][1] = g[1];
-    else { cur[g[0]] = [g[0], g[1], '', '']; order.push(g[0]); }
+    if (cur[g[0]]) { cur[g[0]][1] = g[1]; if (g[2]) cur[g[0]][2] = g[2]; if (g[3]) cur[g[0]][3] = g[3]; }
+    else { cur[g[0]] = [g[0], g[1], g[2] || '', g[3] || '']; order.push(g[0]); }
   });
   var values = [['Warehouse Code', 'Warehouse Name', 'Type', 'City Name']]
     .concat(order.sort().map(function (c) { return cur[c]; }));
