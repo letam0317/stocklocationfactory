@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "name": "Hasaki WMS Token Bridge — Factory",
-  "version": "1.0.0",
-  "description": "Đưa token phiên WMS của CHÍNH BẠN cho dashboard Factory để tạo lệnh kiểm kê ghi đúng tên bạn — không đăng nhập lại, không đá phiên, không tab ẩn.",
-  "host_permissions": ["https://wms-gw.inshasaki.com/*"],
+  "version": "1.1.0",
+  "description": "Đưa token phiên WMS của CHÍNH BẠN cho dashboard Factory (import ghi đúng tên bạn) và cho máy trạm đồng bộ (khỏi re-login đá phiên) — không đăng nhập lại, không tab ẩn.",
+  "host_permissions": ["https://wms-gw.inshasaki.com/*", "https://script.google.com/*", "https://script.googleusercontent.com/*"],
   "permissions": ["webRequest", "storage"],
   "background": { "service_worker": "background.js" },
   "content_scripts": [

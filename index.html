@@ -1016,7 +1016,7 @@ var SHEET_ID = "1eY_oo9fAvWCTXp24x-Z0FXq9mp_jJPlTHg09qdemETs";
 var SHEET_URL = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/edit";
 // Tên tab THẬT trên Sheet là "mastige"/"garment" (bản cũ ghi "MTG" chỉ chạy nhờ gviz fallback về tab đầu)
 var TABS = [{sheet:"mastige",div:"Mastige"},{sheet:"garment",div:"Garment"}];
-// Web App Apps Script (bộ 5S dùng chung) — nút "Tải lại dữ liệu" gọi action force_sync_wms để GAS kéo WMS
+// Web App Apps Script (bộ 5S dùng chung) — nút "Tải lại dữ liệu" gọi requestStockSync ĐẶT CỜ để MÁY TRẠM kéo WMS (không đá phiên)
 var APPSCRIPT_URL = "https://script.google.com/macros/s/AKfycbzIE6E68VYxS0Zm1vj8Ttfd790-JYolO1C4rMoEPj7FdNOWLPb23QpUHgIZ2T_dlZPJRQ/exec";
 var META_TAB = "Metadata";                 // A1 = giờ hiển thị, B1 = epoch ms — do GAS/Node ghi sau mỗi lần đồng bộ WMS
 var COOLDOWN_MS = 4 * 60 * 60 * 1000;      // anti-spam: chỉ được gọi WMS 4 giờ/lần
@@ -1586,33 +1586,69 @@ function toast(msg,type){
   clearTimeout(_toastTimer);
   _toastTimer=setTimeout(function(){ el.classList.remove('show'); },6000);
 }
-/* Nút "Tải lại dữ liệu": kích hoạt GAS kéo TRỰC TIẾP từ WMS (force_sync_wms) rồi đọc lại Sheet */
+/* Nút "Tải lại dữ liệu" (kiến trúc 21/07/2026): KHÔNG bảo GAS tự gọi WMS nữa — chỉ ĐẶT CỜ
+   (requestStockSync); MÁY TRẠM trong mạng nội bộ thấy cờ thì kéo dữ liệu theo LUẬT PHIÊN
+   (ưu tiên token bridge của operator, không đá phiên người đang làm việc). FE sau đó THĂM DÒ
+   tab Metadata: mốc B1 đổi = máy trạm ghi xong → tự nạp lại dữ liệu mới. */
 function syncWms(){
   if(_syncing) return;
   var remain=LAST_SYNC_MS?(LAST_SYNC_MS+COOLDOWN_MS-Date.now()):0;
   if(remain>0){ toast('Chỉ có thể tải lại dữ liệu sau mỗi 4 giờ. Còn '+Math.ceil(remain/60000)+' phút nữa.','warn'); capNhatNut(); return; }
   _syncing=true; capNhatNut();
-  fetch(APPSCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'force_sync_wms'})})
+  fetch(APPSCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'requestStockSync'})})
     .then(function(r){ return r.json(); })
     .then(function(j){
-      _syncing=false;
       if(j.status==='success'){
-        LAST_SYNC_MS=j.at||LAST_SYNC_MS;              // mốc thời gian TỪ BACKEND → khoá nút, mở chu kỳ 4h mới
-        toast('Đã đồng bộ WMS thành công!','ok');
-        clearCaches(); KK.loadedOnce=false; ABN.loadedOnce=false;   // dữ liệu mới -> huỷ cache phiên
-        loadData();                                    // tự fetch lại bảng dữ liệu mới
-        if(!document.getElementById('viewAbn').hidden){ ABN.loadedOnce=true; abnLoad(); }   // đang xem tab bất thường -> nạp lại ngay
-      }else if(j.code===401){
-        toast('Token WMS đã hết hạn. Đang chờ luồng chạy ngầm cập nhật Token mới.','err');
+        toast(j.message||'Đã gửi yêu cầu tới máy trạm — dữ liệu sẽ mới trong ít phút.','ok');
+        choMocMoi();                                   // giữ nút ở trạng thái "đang đồng bộ", thăm dò Metadata
       }else if(j.code===429){
+        _syncing=false;
         if(j.lastSync) LAST_SYNC_MS=j.lastSync;        // đồng bộ lại mốc cooldown từ máy chủ (chặn bypass)
         toast(j.message||'Chỉ có thể tải lại dữ liệu sau mỗi 4 giờ.','warn');
+        capNhatThongTin(); capNhatNut();
       }else{
-        toast('Đồng bộ thất bại: '+(j.message||'lỗi không xác định.'),'err');
+        _syncing=false;
+        toast('Gửi yêu cầu thất bại: '+(j.message||'lỗi không xác định.'),'err');
+        capNhatNut();
       }
-      capNhatThongTin(); capNhatNut();
     })
     .catch(function(e){ _syncing=false; toast('Không gọi được máy chủ đồng bộ ('+e.message+').','err'); capNhatNut(); });
+}
+/* Thăm dò Metadata!B1 (JSONP gviz, 30s/lần, tối đa 20 lần ≈ 10'): mốc tăng = máy trạm ghi xong.
+   Máy trạm có thể HOÃN nếu ngoài khung giờ an toàn và không có token bridge — hết lượt thì nhả
+   nút và nói rõ; dữ liệu vẫn sẽ tự mới ở lần watchdog kế tiếp. */
+function choMocMoi(){
+  var mocCu=LAST_SYNC_MS||0, lan=0;
+  window.gviz_mocmoi=function(resp){
+    var moc=0;
+    try{ var c=resp.table.rows[0].c; moc=(c[0]&&c[0].v!=null)?Number(c[0].v):0; }catch(e){}
+    if(moc>mocCu){
+      _syncing=false; LAST_SYNC_MS=moc;
+      toast('Máy trạm đã cập nhật xong — đang nạp dữ liệu mới...','ok');
+      clearCaches(); KK.loadedOnce=false; ABN.loadedOnce=false;
+      loadData();
+      if(!document.getElementById('viewAbn').hidden){ ABN.loadedOnce=true; abnLoad(); }
+      capNhatThongTin(); capNhatNut();
+      return;
+    }
+    if(lan>=20){
+      _syncing=false;
+      toast('Máy trạm chưa phản hồi — có thể đang ngoài khung giờ an toàn (tránh đá phiên WMS). Dữ liệu sẽ tự cập nhật ở lượt canh kế tiếp.','warn');
+      capNhatNut();
+      return;
+    }
+    setTimeout(hoiMoc,30000);
+  };
+  function hoiMoc(){
+    lan++;
+    var old=document.getElementById('sc_mocmoi'); if(old) old.remove();
+    var sc=document.createElement('script'); sc.id='sc_mocmoi';
+    sc.src="https://docs.google.com/spreadsheets/d/"+SHEET_ID+"/gviz/tq?tqx=out:json;responseHandler:gviz_mocmoi"+
+           "&sheet="+encodeURIComponent(META_TAB)+"&headers=0&range=B1&_="+Date.now();
+    sc.onerror=function(){ if(lan>=20){ _syncing=false; capNhatNut(); } else setTimeout(hoiMoc,30000); };
+    document.body.appendChild(sc);
+  }
+  setTimeout(hoiMoc,20000);   // máy trạm poll cờ mỗi ~2' + kéo vài phút — bắt đầu hỏi sau 20s
 }
 
 /* ===== Bộ 8 kiểu tiêu đề — bê nguyên từ Audit Kiểm soát kho, đổi HASAKI -> FACTORY ===== */
