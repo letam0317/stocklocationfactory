@@ -9,6 +9,12 @@ phiên đang sống của bạn** thay vì tự re-login SSO — vì WMS chỉ c
 máy trạm là bạn bị văng. Cài extension này trên máy có mở WMS = hết bị văng trong giờ làm, đồng thời
 nút "Tải lại dữ liệu" trên dashboard chạy được cả trong giờ làm việc.
 
+**v1.2.0 (22/07/2026):** thêm kênh nghe token **ngay trong trang WMS** (`wms-main-hook.js` hook
+fetch/XHR ở MAIN world + `wms-relay.js` chuyển về background). Kênh webRequest cũ hay HỤT vì
+service worker MV3 ngủ sau ~30 giây; kênh mới không bao giờ lỡ và mỗi lần báo token còn tự đánh
+thức service worker dậy đẩy GAS. **Máy đã cài bản cũ phải bấm Reload (↻) trong `edge://extensions`
+và mở lại tab WMS** thì bản mới mới có hiệu lực.
+
 ## Vì sao cần
 - API WMS ghi `created_by` = chủ token upload; muốn ghi tên bạn thì phải upload bằng token của bạn.
 - Trang dashboard (github.io) không đọc được token WMS (khác origin) → cần extension làm cầu nối.
@@ -16,7 +22,7 @@ nút "Tải lại dữ liệu" trên dashboard chạy được cả trong giờ 
   (không can thiệp, không đăng nhập) → không thể đá phiên ai.
 
 ## Cài (1 lần/máy — Edge hoặc Chrome)
-1. Tải cả thư mục `wms-bridge/` về máy (giữ nguyên 3 file: manifest.json, background.js, bridge.js).
+1. Tải cả thư mục `wms-bridge/` về máy (giữ nguyên 5 file: manifest.json, background.js, bridge.js, wms-main-hook.js, wms-relay.js).
 2. Mở `edge://extensions` (hoặc `chrome://extensions`).
 3. Bật **Developer mode** (góc phải).
 4. Bấm **Load unpacked** → chọn thư mục `wms-bridge`.
@@ -36,7 +42,8 @@ nút "Tải lại dữ liệu" trên dashboard chạy được cả trong giờ 
 ## Quyền extension (tối thiểu)
 - `host_permissions: wms-gw.inshasaki.com` — để nghe header Authorization của chính bạn.
 - `webRequest` (chỉ QUAN SÁT `onSendHeaders`, không chặn/sửa), `storage` (nhớ token mới nhất trong phiên).
-- Content script chỉ chạy trên trang dashboard `letam0317.github.io` để làm cầu nối.
+- Content script trên `letam0317.github.io` (cầu nối dashboard) và `wms.inshasaki.com`
+  (chỉ QUAN SÁT header Authorization của fetch/XHR — không sửa request, không đăng nhập).
 - Token chỉ lưu tạm trong `storage.session` (mất khi đóng trình duyệt), không gửi đi đâu ngoài WMS.
 
 ## Riêng tư / an toàn

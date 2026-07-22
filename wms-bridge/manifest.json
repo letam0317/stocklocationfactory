@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Hasaki WMS Token Bridge — Factory",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Đưa token phiên WMS của CHÍNH BẠN cho dashboard Factory (import ghi đúng tên bạn) và cho máy trạm đồng bộ (khỏi re-login đá phiên) — không đăng nhập lại, không tab ẩn.",
   "host_permissions": ["https://wms-gw.inshasaki.com/*", "https://script.google.com/*", "https://script.googleusercontent.com/*"],
   "permissions": ["webRequest", "storage"],
@@ -10,6 +10,17 @@
     {
       "matches": ["https://letam0317.github.io/*"],
       "js": ["bridge.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["https://wms.inshasaki.com/*"],
+      "js": ["wms-main-hook.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["https://wms.inshasaki.com/*"],
+      "js": ["wms-relay.js"],
       "run_at": "document_start"
     }
   ]
