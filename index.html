@@ -1004,7 +1004,7 @@ body.pcm-open #pcbar,body.pcm-open #pcprev{display:none}   /* modal tạo lệnh
     <div class="msum" id="abnmSum"></div>
     <div class="modalbody"><table class="mtbl"><thead><tr>
       <th class="pcc"><input type="checkbox" class="pcall" title="Chọn/bỏ chọn tất cả dòng đang lọc (kể cả ngoài 500 dòng hiển thị)"></th>
-      <th>Kho</th><th>SKU</th><th>ProductName</th><th>Brand</th><th>Category</th>
+      <th>Kho</th><th>SKU</th><th>ProductName</th><th>Category</th>
       <th class="num">Tồn</th><th class="num">Available</th>
       <th class="num">Conflict</th><th class="num">UID Temp</th><th class="num">Not Found</th><th class="num">Unsuitable</th><th class="num">Committed</th><th class="num">Committed Outbound</th>
     </tr></thead><tbody id="abnmBody"></tbody></table></div>
@@ -2618,7 +2618,7 @@ var ABN_COLS={
   sku:['sku','mã sku','ma sku'],
   pn:['product_name','productname','product name','tên sản phẩm','ten san pham','sản phẩm'],
   brand:['brand_name','brandname','brand','thương hiệu','thuong hieu'],
-  cat:['category_name','categoryname','category','ngành hàng','nganh hang','danh mục','nhóm hàng'],
+  cat:['category_name','categoryname','category name','category','ngành hàng','nganh hang','danh mục','nhóm hàng'],
   wh:['warehouse_name','warehousename','warehouse','warehouse name','kho'],
   ptype:['product_type','producttype','product type','loại sản phẩm','loai san pham','phân loại','classifyname','classify name'],
   in_stock:['in_stock','instock','in stock','tồn kho','tồn','ton'],
@@ -2658,7 +2658,7 @@ async function abnFetch(){
       var c=r.c||[];
       function gv(i){ return (i>=0&&c[i]&&c[i].v!=null)?c[i].v:''; }
       var sku=String(gv(idx.sku)).trim(); if(!sku) return;
-      var o={sku:sku, pn:String(gv(idx.pn)), brand:String(gv(idx.brand)),
+      var o={sku:sku, pn:String(gv(idx.pn)),
         cat:String(gv(idx.cat)||'').trim(), wh:String(gv(idx.wh)),   // rỗng = "" (không ép "(trống)"): pop-up hiện "—", combo lọc bỏ qua
         ptype:String(gv(idx.ptype)).trim(),
         in_stock:abnNum(gv(idx.in_stock)), available:abnNum(gv(idx.available))};
@@ -2839,7 +2839,7 @@ function abnmRowsWith(excludeK,state,q){
       if(f.exact){ if(vs.indexOf(f.raw)<0) return false; }
       else if(!vs.some(function(v){ return v.toLowerCase().indexOf(f.v)>=0; })) return false;
     }
-    if(q&&((r.sku+' '+r.pn+' '+r.brand+' '+r.cat).toLowerCase().indexOf(q)<0)) return false;
+    if(q&&((r.sku+' '+r.pn+' '+r.cat).toLowerCase().indexOf(q)<0)) return false;
     return true;
   });
 }
@@ -2870,14 +2870,14 @@ function abnmRender(){
   var rows=abnmRowsWith(null,state,q);
   var tk=null; state.forEach(function(f){ if(f.k==='type'&&f.exact&&f.raw){ var ty=abnTypeByLb(f.raw); if(ty) tk=ty.k; } });   // đang lọc 1 loại -> sắp theo loại đó
   rows=rows.slice().sort(function(a,b){ return tk?(b[tk]-a[tk]):(b._abn-a._abn); });
-  var NCOL=8+ABN_TYPES.length, cap=500, out=[];   // giới hạn dòng render — đồng bộ CAP các pop-up khác; bảng nghìn dòng × 13 cột làm treo trình duyệt máy yếu
+  var NCOL=7+ABN_TYPES.length, cap=500, out=[];   // giới hạn dòng render — đồng bộ CAP các pop-up khác; bảng nghìn dòng × 12 cột làm treo trình duyệt máy yếu (đã bỏ cột Brand)
   var sums={in_stock:0,available:0}; ABN_TYPES.forEach(function(t){ sums[t.k]=0; });
   for(var i=0;i<rows.length;i++){ var r=rows[i];
     sums.in_stock+=r.in_stock; sums.available+=r.available; ABN_TYPES.forEach(function(t){ sums[t.k]+=r[t.k]; });
     if(out.length<cap){
       var tds=ABN_TYPES.map(function(t){ var v=r[t.k]; return v>0?('<td class="num" style="color:'+t.c+';font-weight:700">'+nf(v)+'</td>'):'<td class="num abncell0">0</td>'; }).join('');
       out.push('<tr>'+pcCell(r.wh,r.sku,r.pn,0,abnReason(r))+'<td class="whn"><span class="dot" style="background:'+abnColor(r.wh)+'"></span>'+esc(r.wh)+'</td>'+
-        '<td>'+esc(r.sku)+'</td><td class="pn">'+esc(r.pn)+'</td><td>'+esc(r.brand)+'</td><td>'+(r.cat?esc(r.cat):'—')+'</td>'+
+        '<td>'+esc(r.sku)+'</td><td class="pn">'+esc(r.pn)+'</td><td>'+(r.cat?esc(r.cat):'—')+'</td>'+
         '<td class="num">'+nf(r.in_stock)+'</td><td class="num">'+nf(r.available)+'</td>'+tds+'</tr>');
     }
   }
