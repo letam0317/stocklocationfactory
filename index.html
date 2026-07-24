@@ -327,14 +327,17 @@ h1.brand-title{margin:0;min-width:0}
 .kkfbar .fld .combo-menu{width:max-content;min-width:100%;max-width:340px;right:auto}   /* menu nở theo nội dung (mã request + ngày · số dòng) dù pill hẹp */
 .kkfbar .date-btn{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font-size:12px;font-family:inherit;text-align:left;padding:6px 7px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kkfbar .date-btn .ph{color:var(--ink3);opacity:.75}
-.kkfbar .fclr{border:0;background:transparent;color:var(--brand2);font-weight:650;font-size:12px;cursor:pointer;white-space:nowrap;padding:7px 4px;font-family:inherit}
-.kkfbar .fclr:hover{text-decoration:underline}
+.kkfbar .fclr{height:32px;display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--brand2);font-weight:650;font-size:12px;cursor:pointer;white-space:nowrap;padding:0 12px;font-family:inherit}
+.kkfbar .fclr:hover{border-color:var(--brand2);background:var(--hover)}
 /* Hàng điều khiển 1 DÒNG đầu tab Kiểm kê: chip kho + pill lọc + nút Kế hoạch chảy chung 1 hàng flex (tự wrap khi hẹp);
    segment display:contents để con của chúng đứng NGANG HÀNG nhau thay vì thành 2 khối riêng */
 .kkonebar{row-gap:6px}
 .kkonebar>#kkWhBar{display:contents}
 .kkonebar>#kkFilters:not([hidden]){display:contents}
-.kkonebar .kkplan{margin-left:auto;white-space:nowrap;flex:0 0 auto;padding:6px 11px;font-size:12px}
+/* ĐỒNG BỘ KÍCH THƯỚC cả hàng: mọi phần tử (chip kho · pill lọc · Xoá lọc · nút Kế hoạch) cùng cao 32px,
+   cùng cỡ chữ — chuẩn pill .mfilters dùng chung toàn dự án, hết cảnh cái to cái nhỏ */
+.kkonebar .kktab{height:32px;display:inline-flex;align-items:center;padding:0 14px;font-size:12.5px}
+.kkonebar .kkplan{margin-left:auto;white-space:nowrap;flex:0 0 auto}
 @media(max-width:1420px){.kkonebar .kkplan .pt{display:none}}   /* màn hẹp: nút Kế hoạch rút về icon 📋 (tooltip giữ đủ chữ) */
 #kkmodal .kkwrap{overflow-x:hidden}
 #kkmodal .kkwrap table{min-width:0;width:100%}
