@@ -318,6 +318,15 @@ h1.brand-title{margin:0;min-width:0}
 .mfilters.kkmf{display:flex;flex-wrap:wrap;gap:6px 8px}
 .kkmf .fld{flex:1 1 190px;min-width:170px}
 .kkmf .fld.q{flex:2 1 250px}
+/* Bộ lọc cấp tab Kiểm kê (#kkFilters): tái dùng pill .mfilters của dự án nhưng GỌN — nền trong suốt,
+   không đóng khối, mỗi ô co theo nội dung; áp dụng cho TOÀN BỘ tab (dải số · trạng thái · chart · thẻ kho) */
+.kkfbar{padding:0;border:0;background:transparent;margin:-4px 0 12px}
+.kkfbar .fld{flex:0 1 205px;min-width:180px}
+.kkfbar .fld.dt{flex:0 1 235px;min-width:205px}
+.kkfbar .date-btn{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font-size:12px;font-family:inherit;text-align:left;padding:6px 7px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kkfbar .date-btn .ph{color:var(--ink3);opacity:.75}
+.kkfbar .fclr{border:0;background:transparent;color:var(--brand2);font-weight:650;font-size:12px;cursor:pointer;white-space:nowrap;padding:7px 4px;font-family:inherit}
+.kkfbar .fclr:hover{text-decoration:underline}
 #kkmodal .kkwrap{overflow-x:hidden}
 #kkmodal .kkwrap table{min-width:0;width:100%}
 #kkmodal .kkwrap thead th,#kkmodal .kkwrap tbody td{white-space:normal;word-wrap:break-word}
@@ -342,6 +351,12 @@ h1.brand-title{margin:0;min-width:0}
 .kkscope{background:color-mix(in srgb,var(--accent) 14%,var(--surface));color:var(--accent);border-radius:999px;padding:2px 10px;font-size:10.5px;font-weight:750;letter-spacing:0}
 .kktab .dot{width:8px;height:8px;margin-right:6px}
 .whsub2{font-size:11px;color:var(--ink2);margin-top:2px}
+/* Thẻ kho tab Kiểm kê: nhãn + số liệu nằm CÙNG 1 DÒNG (nhãn trái · số phải), không còn gãy dòng làm lệch thẻ */
+.whsplit{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.whsplit .lb{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.whsplit .vl{white-space:nowrap;font-variant-numeric:tabular-nums;flex:0 0 auto}
+.whsplit .vl b{color:var(--ink);font-weight:650}
+#kkWhList .whname{max-width:none;flex:1 1 auto}
 .kkwrap{max-height:62vh;overflow:auto;border:1px solid var(--line);border-radius:8px}
 .kkwrap table{width:100%;border-collapse:collapse;font-size:12px;min-width:1080px}
 .kkwrap thead th{position:sticky;top:0;z-index:2;background:var(--surface2);color:var(--ink3);font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;text-align:left;padding:9px 11px;border-bottom:1px solid var(--line);white-space:nowrap}
@@ -838,6 +853,8 @@ body.pcm-open #pcbar,body.pcm-open #pcprev{display:none}   /* modal tạo lệnh
   <!-- Cross-filter KHO cấp tab: chip kho lọc toàn bộ dải chỉ số/thanh trạng thái/chart/pop-up; lọc chi tiết vẫn nằm TRONG pop-up -->
   <div class="kkbar" style="margin-bottom:6px"><span class="hint" style="flex:1">Lệnh tạo từ dashboard nằm ở "sổ kế hoạch" WMS trước khi thành phiếu</span><button class="kktab" onclick="plOpen()">📋 Kế hoạch chờ push (WMS)</button></div>
   <div class="kkbar" id="kkWhBar" style="margin-bottom:12px"></div>
+  <!-- Bộ lọc cấp tab: Ngày kiểm (lịch thả xuống chuẩn dự án) + Request code + Type SKU + Type vị trí — sinh động khi có dữ liệu -->
+  <div class="mfilters kkmf kkfbar" id="kkFilters" hidden></div>
   <div class="grid2 even">
     <section class="panel">
       <h2>Kiểm kê theo SKU <span class="hint">(Type: SKU · SKU Factory)</span> <span class="kkscope" id="kkScope-sku" hidden></span></h2>
@@ -1527,6 +1544,9 @@ document.addEventListener('keydown',function(e){
   if(document.querySelector('#abnmFilters .combo-menu.show')){ abnmCloseCombos(); return; }
   var am=document.getElementById('abnmodal');
   if(am && am.classList.contains('show')){ closeAbnModal(); return; }
+  if(document.querySelector('#kkFilters .combo-menu.show')){ kkfCloseCombos(); return; }   // bộ lọc cấp tab Kiểm kê
+  var kfd=document.getElementById('kkfDatePop');
+  if(kfd && !kfd.classList.contains('hidden')){ kkfCloseDatePop(); return; }
   closeModal();
 });
 document.getElementById('catMenu').addEventListener('click',function(e){
@@ -1802,8 +1822,34 @@ function kkMap(kind,H,rows){
   return rows.filter(function(r){ return String(g(r,d.loc))!==''; }).map(function(r){ return {id:String(g(r,d.id)),req:String(g(r,d.req)),wh:String(g(r,d.wh)),type:String(g(r,d.type)),loc:String(g(r,d.loc)),pri:String(g(r,d.pri)),diff:Number(g(r,d.diff))||0,by:String(g(r,d.by)),cdate:String(g(r,d.cdate)),upd:String(g(r,d.upd)),plan:String(g(r,d.plan)),st:String(g(r,d.st))}; });
 }
 function kkStKey(r){ return String(r.st||'').trim().toUpperCase()||'NOT COUNT'; }
-/* Cross-filter KHO cấp tab: KK.wh rỗng = toàn bộ kho; có giá trị = mọi chỉ số/chart/pop-up tính riêng kho đó */
-function kkRows(kind){ var rs=KK.data[kind]; return KK.wh?rs.filter(function(r){ return r.wh===KK.wh; }):rs; }
+/* Cross-filter KHO cấp tab: KK.wh rỗng = toàn bộ kho; có giá trị = mọi chỉ số/chart/pop-up tính riêng kho đó.
+   Mọi dòng đều đi tiếp qua bộ lọc trường cấp tab (#kkFilters: ngày kiểm / request / type) -> toàn tab đồng nhất */
+function kkRows(kind){
+  var rs=KK.data[kind];
+  if(KK.wh) rs=rs.filter(function(r){ return r.wh===KK.wh; });
+  return kkFltRows(kind,rs);
+}
+/* Bộ lọc cấp tab: req/type đọc thẳng từ combo (chọn menu = khớp CHÍNH XÁC như pop-up, gõ tay = khớp chứa);
+   Ngày lọc theo Counted date (fallback Updated At — cùng nguồn với chart "Đã kiểm theo ngày").
+   skip = chừa 1 trường khi sinh menu chain-filter (menu của combo nào bỏ qua chính combo đó) */
+var KKF={s:'',e:''};   // khoảng ngày đã CHỐT (ISO yyyy-mm-dd); rỗng = không lọc ngày
+function kkfGet(k){
+  var inp=document.querySelector('#kkFilters .combo input[data-fk="'+k+'"]');
+  if(!inp||!inp.value.trim()) return null;
+  var v=inp.value.trim();
+  return {raw:v,v:v.toLowerCase(),exact:!!inp.getAttribute('data-exact')};
+}
+function kkFltRows(kind,rs,skip){
+  var f;
+  if(skip!=='req'&&(f=kkfGet('req'))) rs=rs.filter(function(r){ var c=String(r.req||'').trim(); return f.exact?c===f.raw:c.toLowerCase().indexOf(f.v)>=0; });
+  var tk=(kind==='sku')?'ts':'tl';   // Type tách riêng 2 khối: ts áp cho SKU, tl áp cho mã vị trí
+  if(skip!==tk&&(f=kkfGet(tk))) rs=rs.filter(function(r){ var c=String(r.type||'').trim(); return f.exact?c===f.raw:c.toLowerCase().indexOf(f.v)>=0; });
+  if(skip!=='date'&&(KKF.s||KKF.e)) rs=rs.filter(function(r){
+    var ms=kkCountMs(r); if(isNaN(ms)) return false;   // lọc ngày đang bật -> dòng chưa có ngày kiểm bị loại
+    var d=kkDayStr(ms); return (!KKF.s||d>=KKF.s)&&(!KKF.e||d<=KKF.e);
+  });
+  return rs;
+}
 function kkSetWh(w){ if(KK.wh===w) w=''; KK.wh=w; kkRender(); }   // bấm lại kho đang chọn = bỏ lọc
 function kkDash(v){ return v?esc(v):'—'; }
 function kkDcell(d){ return '<td class="num '+(d<0?'d-am':d>0?'d-duong':'d-khop')+'">'+(d>0?'+':'')+nf(d)+'</td>'; }
@@ -1861,6 +1907,7 @@ function kkStMeta(s){ return KK_ST_META[s]||[s,PAL[s.length%PAL.length]]; }
 /* Dashboard Kiểm kê: 2 khối song song (SKU | mã vị trí), mỗi khối = dải số + thanh trạng thái + chart ngày */
 function kkRender(){
   if(!document.getElementById('kkStrip-sku')) return;
+  kkfBuild();   // thanh lọc cấp tab dựng 1 lần khi dữ liệu về (giữ nguyên giá trị đang gõ giữa các lần render)
   kkRenderWhBar();
   kkRenderPanel('sku');
   kkRenderPanel('loc');
@@ -1877,6 +1924,180 @@ function kkRenderWhBar(){
     '<button class="kktab'+(KK.wh?'':' active')+'" onclick="kkSetWh(\'\')">Tất cả kho</button>'+
     ws.map(function(w){ return '<button class="kktab'+(KK.wh===w?' active':'')+'" data-w="'+esc(w)+'" onclick="kkSetWh(this.getAttribute(\'data-w\'))"><span class="dot" style="background:'+kkColor(w)+'"></span>'+esc(w)+'</button>'; }).join('');
 }
+/* ===== Bộ lọc cấp tab Kiểm kê (#kkFilters) — Ngày kiểm (lịch dp chuẩn dự án) + Request + Type SKU + Type vị trí =====
+   Dựng 1 LẦN khi có dữ liệu (giá trị gõ dở không bị mất khi kkRender chạy lại); menu combo sinh lúc mở (chain-filter). */
+function kkfBuild(){
+  var el=document.getElementById('kkFilters'); if(!el||el.dataset.built) return;
+  if(!KK.data.sku.length&&!KK.data.loc.length) return;   // fetch lỗi/rỗng -> không bày bộ lọc thừa
+  el.dataset.built='1'; el.hidden=false;
+  function cb(k,lb,ph){
+    return '<div class="fld"><label>'+lb+'</label><div class="combo" data-fk="'+k+'" data-lb="'+lb+'">'+
+      '<input data-fk="'+k+'" autocomplete="off" placeholder="'+ph+'" oninput="kkfComboInput(this)" onfocus="kkfComboMenu(this.parentNode)">'+
+      '<div class="combo-menu"></div></div></div>';
+  }
+  el.innerHTML=
+    '<div class="fld dt" title="Lọc theo Counted date — áp dụng cho toàn bộ tab (dải số · trạng thái · chart · thẻ kho)"><label>Ngày kiểm</label>'+
+      '<button type="button" class="date-btn" id="kkfDateBtn"><span class="ph">Tất cả ngày</span></button>'+
+      '<span class="date-pop hidden" id="kkfDatePop"></span></div>'+
+    cb('req','Request','Tất cả mã request…')+
+    cb('ts','Type SKU','Tất cả type…')+
+    cb('tl','Type vị trí','Tất cả type…')+
+    '<div class="fld bare"><button type="button" class="fclr" id="kkfClear" hidden onclick="kkfReset()" title="Bỏ toàn bộ bộ lọc ngày / request / type">✕ Xoá lọc</button></div>';
+}
+/* Nguồn dòng cho menu combo: tôn trọng kho đang chọn + các bộ lọc CÒN LẠI (trừ chính nó) — đúng pattern pop-up */
+function kkfMenuRows(k){
+  var kinds=(k==='ts')?['sku']:(k==='tl')?['loc']:['sku','loc'];
+  var out=[];
+  kinds.forEach(function(kind){
+    var rs=KK.data[kind];
+    if(KK.wh) rs=rs.filter(function(r){ return r.wh===KK.wh; });
+    out=out.concat(kkFltRows(kind,rs,k));
+  });
+  return out;
+}
+function kkfComboMenu(combo){
+  var k=combo.getAttribute('data-fk'), lb=combo.getAttribute('data-lb');
+  var inp=combo.querySelector('input'), menu=combo.querySelector('.combo-menu');
+  var field=(k==='req')?'req':'type';
+  var cnt={};
+  kkfMenuRows(k).forEach(function(r){ var v=String(r[field]||'').trim(); if(v) cnt[v]=(cnt[v]||0)+1; });
+  var typed=inp.getAttribute('data-exact')?'':inp.value.trim().toLowerCase();
+  var items=Object.keys(cnt).sort(); if(k==='req') items.reverse();   // request: mã mới nhất lên đầu
+  items=items.filter(function(v){ return !typed||v.toLowerCase().indexOf(typed)>=0; });
+  var html='<div class="combo-item all" data-v=""><span class="nm">Tất cả '+esc(lb)+'</span><span class="c">'+Object.keys(cnt).length+' mục</span></div>';
+  html+=items.slice(0,400).map(function(v){ return '<div class="combo-item" data-v="'+esc(v)+'"><span class="nm">'+esc(v)+'</span><span class="c">'+nf(cnt[v])+'</span></div>'; }).join('');
+  if(!items.length) html+='<div class="combo-empty">Không có mục phù hợp</div>';
+  menu.innerHTML=html;
+  kkfCloseCombos(combo); kkfCloseDatePop();
+  menu.classList.add('show');
+}
+function kkfComboInput(inp){ inp.removeAttribute('data-exact'); kkfComboMenu(inp.parentNode); kkfApply(); }
+function kkfCloseCombos(except){
+  document.querySelectorAll('#kkFilters .combo-menu.show').forEach(function(m){ if(!except||m.parentNode!==except) m.classList.remove('show'); });
+}
+var _kkfDeb=null;
+function kkfApply(){ clearTimeout(_kkfDeb); _kkfDeb=setTimeout(function(){ kkRender(); kkfClearBtn(); },160); }
+function kkfClearBtn(){
+  var n=(KKF.s?1:0)+(kkfGet('req')?1:0)+(kkfGet('ts')?1:0)+(kkfGet('tl')?1:0);
+  var c=document.getElementById('kkfClear'); if(c) c.hidden=!n;
+}
+function kkfReset(){
+  KKF.s=KKF.e='';
+  document.querySelectorAll('#kkFilters .combo input').forEach(function(i){ i.value=''; i.removeAttribute('data-exact'); });
+  kkfCloseCombos(); kkfCloseDatePop(); kkfUpdateBtn(); kkRender();
+}
+/* --- Bộ chọn khoảng ngày: tái dùng nguyên lịch dp-* của dự án (fcMonthHTML), preset hướng QUÁ KHỨ vì là bộ LỌC --- */
+var KKF_DP={view:{y:0,m:0},selS:'',selE:''};
+function kkfUpdateBtn(){
+  var b=document.getElementById('kkfDateBtn'); if(!b) return;
+  b.innerHTML=KKF.s?esc(KKF.s===KKF.e?fcFmtVN(KKF.s):fcFmtVN(KKF.s)+' → '+fcFmtVN(KKF.e)):'<span class="ph">Tất cả ngày</span>';
+  kkfClearBtn();
+}
+function kkfOpenDatePop(){
+  kkfCloseCombos();
+  var base=KKF.s||fcTodayISO();
+  KKF_DP={view:{y:Number(base.slice(0,4)),m:Number(base.slice(5,7))-1},selS:KKF.s||'',selE:KKF.s?(KKF.e||KKF.s):''};
+  var pop=document.getElementById('kkfDatePop');
+  pop.innerHTML=
+    '<span class="dp-presets" style="display:flex">'+
+      '<button type="button" data-preset="today">Hôm nay</button>'+
+      '<button type="button" data-preset="7">7 ngày qua</button>'+
+      '<button type="button" data-preset="30">30 ngày qua</button>'+
+      '<button type="button" data-preset="month">Tháng này</button>'+
+    '</span>'+
+    '<span class="dp-nav" style="display:flex"><button type="button" id="kkfDpPrev">‹ Trước</button><span></span><button type="button" id="kkfDpNext">Sau ›</button></span>'+
+    '<span class="dp-months" id="kkfDpMonths" style="display:flex"></span>'+
+    '<span class="dp-foot" style="display:flex"><span class="dpsel">Chưa chọn</span><span><button type="button" id="kkfDpClear">Xoá</button><button type="button" class="primary" id="kkfDpApply">Áp dụng</button></span></span>';
+  pop.classList.remove('hidden');
+  kkfRenderCal();
+  kkfBindRepos(true);
+}
+function kkfCloseDatePop(){
+  var pop=document.getElementById('kkfDatePop');
+  if(pop&&!pop.classList.contains('hidden')){ pop.classList.add('hidden'); pop.innerHTML=''; pop.style.maxHeight=''; pop.style.left=pop.style.top=''; }
+  kkfBindRepos(false);
+}
+function kkfRenderCal(){
+  var y=KKF_DP.view.y, m=KKF_DP.view.m, y2=(m===11)?y+1:y, m2=(m+1)%12;
+  var el=document.getElementById('kkfDpMonths'); if(!el) return;
+  el.innerHTML=fcMonthHTML(y,m)+fcMonthHTML(y2,m2);
+  kkfPaint();
+  kkfPosDatePop();
+}
+function kkfPaint(){
+  var a=KKF_DP.selS, b=KKF_DP.selE; if(a&&b&&a>b){ var t=a;a=b;b=t; }
+  var today=fcTodayISO();
+  document.querySelectorAll('#kkfDpMonths .dp-day').forEach(function(el){
+    var iso=el.getAttribute('data-iso');
+    el.classList.remove('in-range','edge');
+    el.classList.toggle('today',iso===today);
+    if(a&&b){ if(iso===a||iso===b) el.classList.add('edge'); else if(iso>a&&iso<b) el.classList.add('in-range'); }
+    else if(a&&iso===a) el.classList.add('edge');
+  });
+  var s=document.querySelector('#kkfDatePop .dpsel');
+  if(s) s.textContent=a?(b&&b!==a?fcFmtVN(a)+' → '+fcFmtVN(b):fcFmtVN(a)):'Chưa chọn';
+}
+/* Lịch position:fixed bám nút, tự lật lên/né mép — bản rút gọn của fcPositionDatePop (ngoài modal nên toạ độ = viewport) */
+function kkfPosDatePop(){
+  var pop=document.getElementById('kkfDatePop'), btn=document.getElementById('kkfDateBtn');
+  if(!pop||!btn||pop.classList.contains('hidden')) return;
+  pop.style.maxHeight='';
+  var r=btn.getBoundingClientRect(), vw=window.innerWidth, vh=window.innerHeight, M=8;
+  var pw=pop.offsetWidth, ph=pop.offsetHeight;
+  var left=Math.max(M, Math.min(r.left, vw-pw-M));
+  var below=vh-r.bottom-M, above=r.top-M, top;
+  if(ph<=below || below>=above){ top=r.bottom+6; if(ph>below) pop.style.maxHeight=Math.max(160,below-6)+'px'; }
+  else { var h=Math.min(ph,above-6); pop.style.maxHeight=Math.max(160,h)+'px'; top=Math.max(M,r.top-6-h); }
+  pop.style.left=Math.round(left)+'px';
+  pop.style.top=Math.round(top)+'px';
+}
+var _kkfBound=false;
+function kkfBindRepos(on){
+  if(on&&!_kkfBound){ window.addEventListener('resize',kkfPosDatePop); window.addEventListener('scroll',kkfPosDatePop,true); _kkfBound=true; }
+  else if(!on&&_kkfBound){ window.removeEventListener('resize',kkfPosDatePop); window.removeEventListener('scroll',kkfPosDatePop,true); _kkfBound=false; }
+}
+function kkfPreset(p){
+  var t=fcTodayISO(), tm=Date.parse(t+'T00:00:00Z');
+  function truoc(n){ var d=new Date(tm-n*86400000); return fcIsoOf(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()); }
+  if(p==='today'){ KKF_DP.selS=t; KKF_DP.selE=t; }
+  else if(p==='month'){ KKF_DP.selS=t.slice(0,8)+'01'; KKF_DP.selE=t; }
+  else { KKF_DP.selS=truoc(Number(p)-1); KKF_DP.selE=t; }
+  KKF_DP.view={y:Number(KKF_DP.selS.slice(0,4)),m:Number(KKF_DP.selS.slice(5,7))-1};
+  kkfRenderCal();   // preset chỉ TÔ dải, bấm Áp dụng mới chốt — đúng hành vi lịch toàn dự án
+}
+function kkfCommit(){
+  var a=KKF_DP.selS, b=KKF_DP.selE; if(a&&b&&a>b){ var t=a;a=b;b=t; }
+  KKF.s=a||''; KKF.e=a?(b||a):'';   // chọn 1 ngày = lọc đúng ngày đó
+  kkfCloseDatePop(); kkfUpdateBtn(); kkRender();
+}
+/* Delegation 1 lần trên container cố định — cùng pattern #kkmFilters/#fcBody */
+document.getElementById('kkFilters').addEventListener('click',function(e){
+  if(e.target.closest('#kkfDateBtn')){ e.preventDefault();
+    var hid=document.getElementById('kkfDatePop').classList.contains('hidden');
+    kkfCloseCombos(); if(hid) kkfOpenDatePop(); else kkfCloseDatePop(); return; }
+  var day=e.target.closest('.dp-day');
+  if(day){ e.preventDefault();
+    var iso=day.getAttribute('data-iso');
+    if(!KKF_DP.selS||(KKF_DP.selS&&KKF_DP.selE)){ KKF_DP.selS=iso; KKF_DP.selE=''; }   // bắt đầu dải MỚI
+    else if(iso<KKF_DP.selS){ KKF_DP.selE=KKF_DP.selS; KKF_DP.selS=iso; }              // chọn ngược -> hoán đổi
+    else KKF_DP.selE=iso;
+    kkfPaint(); return; }
+  var pr=e.target.closest('#kkfDatePop .dp-presets button'); if(pr){ e.preventDefault(); kkfPreset(pr.getAttribute('data-preset')); return; }
+  if(e.target.closest('#kkfDpPrev')){ e.preventDefault(); var v=KKF_DP.view, m=v.m-1, y=v.y; if(m<0){m=11;y--;} KKF_DP.view={y:y,m:m}; kkfRenderCal(); return; }
+  if(e.target.closest('#kkfDpNext')){ e.preventDefault(); var v2=KKF_DP.view, m2=v2.m+1, y2=v2.y; if(m2>11){m2=0;y2++;} KKF_DP.view={y:y2,m:m2}; kkfRenderCal(); return; }
+  if(e.target.closest('#kkfDpApply')){ e.preventDefault(); kkfCommit(); return; }
+  if(e.target.closest('#kkfDpClear')){ e.preventDefault(); KKF_DP.selS=KKF_DP.selE=''; KKF.s=KKF.e=''; kkfCloseDatePop(); kkfUpdateBtn(); kkRender(); return; }
+  if(e.target.closest('#kkfDatePop')) return;   // click nền lịch: không làm gì
+  var it=e.target.closest('.combo-item'); if(!it) return;
+  var inp=it.closest('.combo').querySelector('input');
+  inp.value=it.getAttribute('data-v')||'';
+  if(inp.value) inp.setAttribute('data-exact','1'); else inp.removeAttribute('data-exact');
+  kkfCloseCombos(); kkRender(); kkfClearBtn();
+});
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#kkFilters .combo')) kkfCloseCombos();
+  if(!e.target.closest('#kkFilters .fld.dt')) kkfCloseDatePop();
+});
 /* CT3: MẪU SỐ TUYỆT ĐỐI — Tổng lấy từ dữ liệu Stock Location (distinct SKU/mã vị trí tồn của kho,
    tab mastige/garment đã có trong G-Sheet), bất kể đã kiểm hay chưa. */
 function kkStockSet(kind,w){
@@ -2177,7 +2398,8 @@ function kkRenderWh(){
   var el=document.getElementById('kkWhList'); if(!el) return;
   var agg={};
   ['sku','loc'].forEach(function(kind){
-    KK.data[kind].forEach(function(r){   // dùng DỮ LIỆU GỐC (bỏ qua cross-filter) để luôn liệt kê đủ các kho
+    /* BỎ QUA cross-filter KHO (liệt kê đủ các kho) nhưng TÔN TRỌNG bộ lọc trường cấp tab (ngày/request/type) */
+    kkFltRows(kind,KK.data[kind]).forEach(function(r){
       var w=r.wh||'(trống)';
       if(!agg[w]) agg[w]={sku:{chk:new Set(),rows:0},loc:{chk:new Set(),rows:0}};
       var a=agg[w][kind]; a.rows++;
@@ -2192,13 +2414,14 @@ function kkRenderWh(){
     var totS=uS.size||a.sku.rows, cntS=0; a.sku.chk.forEach(function(k){ if(uS.has(k)) cntS++; }); if(!uS.size) cntS=a.sku.chk.size;
     var totL=uL.size||a.loc.rows, cntL=0; a.loc.chk.forEach(function(k){ if(uL.has(k)) cntL++; }); if(!uL.size) cntL=a.loc.chk.size;
     var rs=totS?cntS/totS*100:0, rl=totL?cntL/totL*100:0;
+    /* Layout chống gãy dòng: header CHỈ còn tên kho; số liệu dọn về CÙNG DÒNG với nhãn từng chỉ số
+       (nhãn trái · "đã kiểm/tổng · %" phải, nowrap) — hết cảnh badge dài đẩy chữ xuống dòng làm lệch thẻ */
     return '<div class="whcard'+(KK.wh===w?' active':'')+'" data-w="'+esc(w)+'" onclick="kkSetWh(this.getAttribute(\'data-w\'))" title="Bấm để lọc toàn tab Kiểm kê theo kho này (bấm lại để bỏ lọc)">'+
-      '<div class="whtop"><span class="whname"><span class="dot" style="background:'+kkColor(w)+'"></span>'+esc(w)+'</span>'+
-      '<span class="whnum">SKU <b>'+nf(cntS)+'</b>/'+nf(totS)+' · VT <b>'+nf(cntL)+'</b>/'+nf(totL)+'</span></div>'+
+      '<div class="whtop"><span class="whname"><span class="dot" style="background:'+kkColor(w)+'"></span>'+esc(w)+'</span></div>'+
       '<div class="prog"><div class="progf" style="width:'+rs.toFixed(1)+'%;background:'+kkColor(w)+'"></div></div>'+
-      '<div class="whsub2">SKU đã kiểm '+pct(rs)+'</div>'+
+      '<div class="whsub2 whsplit"><span class="lb">SKU đã kiểm</span><span class="vl"><b>'+nf(cntS)+'</b>/'+nf(totS)+' · '+pct(rs)+'</span></div>'+
       '<div class="prog"><div class="progf" style="width:'+rl.toFixed(1)+'%;background:color-mix(in srgb,'+kkColor(w)+' 55%,var(--surface))"></div></div>'+
-      '<div class="whsub2">Mã vị trí đã kiểm '+pct(rl)+'</div></div>';
+      '<div class="whsub2 whsplit"><span class="lb">Mã vị trí đã kiểm</span><span class="vl"><b>'+nf(cntL)+'</b>/'+nf(totL)+' · '+pct(rl)+'</span></div></div>';
   }).join('')||'<div class="histempty">Chưa có dữ liệu kiểm kê.</div>';
   kkSwap(el);
 }
