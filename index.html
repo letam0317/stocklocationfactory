@@ -324,6 +324,7 @@ h1.brand-title{margin:0;min-width:0}
 .kkfbar .fld{flex:0 1 152px;min-width:130px}
 .kkfbar .fld.dt{flex:0 1 182px;min-width:160px}
 .kkfbar .fld.bare{flex:0 0 auto;min-width:0}   /* ô bọc nút Xoá lọc: KHÔNG giữ chỗ khi nút đang ẩn */
+.kkfbar .fld .combo-menu{width:max-content;min-width:100%;max-width:340px;right:auto}   /* menu nở theo nội dung (mã request + ngày · số dòng) dù pill hẹp */
 .kkfbar .date-btn{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font-size:12px;font-family:inherit;text-align:left;padding:6px 7px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kkfbar .date-btn .ph{color:var(--ink3);opacity:.75}
 .kkfbar .fclr{border:0;background:transparent;color:var(--brand2);font-weight:650;font-size:12px;cursor:pointer;white-space:nowrap;padding:7px 4px;font-family:inherit}
@@ -1969,13 +1970,26 @@ function kkfComboMenu(combo){
   var k=combo.getAttribute('data-fk'), lb=combo.getAttribute('data-lb');
   var inp=combo.querySelector('input'), menu=combo.querySelector('.combo-menu');
   var field=(k==='req')?'req':'type';
-  var cnt={};
-  kkfMenuRows(k).forEach(function(r){ var v=String(r[field]||'').trim(); if(v) cnt[v]=(cnt[v]||0)+1; });
+  var cnt={}, last={};
+  kkfMenuRows(k).forEach(function(r){
+    var v=String(r[field]||'').trim(); if(!v) return;
+    cnt[v]=(cnt[v]||0)+1;
+    if(k==='req'){   // ngày ĐẠI DIỆN của request = mốc mới nhất trong Counted date/Updated At/Plan Date
+      var t=kkCountMs(r); if(isNaN(t)) t=0;
+      var p=kkParseDate(r.plan); if(!isNaN(p)&&p>t) t=p;
+      if(!(v in last)||t>last[v]) last[v]=t;
+    }
+  });
   var typed=inp.getAttribute('data-exact')?'':inp.value.trim().toLowerCase();
-  var items=Object.keys(cnt).sort(); if(k==='req') items.reverse();   // request: mã mới nhất lên đầu
+  var items=Object.keys(cnt);
+  if(k==='req') items.sort(function(a,b){ return (last[b]||0)-(last[a]||0)||(a<b?1:-1); });   // NGÀY MỚI NHẤT lên đầu
+  else items.sort();
   items=items.filter(function(v){ return !typed||v.toLowerCase().indexOf(typed)>=0; });
   var html='<div class="combo-item all" data-v=""><span class="nm">Tất cả '+esc(lb)+'</span><span class="c">'+Object.keys(cnt).length+' mục</span></div>';
-  html+=items.slice(0,400).map(function(v){ return '<div class="combo-item" data-v="'+esc(v)+'"><span class="nm">'+esc(v)+'</span><span class="c">'+nf(cnt[v])+'</span></div>'; }).join('');
+  html+=items.slice(0,400).map(function(v){
+    var d=(k==='req'&&last[v])?kkFmtD(last[v],true).slice(0,5)+' · ':'';   // "24/07 · 12" = ngày mới nhất · số dòng
+    return '<div class="combo-item" data-v="'+esc(v)+'"><span class="nm">'+esc(v)+'</span><span class="c">'+d+nf(cnt[v])+'</span></div>';
+  }).join('');
   if(!items.length) html+='<div class="combo-empty">Không có mục phù hợp</div>';
   menu.innerHTML=html;
   kkfCloseCombos(combo); kkfCloseDatePop();
@@ -2125,8 +2139,13 @@ function kkUniverse(kind){
   kkKhos().forEach(function(w){ kkStockSet(kind,w).forEach(function(k){ u.add(w+'|'+k); }); });
   return u;
 }
-/* CT3: "Đã kiểm" = có Counted Date HOẶC Status thực (khác rỗng/NOT COUNT) */
-function kkIsChecked(r){ return !isNaN(kkParseDate(r.cdate)) || kkStKey(r)!=='NOT COUNT'; }
+/* CT3: "Đã kiểm" = có Counted Date, HOẶC (thiếu date) status chứng tỏ ĐÃ đếm xong (VERIFIED/APPROVED/WAITING).
+   Sync plan-date (24/07/2026) bắt đầu đổ về cả phiếu CHƯA đếm: PENDING/CANCELED/PROCESSING không có Counted date
+   — không được tính là đã kiểm, kẻo % tiến độ kho và anti-join "Còn lại" phình ảo */
+function kkIsChecked(r){
+  if(!isNaN(kkParseDate(r.cdate))) return true;
+  var st=kkStKey(r); return st==='VERIFIED'||st==='APPROVED'||st==='WAITING FOR APPROVE';
+}
 /* ===== DỰ BÁO HOÀN THÀNH v2 — mô hình EFFORT + lịch làm việc (CHỦ NHẬT NGHỈ) =====
    1) Đo GIÂY/MÃ từ dữ liệu: gom phiếu theo (người đếm | ngày), cắt PHIÊN (gap ≤15'),
       tốc độ phiên = thời lượng ÷ số mã; median RIÊNG TỪNG NHÓM HÀNG
