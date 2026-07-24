@@ -321,12 +321,20 @@ h1.brand-title{margin:0;min-width:0}
 /* Bộ lọc cấp tab Kiểm kê (#kkFilters): tái dùng pill .mfilters của dự án nhưng GỌN — nền trong suốt,
    không đóng khối, mỗi ô co theo nội dung; áp dụng cho TOÀN BỘ tab (dải số · trạng thái · chart · thẻ kho) */
 .kkfbar{padding:0;border:0;background:transparent;margin:-4px 0 12px}
-.kkfbar .fld{flex:0 1 205px;min-width:180px}
-.kkfbar .fld.dt{flex:0 1 235px;min-width:205px}
+.kkfbar .fld{flex:0 1 152px;min-width:130px}
+.kkfbar .fld.dt{flex:0 1 182px;min-width:160px}
+.kkfbar .fld.bare{flex:0 0 auto;min-width:0}   /* ô bọc nút Xoá lọc: KHÔNG giữ chỗ khi nút đang ẩn */
 .kkfbar .date-btn{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font-size:12px;font-family:inherit;text-align:left;padding:6px 7px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kkfbar .date-btn .ph{color:var(--ink3);opacity:.75}
 .kkfbar .fclr{border:0;background:transparent;color:var(--brand2);font-weight:650;font-size:12px;cursor:pointer;white-space:nowrap;padding:7px 4px;font-family:inherit}
 .kkfbar .fclr:hover{text-decoration:underline}
+/* Hàng điều khiển 1 DÒNG đầu tab Kiểm kê: chip kho + pill lọc + nút Kế hoạch chảy chung 1 hàng flex (tự wrap khi hẹp);
+   segment display:contents để con của chúng đứng NGANG HÀNG nhau thay vì thành 2 khối riêng */
+.kkonebar{row-gap:6px}
+.kkonebar>#kkWhBar{display:contents}
+.kkonebar>#kkFilters:not([hidden]){display:contents}
+.kkonebar .kkplan{margin-left:auto;white-space:nowrap;flex:0 0 auto;padding:6px 11px;font-size:12px}
+@media(max-width:1420px){.kkonebar .kkplan .pt{display:none}}   /* màn hẹp: nút Kế hoạch rút về icon 📋 (tooltip giữ đủ chữ) */
 #kkmodal .kkwrap{overflow-x:hidden}
 #kkmodal .kkwrap table{min-width:0;width:100%}
 #kkmodal .kkwrap thead th,#kkmodal .kkwrap tbody td{white-space:normal;word-wrap:break-word}
@@ -850,11 +858,13 @@ body.pcm-open #pcbar,body.pcm-open #pcprev{display:none}   /* modal tạo lệnh
 
 <!-- ===== TAB 2: Kiểm kê — 2 khối song song: theo SKU & theo mã vị trí ===== -->
 <div id="viewKK" hidden>
-  <!-- Cross-filter KHO cấp tab: chip kho lọc toàn bộ dải chỉ số/thanh trạng thái/chart/pop-up; lọc chi tiết vẫn nằm TRONG pop-up -->
-  <div class="kkbar" style="margin-bottom:6px"><span class="hint" style="flex:1">Lệnh tạo từ dashboard nằm ở "sổ kế hoạch" WMS trước khi thành phiếu</span><button class="kktab" onclick="plOpen()">📋 Kế hoạch chờ push (WMS)</button></div>
-  <div class="kkbar" id="kkWhBar" style="margin-bottom:12px"></div>
-  <!-- Bộ lọc cấp tab: Ngày kiểm (lịch thả xuống chuẩn dự án) + Request code + Type SKU + Type vị trí — sinh động khi có dữ liệu -->
-  <div class="mfilters kkmf kkfbar" id="kkFilters" hidden></div>
+  <!-- HÀNG ĐIỀU KHIỂN 1 DÒNG: chip lọc KHO đứng trước → bộ lọc trường (Ngày/Request/Type) → nút Kế hoạch rút gọn
+       (câu giải thích "sổ kế hoạch WMS" chuyển vào tooltip của nút); các segment display:contents để wrap chung 1 dòng -->
+  <div class="kkbar kkonebar" style="margin-bottom:12px">
+    <span id="kkWhBar"></span>
+    <span class="mfilters kkmf kkfbar" id="kkFilters" hidden></span>
+    <button class="kktab kkplan" onclick="plOpen()" title="Kế hoạch chờ push (WMS) — lệnh tạo từ dashboard nằm ở 'sổ kế hoạch' WMS trước khi thành phiếu (Pending = chờ push, Processing = đã push)">📋<span class="pt"> Kế hoạch</span></button>
+  </div>
   <div class="grid2 even">
     <section class="panel">
       <h2>Kiểm kê theo SKU <span class="hint">(Type: SKU · SKU Factory)</span> <span class="kkscope" id="kkScope-sku" hidden></span></h2>
@@ -1920,8 +1930,8 @@ function kkRenderWhBar(){
   var set={}; ['sku','loc'].forEach(function(k){ KK.data[k].forEach(function(r){ if(r.wh) set[r.wh]=1; }); });
   var ws=Object.keys(set).sort();
   if(!ws.length){ el.innerHTML=''; return; }
-  el.innerHTML='<span class="hint" style="font-weight:650">Trạng thái kiểm kê theo kho:</span>'+
-    '<button class="kktab'+(KK.wh?'':' active')+'" onclick="kkSetWh(\'\')">Tất cả kho</button>'+
+  /* Bỏ nhãn dài "Trạng thái kiểm kê theo kho:" — chip kho đứng ĐẦU hàng điều khiển 1 dòng, tự giải thích */
+  el.innerHTML='<button class="kktab'+(KK.wh?'':' active')+'" onclick="kkSetWh(\'\')" title="Lọc toàn tab Kiểm kê theo kho">Tất cả kho</button>'+
     ws.map(function(w){ return '<button class="kktab'+(KK.wh===w?' active':'')+'" data-w="'+esc(w)+'" onclick="kkSetWh(this.getAttribute(\'data-w\'))"><span class="dot" style="background:'+kkColor(w)+'"></span>'+esc(w)+'</button>'; }).join('');
 }
 /* ===== Bộ lọc cấp tab Kiểm kê (#kkFilters) — Ngày kiểm (lịch dp chuẩn dự án) + Request + Type SKU + Type vị trí =====
@@ -1939,9 +1949,9 @@ function kkfBuild(){
     '<div class="fld dt" title="Lọc theo Counted date — áp dụng cho toàn bộ tab (dải số · trạng thái · chart · thẻ kho)"><label>Ngày kiểm</label>'+
       '<button type="button" class="date-btn" id="kkfDateBtn"><span class="ph">Tất cả ngày</span></button>'+
       '<span class="date-pop hidden" id="kkfDatePop"></span></div>'+
-    cb('req','Request','Tất cả mã request…')+
-    cb('ts','Type SKU','Tất cả type…')+
-    cb('tl','Type vị trí','Tất cả type…')+
+    cb('req','Request','Tất cả…')+
+    cb('ts','Type SKU','Tất cả…')+
+    cb('tl','Type vị trí','Tất cả…')+
     '<div class="fld bare"><button type="button" class="fclr" id="kkfClear" hidden onclick="kkfReset()" title="Bỏ toàn bộ bộ lọc ngày / request / type">✕ Xoá lọc</button></div>';
 }
 /* Nguồn dòng cho menu combo: tôn trọng kho đang chọn + các bộ lọc CÒN LẠI (trừ chính nó) — đúng pattern pop-up */
