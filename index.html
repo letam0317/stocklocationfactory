@@ -68,6 +68,10 @@
 @keyframes fadeUp{from{opacity:0; transform:translate3d(0,8px,0);} to{opacity:1; transform:translate3d(0,0,0);}}
 @keyframes paneIn{from{opacity:0; transform:translate3d(0,14px,0) scale(.994);} to{opacity:1; transform:none;}}
 @keyframes popIn{from{opacity:0; transform:translate3d(0,-6px,0) scale(.98);} to{opacity:1; transform:none;}}
+/* barIn: bản popIn cho phần tử ĐỊNH TÂM bằng translateX(-50%) — keyframes phải GIỮ phép dịch -50%,
+   nếu dùng popIn thường thì suốt lúc animation phép định tâm bị ghi đè -> phần tử lệch phải nửa chiều
+   rộng rồi mới "nhảy" về giữa (lỗi giỏ chọn SKU 25/07/2026) */
+@keyframes barIn{from{opacity:0; transform:translate3d(-50%,8px,0) scale(.98);} to{opacity:1; transform:translate3d(-50%,0,0);}}
 @keyframes sheetIn{0%{opacity:0; transform:translate3d(0,24px,0) scale(.965);}
   62%{opacity:1; transform:translate3d(0,-3px,0) scale(1.004);}
   100%{opacity:1; transform:none;}}
@@ -269,6 +273,7 @@ h1.brand-title{margin:0;min-width:0}
 .fcg{border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:5px 13px;font-size:12px;font-weight:650;cursor:pointer;color:var(--ink2);font-family:inherit;transition:background .15s var(--ease),color .15s var(--ease)}
 .fcg.on{background:var(--accent);border-color:var(--accent);color:var(--accent-text)}
 .fcneed{font-size:12.5px;color:var(--ink);margin-top:8px;font-weight:600}
+.fcref{font-size:11.5px;color:var(--muted);margin:-4px 0 10px;line-height:1.5}   /* ghi chú "hiệu suất mượn làm tham chiếu" trong pop-up dự báo */
 /* ===== Bộ chọn KHOẢNG NGÀY gộp (bắt đầu → hạn chót) — bê nguyên thiết kế "Ngày ghi nhận" từ kiemsoatkho ===== */
 .fcdate{position:relative;text-transform:none;letter-spacing:0;font-weight:400}
 .fcdate .date-btn{width:100%;text-align:left;cursor:pointer;padding:8px 30px 8px 10px;border:1px solid var(--border);border-radius:9px;background:var(--surface);color:var(--ink);font-size:13px;font-family:inherit;transition:border-color .15s var(--ease),box-shadow .15s var(--ease)}
@@ -758,7 +763,7 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
 /* giỏ chọn nổi: neo trên footbar, giữ nguyên khi chuyển tab/pop-up/bộ lọc */
 #pcbar{position:fixed;left:50%;bottom:58px;transform:translateX(-50%);z-index:110;display:flex;align-items:center;gap:8px;
   background:var(--surface);border:1px solid var(--accent);border-radius:999px;padding:7px 9px 7px 16px;box-shadow:var(--shadow-lg);
-  font-size:12.5px;font-weight:650;white-space:nowrap;animation:popIn .22s var(--ez-spring)}
+  font-size:12.5px;font-weight:650;white-space:nowrap;animation:barIn .22s var(--ez-spring)}
 #pcbar.hidden{display:none}
 #pcbar b{color:var(--accent);font-variant-numeric:tabular-nums}
 #pcbar button{border:0;border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:650;cursor:pointer;font-family:inherit}
@@ -794,7 +799,7 @@ body.pcm-open #pcbar,body.pcm-open #pcprev{display:none}   /* modal tạo lệnh
 .pcsteps a:hover{text-decoration:underline}
 /* Bảng preview giỏ chọn (bật từ nút "Xem" trên #pcbar): kho · SKU · tên · LÝ DO CHỌN · bỏ từng dòng */
 #pcprev{position:fixed;left:50%;bottom:106px;transform:translateX(-50%);z-index:110;width:min(820px,94vw);max-height:48vh;display:flex;flex-direction:column;
-  background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow-lg);animation:popIn .2s var(--ez-spring)}
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow-lg);animation:barIn .2s var(--ez-spring)}
 #pcprev.hidden{display:none}
 #pcprev .ph{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);font-size:12.5px;font-weight:700}
 #pcprev .ph b{color:var(--accent);font-variant-numeric:tabular-nums}
@@ -2167,9 +2172,10 @@ function kkNhomCat(c){ c=String(c||'').toLowerCase();
 }
 var KK_NHOM_TEN={PL:'Phụ liệu',NVL:'Nguyên liệu',KHAC:'Nhóm khác',ALL:'chung'};
 function kkMedian(a){ if(!a||!a.length) return null; a=a.slice().sort(function(x,y){ return x-y; }); var m=a.length>>1; return a.length%2?a[m]:(a[m-1]+a[m])/2; }
-function kkTimingModel(kind){
+function kkTimingModel(kind,toanBo){
   var byPD={};
-  kkRows(kind).forEach(function(r){
+  // toanBo=true: đo trên TOÀN BỘ dữ liệu bảng (bỏ cross-filter kho + bộ lọc trường) — nguồn "mượn hiệu suất"
+  (toanBo?(KK.data[kind]||[]):kkRows(kind)).forEach(function(r){
     if(!kkIsChecked(r)) return;
     var ms=kkParseDate(r.cdate); if(isNaN(ms)) return;   // cần giờ phút THẬT của Counted date
     var pd=(r.by||'?')+'|'+kkDayStr(ms);
@@ -2212,18 +2218,15 @@ function kkForecastInfo(kind,univ,conLai){
     for(var i=1;i<=800&&lam<soNgayLam;i++){ d=todayMs+i*86400000; if(new Date(d).getUTCDay()!==0) lam++; }
     return d;
   }
-  /* ---- Mô hình EFFORT (ưu tiên) ---- */
-  var tm=kkTimingModel(kind);
-  var allSamples=[]; for(var g0 in tm.rate) allSamples=allSamples.concat(tm.rate[g0]);
-  var secAll=kkMedian(allSamples);
-  if(secAll){
+  /* ---- Mô hình EFFORT — dùng chung cho số đo TẠI CHỖ lẫn số MƯỢN (tham chiếu) ---- */
+  function tinhEffort(tm,secAll,muon){
     var remain=kkStockUniverseRows(kind,true), nhom={};
     remain.forEach(function(m){ var g=(kind==='sku')?kkNhomCat(m.cat):'ALL'; nhom[g]=(nhom[g]||0)+1; });
     var nhomTong={};   // tổng mã theo nhóm (kể cả đã kiểm) — cho mô phỏng "Toàn bộ / kiểm lại từ đầu"
     kkStockUniverseRows(kind,false).forEach(function(m){ var g=(kind==='sku')?kkNhomCat(m.cat):'ALL'; nhomTong[g]=(nhomTong[g]||0)+1; });
     var effort=0, secG={};
     for(var gT in nhomTong) secG[gT]=kkMedian(tm.rate[gT])||secAll;   // giây/mã cho MỌI nhóm (tránh NaN khi tính toàn bộ)
-    for(var g1 in nhom) effort+=nhom[g1]*secG[g1];   // ① effort vẫn theo CÒN LẠI
+    for(var g1 in nhom) effort+=nhom[g1]*secG[g1];   // ① effort vẫn theo CÒN LẠI (khối lượng luôn của PHẠM VI ĐANG LỌC)
     /* công suất + NHÂN SỰ: cùng cửa sổ 7 ngày LÀM VIỆC gần nhất (lùi từ hôm qua, bỏ CN)
        — để tầng mô phỏng mặc định (N người × phút/người) TÁI TẠO đúng dự báo tự tính */
     var dayStaff={}; Object.keys(tm.persEff).forEach(function(k){ var p=k.split('|'); dayStaff[p[1]]=(dayStaff[p[1]]||0)+1; });
@@ -2242,17 +2245,35 @@ function kkForecastInfo(kind,univ,conLai){
       }
     }
     var capNgay=nWin?cap/nWin:0;
-    if(capNgay>0){
-      var soLam=Math.ceil(effort/capNgay);
-      var out={mode:'effort',ngay:soLam,secG:secG,nhom:nhom,nhomTong:nhomTong,capNgay:capNgay,effort:effort};
-      out.nguoiTB=nWin?sSum/nWin:0;                                        // người kiểm TB / ngày làm việc (cùng cửa sổ)
-      out.phutNguoi=out.nguoiTB>0?(capNgay/60)/out.nguoiTB:capNgay/60;     // phút/người/ngày sao cho N×phút ≈ công suất
-      if(soLam>150){ out.slow=true; return out; }
-      out.eta=fmt(etaSkipCN(soLam));
-      return out;
-    }
+    if(!(capNgay>0)) return null;
+    var soLam=Math.ceil(effort/capNgay);
+    var out={mode:'effort',ngay:soLam,secG:secG,nhom:nhom,nhomTong:nhomTong,capNgay:capNgay,effort:effort,muon:muon||''};
+    out.nguoiTB=nWin?sSum/nWin:0;                                        // người kiểm TB / ngày làm việc (cùng cửa sổ)
+    out.phutNguoi=out.nguoiTB>0?(capNgay/60)/out.nguoiTB:capNgay/60;     // phút/người/ngày sao cho N×phút ≈ công suất
+    if(soLam>150){ out.slow=true; return out; }
+    out.eta=fmt(etaSkipCN(soLam));
+    return out;
   }
-  /* ---- Fallback: mô hình ĐỘ PHỦ (không có giờ kiểm) — mẫu số ngày làm việc, ETA né CN ---- */
+  /* ---- ƯU TIÊN 1: effort đo TẠI CHỖ (phạm vi đang lọc có giờ kiểm) ---- */
+  var tm=kkTimingModel(kind);
+  var allSamples=[]; for(var g0 in tm.rate) allSamples=allSamples.concat(tm.rate[g0]);
+  var secAll=kkMedian(allSamples);
+  if(secAll){ var outL=tinhEffort(tm,secAll,''); if(outL) return outL; }
+  /* ---- MƯỢN HIỆU SUẤT (cải tiến 25/07/2026 — không "bó tay" khi phạm vi lọc chưa có giờ kiểm):
+     tìm giây/mã + nhịp đã đo được ở phạm vi RỘNG HƠN: cùng bảng bỏ hết bộ lọc → bảng còn lại.
+     Chỉ dùng làm THAM CHIẾU (dự báo ① khi không còn gì khác + luôn mở khoá mô phỏng ②);
+     khi phạm vi này tự có dữ liệu giờ kiểm thì nhánh trên tự thay thế. ---- */
+  var tmM=null, secM=null, muon='';
+  var nguon=[[kind,'bảng '+(kind==='loc'?'mã vị trí':'SKU')+' · toàn bộ kho (bỏ bộ lọc)'],
+             [(kind==='sku')?'loc':'sku','bảng '+((kind==='sku')?'mã vị trí':'SKU')+' · toàn bộ kho']];
+  for(var t=0;t<nguon.length&&!secM;t++){
+    var tmT=kkTimingModel(nguon[t][0],true), sT=[];
+    for(var gM in tmT.rate) sT=sT.concat(tmT.rate[gM]);
+    var secT=kkMedian(sT);
+    if(secT){ tmM=tmT; secM=secT; muon=nguon[t][1]; }
+  }
+  /* ---- ƯU TIÊN 2: mô hình ĐỘ PHỦ TẠI CHỖ (counted date không cần giờ) — bằng chứng thật của
+     chính phạm vi này nên đứng trên effort mượn; nếu có số mượn thì gắn kèm để mô phỏng ② vẫn mở ---- */
   var first={};
   kkRows(kind).forEach(function(r){
     if(!kkIsChecked(r)) return;
@@ -2262,20 +2283,29 @@ function kkForecastInfo(kind,univ,conLai){
     if(!(k in first)||ms<first[k]) first[k]=ms;
   });
   var keys=Object.keys(first);
-  if(!keys.length) return {none:true};
-  var d7=0, minDay=Infinity;
-  keys.forEach(function(k){ var day=Math.floor(first[k]/86400000)*86400000;
-    if(day<minDay) minDay=day;
-    if(todayMs-day<7*86400000) d7++;
-  });
-  var wdAll=0; for(var ms3=minDay;ms3<=todayMs;ms3+=86400000) if(new Date(ms3).getUTCDay()!==0) wdAll++;
-  var pace=(d7>0)?(d7/6):(keys.length/Math.max(1,wdAll));   // 7 ngày lịch ≈ 6 ngày làm việc
-  if(!(pace>0)) return {none:true};
-  var soLam2=Math.ceil(conLai/pace);
-  var out2={mode:'phu',ngay:soLam2,pace:pace,dung7:d7>0};
-  if(soLam2>150){ out2.slow=true; return out2; }
-  out2.eta=fmt(etaSkipCN(soLam2));
-  return out2;
+  if(keys.length){
+    var d7=0, minDay=Infinity;
+    keys.forEach(function(k){ var day=Math.floor(first[k]/86400000)*86400000;
+      if(day<minDay) minDay=day;
+      if(todayMs-day<7*86400000) d7++;
+    });
+    var wdAll=0; for(var ms3=minDay;ms3<=todayMs;ms3+=86400000) if(new Date(ms3).getUTCDay()!==0) wdAll++;
+    var pace=(d7>0)?(d7/6):(keys.length/Math.max(1,wdAll));   // 7 ngày lịch ≈ 6 ngày làm việc
+    if(pace>0){
+      var soLam2=Math.ceil(conLai/pace);
+      var out2={mode:'phu',ngay:soLam2,pace:pace,dung7:d7>0};
+      if(secM){   // gắn bộ số mượn để tầng mô phỏng ② mở được (sim=true), dự báo ① vẫn là độ phủ tại chỗ
+        var outS=tinhEffort(tmM,secM,muon);
+        if(outS){ out2.sim=true; out2.muon=muon; out2.secG=outS.secG; out2.nhom=outS.nhom; out2.nhomTong=outS.nhomTong; out2.phutNguoi=outS.phutNguoi; out2.nguoiTB=outS.nguoiTB; }
+      }
+      if(soLam2>150){ out2.slow=true; return out2; }
+      out2.eta=fmt(etaSkipCN(soLam2));
+      return out2;
+    }
+  }
+  /* ---- ƯU TIÊN 3: tại chỗ trắng dữ liệu — dự báo trọn bằng EFFORT THAM CHIẾU (mượn) ---- */
+  if(secM){ var outM=tinhEffort(tmM,secM,muon); if(outM) return outM; }
+  return {none:true};
 }
 /* Danh sách tồn kho gộp theo (kho|mã) từ Stock Location — nền tảng cho cả 2 thẻ:
    "Tổng" (chiChuaKiem=false: TOÀN BỘ universe, kèm cờ đã kiểm) và
@@ -2343,7 +2373,8 @@ function kkRenderPanel(kind){
   function fcMoTa(f){
     if(f.mode==='effort'){
       var arr=[]; for(var g in f.secG){ if(f.nhom[g]) arr.push(KK_NHOM_TEN[g]+' ≈'+Math.round(f.secG[g])+'s/mã × '+nf(f.nhom[g])+' còn lại'); }
-      return 'Mô hình thời gian thực đo: '+arr.join(' · ')+' → khối lượng ≈'+(f.effort!=null?(f.effort/3600).toFixed(1):'?')+' giờ công. '+
+      return (f.muon?('Phạm vi đang lọc chưa có giờ kiểm — MƯỢN hiệu suất từ '+f.muon+' làm tham chiếu. '):'')+
+        'Mô hình thời gian thực đo: '+arr.join(' · ')+' → khối lượng ≈'+(f.effort!=null?(f.effort/3600).toFixed(1):'?')+' giờ công. '+
         'Công suất đo được ≈'+Math.round(f.capNgay/60)+' phút kiểm/ngày làm việc (TB 7 ngày làm việc gần nhất) → ≈'+nf(f.ngay)+' ngày làm việc. Chủ nhật nghỉ — ETA đã bỏ qua CN. Tự tính lại theo kho đang lọc.';
     }
     return 'Chưa đủ dữ liệu giờ kiểm để đo giây/mã — dùng mô hình độ phủ: Còn lại ('+nf(notc)+' '+U+') ÷ tốc độ phủ '+(f.dung7?'TB 7 ngày gần nhất':'TB toàn kỳ')+' ≈'+f.pace.toFixed(1)+' '+U+'/ngày làm việc. Chủ nhật nghỉ — ETA đã bỏ qua CN.';
@@ -2351,8 +2382,8 @@ function kkRenderPanel(kind){
   var fcOpen=' data-k="'+kind+'" onclick="kkFcOpen(this.getAttribute(\'data-k\'))"';   // bấm ô -> pop-up dự báo + mô phỏng nhân sự
   if(fc.done)      fcHtml='<div class="ks fc"'+fcOpen+' title="Toàn bộ '+U+' trong phạm vi đã được kiểm."><div class="v ok">✓</div><div class="t">Hoàn thành 100%</div></div>';
   else if(fc.none) fcHtml='<div class="ks fc"'+fcOpen+' title="Chưa có phiếu kiểm kèm ngày để tính tốc độ — dự báo sẽ tự hiện khi có dữ liệu."><div class="v mut">—</div><div class="t">Dự kiến xong · chưa đủ dữ liệu</div></div>';
-  else if(fc.slow) fcHtml='<div class="ks fc"'+fcOpen+' title="'+esc(fcMoTa(fc))+' Với nhịp hiện tại cần ≈'+nf(fc.ngay)+' ngày làm việc. Bấm để mô phỏng phương án nhân sự."><div class="v neg">&gt;6 tháng</div><div class="t">Dự kiến xong · nhịp quá chậm</div></div>';
-  else             fcHtml='<div class="ks fc"'+fcOpen+' title="'+esc(fcMoTa(fc))+' Bấm để xem chi tiết & mô phỏng phương án nhân sự."><div class="v fce">'+fc.eta+'</div><div class="t">Dự kiến xong · ≈'+nf(fc.ngay)+' ngày làm việc</div></div>';
+  else if(fc.slow) fcHtml='<div class="ks fc"'+fcOpen+' title="'+esc(fcMoTa(fc))+' Với nhịp hiện tại cần ≈'+nf(fc.ngay)+' ngày làm việc. Bấm để mô phỏng phương án nhân sự."><div class="v neg">&gt;6 tháng</div><div class="t">Dự kiến xong · nhịp quá chậm'+(fc.muon?' · tham chiếu':'')+'</div></div>';
+  else             fcHtml='<div class="ks fc"'+fcOpen+' title="'+esc(fcMoTa(fc))+' Bấm để xem chi tiết & mô phỏng phương án nhân sự."><div class="v fce">'+fc.eta+'</div><div class="t">Dự kiến xong · ≈'+nf(fc.ngay)+' ngày làm việc'+(fc.muon&&fc.mode==='effort'?' · tham chiếu':'')+'</div></div>';
   var strip=document.getElementById('kkStrip-'+kind);
   strip.innerHTML=
     it('total','',denom,'Tổng '+U+' tồn kho')+
@@ -2472,18 +2503,8 @@ function kkFcOpen(kind){
   document.getElementById('fcTitle').textContent='Dự báo hoàn thành kiểm kê · '+U;
   document.getElementById('fcSub').textContent=(KK.wh?('Kho '+KK.wh):'Toàn bộ kho')+' · còn lại '+nf(notc)+' '+U+' chưa kiểm · lịch làm việc bỏ qua Chủ nhật';
   var htmlA='',htmlB='';
-  if(fc.done){
-    htmlA='<div class="fcsec"><h3>Trạng thái</h3><div class="fchero"><span class="d">✓ 100%</span><span class="n">Toàn bộ '+U+' trong phạm vi đã được kiểm.</span></div></div>';
-  }else if(fc.mode==='effort'){
-    var gList=''; for(var g in fc.secG){ if(fc.nhom[g]) gList+='<div class="fcfact"><b>≈'+Math.round(fc.secG[g])+'s/mã · '+nf(fc.nhom[g])+' mã</b><span>'+KK_NHOM_TEN[g]+' còn lại</span></div>'; }
-    htmlA='<div class="fcsec"><h3>① Máy tự tính — đo từ dữ liệu quá khứ</h3>'+
-      '<div class="fchero"><span class="d'+(fc.slow?' bad':'')+'">'+(fc.slow?'&gt;6 tháng':fc.eta)+'</span><span class="n">≈'+nf(fc.ngay)+' ngày làm việc theo nhịp hiện tại (đã né Chủ nhật)</span></div>'+
-      '<div class="fcfacts">'+gList+
-      '<div class="fcfact"><b>≈'+(fc.effort/3600).toFixed(1)+' giờ công</b><span>khối lượng còn lại</span></div>'+
-      '<div class="fcfact"><b>≈'+Math.round(fc.capNgay/60)+' phút/ngày</b><span>công suất đo được (TB 7 ngày làm việc)</span></div>'+
-      '<div class="fcfact"><b>≈'+fc.nguoiTB.toFixed(1)+' người/ngày</b><span>nhân sự kiểm TB (ngày có kiểm)</span></div>'+
-      '<div class="fcfact"><b>≈'+Math.round(fc.phutNguoi)+' phút/người</b><span>thời lượng kiểm TB 1 người/ngày</span></div>'+
-      '</div></div>';
+  /* Khối mô phỏng ② dùng chung: mode effort (số đo tại chỗ/mượn) LẪN mode độ phủ có kèm số mượn (fc.sim) */
+  function simHtml(){
     var nMac=Math.min(10,Math.max(1,Math.round(fc.nguoiTB)||1));
     var nItems=[]; for(var i=1;i<=10;i++) nItems.push({v:i,t:i+' người'});
     var hDo=Math.max(60,Math.round(fc.phutNguoi*60));
@@ -2492,7 +2513,8 @@ function kkFcOpen(kind){
     var homNay=(function(){ var t=new Date(kkTodayMsVN()); function p(n){ return (n<10?'0':'')+n; } return t.getUTCFullYear()+'-'+p(t.getUTCMonth()+1)+'-'+p(t.getUTCDate()); })();
     var gChips=''; for(var g2 in fc.nhomTong){ if(fc.nhomTong[g2]) gChips+='<button class="fcg on" data-g="'+g2+'" onclick="this.classList.toggle(\'on\');kkFcSim()">'+KK_NHOM_TEN[g2]+' · '+nf(fc.nhom[g2]||0)+'</button>'; }
     var baseItems=[{v:'conlai',t:'Còn lại chưa kiểm'},{v:'tong',t:'Toàn bộ — kiểm lại từ đầu'}];
-    htmlB='<div class="fcsec"><h3>② Người chọn — mô phỏng phương án nhân sự</h3>'+
+    return '<div class="fcsec"><h3>② Người chọn — mô phỏng phương án nhân sự</h3>'+
+      (fc.muon?'<div class="fcref">Giây/mã &amp; nhịp làm việc mượn từ '+esc(fc.muon)+' làm THAM CHIẾU — sẽ tự thay bằng số đo tại chỗ khi phạm vi này có phiếu kiểm kèm giờ.</div>':'')+
       '<div class="fcctl">'+
       '<label>Số nhân sự kiểm'+fcComboHtml('fcN',nItems,nMac)+'</label>'+
       '<label>Thời lượng kiểm / người / ngày'+fcComboHtml('fcH',hItems,hDo)+'</label>'+
@@ -2505,19 +2527,35 @@ function kkFcOpen(kind){
       '</span></label></div>'+
       '<div class="fcctl" style="grid-template-columns:1fr"><label>Nhóm hàng đưa vào đợt kiểm<span class="fcgroups" id="fcG">'+gChips+'</span></label></div>'+
       '<div class="fchero" id="fcSimOut"></div><div class="fcneed" id="fcNeed"></div></div>';
+  }
+  if(fc.done){
+    htmlA='<div class="fcsec"><h3>Trạng thái</h3><div class="fchero"><span class="d">✓ 100%</span><span class="n">Toàn bộ '+U+' trong phạm vi đã được kiểm.</span></div></div>';
+  }else if(fc.mode==='effort'){
+    var gList=''; for(var g in fc.secG){ if(fc.nhom[g]) gList+='<div class="fcfact"><b>≈'+Math.round(fc.secG[g])+'s/mã · '+nf(fc.nhom[g])+' mã</b><span>'+KK_NHOM_TEN[g]+' còn lại</span></div>'; }
+    htmlA='<div class="fcsec"><h3>① Máy tự tính — '+(fc.muon?'THAM CHIẾU (mượn hiệu suất)':'đo từ dữ liệu quá khứ')+'</h3>'+
+      (fc.muon?'<div class="fcref">Phạm vi đang lọc chưa có phiếu kiểm kèm giờ — dự báo dưới đây dùng hiệu suất đo từ '+esc(fc.muon)+'.</div>':'')+
+      '<div class="fchero"><span class="d'+(fc.slow?' bad':'')+'">'+(fc.slow?'&gt;6 tháng':fc.eta)+'</span><span class="n">≈'+nf(fc.ngay)+' ngày làm việc theo nhịp '+(fc.muon?'tham chiếu':'hiện tại')+' (đã né Chủ nhật)</span></div>'+
+      '<div class="fcfacts">'+gList+
+      '<div class="fcfact"><b>≈'+(fc.effort/3600).toFixed(1)+' giờ công</b><span>khối lượng còn lại</span></div>'+
+      '<div class="fcfact"><b>≈'+Math.round(fc.capNgay/60)+' phút/ngày</b><span>công suất đo được (TB 7 ngày làm việc'+(fc.muon?' · nguồn mượn':'')+')</span></div>'+
+      '<div class="fcfact"><b>≈'+fc.nguoiTB.toFixed(1)+' người/ngày</b><span>nhân sự kiểm TB (ngày có kiểm'+(fc.muon?' · nguồn mượn':'')+')</span></div>'+
+      '<div class="fcfact"><b>≈'+Math.round(fc.phutNguoi)+' phút/người</b><span>thời lượng kiểm TB 1 người/ngày</span></div>'+
+      '</div></div>';
+    htmlB=simHtml();
   }else if(fc.none){
     htmlA='<div class="fcsec"><h3>① Máy tự tính</h3><div class="fchero"><span class="d">—</span><span class="n">Chưa có phiếu kiểm kèm ngày giờ để dự báo.</span></div></div>';
   }else{
     htmlA='<div class="fcsec"><h3>① Máy tự tính — mô hình độ phủ (chưa có giờ kiểm chi tiết)</h3>'+
       '<div class="fchero"><span class="d'+(fc.slow?' bad':'')+'">'+(fc.slow?'&gt;6 tháng':fc.eta)+'</span><span class="n">≈'+nf(fc.ngay)+' ngày làm việc · tốc độ ≈'+fc.pace.toFixed(1)+' '+U+'/ngày làm việc</span></div></div>';
+    if(fc.sim) htmlB=simHtml();   // độ phủ tại chỗ + bộ số mượn -> mô phỏng ② vẫn mở
   }
-  if(!htmlB&&!fc.done) htmlB='<div class="fcsec"><h3>② Người chọn — mô phỏng</h3><div class="fchero"><span class="n">Chưa đủ dữ liệu giờ kiểm (Counted date có giờ phút) để đo giây/mã — mô phỏng sẽ mở khi có dữ liệu.</span></div></div>';
+  if(!htmlB&&!fc.done) htmlB='<div class="fcsec"><h3>② Người chọn — mô phỏng</h3><div class="fchero"><span class="n">Chưa có dữ liệu giờ kiểm (Counted date có giờ phút) ở BẤT KỲ phạm vi nào để đo giây/mã — mô phỏng sẽ mở ngay khi hệ thống đo được hiệu suất đầu tiên.</span></div></div>';
   var fcb=document.getElementById('fcBody');
   fcb.className='modalbody fcwrap'+(htmlB?'':' one');   // 100% (chỉ 1 tầng) -> 1 cột; còn lại 2 cột cạnh nhau
   fcb.innerHTML=htmlA+htmlB;
   FC_DP={view:{y:0,m:0},selS:'',selE:'',start:fcTodayISO(),end:''};   // mỗi lần mở: bắt đầu = hôm nay, chưa đặt hạn
   fcUpdateDateBtn();
-  if(fc.mode==='effort'&&!fc.done) kkFcSim();
+  if((fc.mode==='effort'||fc.sim)&&!fc.done) kkFcSim();
   var m=document.getElementById('fcmodal'); m.style.display='flex';
   requestAnimationFrame(function(){ m.classList.add('show'); });
 }
@@ -2569,7 +2607,7 @@ document.addEventListener('click',function(e){
 function fcComboV(id){ var inp=document.querySelector('#fcBody .fccombo[data-id="'+id+'"] input'); return inp?Number(inp.getAttribute('data-v')):NaN; }
 function fcBaseVal(){ var inp=document.querySelector('#fcBody .fccombo[data-id="fcBase"] input'); return (inp&&inp.getAttribute('data-v'))||'conlai'; }
 function kkFcSim(){
-  var fc=KK_FC.fc; if(!fc||fc.mode!=='effort') return;
+  var fc=KK_FC.fc; if(!fc||(fc.mode!=='effort'&&!fc.sim)) return;   // fc.sim = độ phủ tại chỗ + bộ số mượn
   var out=document.getElementById('fcSimOut'), need=document.getElementById('fcNeed');
   if(!out) return;
   var base=fcBaseVal(), cnt=(base==='tong')?(fc.nhomTong||{}):(fc.nhom||{});   // ② mô phỏng trên CÒN LẠI hoặc TOÀN BỘ
