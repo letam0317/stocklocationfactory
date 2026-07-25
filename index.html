@@ -627,7 +627,7 @@ code{background:var(--surface2);padding:1px 7px;border-radius:6px;font-size:12px
   white-space:nowrap;overflow:hidden;transition:background .12s var(--ease),color .12s var(--ease)}
 .combo-item .nm{overflow:hidden;text-overflow:ellipsis}
 .combo-item .c{color:var(--ink3);font-size:11px;font-variant-numeric:tabular-nums;flex:none}
-.combo-item:hover,.combo-item.active{background:#eef4ff;color:var(--brand)}
+.combo-item:hover,.combo-item.active{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent)}   /* token theo theme — hết loè nền sáng trên 5 theme tối (vá 25/07/2026) */
 .combo-item.all{border-bottom:1px solid var(--line);border-radius:8px 8px 0 0;font-weight:600}
 .combo-empty{padding:12px 11px;font-size:12px;color:var(--ink3);text-align:center}
 .msum{padding:5px 16px 7px;font-size:11.5px;color:var(--ink3);border-bottom:1px solid var(--line);background:transparent;font-variant-numeric:tabular-nums}
@@ -772,7 +772,8 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
 .modalbox.pcbox{width:min(1100px,96vw)}
 /* Modal tạo lệnh nổi TRÊN pop-up chi tiết (kkmodal/abnmodal cùng z-index 99 nhưng đứng sau trong DOM) */
 #pcmodal{z-index:105}
-body.pcm-open #pcbar,body.pcm-open #pcprev{display:none}   /* modal tạo lệnh mở -> ẩn giỏ nổi cho sạch */
+body.pcm-open #pcbar,body.pcm-open #pcprev,
+body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh / Kế hoạch / Dự báo mở -> ẩn giỏ nổi (z110 > modal z99, không ẩn sẽ đè lên modal); giỏ vẫn nổi trên pop-up chi tiết để tick */
 /* Bộ lọc modal Tạo lệnh: TÁI DÙNG nguyên .mfilters + .combo gõ-để-lọc của dự án — chỉ thêm 2 chi tiết nhỏ */
 .combo-head{padding:7px 11px 3px;font-size:9.5px;font-weight:750;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .combo-item.sync .nm b{color:var(--warn)}   /* mục "chưa có mã" — bấm để đồng bộ danh mục */
@@ -1791,11 +1792,14 @@ function cacheSet(k,d){ try{ sessionStorage.setItem(k,JSON.stringify({at:Date.no
 function clearCaches(){ try{ ['slf-kk-sku','slf-kk-loc','slf-kk3-sku','slf-kk3-loc','slf-hist','slf-hist2','slf-abn3'].forEach(function(k){ sessionStorage.removeItem(k); }); }catch(e){} }
 function gvizP(sheet,params,cb){
   return new Promise(function(res){
-    window[cb]=function(resp){ res(resp); };
+    // null = LỖI TẢI (mạng/treo/chặn) — khác "tab rỗng"; caller phân biệt để không hiển thị nhầm "không có dữ liệu"
+    var xong=false, tra=function(v){ if(!xong){ xong=true; clearTimeout(timer); res(v); } };
+    var timer=setTimeout(function(){ tra(null); },30000);   // treo quá 30s = lỗi tải (trước đây skeleton kẹt vĩnh viễn)
+    window[cb]=function(resp){ tra(resp); };
     var old=document.getElementById('sc_'+cb); if(old) old.remove();
     var s=document.createElement('script'); s.id='sc_'+cb;
     s.src='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:json;responseHandler:'+cb+'&sheet='+encodeURIComponent(sheet)+(params||'');
-    s.onerror=function(){ res(null); };
+    s.onerror=function(){ tra(null); };
     document.body.appendChild(s);
   });
 }
@@ -1809,18 +1813,22 @@ var KK_TYPES={
 };
 function kkTypeKey(t){ return String(t||'').toUpperCase().replace(/[^A-Z]+/g,'_').replace(/^_+|_+$/g,''); }
 async function kkFetch(kind){
+  // Trả {rows,err}: err=true là LỖI TẢI (mạng/treo/parse) — vá 25/07/2026: trước đây lỗi tải bị nuốt
+  // thành [] khiến tab hiện "Không có dòng phù hợp" y như kho chưa kiểm gì. Thử lại 1 lần trước khi báo lỗi.
   var ck='slf-kk3-'+kind, hit=cacheGet(ck);
-  if(hit) return hit;
-  var resp=await gvizP(KK_TABS[kind],'&headers=1','kkgv_'+kind);
-  var out=[];
-  try{
-    if(!resp||resp.status==='error') throw 0;
-    var H=(resp.table&&resp.table.cols||[]).map(function(c){ return String((c&&c.label)||'').replace(/\s+/g,' ').trim().toLowerCase(); });
-    var rows=(resp.table&&resp.table.rows||[]).map(function(r){ return (r.c||[]).map(function(c){ return c?(c.v==null?'':c.v):''; }); });
-    out=kkMap(kind,H,rows).filter(function(r){ return KK_TYPES[kind].indexOf(kkTypeKey(r.type))>=0; });   // LỌC ĐÚNG TYPE
-  }catch(e){ out=[]; }
-  if(out.length) cacheSet(ck,out);
-  return out;
+  if(hit) return {rows:hit,err:false};
+  for(var lan=0;lan<2;lan++){
+    var resp=await gvizP(KK_TABS[kind],'&headers=1','kkgv_'+kind+(lan?'_r':''));
+    try{
+      if(!resp||resp.status==='error') throw 0;
+      var H=(resp.table&&resp.table.cols||[]).map(function(c){ return String((c&&c.label)||'').replace(/\s+/g,' ').trim().toLowerCase(); });
+      var rows=(resp.table&&resp.table.rows||[]).map(function(r){ return (r.c||[]).map(function(c){ return c?(c.v==null?'':c.v):''; }); });
+      var out=kkMap(kind,H,rows).filter(function(r){ return KK_TYPES[kind].indexOf(kkTypeKey(r.type))>=0; });   // LỌC ĐÚNG TYPE
+      if(out.length) cacheSet(ck,out);
+      return {rows:out,err:false};   // rỗng thật cũng về đây (err=false) — tab hiện "không có dòng" là ĐÚNG
+    }catch(e){ /* lỗi tải/parse -> thử lại lượt sau */ }
+  }
+  return {rows:[],err:true};
 }
 async function kkLoad(){
   ['sku','loc'].forEach(function(k){   // skeleton loading cho cả 2 khối
@@ -1829,8 +1837,15 @@ async function kkLoad(){
     document.getElementById('kkHist-'+k).innerHTML='<div class="sk" style="height:180px;border-radius:10px"></div>';
   });
   var res=await Promise.all([kkFetch('sku'),kkFetch('loc')]);   // 2 nguồn chạy song song
-  KK.data={sku:res[0],loc:res[1]};
+  KK.data={sku:res[0].rows,loc:res[1].rows};
+  KK.loadErr={sku:res[0].err,loc:res[1].err};
   kkRender();
+  // State LỖI TẢI (chỉ khi lỗi và không có gì hiển thị) — phân biệt rõ với "kho chưa kiểm"
+  ['sku','loc'].forEach(function(k){
+    if(KK.loadErr[k]&&!KK.data[k].length){
+      document.getElementById('kkStatus-'+k).innerHTML='<div class="state" style="padding:14px">⚠ Không tải được dữ liệu tab <code>'+KK_TABS[k]+'</code> (mạng/Google Sheet) — đây là LỖI TẢI, không phải kho chưa kiểm. <button class="fcg" onclick="kkLoad()">Thử lại</button></div>';
+    }
+  });
 }
 function kkIdx(H,names){ for(var i=0;i<names.length;i++){ var j=H.indexOf(names[i].toLowerCase()); if(j>=0) return j; } return -1; }
 function kkMap(kind,H,rows){
@@ -1883,7 +1898,8 @@ function kkIdLink(id,kind){
     : 'https://wms.inshasaki.com/physical-count/result/sku/detail/'+encodeURIComponent(id)+'?page=1&size=20';
   return '<a class="wlink" href="'+url+'" target="_blank" rel="noopener">'+esc(id)+KK_ICON+'</a>';
 }
-/* 1 dòng có được tính "đã kiểm" không (đồng nhất giữa dải số, chart và modal drill-down) */
+/* 1 dòng "có số liệu đếm dùng được" — CHỈ dùng cho diff/drill-down (kkDiffOf).
+   Thẻ chỉ số + chart + anti-join đều dùng kkIsChecked (thống nhất 25/07/2026). */
 function kkIsCounted(kind,r){
   if(kind==='loc'){ var st=kkStKey(r); return st!=='NOT COUNT'&&st!=='PENDING'; }
   var e=kkEval(r.inv,r.cnt);
@@ -2134,9 +2150,21 @@ document.addEventListener('click',function(e){
 });
 /* CT3: MẪU SỐ TUYỆT ĐỐI — Tổng lấy từ dữ liệu Stock Location (distinct SKU/mã vị trí tồn của kho,
    tab mastige/garment đã có trong G-Sheet), bất kể đã kiểm hay chưa. */
+/* BIN TRUNG CHUYỂN ẢO (F0-A0/F00-A00 — chính là bucket 'pend' của WH_DATA): theo nghiệp vụ 25/07/2026,
+   bin này VẪN PHẢI KIỂM trong 2 type Location Factory / Full Location Factory, nên universe VỊ TRÍ
+   chỉ được loại nó khi phạm vi Type đang lọc KHÔNG còn bao gồm type *_FACTORY nào
+   (vd lọc "Full location" thường: không ai kiểm bin ảo ở type đó → nằm mãi trong "Còn lại" là sai). */
+function kkLocCoBinAo(){
+  var f=kkfGet('tl');
+  if(!f) return true;   // không lọc Type — phạm vi mặc định gồm cả *_FACTORY → giữ bin ảo
+  if(f.exact) return ['LOCATION_FACTORY','FULL_LOCATION_FACTORY'].indexOf(kkTypeKey(f.raw))>=0;
+  // gõ tay = khớp chứa (như kkFltRows): giữ bin ảo nếu chuỗi gõ còn khớp được TÊN 1 type *_FACTORY
+  return ['location - factory','full location - factory','location factory','full location factory'].some(function(t){ return t.indexOf(f.v)>=0; });
+}
 function kkStockSet(kind,w){
   var u=new Set(), d=WH_DATA[w]; if(!d) return u;
-  ['shelf','pend'].forEach(function(t){ d[t].forEach(function(r){ u.add(kind==='sku'?r[0]:r[2]); }); });
+  var xo=(kind==='loc'&&!kkLocCoBinAo())?['shelf']:['shelf','pend'];   // bucket 'pend' = các bin ảo F0-A0
+  xo.forEach(function(t){ d[t].forEach(function(r){ u.add(kind==='sku'?r[0]:r[2]); }); });
   return u;
 }
 function kkKhos(){   // danh sách kho trong phạm vi đang xem (tôn trọng cross-filter KK.wh)
@@ -2330,9 +2358,10 @@ function kkStockUniverseRows(kind,chiChuaKiem){
   kkRows(kind).forEach(function(r){ if(kkIsChecked(r)) chk.add(r.wh+'|'+((kind==='sku')?r.sku:r.loc)); });
   var khos=kkKhos();   // tôn trọng cross-filter kho
   var map={};
+  var buckets=(kind==='loc'&&!kkLocCoBinAo())?['shelf']:['shelf','pend'];   // đồng bộ luật bin ảo với kkStockSet
   khos.forEach(function(w){
     var d=WH_DATA[w]; if(!d) return;
-    ['shelf','pend'].forEach(function(t){ d[t].forEach(function(r){   // r = [sku,pn,loc,cat,qty,wh]
+    buckets.forEach(function(t){ d[t].forEach(function(r){   // r = [sku,pn,loc,cat,qty,wh]
       var k=(kind==='sku')?r[0]:r[2];
       var gk=w+'|'+k, daKiem=chk.has(gk);
       if(chiChuaKiem&&daKiem) return;                                 // .filter(x => KHÔNG nằm trong tập đã kiểm)
@@ -2441,7 +2470,7 @@ function kkRenderDaily(kind){
   var rs=kkRows(kind), U=(kind==='loc')?'vị trí':'SKU';
   var days={}, khoAll={};
   rs.forEach(function(r){
-    if(!kkIsCounted(kind,r)) return;
+    if(!kkIsChecked(r)) return;   // CÙNG tiêu chí "đã kiểm" với thẻ chỉ số/anti-join (vá 25/07/2026 — trước dùng kkIsCounted nên chart và thẻ vênh nhau)
     var ms=kkCountMs(r); if(isNaN(ms)) return;
     var d=kkDayStr(ms);
     if(!days[d]) days[d]={tot:0,kho:{}};
@@ -2572,6 +2601,7 @@ function kkFcOpen(kind){
   fcUpdateDateBtn();
   if((fc.mode==='effort'||fc.sim)&&!fc.done) kkFcSim();
   var m=document.getElementById('fcmodal'); m.style.display='flex';
+  document.body.classList.add('ovl-open');   // ẩn giỏ nổi (z110) khi modal dự báo (z99) mở
   requestAnimationFrame(function(){ m.classList.add('show'); });
 }
 /* Combo kiểu dự án (thay <select> trần): input readonly + combo-menu popIn dùng chung CSS toàn dashboard */
@@ -2759,6 +2789,7 @@ function fcClearDate(){
 function closeFcModal(){
   fcBindReposition(false);   // gỡ listener định vị lịch
   var m=document.getElementById('fcmodal'); m.classList.remove('show');
+  document.body.classList.remove('ovl-open');
   setTimeout(function(){ m.style.display='none'; document.getElementById('fcBody').innerHTML=''; },240);
 }
 /* Modal drill-down — bảng thô CHỈ dựng DOM lúc bấm (lazy); metric có thể là chỉ số hoặc 'st:TRẠNG THÁI' */
@@ -2963,8 +2994,12 @@ function abnWhTot(o){ var s=0; ABN_TYPES.forEach(function(t){ s+=(o[t.k]||0); })
 async function abnFetch(){
   var ck='slf-abn3', hit=cacheGet(ck);
   if(hit) return hit;
+  // err='net' = LỖI TẢI (mạng/treo — thử lại 1 lần) · err='tab' = tab không phải nguồn hợp lệ (thiếu cột/fallback)
+  // Vá 25/07/2026: trước đây 2 loại lỗi dùng chung thông điệp "cần bổ sung backend" gây hiểu nhầm khi chỉ chớp mạng.
   var resp=await gvizP(ABN_TAB,'&headers=1','abngv');
-  var out={ok:false,rows:[],hasPtype:false};
+  if(!resp||resp.status==='error') resp=await gvizP(ABN_TAB,'&headers=1','abngv_r');
+  var out={ok:false,rows:[],hasPtype:false,err:'tab'};
+  if(!resp||resp.status==='error'){ out.err='net'; return out; }
   try{
     if(!resp||resp.status==='error') throw 0;
     var H=(resp.table&&resp.table.cols||[]).map(function(c){ return String((c&&c.label)||'').replace(/\s+/g,' ').trim().toLowerCase(); });
@@ -2984,7 +3019,7 @@ async function abnFetch(){
       o._abn=s; arr.push(o);
     });
     out={ok:true, rows:arr, hasPtype:idx.ptype>=0};
-  }catch(e){ out={ok:false,rows:[],hasPtype:false}; }
+  }catch(e){ out={ok:false,rows:[],hasPtype:false,err:'tab'}; }
   if(out.ok) cacheSet(ck,out);
   return out;
 }
@@ -2993,7 +3028,7 @@ async function abnLoad(){
   st.style.display='block'; st.innerHTML='<div class="spin"></div>Đang tải dữ liệu tồn kho bất thường…';
   document.getElementById('abnContent').innerHTML=''; document.getElementById('abnWhBar').innerHTML='';
   var res=await abnFetch();
-  ABN.ok=res.ok; ABN.hasPtype=res.hasPtype;
+  ABN.ok=res.ok; ABN.hasPtype=res.hasPtype; ABN.err=res.err||'';
   var norm=res.rows;
   if(res.ok && res.hasPtype) norm=res.rows.filter(function(r){ return /^normal$/i.test(r.ptype)||r.ptype==='1'; });   // CHỈ Product Type = Normal
   ABN.all=norm;
@@ -3033,6 +3068,13 @@ function abnRender(){
   if(!ABN.ok){
     bar.innerHTML=''; cont.innerHTML='';
     st.style.display='block';
+    if(ABN.err==='net'){   // LỖI TẢI thoáng qua — nói đúng bản chất + cho thử lại, KHÔNG đổ cho backend
+      st.innerHTML='<div style="max-width:720px;margin:0 auto;line-height:1.75;color:var(--ink2)">'+
+        '<b style="color:var(--ink)">⚠ Không tải được dữ liệu (mạng/Google Sheet).</b><br>'+
+        'Đây là lỗi tải tạm thời — dữ liệu trên Sheet vẫn còn nguyên, KHÔNG phải chưa cấu hình backend. '+
+        '<button class="fcg" onclick="abnLoad()">Thử lại</button></div>';
+      return;
+    }
     st.innerHTML='<div style="max-width:720px;margin:0 auto;text-align:left;line-height:1.75;color:var(--ink2)">'+
       '<b style="color:var(--ink)">Chưa có dữ liệu tồn kho bất thường trong Google Sheet.</b><br>'+
       'Tab này đọc từ sheet <code>'+esc(ABN_TAB)+'</code>. Cần bổ sung luồng đồng bộ backend (<code>force_sync_wms</code>) để ghi báo cáo '+
@@ -3525,6 +3567,9 @@ document.getElementById('pcBody').addEventListener('click',function(e){
 /* ---------- Gửi backend: dryRun=true chỉ tạo file .xlsx tải về; false = upload thẳng WMS ----------
    Khóa PC_KEY: action pc_* phía GAS bắt buộc khóa (chính sách: GAS gọi WMS bằng token nội bộ phải khóa).
    Khóa KHÔNG nằm trong mã nguồn trang — operator nhập 1 lần, lưu localStorage, sai thì tự xoá để nhập lại. */
+/* Đọc khoá ĐÃ LƯU, tuyệt đối không hỏi — cho các luồng CHỈ XEM (plLoad): vá 25/07/2026,
+   trước đây mở modal Kế hoạch không có extension là bật prompt() đòi khoá dù chỉ muốn xem. */
+function pcKeyLuu(){ try{ return (localStorage.getItem('pc-key')||'').trim(); }catch(e){ return ''; } }
 function pcKeyGet(){
   var k=''; try{ k=localStorage.getItem('pc-key')||''; }catch(e){}
   if(!k){
@@ -3706,18 +3751,23 @@ function pcDownloadB64(b64,name){
 var PL={rows:[],at:0,st:''};
 function plOpen(){
   var m=document.getElementById('plmodal'); m.style.display='flex';
+  document.body.classList.add('ovl-open');   // ẩn giỏ nổi (z110) khi modal này (z99) mở
   requestAnimationFrame(function(){ m.classList.add('show'); });
   if(PL.rows.length&&Date.now()-PL.at<120000){ plRender(); return; }   // cache 2 phút — bấm "Làm mới" để ép tải
   plLoad();
 }
-function closePlModal(){ var m=document.getElementById('plmodal'); m.classList.remove('show'); setTimeout(function(){ m.style.display='none'; },240); }
+function closePlModal(){ var m=document.getElementById('plmodal'); m.classList.remove('show'); document.body.classList.remove('ovl-open'); setTimeout(function(){ m.style.display='none'; },240); }
 async function plLoad(){
   var body=document.getElementById('plBody');
   body.innerHTML='<tr><td colspan="8" class="empty"><div class="spin"></div>Đang tải sổ kế hoạch từ WMS…</td></tr>';
   document.getElementById('plSum').textContent=''; document.getElementById('plChips').innerHTML='';
   try{
     var tok=await wmsExtToken();   // ưu tiên token phiên của chính operator (extension) — không phụ thuộc token robot
-    if(!tok){ var khoa=pcKeyGet(); if(!khoa){ body.innerHTML='<tr><td colspan="8" class="empty">Cần extension WMS Token Bridge, hoặc khóa PC_KEY để đọc qua token robot.</td></tr>'; return; } tok=await pcWmsToken(khoa); }
+    if(!tok){
+      var khoa=pcKeyLuu();   // CHỈ đọc khoá đã lưu — luồng xem không được tự bật prompt (vá 25/07/2026)
+      if(!khoa){ body.innerHTML='<tr><td colspan="8" class="empty">Cần extension WMS Token Bridge (đọc bằng phiên của chính bạn), hoặc khóa PC_KEY để đọc qua token robot.<br><button class="fcg" style="margin-top:8px" onclick="plNhapKhoa()">Nhập khóa PC_KEY</button></td></tr>'; return; }
+      tok=await pcWmsToken(khoa);
+    }
     var all=[], SIZE=200, MAXP=5;   // 5 trang × 200 = 1.000 kế hoạch mới nhất (API trả mới -> cũ)
     for(var page=1;page<=MAXP;page++){
       var r=await fetch(PC_WMS_BASE+'/wms/counting-plans/type-sku?page='+page+'&size='+SIZE,{headers:{'Authorization':'Bearer '+tok}});
@@ -3734,6 +3784,8 @@ async function plLoad(){
     else body.innerHTML='<tr><td colspan="8" class="empty">'+esc(String(e&&e.message||e))+'</td></tr>';
   }
 }
+/* Người dùng CHỦ ĐỘNG bấm nút mới hỏi khoá (pcKeyGet có prompt) — nhập xong tải lại sổ kế hoạch */
+function plNhapKhoa(){ if(pcKeyGet()) plLoad(); }
 function plStColor(s){ s=String(s).toUpperCase();
   if(/PEND/.test(s)) return 'var(--warn)';
   if(/PROCESS/.test(s)) return 'var(--info)';
