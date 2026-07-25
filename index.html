@@ -151,8 +151,11 @@ h1.brand-title{margin:0;min-width:0}
 .set-h{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .set-field{display:flex;flex-direction:column;gap:5px}
 .set-field>span.lbl{font-size:12px;color:var(--muted);min-height:0}
-.set-field select{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:13px;font-family:inherit;cursor:pointer}
-.set-field select:focus{outline:none;border-color:var(--accent)}
+/* Combo trong Cài đặt (thay select trần — C4): input cùng dáng field cũ + focus ring chuẩn dự án */
+.set-combo{position:relative}
+.set-combo input{width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:13px;font-family:inherit;cursor:pointer}
+.set-combo input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}
+.set-combo .combo-menu{left:0;right:0;min-width:0}
 .settings-pop .dropdown-action-btn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:56px;justify-content:center;width:100%;text-align:left;padding:8px 14px;background:transparent;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-family:inherit}
 .settings-pop .dropdown-action-btn .act{font-weight:600;color:var(--text);white-space:nowrap;font-size:13px;line-height:1.35}
 .settings-pop .dropdown-action-btn .timestamp-hint{font-size:12px;font-weight:500;color:var(--muted);white-space:nowrap;line-height:1.3}
@@ -763,8 +766,9 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
 /* giỏ chọn nổi: neo trên footbar, giữ nguyên khi chuyển tab/pop-up/bộ lọc */
 #pcbar{position:fixed;left:50%;bottom:58px;transform:translateX(-50%);z-index:110;display:flex;align-items:center;gap:8px;
   background:var(--surface);border:1px solid var(--accent);border-radius:999px;padding:7px 9px 7px 16px;box-shadow:var(--shadow-lg);
-  font-size:12.5px;font-weight:650;white-space:nowrap;animation:barIn .22s var(--ez-spring)}
+  font-size:12.5px;font-weight:650;flex-wrap:wrap;justify-content:center;row-gap:4px;max-width:94vw;animation:barIn .22s var(--ez-spring)}   /* C6: mobile hẹp pill tự wrap trong 94vw thay vì tràn 2 mép */
 #pcbar.hidden{display:none}
+@media(max-width:900px){#pcbar{bottom:84px}}   /* footbar wrap 2 dòng ở màn hẹp — nâng giỏ lên khỏi vùng đè */
 #pcbar b{color:var(--accent);font-variant-numeric:tabular-nums}
 #pcbar button{border:0;border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:650;cursor:pointer;font-family:inherit}
 #pcbar .go{background:var(--accent);color:var(--accent-text)} #pcbar .go:hover{background:var(--accent-hover)}
@@ -823,27 +827,11 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
     <div class="settings-pop hidden" id="settingsPop">
       <div class="set-sec">
         <div class="set-h">Cá nhân hoá</div>
-        <label class="set-field"><span class="lbl">Giao diện (theme)</span>
-          <select id="themeSel">
-            <option value="hasaki">Hasaki</option>
-            <option value="solar">Solarized Light</option>
-            <option value="tokyo">Tokyo Night</option>
-            <option value="dracula">Dracula</option>
-            <option value="nord">Nord</option>
-            <option value="mocha">Catppuccin Mocha</option>
-            <option value="latte">Catppuccin Latte</option>
-          </select></label>
-        <label class="set-field"><span class="lbl">Kiểu tiêu đề</span>
-          <select id="hstyle">
-            <option value="1">1 · Xếp chồng</option>
-            <option value="2">2 · Viên nhãn</option>
-            <option value="3">3 · Một hàng · vạch dọc</option>
-            <option value="4">4 · Hai độ đậm</option>
-            <option value="5">5 · Gạch chân accent</option>
-            <option value="6">6 · Ô monogram sao đỏ</option>
-            <option value="7">7 · Chữ viền</option>
-            <option value="8">8 · Sao đỏ nội tuyến</option>
-          </select></label>
+        <!-- C4 (25/07/2026): thay <select> trần bằng combo pattern của dự án — danh mục THEME_TEN/HSTYLE_TEN trong JS -->
+        <div class="set-field"><span class="lbl">Giao diện (theme)</span>
+          <div class="combo set-combo" id="themeCombo"><input readonly aria-label="Chọn giao diện"><div class="combo-menu"></div></div></div>
+        <div class="set-field"><span class="lbl">Kiểu tiêu đề</span>
+          <div class="combo set-combo" id="hstyleCombo"><input readonly aria-label="Chọn kiểu tiêu đề"><div class="combo-menu"></div></div></div>
       </div>
       <div class="set-sec">
         <div class="set-h">Dữ liệu</div>
@@ -882,14 +870,14 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
       <h2>Kiểm kê theo SKU <span class="hint">(Type: SKU · SKU Factory)</span> <span class="kkscope" id="kkScope-sku" hidden></span></h2>
       <div class="kkstrip" id="kkStrip-sku"></div>
       <div id="kkStatus-sku"></div>
-      <div class="kkdhead">Đã kiểm theo ngày <span class="hint">(Counted date · so với ngày kề trước)</span> <span class="lg" id="kkLegend-sku"></span></div>
+      <div class="kkdhead">Đã kiểm theo ngày <span class="hint">(Counted date · so với lần kiểm gần trước)</span> <span class="lg" id="kkLegend-sku"></span></div>
       <div class="kkdaily" id="kkHist-sku"></div>
     </section>
     <section class="panel">
       <h2>Kiểm kê theo mã vị trí <span class="hint">(Type: Location · Full Location · Full Location Factory)</span> <span class="kkscope" id="kkScope-loc" hidden></span></h2>
       <div class="kkstrip" id="kkStrip-loc"></div>
       <div id="kkStatus-loc"></div>
-      <div class="kkdhead">Đã kiểm theo ngày <span class="hint">(Counted date · so với ngày kề trước)</span> <span class="lg" id="kkLegend-loc"></span></div>
+      <div class="kkdhead">Đã kiểm theo ngày <span class="hint">(Counted date · so với lần kiểm gần trước)</span> <span class="lg" id="kkLegend-loc"></span></div>
       <div class="kkdaily" id="kkHist-loc"></div>
     </section>
     <section class="panel span2"><h2>Tiến độ theo kho <span class="hint">(SKU + mã vị trí · bấm thẻ kho để lọc toàn tab theo kho đó)</span></h2><div class="whlist" id="kkWhList"></div></section>
@@ -962,7 +950,12 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
       <div class="fld"><label>Type</label><div class="combo">
         <input id="pcType" autocomplete="off" readonly placeholder="— Theo nguồn từng dòng —" onfocus="pcTypeMenu()" onclick="pcTypeMenu()">
         <div class="combo-menu" id="pcTypeMenu"></div></div></div>
-      <div class="fld"><label>Plan date</label><input type="date" id="pcDate" onchange="pcRender()"></div>
+      <!-- C5 (25/07/2026): date-pop tuỳ biến của dự án thay <input type=date> trần (lịch OS lệch giao diện) -->
+      <div class="fld"><label>Plan date</label><span class="fcdate" id="pcDateWrap" style="display:block">
+        <button type="button" class="date-btn" id="pcDateBtn" onclick="pcDpToggle()">Chọn ngày</button>
+        <span class="date-pop hidden" id="pcDatePop" style="position:absolute;left:0;top:calc(100% + 6px)"></span>
+        <input type="hidden" id="pcDate">
+      </span></div>
       <div class="fld"><label>Executed By</label><div class="combo">
         <input id="pcBy" autocomplete="off" placeholder="— Để trống —" oninput="pcByInput(this)" onfocus="pcByMenu()">
         <div class="combo-menu" id="pcByMenu"></div></div></div>
@@ -1086,13 +1079,18 @@ function loadData(){
   _raw=[]; _failed=0;
   loadHistory(); loadMeta();
   Promise.all(TABS.map(function(t,i){
-    return gvizP(t.sheet,'&tq='+encodeURIComponent('select A,C,D,F,G,M'),'gviz_'+i);
+    return gvizP(t.sheet,'&headers=1&tq='+encodeURIComponent('select A,C,D,F,G,M'),'gviz_'+i);
   })).then(function(rs){
     rs.forEach(function(resp,i){
       try{
         if(!resp||resp.status==='error') throw 0;
+        // B4 (25/07/2026): map cột theo TÊN header (headers=1) như 2 tab kia — producer đổi thứ tự cột
+        // không còn lệch dữ liệu thầm lặng; thiếu label thì fallback đúng vị trí cũ A,C,D,F,G,M.
+        var lbl=(resp.table&&resp.table.cols||[]).map(function(x){ return String((x&&x.label)||'').replace(/\s+/g,'').trim().toLowerCase(); });
+        var want=['sku','productname','locationdescription','categoryname','warehouse','total'];
+        var ix=want.map(function(w,j){ var p=lbl.indexOf(w); return p>=0?p:j; });
         var rows=(resp.table&&resp.table.rows)||[];
-        for(var k=0;k<rows.length;k++){ var c=rows[k].c; if(!c) continue; _raw.push([c,TABS[i].div]); }
+        for(var k=0;k<rows.length;k++){ var c=rows[k].c; if(!c) continue; _raw.push([ix.map(function(p){ return c[p]; }),TABS[i].div]); }
       }catch(e){ _failed++; }
     });
     checkDone();
@@ -1192,9 +1190,9 @@ function renderSparks(){
     var arrow='';
     if(ds.length>1){
       var delta=m[ds[ds.length-1]]-m[ds[0]];
-      arrow=delta>0?'<span class="sd" style="color:#0f766e">↑</span>'
-           :delta<0?'<span class="sd" style="color:#d97706">↓</span>'
-                   :'<span class="sd" style="color:#9ca3af">→</span>';
+      arrow=delta>0?'<span class="sd" style="color:var(--good)">↑</span>'
+           :delta<0?'<span class="sd" style="color:var(--warn)">↓</span>'
+                   :'<span class="sd" style="color:var(--muted)">→</span>';
     }
     el.title='SKU đã lên kệ 5 ngày gần nhất — '+ds.map(function(d){ return d.slice(8,10)+'/'+d.slice(5,7)+': '+nf(m[d]); }).join(' · ');
     el.style.color=WH_COLOR[w]||'#94a3b8';
@@ -1490,7 +1488,7 @@ function openCatWh(cat){
   var rows=ca.whs.slice().sort(function(x,y){ return (y[1]-x[1]) || ((y[1]+y[2])-(x[1]+x[2])); });
   var html=rows.map(function(wr){
     var tot=wr[1]+wr[2], rt=tot?wr[1]/tot*100:0;
-    return '<tr><td class="whn"><span class="dot" style="background:'+(WH_COLOR[wr[0]]||'#94a3b8')+'"></span>'+esc(wr[0])+'</td>'+
+    return '<tr><td class="whn"><span class="dot" style="background:'+(WH_COLOR[wr[0]]||'var(--muted)')+'"></span>'+esc(wr[0])+'</td>'+
       '<td class="num" style="color:var(--teal);font-weight:700">'+nf(wr[1])+'</td>'+
       '<td class="num pend">'+nf(wr[2])+'</td>'+
       '<td class="num col-tot">'+nf(tot)+'</td>'+
@@ -1545,6 +1543,8 @@ function renderRows(){
 document.addEventListener('keydown',function(e){
   if(e.key!=='Escape') return;
   if(document.querySelector('#pcFilters .combo-menu.show')){ pcCloseCombos(); return; }   // menu combo modal tạo lệnh
+  var pdp=document.getElementById('pcDatePop');   // lịch Plan date trong modal tạo lệnh — đóng trước modal
+  if(pdp && !pdp.classList.contains('hidden')){ pdp.classList.add('hidden'); return; }
   var pv=document.getElementById('pcprev');    // preview giỏ chọn nổi trên cùng -> Escape đóng trước nhất
   if(pv && !pv.classList.contains('hidden')){ pv.classList.add('hidden'); return; }
   var pm=document.getElementById('pcmodal');   // modal tạo lệnh mở ĐÈ lên pop-up khác -> đóng trước tiên
@@ -1581,9 +1581,9 @@ document.addEventListener('click',function(e){
 });
 
 /* ================= Đồng bộ WMS on-demand + cooldown 4h ================= */
-function fmtTime(ms){  // HH:mm:ss DD/MM/YYYY
-  var d=new Date(ms); function p(n){return (n<10?'0':'')+n;}
-  return p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds())+' '+p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear();
+function fmtTime(ms){  // HH:mm:ss DD/MM/YYYY — NEO GIỜ VN (+07) như mọi mốc ngày trên trang, không theo giờ máy (B5, 25/07/2026)
+  var d=new Date(ms+7*3600*1000); function p(n){return (n<10?'0':'')+n;}
+  return p(d.getUTCHours())+':'+p(d.getUTCMinutes())+':'+p(d.getUTCSeconds())+' '+p(d.getUTCDate())+'/'+p(d.getUTCMonth()+1)+'/'+d.getUTCFullYear();
 }
 /* Footer "· N dòng · cập nhật …": số dòng NEO theo tab đang xem, mốc cập nhật CHUNG (LAST_SYNC_MS)
    -> đồng bộ giữa 3 tab, tab Tồn kho bất thường không còn hiện nhầm số dòng của Trạng thái lưu trữ. */
@@ -1708,13 +1708,27 @@ var TITLES={
   '7':'<span class="tt-wrap tt7"><span class="r"><span class="o">AUDIT</span> <span class="f">FACTORY</span></span><i>Kiểm soát kho</i></span>',
   '8':'<span class="tt-wrap tt8">'+STAR+'<b>AUDIT FACTORY</b><i>Kiểm soát kho</i></span>'
 };
+/* Danh mục hiển thị cho 2 combo Cài đặt (C4 — thay <select> trần) */
+var THEME_TEN={hasaki:'Hasaki',solar:'Solarized Light',tokyo:'Tokyo Night',dracula:'Dracula',nord:'Nord',mocha:'Catppuccin Mocha',latte:'Catppuccin Latte'};
+var HSTYLE_TEN={'1':'1 · Xếp chồng','2':'2 · Viên nhãn','3':'3 · Một hàng · vạch dọc','4':'4 · Hai độ đậm','5':'5 · Gạch chân accent','6':'6 · Ô monogram sao đỏ','7':'7 · Chữ viền','8':'8 · Sao đỏ nội tuyến'};
+function setComboBuild(id,items,cur,onPick){
+  var combo=document.getElementById(id); if(!combo) return;
+  var inp=combo.querySelector('input'), menu=combo.querySelector('.combo-menu');
+  menu.innerHTML=Object.keys(items).map(function(v){ return '<div class="combo-item'+(String(v)===String(cur)?' active':'')+'" data-v="'+v+'"><span class="nm">'+items[v]+'</span></div>'; }).join('');
+  inp.value=items[cur]||'';
+  inp.onclick=function(){
+    var dangMo=menu.classList.contains('show');
+    document.querySelectorAll('.settings-pop .combo-menu.show').forEach(function(x){ x.classList.remove('show'); });
+    if(!dangMo) menu.classList.add('show');
+  };
+  menu.onclick=function(e){ var it=e.target.closest('.combo-item'); if(!it) return; menu.classList.remove('show'); onPick(it.getAttribute('data-v')); };
+}
 function setTitle(t){
   if(!TITLES[t]) t='1';
   document.getElementById('brandTitle').innerHTML=TITLES[t];
-  document.getElementById('hstyle').value=t;
   try{ localStorage.setItem('slf-hstyle',t); }catch(e){}
+  setComboBuild('hstyleCombo',HSTYLE_TEN,t,setTitle);
 }
-document.getElementById('hstyle').addEventListener('change',function(){ setTitle(this.value); });
 setTitle((function(){ try{ return localStorage.getItem('slf-hstyle')||'1'; }catch(e){ return '1'; } })());
 
 /* ===== 7 theme (palette đầy đủ) + popup Cài đặt — luồng chọn theme y hệt kiemsoatkho ===== */
@@ -1724,9 +1738,8 @@ function setTheme(t){
   if(THEME_IDS.indexOf(t)<0) t='hasaki';
   document.documentElement.setAttribute('data-theme',t);   // palette CSS đổi toàn trang theo attribute này
   try{ localStorage.setItem('slf-theme',t); }catch(e){}
-  var sel=document.getElementById('themeSel'); if(sel) sel.value=t;
+  setComboBuild('themeCombo',THEME_TEN,t,setTheme);
 }
-document.getElementById('themeSel').addEventListener('change',function(){ setTheme(this.value); });
 document.getElementById('btnSettings').addEventListener('click',function(){
   this.classList.toggle('open');
   document.getElementById('settingsPop').classList.toggle('hidden');
@@ -1823,7 +1836,9 @@ async function kkFetch(kind){
       if(!resp||resp.status==='error') throw 0;
       var H=(resp.table&&resp.table.cols||[]).map(function(c){ return String((c&&c.label)||'').replace(/\s+/g,' ').trim().toLowerCase(); });
       var rows=(resp.table&&resp.table.rows||[]).map(function(r){ return (r.c||[]).map(function(c){ return c?(c.v==null?'':c.v):''; }); });
-      var out=kkMap(kind,H,rows).filter(function(r){ return KK_TYPES[kind].indexOf(kkTypeKey(r.type))>=0; });   // LỌC ĐÚNG TYPE
+      var mapped=kkMap(kind,H,rows);
+      var out=mapped.filter(function(r){ return KK_TYPES[kind].indexOf(kkTypeKey(r.type))>=0; });   // LỌC ĐÚNG TYPE
+      KK.typeLa=KK.typeLa||{}; KK.typeLa[kind]=mapped.length-out.length;   // B3: đếm dòng Type ngoài danh mục để CẢNH BÁO thay vì nuốt im lặng (WMS thêm enum mới là thấy ngay)
       if(out.length) cacheSet(ck,out);
       return {rows:out,err:false};   // rỗng thật cũng về đây (err=false) — tab hiện "không có dòng" là ĐÚNG
     }catch(e){ /* lỗi tải/parse -> thử lại lượt sau */ }
@@ -2225,7 +2240,9 @@ function kkTimingModel(kind,toanBo){
       var e=s;
       while(e+1<a.length && a[e+1].ms-a[e].ms<=15*60*1000) e++;
       var n=e-s+1;
-      if(n>=3){   // phiên ≥3 mã mới đủ tin để đo tốc độ
+      // Phiên ≥3 mã VÀ thời lượng thật >0: chống "đồng hồ phẳng" (Counted date không giờ / ghi bulk
+      // trùng giây) — không guard thì dur kẹp 60s chia đều → giây/mã ảo nhỏ, ETA ngắn phi lý (A4, 25/07/2026)
+      if(n>=3 && a[e].ms>a[s].ms){
         var dur=Math.max(60000,a[e].ms-a[s].ms), spm=dur/1000/n;
         var gc={}; for(var i=s;i<=e;i++) gc[a[i].g]=(gc[a[i].g]||0)+1;
         for(var g in gc) for(var j=0;j<gc[g];j++) (rate[g]=rate[g]||[]).push(spm);
@@ -2239,8 +2256,8 @@ function kkTimingModel(kind,toanBo){
 }
 /* Helper lịch làm việc (Chủ nhật nghỉ) — dùng chung cho dự báo tự tính & mô phỏng người chọn */
 function kkTodayMsVN(){ var n=vnDate(Date.now()); return Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate()); }
-function kkEtaCN(soNgayLam){ var t=kkTodayMsVN(), d=t, lam=0; for(var i=1;i<=800&&lam<soNgayLam;i++){ d=t+i*86400000; if(new Date(d).getUTCDay()!==0) lam++; } return d; }
-/* ETA từ NGÀY BẮT ĐẦU tuỳ chọn: ngày bắt đầu (nếu không phải CN) tính là ngày làm việc thứ 1 */
+/* ETA từ NGÀY BẮT ĐẦU tuỳ chọn: ngày bắt đầu (nếu không phải CN) tính là ngày làm việc thứ 1
+   — QUY ƯỚC DUY NHẤT toàn dashboard (25/07/2026), cả ① tự tính lẫn ② mô phỏng đều dùng hàm này */
 function kkEtaFrom(startMs,soNgayLam){ var d=startMs, lam=0; for(var i=0;i<=800&&lam<soNgayLam;i++){ d=startMs+i*86400000; if(new Date(d).getUTCDay()!==0) lam++; } return d; }
 function kkFcFmt(ms){ var t=new Date(ms), nay=new Date(kkTodayMsVN()); function p(n){ return (n<10?'0':'')+n; } return p(t.getUTCDate())+'/'+p(t.getUTCMonth()+1)+(t.getUTCFullYear()!==nay.getUTCFullYear()?('/'+t.getUTCFullYear()):''); }
 function kkForecastInfo(kind,univ,conLai){
@@ -2249,11 +2266,9 @@ function kkForecastInfo(kind,univ,conLai){
   var todayMs=Date.UTC(nowVN.getUTCFullYear(),nowVN.getUTCMonth(),nowVN.getUTCDate());
   var namNay=nowVN.getUTCFullYear();
   function fmt(ms){ var t=new Date(ms); function p(n){ return (n<10?'0':'')+n; } return p(t.getUTCDate())+'/'+p(t.getUTCMonth()+1)+(t.getUTCFullYear()!==namNay?('/'+t.getUTCFullYear()):''); }
-  function etaSkipCN(soNgayLam){   // cộng dồn từng ngày, Chủ nhật không tính là ngày làm việc
-    var d=todayMs, lam=0;
-    for(var i=1;i<=800&&lam<soNgayLam;i++){ d=todayMs+i*86400000; if(new Date(d).getUTCDay()!==0) lam++; }
-    return d;
-  }
+  // THỐNG NHẤT với mô phỏng ② (25/07/2026): hôm nay (nếu không phải CN) là NGÀY LÀM VIỆC THỨ 1
+  // — trước đây ① bỏ qua hôm nay nên ETA hai tầng lệch nhau đúng 1 ngày với cùng tham số.
+  function etaSkipCN(soNgayLam){ return kkEtaFrom(todayMs,soNgayLam); }
   /* ---- Mô hình EFFORT — dùng chung cho số đo TẠI CHỖ lẫn số MƯỢN (tham chiếu) ---- */
   function tinhEffort(tm,secAll,muon){
     var remain=kkStockUniverseRows(kind,true), nhom={};
@@ -2406,7 +2421,10 @@ function kkRenderPanel(kind){
   /* Tổng = universe tồn kho; Đã kiểm = |đã kiểm ∩ universe| -> Tổng = Đã kiểm + Còn lại KHỚP 1:1 với anti-join */
   var univ=kkUniverse(kind), denom=univ.size, counted=0;
   chk.forEach(function(k){ if(univ.has(k)) counted++; });
-  if(!denom){ denom=rs.length; counted=chk.size; }   // stock chưa tải xong -> tạm dùng số phiếu
+  if(!denom){   // stock chưa tải xong -> tạm dùng số MÃ distinct từ phiếu (dùng số PHIẾU sẽ phồng mẫu số khi 1 mã nhiều phiếu — A5, 25/07/2026)
+    var kTmp=new Set(); rs.forEach(function(r){ kTmp.add(r.wh+'|'+((kind==='sku')?r.sku:r.loc)); });
+    denom=kTmp.size; counted=chk.size;
+  }
   var notc=Math.max(0,denom-counted), rate=denom?counted/denom*100:0;
   /* Tầng 1: dải 5 số bấm được — số to mỏng, nhãn uppercase mờ, divider mảnh */
   function it(metric,cls,val,lab){
@@ -2449,9 +2467,12 @@ function kkRenderPanel(kind){
     return '<button class="kkstchip" style="--cc:'+m[1]+'" data-k="'+kind+'" data-m="st:'+esc(s)+'" onclick="kkOpen(this.getAttribute(\'data-k\'),this.getAttribute(\'data-m\'))"><span class="dot2"></span>'+esc(m[0])+' <b>'+nf(stc[s])+'</b></button>';
   }).join('');
   var stEl=document.getElementById('kkStatus-'+kind);
-  stEl.innerHTML=rs.length
+  var canhTypeLa=((KK.typeLa||{})[kind]>0)
+    ? '<div class="hint" style="margin:2px 0 6px">⚠ '+nf(KK.typeLa[kind])+' dòng có Type ngoài danh mục đang bị ẩn — WMS có thể vừa thêm Type mới, cần bổ sung KK_TYPES.</div>'
+    : '';
+  stEl.innerHTML=canhTypeLa+(rs.length
     ? '<div class="kkstbar">'+segs+'</div><div class="kkstchips">'+chips+'</div>'
-    : '<div class="histempty">Kho đang chọn chưa có phiếu kiểm kê loại này.</div>';
+    : '<div class="histempty">Kho đang chọn chưa có phiếu kiểm kê loại này.</div>');
   kkSwap(stEl);
   /* Chip phạm vi: cho biết panel đang tính theo kho nào (cross-filter) */
   var sc=document.getElementById('kkScope-'+kind);
@@ -2539,7 +2560,7 @@ var KK_FC={kind:null,fc:null,U:''};
 function kkFcOpen(kind){
   var univ=kkUniverse(kind), latest=kkLatestByKey(kind), counted=0;
   Object.keys(latest).forEach(function(k){ if(univ.has(k)) counted++; });
-  var denom=univ.size||kkRows(kind).length;
+  var denom=univ.size||Object.keys(latest).length;   // fallback = số MÃ distinct (không dùng số phiếu — A5)
   var notc=Math.max(0,denom-counted);
   var fc=kkForecastInfo(kind,univ,notc);
   var U=(kind==='loc')?'mã vị trí':'SKU';
@@ -2551,8 +2572,11 @@ function kkFcOpen(kind){
   function simHtml(){
     var nMac=Math.min(10,Math.max(1,Math.round(fc.nguoiTB)||1));
     var nItems=[]; for(var i=1;i<=10;i++) nItems.push({v:i,t:i+' người'});
-    var hDo=Math.max(60,Math.round(fc.phutNguoi*60));
-    var hItems=[{v:hDo,t:'Như thực đo · ≈'+Math.round(fc.phutNguoi)+' phút/người/ngày'},
+    // "Như thực đo" phải cho N × giây/người ≈ ĐÚNG công suất đo được — nếu làm tròn phút/người riêng lẻ,
+    // ② mặc định lệch ① 1 ngày do ceil() hai vế khác nhau (F4, 25/07/2026)
+    var capSim=fc.capNgay||fc.phutNguoi*60*Math.max(1,fc.nguoiTB||1);
+    var hDo=Math.max(60,Math.round(capSim/nMac));
+    var hItems=[{v:hDo,t:'Như thực đo · ≈'+Math.round(hDo/60)+' phút/người/ngày'},
       {v:7200,t:'2 giờ / người / ngày'},{v:14400,t:'4 giờ / người / ngày'},{v:21600,t:'6 giờ / người / ngày'},{v:28800,t:'8 giờ / người / ngày'}];
     var homNay=(function(){ var t=new Date(kkTodayMsVN()); function p(n){ return (n<10?'0':'')+n; } return t.getUTCFullYear()+'-'+p(t.getUTCMonth()+1)+'-'+p(t.getUTCDate()); })();
     var gChips=''; for(var g2 in fc.nhomTong){ if(fc.nhomTong[g2]) gChips+='<button class="fcg on" data-g="'+g2+'" onclick="this.classList.toggle(\'on\');kkFcSim()">'+KK_NHOM_TEN[g2]+' · '+nf(fc.nhom[g2]||0)+'</button>'; }
@@ -2665,6 +2689,10 @@ function kkFcSim(){
   /* Thời gian đợt kiểm từ BỘ CHỌN KHOẢNG NGÀY (bắt đầu → hạn chót) -> tính KẾT THÚC (né CN) */
   var startMs=FC_DP.start?Date.parse(FC_DP.start+'T00:00:00Z'):kkTodayMsVN(); if(isNaN(startMs)) startMs=kkTodayMsVN();
   var soLam=Math.ceil(load/(N*secNguoi));
+  if(soLam>150){   // cùng trần ">6 tháng" với tầng ① — quá xa thì ngày cụ thể vô nghĩa (vòng ETA cũng chỉ dò 800 ngày lịch) — A8
+    out.innerHTML='<span class="d bad">&gt;6 tháng</span><span class="n">≈'+nf(soLam)+' ngày làm việc · '+nf(nMa)+' mã ≈'+(load/3600).toFixed(1)+' giờ công · '+N+' người × '+Math.round(secNguoi/60)+' phút/ngày — tăng nhân sự hoặc thời lượng để rút ngắn.</span>';
+    need.textContent=''; return;
+  }
   var endMs=kkEtaFrom(startMs,soLam);
   out.innerHTML='<span class="d">'+kkFcFmt(endMs)+'</span><span class="n">kết thúc dự kiến · bắt đầu '+kkFcFmt(startMs)+' → ≈'+nf(soLam)+' ngày làm việc (né CN) · '+nf(nMa)+' mã ≈'+(load/3600).toFixed(1)+' giờ công · '+N+' người × '+Math.round(secNguoi/60)+' phút/ngày · phạm vi: '+(base==='tong'?'TOÀN BỘ (kiểm lại từ đầu)':'còn lại chưa kiểm')+'</span>';
   var txt='';
@@ -3438,7 +3466,8 @@ async function pcOpen(){
   requestAnimationFrame(function(){ m.classList.add('show'); });
   var d=document.getElementById('pcDate');
   // mặc định NGÀY MAI: job push count của WMS sinh phiếu theo ngày kế hoạch — plan đặt hôm nay lúc giữa ngày dễ bị job (đã chạy đầu ngày) bỏ qua
-  if(!d.value){ var t=new Date(); t.setDate(t.getDate()+1); d.value=t.getFullYear()+'-'+kkP2(t.getMonth()+1)+'-'+kkP2(t.getDate()); }
+  if(!d.value){ var t=new Date(); t.setDate(t.getDate()+1); pcDateSet(t.getFullYear()+'-'+kkP2(t.getMonth()+1)+'-'+kkP2(t.getDate())); }
+  else pcDateSet(d.value);   // đồng bộ nhãn nút với giá trị đã có
   pcRender();            // hiện preview ngay; danh mục kho + email nạp nền cho combo (menu dựng lúc focus)
   await pcFetchWhcode();
   pcRender();            // có danh mục -> tra lại mã kho cho các dòng
@@ -3786,6 +3815,42 @@ async function plLoad(){
 }
 /* Người dùng CHỦ ĐỘNG bấm nút mới hỏi khoá (pcKeyGet có prompt) — nhập xong tải lại sổ kế hoạch */
 function plNhapKhoa(){ if(pcKeyGet()) plLoad(); }
+
+/* ===== Plan date (modal tạo lệnh): date-pop 1 ngày, tái dùng lưới tháng fcMonthHTML + CSS dp-* (C5) ===== */
+var PC_DP2={y:0,m:0};
+function pcDateSet(iso){
+  document.getElementById('pcDate').value=iso||'';
+  document.getElementById('pcDateBtn').textContent=iso?(iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4)):'Chọn ngày';
+}
+function pcDpToggle(){
+  var pop=document.getElementById('pcDatePop');
+  if(!pop.classList.contains('hidden')){ pop.classList.add('hidden'); return; }
+  var iso=document.getElementById('pcDate').value||fcTodayISO();
+  PC_DP2.y=Number(iso.slice(0,4)); PC_DP2.m=Number(iso.slice(5,7))-1;
+  pcDpRender(); pop.classList.remove('hidden');
+}
+function pcDpNav(d){ PC_DP2.m+=d; if(PC_DP2.m<0){ PC_DP2.m=11; PC_DP2.y--; } if(PC_DP2.m>11){ PC_DP2.m=0; PC_DP2.y++; } pcDpRender(); }
+function pcDpRender(){
+  var pop=document.getElementById('pcDatePop');
+  pop.innerHTML='<span style="display:flex;justify-content:space-between;gap:6px;margin-bottom:8px">'+
+    '<button type="button" onclick="pcDpNav(-1)" aria-label="Tháng trước">‹</button>'+
+    '<button type="button" onclick="pcDpNav(1)" aria-label="Tháng sau">›</button></span>'+fcMonthHTML(PC_DP2.y,PC_DP2.m);
+  var sel=document.getElementById('pcDate').value, today=fcTodayISO();
+  pop.querySelectorAll('.dp-day').forEach(function(x){
+    var iso=x.getAttribute('data-iso');
+    if(iso===sel) x.classList.add('edge');
+    if(iso===today) x.classList.add('today');
+  });
+}
+document.getElementById('pcDatePop').addEventListener('click',function(e){
+  var day=e.target.closest('.dp-day'); if(!day) return;
+  pcDateSet(day.getAttribute('data-iso'));
+  document.getElementById('pcDatePop').classList.add('hidden');
+  pcRender();
+});
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#pcDateWrap')){ var p=document.getElementById('pcDatePop'); if(p&&!p.classList.contains('hidden')) p.classList.add('hidden'); }
+});
 function plStColor(s){ s=String(s).toUpperCase();
   if(/PEND/.test(s)) return 'var(--warn)';
   if(/PROCESS/.test(s)) return 'var(--info)';
