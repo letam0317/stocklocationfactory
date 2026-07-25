@@ -2174,8 +2174,16 @@ var KK_NHOM_TEN={PL:'Phụ liệu',NVL:'Nguyên liệu',KHAC:'Nhóm khác',ALL:'
 function kkMedian(a){ if(!a||!a.length) return null; a=a.slice().sort(function(x,y){ return x-y; }); var m=a.length>>1; return a.length%2?a[m]:(a[m-1]+a[m])/2; }
 function kkTimingModel(kind,toanBo){
   var byPD={};
-  // toanBo=true: đo trên TOÀN BỘ dữ liệu bảng (bỏ cross-filter kho + bộ lọc trường) — nguồn "mượn hiệu suất"
-  (toanBo?(KK.data[kind]||[]):kkRows(kind)).forEach(function(r){
+  /* toanBo=true: nguồn "mượn hiệu suất" — bỏ cross-filter kho + lọc request/ngày NHƯNG GIỮ LỌC TYPE
+     (25/07/2026): giây/mã khác hẳn nhau giữa các Type (Location đếm điểm nhanh · Full Location Factory
+     đếm trọn lâu) — trộn lẫn cho ra con số phi lý. Đang lọc Type nào chỉ được mượn phiếu đúng Type đó. */
+  var rows;
+  if(toanBo){
+    rows=KK.data[kind]||[];
+    var fT=kkfGet((kind==='sku')?'ts':'tl');
+    if(fT) rows=rows.filter(function(r){ var c=String(r.type||'').trim(); return fT.exact?c===fT.raw:c.toLowerCase().indexOf(fT.v)>=0; });
+  } else rows=kkRows(kind);
+  rows.forEach(function(r){
     if(!kkIsChecked(r)) return;
     var ms=kkParseDate(r.cdate); if(isNaN(ms)) return;   // cần giờ phút THẬT của Counted date
     var pd=(r.by||'?')+'|'+kkDayStr(ms);
@@ -2264,8 +2272,15 @@ function kkForecastInfo(kind,univ,conLai){
      Chỉ dùng làm THAM CHIẾU (dự báo ① khi không còn gì khác + luôn mở khoá mô phỏng ②);
      khi phạm vi này tự có dữ liệu giờ kiểm thì nhánh trên tự thay thế. ---- */
   var tmM=null, secM=null, muon='';
-  var nguon=[[kind,'bảng '+(kind==='loc'?'mã vị trí':'SKU')+' · toàn bộ kho (bỏ bộ lọc)'],
-             [(kind==='sku')?'loc':'sku','bảng '+((kind==='sku')?'mã vị trí':'SKU')+' · toàn bộ kho']];
+  /* Đang lọc Type -> CHỈ mượn phiếu đúng Type đó (kkTimingModel giữ lọc Type khi toanBo=true);
+     không có mẫu đúng Type thì báo "chưa đo được" chứ KHÔNG nới sang Type khác/bảng khác —
+     mượn chéo Type từng cho ≈160s/vị trí cho Full Location Factory (phi lý, 25/07/2026).
+     Không lọc Type mới được nới: cùng bảng mọi Type → bảng còn lại. */
+  var fTyp=kkfGet((kind==='sku')?'ts':'tl');
+  var nguon=fTyp
+    ?[[kind,'bảng '+(kind==='loc'?'mã vị trí':'SKU')+' · Type "'+fTyp.raw+'" · toàn bộ kho']]
+    :[[kind,'bảng '+(kind==='loc'?'mã vị trí':'SKU')+' · toàn bộ kho (bỏ bộ lọc)'],
+      [(kind==='sku')?'loc':'sku','bảng '+((kind==='sku')?'mã vị trí':'SKU')+' · toàn bộ kho']];
   for(var t=0;t<nguon.length&&!secM;t++){
     var tmT=kkTimingModel(nguon[t][0],true), sT=[];
     for(var gM in tmT.rate) sT=sT.concat(tmT.rate[gM]);
@@ -2549,7 +2564,7 @@ function kkFcOpen(kind){
       '<div class="fchero"><span class="d'+(fc.slow?' bad':'')+'">'+(fc.slow?'&gt;6 tháng':fc.eta)+'</span><span class="n">≈'+nf(fc.ngay)+' ngày làm việc · tốc độ ≈'+fc.pace.toFixed(1)+' '+U+'/ngày làm việc</span></div></div>';
     if(fc.sim) htmlB=simHtml();   // độ phủ tại chỗ + bộ số mượn -> mô phỏng ② vẫn mở
   }
-  if(!htmlB&&!fc.done) htmlB='<div class="fcsec"><h3>② Người chọn — mô phỏng</h3><div class="fchero"><span class="n">Chưa có dữ liệu giờ kiểm (Counted date có giờ phút) ở BẤT KỲ phạm vi nào để đo giây/mã — mô phỏng sẽ mở ngay khi hệ thống đo được hiệu suất đầu tiên.</span></div></div>';
+  if(!htmlB&&!fc.done) htmlB='<div class="fcsec"><h3>② Người chọn — mô phỏng</h3><div class="fchero"><span class="n">Chưa có phiếu kiểm kèm giờ (Counted date có giờ phút) PHÙ HỢP phạm vi/Type đang lọc để đo giây/mã — hệ thống không mượn hiệu suất của Type khác (giây/mã khác bản chất). Mô phỏng sẽ mở ngay khi có phiếu kiểm kèm giờ đúng Type này.</span></div></div>';
   var fcb=document.getElementById('fcBody');
   fcb.className='modalbody fcwrap'+(htmlB?'':' one');   // 100% (chỉ 1 tầng) -> 1 cột; còn lại 2 cột cạnh nhau
   fcb.innerHTML=htmlA+htmlB;
