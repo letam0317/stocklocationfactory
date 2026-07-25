@@ -338,7 +338,8 @@ h1.brand-title{margin:0;min-width:0}
    cùng cỡ chữ — chuẩn pill .mfilters dùng chung toàn dự án, hết cảnh cái to cái nhỏ */
 .kkonebar .kktab{height:32px;display:inline-flex;align-items:center;padding:0 14px;font-size:12.5px}
 .kkonebar .kkplan{margin-left:auto;white-space:nowrap;flex:0 0 auto}
-@media(max-width:1420px){.kkonebar .kkplan .pt{display:none}}   /* màn hẹp: nút Kế hoạch rút về icon 📋 (tooltip giữ đủ chữ) */
+.kkplan .ps{display:none}
+@media(max-width:1420px){.kkonebar .kkplan .pt{display:none}.kkonebar .kkplan .ps{display:inline}}   /* màn hẹp: nút rút gọn còn chữ "Kế hoạch" (tooltip giữ đủ chữ) */
 #kkmodal .kkwrap{overflow-x:hidden}
 #kkmodal .kkwrap table{min-width:0;width:100%}
 #kkmodal .kkwrap thead th,#kkmodal .kkwrap tbody td{white-space:normal;word-wrap:break-word}
@@ -862,12 +863,13 @@ body.pcm-open #pcbar,body.pcm-open #pcprev{display:none}   /* modal tạo lệnh
 
 <!-- ===== TAB 2: Kiểm kê — 2 khối song song: theo SKU & theo mã vị trí ===== -->
 <div id="viewKK" hidden>
-  <!-- HÀNG ĐIỀU KHIỂN 1 DÒNG: chip lọc KHO đứng trước → bộ lọc trường (Ngày/Request/Type) → nút Kế hoạch rút gọn
-       (câu giải thích "sổ kế hoạch WMS" chuyển vào tooltip của nút); các segment display:contents để wrap chung 1 dòng -->
+  <p class="sub"><span class="muted">Kiểm kê THẬT từ phiếu <code>physical-count</code> WMS (Type: SKU &amp; Location) — "Kế hoạch chờ push": lệnh kiểm kê tạo từ dashboard nằm ở sổ kế hoạch WMS trước khi thành phiếu (Pending = chờ push · Processing = đã push).</span></p>
+  <!-- HÀNG ĐIỀU KHIỂN 1 DÒNG: chip lọc KHO đứng trước → bộ lọc trường (Ngày/Request/Type) → nút Kế hoạch
+       (nút chuẩn chung 2 tab — không icon, màn hẹp rút gọn còn "Kế hoạch"); các segment display:contents để wrap chung 1 dòng -->
   <div class="kkbar kkonebar" style="margin-bottom:12px">
     <span id="kkWhBar"></span>
     <span class="mfilters kkmf kkfbar" id="kkFilters" hidden></span>
-    <button class="kktab kkplan" onclick="plOpen()" title="Kế hoạch chờ push (WMS) — lệnh tạo từ dashboard nằm ở 'sổ kế hoạch' WMS trước khi thành phiếu (Pending = chờ push, Processing = đã push)">📋<span class="pt"> Kế hoạch</span></button>
+    <button class="kktab kkplan" onclick="plOpen()" title="Lệnh kiểm kê tạo từ dashboard nằm ở 'sổ kế hoạch' WMS trước khi thành phiếu — Pending = chờ push · Processing = đã push · đọc trực tiếp từ WMS"><span class="pt">Kế hoạch chờ push (WMS)</span><span class="ps">Kế hoạch</span></button>
   </div>
   <div class="grid2 even">
     <section class="panel">
@@ -892,7 +894,7 @@ body.pcm-open #pcbar,body.pcm-open #pcprev{display:none}   /* modal tạo lệnh
 <div id="viewAbn" hidden>
   <p class="sub"><span class="muted">Chỉ số "bất thường" đọc từ báo cáo <code>stock-inventory-beta</code> — chỉ SKU có <b>Product Type = Normal</b> và có ít nhất 1 loại &gt; 0: Conflict · UID Temp · Not Found · Unsuitable product · Committed · Committed Outbound.</span></p>
   <!-- Cross-filter KHO: chip kho lọc toàn bộ thẻ chỉ số + chart + pop-up -->
-  <div class="kkbar" style="margin-bottom:6px"><span class="hint" style="flex:1"></span><button class="kktab" onclick="plOpen()">📋 Kế hoạch chờ push (WMS)</button></div>
+  <div class="kkbar" style="margin-bottom:6px"><span class="hint" style="flex:1"></span><button class="kktab kkplan" onclick="plOpen()" title="Lệnh kiểm kê tạo từ dashboard nằm ở 'sổ kế hoạch' WMS trước khi thành phiếu — Pending = chờ push · Processing = đã push · đọc trực tiếp từ WMS"><span class="pt">Kế hoạch chờ push (WMS)</span><span class="ps">Kế hoạch</span></button></div>
   <div class="kkbar" id="abnWhBar" style="margin-bottom:12px"></div>
   <div id="abnContent"></div>
   <div id="abnState" class="state"><div class="spin"></div>Đang tải dữ liệu tồn kho bất thường…</div>
@@ -972,8 +974,8 @@ body.pcm-open #pcbar,body.pcm-open #pcprev{display:none}   /* modal tạo lệnh
     </div>
     <div class="pcfoot">
       <span class="hint" id="pcStatus"></span><span class="sp"></span>
-      <button onclick="pcSubmit(true)" id="pcBtnFile" title="Dựng file template chuẩn để bạn tự import trong WMS">⬇ Tải file .xlsx</button>
-      <button class="primary" id="pcBtnDirect" style="display:none" onclick="pcSubmitDirect()" title="Upload thẳng bằng phiên WMS của chính bạn (qua extension) — ghi đúng tên bạn, không đá phiên">⚡ Import bằng tài khoản của bạn</button>
+      <button onclick="pcSubmit(true)" id="pcBtnFile" title="Dựng file template chuẩn để bạn tự import trong WMS">Tải file .xlsx</button>
+      <button class="primary" id="pcBtnDirect" style="display:none" onclick="pcSubmitDirect()" title="Upload thẳng bằng phiên WMS của chính bạn (qua extension) — ghi đúng tên bạn, không đá phiên">Import bằng tài khoản của bạn</button>
     </div>
   </div>
 </div>
@@ -2341,7 +2343,7 @@ function kkRenderPanel(kind){
   function fcMoTa(f){
     if(f.mode==='effort'){
       var arr=[]; for(var g in f.secG){ if(f.nhom[g]) arr.push(KK_NHOM_TEN[g]+' ≈'+Math.round(f.secG[g])+'s/mã × '+nf(f.nhom[g])+' còn lại'); }
-      return 'Mô hình thời gian thực đo: '+arr.join(' · ')+' ⇒ khối lượng ≈'+(f.effort!=null?(f.effort/3600).toFixed(1):'?')+' giờ công. '+
+      return 'Mô hình thời gian thực đo: '+arr.join(' · ')+' → khối lượng ≈'+(f.effort!=null?(f.effort/3600).toFixed(1):'?')+' giờ công. '+
         'Công suất đo được ≈'+Math.round(f.capNgay/60)+' phút kiểm/ngày làm việc (TB 7 ngày làm việc gần nhất) → ≈'+nf(f.ngay)+' ngày làm việc. Chủ nhật nghỉ — ETA đã bỏ qua CN. Tự tính lại theo kho đang lọc.';
     }
     return 'Chưa đủ dữ liệu giờ kiểm để đo giây/mã — dùng mô hình độ phủ: Còn lại ('+nf(notc)+' '+U+') ÷ tốc độ phủ '+(f.dung7?'TB 7 ngày gần nhất':'TB toàn kỳ')+' ≈'+f.pace.toFixed(1)+' '+U+'/ngày làm việc. Chủ nhật nghỉ — ETA đã bỏ qua CN.';
@@ -3514,7 +3516,7 @@ function pcWmsRowErrs(res){
 function pcWmsMsg2(res){ var j=res.j||{}, d=j.data||{}; return String(j.message||j.error_message||j.error||d.message||d.error||('HTTP '+res.http)); }
 /* ===== CẦU NỐI EXTENSION "WMS Token Bridge" — cho phép Import 1-CLICK ghi đúng tên operator =====
    Extension chạy trong CHÍNH trình duyệt operator, nghe token phiên WMS họ đang dùng rồi đưa cho trang.
-   Không có extension thì mọi thứ vẫn chạy (chỉ tải file tự import). CÓ extension -> hiện nút ⚡. */
+   Không có extension thì mọi thứ vẫn chạy (chỉ tải file tự import). CÓ extension -> hiện nút Import 1-click. */
 var WMSEXT={ok:false};
 window.addEventListener('message',function(e){
   if(e.source!==window||!e.data)return;
@@ -3534,7 +3536,7 @@ var _pcBusy=false;
 /* LUỒNG MẶC ĐỊNH — ÍT RỦI RO NHẤT: dashboard CHỈ dựng file .xlsx qua GAS (build dùng Google OAuth
    của script, KHÔNG đụng token WMS) rồi tải về. Operator tự import trong WMS bằng CHÍNH tài khoản họ
    -> created_by = họ. Không capture token -> không đá phiên ai, không cướp chuột.
-   (Có extension WMS Token Bridge thì thêm nút ⚡ import 1-click cũng ghi đúng tên họ — xem pcSubmitDirect.) */
+   (Có extension WMS Token Bridge thì thêm nút Import 1-click cũng ghi đúng tên họ — xem pcSubmitDirect.) */
 function pcSubmit(dry){
   if(_pcBusy) return;
   var rows=pcRows(), pick=pcWhPick(), manual=pcWhManual();
@@ -3570,7 +3572,7 @@ function pcSubmit(dry){
       return xong('ok','✓ Đã tải <b>'+esc(ten)+'</b> ('+nf(list.length)+' dòng). Giờ mở '+
         '<a href="https://wms.inshasaki.com/physical-count/request/import/sku" target="_blank" rel="noopener">trang Import SKU của WMS ↗</a> '+
         '(đăng nhập bằng tài khoản của bạn) và thả file này vào — lệnh sẽ ghi tên <b>chính bạn</b>. '+
-        '<button class="fcg" onclick="closePcModal();plOpen()">📋 Xem kế hoạch trên WMS</button>'+
+        '<button class="fcg" onclick="closePcModal();plOpen()">Xem kế hoạch trên WMS</button>'+
         (conlai?('<br>Giỏ còn '+nf(conlai)+' SKU thuộc kho khác — chọn kho nguồn tiếp theo ở ô "Kho kiểm" để xuất file tiếp.'):''),'Đã tải file');
     }catch(e){
       toast('Dựng file thất bại.','err');
@@ -3601,7 +3603,7 @@ function pcSubmitDirect(){
     try{
       st.textContent='Đang lấy token phiên WMS của bạn…';
       var tok=await wmsExtToken();
-      if(!tok) return xong('bad','Không lấy được token từ extension. Hãy MỞ 1 tab WMS (wms.inshasaki.com) và đăng nhập bằng tài khoản của bạn, thao tác một chút rồi bấm lại — hoặc dùng nút "⬇ Tải file .xlsx" để tự import.','Chưa có token');
+      if(!tok) return xong('bad','Không lấy được token từ extension. Hãy MỞ 1 tab WMS (wms.inshasaki.com) và đăng nhập bằng tài khoản của bạn, thao tác một chút rồi bấm lại — hoặc dùng nút "Tải file .xlsx" để tự import.','Chưa có token');
       st.textContent='Đang dựng file template…';
       var jf=await pcGas({action:'pc_import',dryRun:true,key:khoa,rows:list});
       if(jf.status!=='file'){ if(jf.code===403) pcKeyForget(); return xong('bad','Lỗi dựng file ('+esc(jf.stage||'?')+'): '+esc(jf.message||'')+(jf.code===403?' — khóa đã xoá, bấm lại để nhập.':''),'Thất bại'); }
@@ -3619,7 +3621,7 @@ function pcSubmitDirect(){
       toast('Import thành công — ghi tên chính bạn ('+nf(list.length)+' dòng).','ok');
       used.forEach(function(k){ delete PC.sel[k]; }); pcSave(); pcSyncBar(); pcRefreshChecks();
       var conlai=pcCount();
-      return xong('ok','✓ WMS đã nhận kế hoạch ('+nf(list.length)+' dòng) — <b>created_by = tài khoản của bạn</b>, không đá phiên ai. <button class="fcg" onclick="closePcModal();plOpen()">📋 Xem kế hoạch</button>'+(conlai?('<br>Giỏ còn '+nf(conlai)+' SKU kho khác — chọn kho nguồn tiếp để tạo lệnh tiếp.'):''),'Hoàn tất');
+      return xong('ok','✓ WMS đã nhận kế hoạch ('+nf(list.length)+' dòng) — <b>created_by = tài khoản của bạn</b>, không đá phiên ai. <button class="fcg" onclick="closePcModal();plOpen()">Xem kế hoạch</button>'+(conlai?('<br>Giỏ còn '+nf(conlai)+' SKU kho khác — chọn kho nguồn tiếp để tạo lệnh tiếp.'):''),'Hoàn tất');
     }catch(e){ toast('Import thất bại.','err'); return xong('bad','Lỗi: '+esc(String(e&&e.message||e)),'Thất bại'); }
   })();
 }
