@@ -1112,6 +1112,23 @@ function loadMeta(){
   var sc=document.createElement('script'); sc.id='sc_meta'; sc.src=url;
   sc.onerror=function(){ capNhatThongTin(); capNhatNut(); };
   document.body.appendChild(sc);
+  loadTabSync();
+}
+/* Mốc RIÊNG theo tab dữ liệu (26/07/2026 — nhịp phân tầng): kiểm kê / tồn bất thường được máy trạm
+   cập nhật (hoặc "chạm mốc" khi kiểm tra xong mà dữ liệu không đổi) nhiều lần trong ngày. Footer
+   phải chạy theo giờ KIỂM TRA thật của tab đang xem — Metadata chỉ là mốc của riêng tồn-vị-trí. */
+var TAB_SYNC={kk:0,abn:0};
+function jsonpTs(tab,cbName,fn){
+  window[cbName]=function(j){ try{ if(j&&j.status==='success'&&Number(j.ts)>0) fn(Number(j.ts)); }catch(e){} };
+  var old=document.getElementById('sc_'+cbName); if(old) old.remove();
+  var sc=document.createElement('script'); sc.id='sc_'+cbName;
+  sc.src=APPSCRIPT_URL+'?action=lastSync&tab='+encodeURIComponent(tab)+'&callback='+cbName;
+  document.body.appendChild(sc);
+}
+function loadTabSync(){
+  jsonpTs('kiemke-sku','ts_kk1',function(ts){ if(ts>TAB_SYNC.kk){TAB_SYNC.kk=ts; capNhatThongTin();} });
+  jsonpTs('kiemke-location','ts_kk2',function(ts){ if(ts>TAB_SYNC.kk){TAB_SYNC.kk=ts; capNhatThongTin();} });
+  jsonpTs('stock-inventory-beta','ts_abn',function(ts){ if(ts>TAB_SYNC.abn){TAB_SYNC.abn=ts; capNhatThongTin();} });
 }
 /* ---------- Lịch sử snapshot theo ngày (tab "history": Date, Division, Warehouse, SkuShelf, SkuPend) ---------- */
 var HIST=[], _histDone=false;
@@ -1597,7 +1614,10 @@ function capNhatThongTin(){
   }else{
     if(_rowCount) t='· '+nf(_rowCount)+' dòng';
   }
-  if(LAST_SYNC_MS) t+=(t?' ':'')+'· cập nhật '+fmtTime(LAST_SYNC_MS);
+  var moc=LAST_SYNC_MS;   // mặc định: Metadata (mốc tồn-vị-trí)
+  if(TOPTAB==='kk' && TAB_SYNC.kk) moc=TAB_SYNC.kk;
+  else if(TOPTAB==='abn' && TAB_SYNC.abn) moc=TAB_SYNC.abn;
+  if(moc) t+=(t?' ':'')+'· cập nhật '+fmtTime(moc);
   if(TOPTAB==='stock' && _failed) t+=' · '+_failed+' tab lỗi';
   document.getElementById('loadinfo').textContent=t;
 }
