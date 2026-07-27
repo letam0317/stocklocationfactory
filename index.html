@@ -2067,9 +2067,9 @@ function kkDiffOf(kind,r){
    dữ liệu thật có 169 SKU >1 phiếu khiến 28 mã bị đếm ở CẢ lệch âm lẫn lệch dương.
    Mỗi (kho|mã) chỉ lấy 1 PHIẾU ĐẠI DIỆN: phiếu đã kiểm MỚI NHẤT (theo Counted date, fallback Updated At),
    phiếu hợp lệ luôn thắng phiếu bị REJECTED/CANCELED. */
-function kkLatestByKey(kind){
+function kkLatestOf(kind,rows){
   var map={};
-  kkRows(kind).forEach(function(r){
+  rows.forEach(function(r){
     if(!kkIsChecked(r)) return;
     var k=r.wh+'|'+((kind==='sku')?r.sku:r.loc);
     var st=kkStKey(r), bad=(st==='REJECTED'||st==='CANCELED');
@@ -2080,6 +2080,21 @@ function kkLatestByKey(kind){
     if(t>=cur.t) map[k]={r:r,t:t,bad:bad};                            // cùng hạng -> lấy phiếu mới nhất
   });
   return map;
+}
+function kkLatestByKey(kind){ return kkLatestOf(kind,kkRows(kind)); }
+/* NỀN BÙ TRỪ TOÀN KHO (vá 27/07 — cặp chuyển vị trí đếm 2 NGÀY/2 NGƯỜI khác nhau bị bộ lọc cắt đôi
+   thành "lệch giả"): phép bù trừ SKU/UID luôn tính trên MỌI phiếu đại diện đã kiểm của kho (chỉ tôn
+   trọng cross-filter kho), KHÔNG ăn theo bộ lọc ngày/request/type/người đếm — các bộ lọc đó chỉ được
+   chọn dòng HIỂN THỊ. */
+function kkLatestAllByKey(kind){
+  var rs=KK.data[kind]||[];
+  if(KK.wh) rs=rs.filter(function(r){ return r.wh===KK.wh; });
+  return kkLatestOf(kind,rs);
+}
+function kkLechRepsAll(kind){
+  var latest=kkLatestAllByKey(kind), reps=[];
+  Object.keys(latest).forEach(function(k){ var r=latest[k].r; if(kkIsCounted(kind,r)) reps.push(r); });
+  return reps;
 }
 /* Bảng màu trạng thái — ngữ nghĩa, ăn theo theme */
 /* CT2: nhãn hiển thị = TIẾNG ANH GỐC từ Sheet/WMS; key so sánh giữ đúng enum data (CANCELED 1 chữ L) */
@@ -2557,7 +2572,7 @@ function kkRenderPanel(kind){
      phiếu như cũ. Khối SKU giữ nguyên: diff phiếu vốn đã là net của SKU. */
   var neg=0, pos=0, netTile=false;
   if(kind==='loc'&&UIDGR.map&&!UIDGR.err){
-    var nn=kkUidNets('loc',kkLechReps('loc'));
+    var nn=kkUidNets('loc',kkLechRepsAll('loc'));
     if(nn){ nn.order.forEach(function(gk){ var n=nn.gs[gk].net; if(n<0) neg++; else if(n>0) pos++; }); netTile=true; }
   }
   if(!netTile) Object.keys(latest).forEach(function(k){
@@ -4250,8 +4265,9 @@ function kkUidNets(kind,phieuRows){
 }
 /* Nhóm SKU cho pop-up: chọn theo DẤU của net (dương/âm), rồi q + 2 combo ucat/ugst lọc dòng chi tiết */
 function kkUidGroups(kind,metric,phieuRows,q,state,excludeK){
-  var nets=kkUidNets(kind,phieuRows);
+  var nets=kkUidNets(kind,kkLechRepsAll(kind));   // NỀN BÙ TRỪ = TOÀN KHO (vá 27/07): cặp chuyển vị trí đếm 2 ngày/2 người không bị bộ lọc chẻ thành lệch giả
   if(!nets) return null;
+  var allowed={}; (phieuRows||[]).forEach(function(p){ allowed[String(p.id)]=1; });
   var fs=(state||[]).filter(function(f){ return (f.k==='ucat'||f.k==='ugst')&&f.k!==excludeK&&f.v; });
   var groups=[],nRows=0;
   nets.order.forEach(function(gk){
@@ -4261,9 +4277,10 @@ function kkUidGroups(kind,metric,phieuRows,q,state,excludeK){
        tổng đếm − tổng tồn = 0 -> chỉ CHUYỂN VỊ TRÍ, không phải lệch -> ẩn khỏi bảng (cặp này tự
        triệt tiêu trong net của SKU nên số "Sau bù trừ" không đổi). Hàng không mã UID gom chung 1 rọ. */
     var uidNet={};
-    g.rows.forEach(function(u2){ var kU=u2.uid||' '; uidNet[kU]=(uidNet[kU]||0)+((Number(u2.qu)||0)-(Number(u2.qs)||0)); });
+    g.rows.forEach(function(u2){ var kU=u2.uid||'~'; uidNet[kU]=(uidNet[kU]||0)+((Number(u2.qu)||0)-(Number(u2.qs)||0)); });
     var rs=g.rows.filter(function(u){
-      if(uidNet[u.uid||' ']===0) return false;   // mã UID chỉ đổi chỗ -> ẩn
+      if(uidNet[u.uid||'~']===0) return false;   // mã UID chỉ đổi chỗ (tính trên toàn kho) -> ẩn
+      if(!allowed[String(u.cid)]) return false;  // ngoài phạm vi bộ lọc (ngày/request/combo) -> chỉ ẩn HIỂN THỊ, không đổi phép bù trừ
       for(var x=0;x<fs.length;x++){
         var f=fs[x], cell=(f.k==='ucat')?kkUidCat(u):String(u.gst||'').trim();
         if(f.exact){ if(cell!==f.raw) return false; }
@@ -4289,7 +4306,8 @@ function kkLechReps(kind){
 /* Tiêu đề pop-up lệch = SỐ SKU SAU BÙ TRỪ (khớp thẻ chỉ số); uidgr chưa tải -> tạm đếm theo phiếu */
 function kkLechTitle(){
   var kind=KK_MODAL.kind, metric=KK_MODAL.metric, lab=KK_METRIC_LABEL[metric], txt;
-  var ug=kkUidGroups(kind,metric,KK_MODAL.rows,'',[],null);
+  var nn2=kkUidNets(kind,kkLechRepsAll(kind)), ug=null;
+  if(nn2){ var d2=0; nn2.order.forEach(function(gk){ var v=nn2.gs[gk].net; if(metric==='positive'?v>0:v<0) d2++; }); ug={groups:{length:d2}}; }
   if(ug) txt='SKU · '+lab+' (sau bù trừ vị trí)'+(KK.wh?(' · kho '+KK.wh):'')+' — '+nf(ug.groups.length)+' SKU';
   else{
     var n=0; KK_MODAL.rows.forEach(function(r){ var d=kkDiffOf(kind,r); if(d!=null&&(metric==='positive'?d>0:d<0)) n++; });
@@ -4333,7 +4351,7 @@ function kkUidTable(ug){
   var html='<div class="kkwrap"><table><thead><tr><th>Location</th><th>UID group</th><th>Group status</th><th class="num">SL đếm</th><th class="num">Tồn HT</th><th class="num">Diff</th><th>Counted date</th><th>Counted by</th><th>Action</th></tr></thead><tbody>'+
     (out.join('')||kkEmpty(9))+'</tbody></table></div>'+
     '<div class="kknote">'+(ug.nRows>CAP?('Hiển thị '+nf(CAP)+' / '+nf(ug.nRows)+' dòng — lọc để thu hẹp.'):(nf(ug.groups.length)+' SKU lệch · '+nf(ug.nRows)+' dòng vị trí × UID group.'))+
-    ' SKU thiếu bin này thừa bin kia đã TỰ BÙ TRỪ — chỉ SKU có tổng sau bù trừ ≠ 0 mới xuất hiện (net = Σ diff các vị trí); cùng MÃ UID thiếu chỗ này thừa chỗ kia (chỉ chuyển vị trí) cũng đã ẩn; thứ tự vị trí theo lối đi của cate (phụ liệu 507→513 kệ 15→01 · nguyên liệu 507→501 kệ 10→15).'+
+    ' SKU thiếu bin này thừa bin kia đã TỰ BÙ TRỪ trên TOÀN KHO (bộ lọc ngày/request/người đếm chỉ chọn dòng hiển thị — không chẻ đôi cặp bù trừ thành lệch giả); cùng MÃ UID thiếu chỗ này thừa chỗ kia (chỉ chuyển vị trí) cũng đã ẩn; thứ tự vị trí theo lối đi của cate (phụ liệu 507→513 kệ 15→01 · nguyên liệu 507→501 kệ 10→15).'+
     (ug.thieu?(' <span style="color:var(--warn)">⚠ '+nf(ug.thieu)+' phiếu lệch chưa có chi tiết trên Sheet — đợi cụm sync kế (poller trưa/chiều hoặc 7h).</span>'):'')+'</div>';
   if(flat.length){
     var mail=''; try{ mail=localStorage.getItem('uide-mail')||''; }catch(e){}
