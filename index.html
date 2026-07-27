@@ -2067,11 +2067,11 @@ function kkDiffOf(kind,r){
    dữ liệu thật có 169 SKU >1 phiếu khiến 28 mã bị đếm ở CẢ lệch âm lẫn lệch dương.
    Mỗi (kho|mã) chỉ lấy 1 PHIẾU ĐẠI DIỆN: phiếu đã kiểm MỚI NHẤT (theo Counted date, fallback Updated At),
    phiếu hợp lệ luôn thắng phiếu bị REJECTED/CANCELED. */
-function kkLatestOf(kind,rows){
+function kkLatestOf(kind,rows,theoReq){
   var map={};
   rows.forEach(function(r){
     if(!kkIsChecked(r)) return;
-    var k=r.wh+'|'+((kind==='sku')?r.sku:r.loc);
+    var k=r.wh+'|'+(theoReq?String(r.req||'')+'|':'')+((kind==='sku')?r.sku:r.loc);
     var st=kkStKey(r), bad=(st==='REJECTED'||st==='CANCELED');
     var t=kkCountMs(r); if(isNaN(t)) t=0;
     var cur=map[k];
@@ -2082,17 +2082,16 @@ function kkLatestOf(kind,rows){
   return map;
 }
 function kkLatestByKey(kind){ return kkLatestOf(kind,kkRows(kind)); }
-/* NỀN BÙ TRỪ TOÀN KHO (vá 27/07 — cặp chuyển vị trí đếm 2 NGÀY/2 NGƯỜI khác nhau bị bộ lọc cắt đôi
-   thành "lệch giả"): phép bù trừ SKU/UID luôn tính trên MỌI phiếu đại diện đã kiểm của kho (chỉ tôn
-   trọng cross-filter kho), KHÔNG ăn theo bộ lọc ngày/request/type/người đếm — các bộ lọc đó chỉ được
-   chọn dòng HIỂN THỊ. */
-function kkLatestAllByKey(kind){
+/* NỀN BÙ TRỪ THEO ĐỢT KIỂM — REQUEST CODE (user chốt 27/07, "tối quan trọng"):
+   - Bù trừ SKU/UID tính TRONG TỪNG REQUEST: khử trùng phiếu theo (kho|request|mã), 1 đợt kiểm
+     có thể vắt ngày nên KHÔNG được cắt theo ngày kiểm/người đếm — 2 bộ lọc đó chỉ chọn hiển thị.
+   - Bộ lọc Request/Type cấp tab VẪN áp (chọn nguyên ĐỢT — không thể chẻ đôi cặp bù trừ trong đợt);
+     bỏ riêng bộ lọc ngày (skip='date'). Cross-filter kho áp như mọi chỉ số. */
+function kkLechRepsAll(kind){
   var rs=KK.data[kind]||[];
   if(KK.wh) rs=rs.filter(function(r){ return r.wh===KK.wh; });
-  return kkLatestOf(kind,rs);
-}
-function kkLechRepsAll(kind){
-  var latest=kkLatestAllByKey(kind), reps=[];
+  rs=kkFltRows(kind,rs,'date');   // giữ Request/Type, BỎ ngày
+  var latest=kkLatestOf(kind,rs,true), reps=[];   // khử trùng theo (kho|request|mã)
   Object.keys(latest).forEach(function(k){ var r=latest[k].r; if(kkIsCounted(kind,r)) reps.push(r); });
   return reps;
 }
@@ -3023,7 +3022,7 @@ function kkOpen(kind,metric){
   var lech=(metric==='negative'||metric==='positive');
   var rows=(metric==='total')?kkStockUniverseRows(kind,false)
           :(metric==='notcount')?kkRemaining(kind)
-          :lech?kkLechReps(kind)   // nền bù trừ SKU: MỌI phiếu đại diện đã kiểm (kể cả net 0)
+          :lech?kkLechRepsAll(kind)   // nền bù trừ THEO ĐỢT: phiếu đại diện đã kiểm của từng request (bỏ lọc ngày — đợt kiểm vắt ngày)
           :kkMetricRows(kind,metric);
   KK_MODAL={kind:kind,metric:metric,rows:rows,view:lech?'uid':''};   // lệch âm/dương: mặc định view UID GROUP LỆCH
   var U=(kind==='loc')?'Mã vị trí':'SKU';
@@ -3035,7 +3034,7 @@ function kkOpen(kind,metric){
     : metric==='notcount'
     ? 'Anti-join: tồn kho từ Stock Location TRỪ tập (kho|mã) đã kiểm — đây là phần chưa được đụng tới'
     : lech
-    ? 'Gộp theo SKU SAU BÙ TRỪ vị trí: thiếu bin này thừa bin kia tự bù, chỉ SKU có tổng ≠ 0 mới tính lệch · dưới mỗi SKU là từng vị trí × UID group (Action sửa tự do) · chuyển "Danh sách phiếu" để xem theo phiếu như cũ'
+    ? 'Gộp theo SKU SAU BÙ TRỪ vị trí TRONG TỪNG ĐỢT KIỂM (request): thiếu bin này thừa bin kia tự bù, chỉ SKU có tổng ≠ 0 mới tính lệch · bộ lọc ngày không áp ở đây (đợt kiểm vắt ngày) · dưới mỗi SKU là từng vị trí × UID group (Action sửa tự do) · chuyển "Danh sách phiếu" để xem theo phiếu như cũ'
     : (metric==='counted')
     ? 'Đã khử trùng phiếu: mỗi (kho|mã) chỉ tính 1 phiếu đã kiểm MỚI NHẤT (ưu tiên phiếu không bị từ chối/huỷ) · bấm ID xem chi tiết phiếu ngay tại đây (icon ↗ mở WMS)'
     : 'Bấm ID xem chi tiết phiếu ngay tại đây (icon ↗ mở WMS) · ✎ = phiếu có số lượng điều chỉnh');
@@ -4254,8 +4253,8 @@ function kkUidNets(kind,phieuRows){
     nPhieu++;
     us.forEach(function(u){
       if((Number(u.qu)||0)===(Number(u.qs)||0)) return;   // CHỈ nhóm LỆCH — chặn cả dữ liệu tab định dạng cũ còn trong cache phiên
-      var gk=p.wh+'|'+u.sku, g=gs[gk];
-      if(!g){ g=gs[gk]={wh:p.wh,sku:String(u.sku),pn:String(u.pn||''),net:0,sc:0,si:0,rows:[],_t:{}}; order.push(gk); }
+      var gk=p.wh+'|'+String(p.req||'')+'|'+u.sku, g=gs[gk];   // net TRONG TỪNG ĐỢT (request) — không trộn lẫn giữa các đợt
+      if(!g){ g=gs[gk]={wh:p.wh,req:String(p.req||''),sku:String(u.sku),pn:String(u.pn||''),net:0,sc:0,si:0,rows:[],_t:{}}; order.push(gk); }
       if(u.tid&&!g._t[u.tid]){ g._t[u.tid]=1; g.net+=Number(u.ld)||0; g.sc+=Number(u.lc)||0; g.si+=Number(u.li)||0; }
       var b=Object.create(u); b.by=p.by||'';
       g.rows.push(b);
@@ -4265,7 +4264,7 @@ function kkUidNets(kind,phieuRows){
 }
 /* Nhóm SKU cho pop-up: chọn theo DẤU của net (dương/âm), rồi q + 2 combo ucat/ugst lọc dòng chi tiết */
 function kkUidGroups(kind,metric,phieuRows,q,state,excludeK){
-  var nets=kkUidNets(kind,kkLechRepsAll(kind));   // NỀN BÙ TRỪ = TOÀN KHO (vá 27/07): cặp chuyển vị trí đếm 2 ngày/2 người không bị bộ lọc chẻ thành lệch giả
+  var nets=kkUidNets(kind,kkLechRepsAll(kind));   // NỀN BÙ TRỪ = TỪNG ĐỢT KIỂM/REQUEST (chốt 27/07): đợt vắt ngày không bị lọc ngày/người đếm chẻ thành lệch giả; các đợt KHÔNG trộn lẫn nhau
   if(!nets) return null;
   var allowed={}; (phieuRows||[]).forEach(function(p){ allowed[String(p.id)]=1; });
   var fs=(state||[]).filter(function(f){ return (f.k==='ucat'||f.k==='ugst')&&f.k!==excludeK&&f.v; });
@@ -4279,7 +4278,7 @@ function kkUidGroups(kind,metric,phieuRows,q,state,excludeK){
     var uidNet={};
     g.rows.forEach(function(u2){ var kU=u2.uid||'~'; uidNet[kU]=(uidNet[kU]||0)+((Number(u2.qu)||0)-(Number(u2.qs)||0)); });
     var rs=g.rows.filter(function(u){
-      if(uidNet[u.uid||'~']===0) return false;   // mã UID chỉ đổi chỗ (tính trên toàn kho) -> ẩn
+      if(uidNet[u.uid||'~']===0) return false;   // mã UID chỉ đổi chỗ (tính trong từng đợt/request) -> ẩn
       if(!allowed[String(u.cid)]) return false;  // ngoài phạm vi bộ lọc (ngày/request/combo) -> chỉ ẩn HIỂN THỊ, không đổi phép bù trừ
       for(var x=0;x<fs.length;x++){
         var f=fs[x], cell=(f.k==='ucat')?kkUidCat(u):String(u.gst||'').trim();
@@ -4290,20 +4289,14 @@ function kkUidGroups(kind,metric,phieuRows,q,state,excludeK){
       return true;
     });
     if(!rs.length) return;
-    var g2={wh:g.wh,sku:g.sku,pn:g.pn,net:g.net,sc:g.sc,si:g.si,rows:rs};
+    var g2={wh:g.wh,req:g.req,sku:g.sku,pn:g.pn,net:g.net,sc:g.sc,si:g.si,rows:rs};
     kkUidSortRows(g2);
     groups.push(g2); nRows+=rs.length;
   });
   groups.sort(function(a,b){ return Math.abs(b.net)-Math.abs(a.net); });   // SKU lệch nặng đứng trước
   return {groups:groups,nRows:nRows,thieu:nets.thieu,nPhieu:nets.nPhieu};
 }
-/* Nền của pop-up lệch: MỌI phiếu đại diện ĐÃ KIỂM (kể cả net 0 — bên trong vẫn có SKU lệch bù trừ chéo bin) */
-function kkLechReps(kind){
-  var latest=kkLatestByKey(kind), reps=[];
-  Object.keys(latest).forEach(function(k){ var r=latest[k].r; if(kkIsCounted(kind,r)) reps.push(r); });
-  return reps;
-}
-/* Tiêu đề pop-up lệch = SỐ SKU SAU BÙ TRỪ (khớp thẻ chỉ số); uidgr chưa tải -> tạm đếm theo phiếu */
+/* Tiêu đề pop-up lệch = SỐ SKU SAU BÙ TRỪ THEO ĐỢT (khớp thẻ chỉ số); uidgr chưa tải -> tạm đếm theo phiếu */
 function kkLechTitle(){
   var kind=KK_MODAL.kind, metric=KK_MODAL.metric, lab=KK_METRIC_LABEL[metric], txt;
   var nn2=kkUidNets(kind,kkLechRepsAll(kind)), ug=null;
@@ -4331,7 +4324,7 @@ function kkUidTable(ug){
     var g=ug.groups[gi], cat=kkUidCat({sku:g.sku}), nCls=g.net<0?'d-am':'d-duong';
     var vitri={}; g.rows.forEach(function(u2){ vitri[u2.loc]=1; });
     out.push('<tr class="uidsku"><td colspan="9"><b>'+esc(g.sku)+'</b> <span class="pn2i">'+esc(g.pn)+'</span>'+
-      (cat?' <span class="catchip">'+esc(cat)+'</span>':'')+' <span class="catchip">'+esc(g.wh)+'</span>'+
+      (cat?' <span class="catchip">'+esc(cat)+'</span>':'')+' <span class="catchip">'+esc(g.wh)+'</span>'+(g.req?' <span class="catchip" title="Đợt kiểm — bù trừ tính trong từng request">Req '+esc(g.req)+'</span>':'')+
       '<span class="tot">'+nf(Object.keys(vitri).length)+' vị trí lệch · SL đếm <b>'+nf(g.sc)+'</b> · Tồn HT <b>'+nf(g.si)+'</b> · Sau bù trừ <b class="'+nCls+'">'+(g.net>0?'+':'')+nf(g.net)+'</b></span></td></tr>');
     for(var i=0;i<g.rows.length&&hienThi<CAP;i++){
       var u=g.rows[i]; hienThi++;
@@ -4351,7 +4344,7 @@ function kkUidTable(ug){
   var html='<div class="kkwrap"><table><thead><tr><th>Location</th><th>UID group</th><th>Group status</th><th class="num">SL đếm</th><th class="num">Tồn HT</th><th class="num">Diff</th><th>Counted date</th><th>Counted by</th><th>Action</th></tr></thead><tbody>'+
     (out.join('')||kkEmpty(9))+'</tbody></table></div>'+
     '<div class="kknote">'+(ug.nRows>CAP?('Hiển thị '+nf(CAP)+' / '+nf(ug.nRows)+' dòng — lọc để thu hẹp.'):(nf(ug.groups.length)+' SKU lệch · '+nf(ug.nRows)+' dòng vị trí × UID group.'))+
-    ' SKU thiếu bin này thừa bin kia đã TỰ BÙ TRỪ trên TOÀN KHO (bộ lọc ngày/request/người đếm chỉ chọn dòng hiển thị — không chẻ đôi cặp bù trừ thành lệch giả); cùng MÃ UID thiếu chỗ này thừa chỗ kia (chỉ chuyển vị trí) cũng đã ẩn; thứ tự vị trí theo lối đi của cate (phụ liệu 507→513 kệ 15→01 · nguyên liệu 507→501 kệ 10→15).'+
+    ' SKU thiếu bin này thừa bin kia đã TỰ BÙ TRỪ trong TỪNG ĐỢT KIỂM (request code — đợt vắt ngày nên bộ lọc ngày/người đếm chỉ chọn dòng hiển thị, không chẻ đôi cặp bù trừ; các đợt không trộn lẫn nhau); cùng MÃ UID thiếu chỗ này thừa chỗ kia (chỉ chuyển vị trí) cũng đã ẩn; thứ tự vị trí theo lối đi của cate (phụ liệu 507→513 kệ 15→01 · nguyên liệu 507→501 kệ 10→15).'+
     (ug.thieu?(' <span style="color:var(--warn)">⚠ '+nf(ug.thieu)+' phiếu lệch chưa có chi tiết trên Sheet — đợi cụm sync kế (poller trưa/chiều hoặc 7h).</span>'):'')+'</div>';
   if(flat.length){
     var mail=''; try{ mail=localStorage.getItem('uide-mail')||''; }catch(e){}
