@@ -326,6 +326,22 @@ h1.brand-title{margin:0;min-width:0}
 .mfilters.kkmf{display:flex;flex-wrap:wrap;gap:6px 8px}
 .kkmf .fld{flex:1 1 190px;min-width:170px}
 .kkmf .fld.q{flex:2 1 250px}
+/* ĐIỆN THOẠI (≤640px): dàn combo dọc chiếm quá nửa màn hình (phản hồi 27/07) -> THU GỌN mặc định:
+   1 hàng [Tìm nhanh][nút Bộ lọc (n) ▾]; bấm nút mới xổ combo, xếp 2 CỘT cho thấp. Desktop nguyên vẹn. */
+.mfbtn{display:none}
+@media(max-width:640px){
+  .mfilters.kkmf{padding:8px 12px}
+  .kkmf .fld.q{order:-2;flex:1 1 0;min-width:0}   /* basis 0: co lại để đứng CÙNG HÀNG với nút Bộ lọc */
+  .mfbtn{display:inline-flex;order:-1;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:999px;
+    border:1px solid var(--border);background:var(--surface);color:var(--ink2);font-size:12px;font-weight:650;font-family:inherit;cursor:pointer;flex:0 0 auto;
+    transition:border-color .15s var(--ease),box-shadow .15s var(--ease)}
+  .mfbtn:active{transform:scale(.96)}
+  .mfbtn:focus-visible{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}
+  .mfbtn .n{display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:var(--accent);color:var(--accent-text,#fff);font-size:10.5px;font-weight:750}
+  .mfbtn .n:empty{display:none}
+  .kkmf .fld:not(.q){flex:1 1 calc(50% - 4px);min-width:0}
+  .kkmf.mf-thu .fld:not(.q){display:none}
+}
 /* Bộ lọc cấp tab Kiểm kê (#kkFilters): tái dùng pill .mfilters của dự án nhưng GỌN — nền trong suốt,
    không đóng khối, mỗi ô co theo nội dung; áp dụng cho TOÀN BỘ tab (dải số · trạng thái · chart · thẻ kho) */
 .kkfbar{padding:0;border:0;background:transparent;margin:-4px 0 12px}
@@ -3042,7 +3058,22 @@ function kkmBuildFilters(){
   if(lech){ html+=combo('ucat','Category'); html+=combo('ugst','Group status'); }
   // Ô Tìm nhanh đứng CUỐI hàng lọc (quy ước chung mọi pop-up: combo cột trước, tìm tự do sau)
   html+='<div class="fld q"><label>Tìm nhanh</label><input id="kkmQ" autocomplete="off" placeholder="SKU / tên / vị trí / kho…" oninput="kkmQuick()"></div>';
-  document.getElementById('kkmFilters').innerHTML=html;
+  // Nút thu/xổ bộ lọc — CHỈ hiện trên điện thoại (CSS .mfbtn); badge = số combo đang có giá trị
+  html+='<button type="button" class="mfbtn" onclick="kkmFltThu()">Bộ lọc <span class="n" id="kkmFltN"></span><span id="kkmFltCh">▾</span></button>';
+  var c=document.getElementById('kkmFilters');
+  c.innerHTML=html;
+  var mob=window.matchMedia&&window.matchMedia('(max-width:640px)').matches;
+  c.classList.toggle('mf-thu',mob);   // điện thoại: mặc định thu gọn — bộ lọc không được chiếm nửa màn hình
+  kkmFltBadge();
+}
+function kkmFltThu(){
+  var c=document.getElementById('kkmFilters'), thu=c.classList.toggle('mf-thu');
+  var ch=document.getElementById('kkmFltCh'); if(ch) ch.textContent=thu?'▾':'▴';
+}
+function kkmFltBadge(){
+  var n=0;
+  document.querySelectorAll('#kkmFilters .combo input').forEach(function(i2){ if(i2.value.trim()) n++; });
+  var b=document.getElementById('kkmFltN'); if(b) b.textContent=n?String(n):'';
 }
 function kkmQval(){ return ((document.getElementById('kkmQ')||{}).value||'').trim().toLowerCase(); }
 function kkmState(){
@@ -3113,7 +3144,7 @@ function kkmApply(){
   var b=document.getElementById('kkmBody');
   if(b) b.classList.add('is-filtering');
   clearTimeout(_kkmT);
-  _kkmT=setTimeout(function(){ kkmRender(); if(b) b.classList.remove('is-filtering'); },150);
+  _kkmT=setTimeout(function(){ kkmRender(); kkmFltBadge(); if(b) b.classList.remove('is-filtering'); },150);
 }
 function kkmRender(){
   var state=kkmState(), q=kkmQval();
