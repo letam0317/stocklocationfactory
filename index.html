@@ -68,6 +68,7 @@
 @keyframes fadeUp{from{opacity:0; transform:translate3d(0,8px,0);} to{opacity:1; transform:translate3d(0,0,0);}}
 @keyframes paneIn{from{opacity:0; transform:translate3d(0,14px,0) scale(.994);} to{opacity:1; transform:none;}}
 @keyframes popIn{from{opacity:0; transform:translate3d(0,-6px,0) scale(.98);} to{opacity:1; transform:none;}}
+@keyframes fadeIn{from{opacity:0;} to{opacity:1;}}
 /* barIn: bản popIn cho phần tử ĐỊNH TÂM bằng translateX(-50%) — keyframes phải GIỮ phép dịch -50%,
    nếu dùng popIn thường thì suốt lúc animation phép định tâm bị ghi đè -> phần tử lệch phải nửa chiều
    rộng rồi mới "nhảy" về giữa (lỗi giỏ chọn SKU 25/07/2026) */
@@ -170,6 +171,9 @@ h1.brand-title{margin:0;min-width:0}
   border-radius:10px 10px 0 0;box-shadow:0 -4px 6px -1px rgba(0,0,0,0.1);font-size:12.5px;margin-top:16px}
 /* chống đè nội dung: khối content cộng đệm đáy để dòng cuối không bị footer che khi cuộn kịch */
 #viewStock,#viewKK,#viewAbn{padding-bottom:60px}
+/* Pop-up đang mở: footbar (z100) tụt xuống DƯỚI lớp modal (z99) — không thì thanh này đè lên đáy
+   modal trên điện thoại, hớt tap của các nút vùng đáy (Lưu / Áp dụng của sheet bộ lọc) */
+body:has(.modal.show) .footbar{z-index:98}
 .footbar a{color:var(--brand2);text-decoration:none;font-weight:600}
 .footbar a:hover{text-decoration:underline}
 .footbar .hint{font-variant-numeric:tabular-nums}
@@ -327,8 +331,10 @@ h1.brand-title{margin:0;min-width:0}
 .kkmf .fld{flex:1 1 190px;min-width:170px}
 .kkmf .fld.q{flex:2 1 250px}
 /* ĐIỆN THOẠI (≤640px): dàn combo dọc chiếm quá nửa màn hình (phản hồi 27/07) -> THU GỌN mặc định:
-   1 hàng [Tìm nhanh][nút Bộ lọc (n) ▾]; bấm nút mới xổ combo, xếp 2 CỘT cho thấp. Desktop nguyên vẹn. */
+   1 hàng [Tìm nhanh][nút Bộ lọc (n) ▾]; bấm nút XỔ thành BOTTOM SHEET (.mf-xo) — không đẩy/đè
+   danh sách bên dưới như bản display:block cũ. Desktop nguyên vẹn. */
 .mfbtn{display:none}
+.mfsh,.mfsf{display:none}   /* tiêu đề + hàng nút [Xóa lọc][Áp dụng] của sheet — chỉ sống khi .mf-xo trên điện thoại */
 @media(max-width:640px){
   .mfilters.kkmf{padding:8px 12px}
   .kkmf .fld.q{order:-2;flex:1 1 0;min-width:0}   /* basis 0: co lại để đứng CÙNG HÀNG với nút Bộ lọc */
@@ -341,6 +347,26 @@ h1.brand-title{margin:0;min-width:0}
   .mfbtn .n:empty{display:none}
   .kkmf .fld:not(.q){flex:1 1 calc(50% - 4px);min-width:0}
   .kkmf.mf-thu .fld:not(.q){display:none}
+  /* BOTTOM SHEET bộ lọc (.mf-xo): position:fixed ở đây NEO THEO .modalbox chứ không phải viewport
+     (modalbox giữ transform:translateZ(0) nên là containing block của fixed) -> sheet + backdrop
+     phủ đúng pop-up đang mở, không cần chuyển DOM; animation tái dùng sheetIn của dự án */
+  .kkmf.mf-xo{position:fixed;left:0;right:0;bottom:0;top:auto;z-index:90;margin:0;
+    background:var(--surface);border:0;border-top:1px solid var(--line);border-radius:16px 16px 0 0;
+    box-shadow:0 -10px 30px rgba(0,0,0,.28);padding:12px 14px calc(12px + env(safe-area-inset-bottom,0px));
+    max-height:76%;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+    animation:sheetIn .32s var(--ez-apple)}
+  .kkmf.mf-xo::before{content:"";position:fixed;inset:0;z-index:-1;background:rgba(15,23,42,.45);border-radius:18px;animation:fadeIn .2s var(--ease) both}
+  .kkmf.mf-xo .mfbtn{display:none}   /* trong sheet đóng bằng × / Áp dụng — nút Bộ lọc chỉ sống ở hàng thu gọn */
+  .kkmf.mf-xo .fld.q{flex:1 1 100%}
+  .kkmf.mf-xo .mfsh{display:flex;flex:1 1 100%;order:-3;align-items:center;justify-content:space-between;
+    font-size:13.5px;font-weight:700;color:var(--ink);padding-bottom:2px}
+  .kkmf.mf-xo .mfsf{display:flex;flex:1 1 100%;order:99;gap:8px;margin-top:6px;padding-top:10px;border-top:1px solid var(--line);
+    position:sticky;bottom:0;background:var(--surface)}
+  .mfsf button{border:1px solid var(--border);background:var(--surface);color:var(--ink);border-radius:9px;
+    padding:10px 16px;font-size:13px;font-weight:650;cursor:pointer;font-family:inherit;
+    transition:border-color .15s var(--ease),background .15s var(--ease)}
+  .mfsf button:focus-visible{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}
+  .mfsf .mfok{flex:1;background:var(--accent);border-color:var(--accent);color:var(--accent-text)}
 }
 /* Bộ lọc cấp tab Kiểm kê (#kkFilters): tái dùng pill .mfilters của dự án nhưng GỌN — nền trong suốt,
    không đóng khối, mỗi ô co theo nội dung; áp dụng cho TOÀN BỘ tab (dải số · trạng thái · chart · thẻ kho) */
@@ -736,6 +762,17 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
   /* Modal phân bổ kho: Tên Kho ~70% trái + ngắt dòng, cột số 25-30% dồn phải */
   #catmodal .mtbl th{white-space:normal;text-align:right}
   #catmodal .mtbl th:first-child,#catmodal .mtbl td:first-child{white-space:normal;width:70%;text-align:left}
+  /* Pop-up Kiểm kê trên điện thoại: BẢNG CUỘN NGANG (gỡ lệnh cấm overflow-x của smart-modal dòng trên) —
+     mã vị trí F0-KHO-… hết vỡ 5-6 dòng theo dấu '-', padding nén để 1 màn thấy 4-5 dòng dữ liệu.
+     Hàng tiêu đề SKU (tr.uidsku, khai báo SAU khối này) vẫn white-space:normal + sticky trái. */
+  #kkmodal .kkwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  #kkmodal .kkwrap table{min-width:580px}
+  #kkmodal .kkwrap thead th,#kkmodal .kkwrap tbody td{white-space:nowrap;word-wrap:normal;padding:6px 8px}
+  #kkmodal .kkwrap .pn2{white-space:normal;min-width:170px;max-width:230px}
+  #kkmodal .kkwrap td.loc .pn2i{display:block;margin-top:2px;font-size:11px;color:var(--ink3)}   /* "· phiếu 730959" xuống dòng riêng, chữ nhỏ mờ */
+  #kkmodal .locchip{display:inline-block;background:var(--surface2);border-radius:6px;padding:2px 7px}   /* mã vị trí dạng chip monospace (kế thừa .loc) */
+  #kkmBody .uidskuin{position:sticky;left:0;max-width:calc(100vw - 72px)}   /* tiêu đề SKU dính mép trái khi cuộn ngang */
+  #kkmodal .adjinp.uide{width:130px}
 }
 
 /* ===== TAB 3: Tồn kho bất thường — thẻ chỉ số gọn + 2 chart cạnh nhau (theo kho | theo loại) ===== */
@@ -840,6 +877,11 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 #kkmBody tr.uidsku td{background:var(--hover);border-top:2px solid var(--line);padding:7px 10px;font-size:12px;white-space:normal}
 #kkmBody tr.uidsku .pn2i{color:var(--ink3);font-size:11px}
 #kkmBody tr.uidsku .tot{float:right;white-space:nowrap;color:var(--ink2);font-variant-numeric:tabular-nums;margin-left:14px}
+/* Điện thoại (bảng cuộn ngang, khối này phải đứng SAU quy tắc float:right phía trên mới thắng cascade):
+   dòng tổng SKU thôi dồn phải + cho bẻ dòng — không thì chữ tràn khỏi mép trái vùng sticky */
+@media(max-width:768px){
+  #kkmBody tr.uidsku .tot{float:none;display:block;white-space:normal;margin:3px 0 0}
+}
 #kkmBody tr.uidsku .catchip{display:inline-block;font-size:10px;font-weight:650;color:var(--ink2);border:1px solid var(--line);border-radius:999px;padding:1px 7px;background:var(--surface);vertical-align:1px}
 .uidmini{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
 .uidchip{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;color:var(--ink2);border:1px solid var(--line);border-radius:999px;padding:2px 8px;background:var(--surface);font-variant-numeric:tabular-nums}
@@ -1686,6 +1728,8 @@ document.addEventListener('keydown',function(e){
   var cm=document.getElementById('catmodal');
   if(cm && cm.classList.contains('show')){ closeCatWhModal(); return; }
   if(document.querySelector('#kkmFilters .combo-menu.show')){ kkmCloseCombos(); return; }
+  var kfx=document.getElementById('kkmFilters');   // sheet bộ lọc trên điện thoại đóng TRƯỚC pop-up Kiểm kê
+  if(kfx && kfx.classList.contains('mf-xo')){ kkmFltThu(); return; }
   var fdp=document.getElementById('fcDatePop');
   if(fdp && !fdp.classList.contains('hidden')){ fcCloseDatePop(); return; }
   if(document.querySelector('#fcBody .combo-menu.show')){ fcCloseMenus(); return; }
@@ -3074,15 +3118,26 @@ function kkmBuildFilters(){
   html+='<div class="fld q"><label>Tìm nhanh</label><input id="kkmQ" autocomplete="off" placeholder="SKU / tên / vị trí / kho…" oninput="kkmQuick()"></div>';
   // Nút thu/xổ bộ lọc — CHỈ hiện trên điện thoại (CSS .mfbtn); badge = số combo đang có giá trị
   html+='<button type="button" class="mfbtn" onclick="kkmFltThu()">Bộ lọc <span class="n" id="kkmFltN"></span><span id="kkmFltCh">▾</span></button>';
+  // Khung bottom-sheet trên điện thoại (CSS .mf-xo): tiêu đề + [Xóa lọc][Áp dụng] — desktop ẩn cả hai
+  html+='<div class="mfsh">Bộ lọc <button type="button" class="mclose" onclick="kkmFltThu()" aria-label="Đóng">&times;</button></div>';
+  html+='<div class="mfsf"><button type="button" onclick="kkmFltClear()">Xóa lọc</button><button type="button" class="mfok" onclick="kkmFltThu()">Áp dụng</button></div>';
   var c=document.getElementById('kkmFilters');
   c.innerHTML=html;
   var mob=window.matchMedia&&window.matchMedia('(max-width:640px)').matches;
   c.classList.toggle('mf-thu',mob);   // điện thoại: mặc định thu gọn — bộ lọc không được chiếm nửa màn hình
+  c.classList.remove('mf-xo');        // mở pop-up mới luôn bắt đầu ở trạng thái sheet ĐÓNG
   kkmFltBadge();
 }
 function kkmFltThu(){
   var c=document.getElementById('kkmFilters'), thu=c.classList.toggle('mf-thu');
+  // Điện thoại: xổ = bottom sheet (.mf-xo). Bộ lọc vốn tự áp khi đổi -> "Áp dụng" chỉ việc đóng sheet.
+  c.classList.toggle('mf-xo',!thu&&window.matchMedia&&window.matchMedia('(max-width:640px)').matches);
   var ch=document.getElementById('kkmFltCh'); if(ch) ch.textContent=thu?'▾':'▴';
+}
+function kkmFltClear(){
+  document.querySelectorAll('#kkmFilters .combo input').forEach(function(i2){ i2.value=''; i2.removeAttribute('data-exact'); });
+  var q=document.getElementById('kkmQ'); if(q) q.value='';
+  kkmApply();
 }
 function kkmFltBadge(){
   var n=0;
@@ -3142,6 +3197,7 @@ function kkmCloseCombos(except){
 }
 /* Delegation 1 lần trên container cố định — innerHTML rebuild mỗi lần mở modal không làm mất listener */
 document.getElementById('kkmFilters').addEventListener('click',function(e){
+  if(e.target===this&&this.classList.contains('mf-xo')){ kkmFltThu(); return; }   // chạm backdrop (::before của sheet) = đóng sheet
   var it=e.target.closest('.combo-item'); if(!it) return;
   var inp=it.closest('.combo').querySelector('input');
   inp.value=it.getAttribute('data-v')||'';
@@ -4323,15 +4379,15 @@ function kkUidTable(ug){
   for(var gi=0;gi<ug.groups.length&&hienThi<CAP;gi++){
     var g=ug.groups[gi], cat=kkUidCat({sku:g.sku}), nCls=g.net<0?'d-am':'d-duong';
     var vitri={}; g.rows.forEach(function(u2){ vitri[u2.loc]=1; });
-    out.push('<tr class="uidsku"><td colspan="9"><b>'+esc(g.sku)+'</b> <span class="pn2i">'+esc(g.pn)+'</span>'+
+    out.push('<tr class="uidsku"><td colspan="9"><div class="uidskuin"><b>'+esc(g.sku)+'</b> <span class="pn2i">'+esc(g.pn)+'</span>'+
       (cat?' <span class="catchip">'+esc(cat)+'</span>':'')+' <span class="catchip">'+esc(g.wh)+'</span>'+(g.req?' <span class="catchip" title="Đợt kiểm — bù trừ tính trong từng request">Req '+esc(g.req)+'</span>':'')+
-      '<span class="tot">'+nf(Object.keys(vitri).length)+' vị trí lệch · SL đếm <b>'+nf(g.sc)+'</b> · Tồn HT <b>'+nf(g.si)+'</b> · Sau bù trừ <b class="'+nCls+'">'+(g.net>0?'+':'')+nf(g.net)+'</b></span></td></tr>');
+      '<span class="tot">'+nf(Object.keys(vitri).length)+' vị trí lệch · SL đếm <b>'+nf(g.sc)+'</b> · Tồn HT <b>'+nf(g.si)+'</b> · Sau bù trừ <b class="'+nCls+'">'+(g.net>0?'+':'')+nf(g.net)+'</b></span></div></td></tr>');
     for(var i=0;i<g.rows.length&&hienThi<CAP;i++){
       var u=g.rows[i]; hienThi++;
       var idx=flat.length; flat.push(u);
       var d=(Number(u.qu)||0)-(Number(u.qs)||0), dCls=(d<0?'d-am':d>0?'d-duong':'d-khop');
       var k=u.cid+'|'+u.tid+'|'+u.uid, a=UIDE.map&&UIDE.map[k];
-      out.push('<tr><td class="loc">'+esc(u.loc)+' <span class="pn2i">· phiếu '+kkIdLink(u.cid,kind)+'</span></td>'+
+      out.push('<tr><td class="loc"><span class="locchip">'+esc(u.loc)+'</span> <span class="pn2i">· phiếu '+kkIdLink(u.cid,kind)+'</span></td>'+
         '<td>'+(u.uid?('<code>'+esc(u.uid)+'</code>'):'—')+'</td><td>'+kkUidStBadge(u.gst)+'</td>'+
         '<td class="num">'+(u.qu===''?'—':nf(Number(u.qu)||0))+'</td><td class="num">'+(u.qs===''?'—':nf(Number(u.qs)||0))+'</td>'+
         '<td class="num '+dCls+'">'+(d>0?'+':'')+nf(d)+'</td>'+
