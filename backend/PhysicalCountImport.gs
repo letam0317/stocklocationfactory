@@ -353,9 +353,14 @@ function pcAdjust_(duLieu) {
       them++;
     });
     if (loi.length && !them && !xoa) return pcErr_('config', 'Toàn bộ dòng lỗi: ' + loi.join('; '));
-    var values = [PC_ADJ_HEADERS].concat(order.filter(function (k) { return cur[k]; }).map(function (k) { return cur[k]; }));
+    var values = [PC_ADJ_HEADERS].concat(order.filter(function (k) { return cur[k]; }).map(function (k) {
+      return cur[k].map(function (c) {   // ép TEXT + String() từng ô — tránh gviz lẫn kiểu cột (cùng bài học kiemke-uidgr-edit)
+        if (c && c.getTime) return Utilities.formatDate(c, cfg.TZ, 'yyyy-MM-dd HH:mm:ss');
+        return c == null ? '' : String(c);
+      });
+    }));
     sh.clearContents();
-    sh.getRange(1, 1, values.length, PC_ADJ_HEADERS.length).setValues(values);
+    sh.getRange(1, 1, values.length, PC_ADJ_HEADERS.length).setNumberFormat('@').setValues(values);
     return { status: 'success', rows: them, removed: xoa, total: values.length - 1, at: at,
       message: 'Đã lưu ' + them + ' điều chỉnh' + (xoa ? (', gỡ ' + xoa) : '') + ' — tab ' + PC_ADJ_TAB + ' còn ' + (values.length - 1) + ' dòng.' + (loi.length ? (' Bỏ qua: ' + loi.join('; ')) : '') };
   } catch (err) {
@@ -406,9 +411,17 @@ function pcUidgrEdit_(duLieu) {
       them++;
     });
     if (loi.length && !them && !xoa) return pcErr_('config', 'Toàn bộ dòng lỗi: ' + loi.join('; '));
-    var values = [PC_UIDE_HEADERS].concat(order.filter(function (k) { return cur[k]; }).map(function (k) { return cur[k]; }));
+    // Ép TEXT ('@') + String() TỪNG Ô (bài học 27/07): thiếu bước này Sheets coerce "trông như số"
+    // thành number -> cột gviz lẫn kiểu: Action chữ trong cột number bị null (mất chữ), UID number
+    // trong cột chữ thành "1,02826E+15". String(number) trả đủ 16 ký tự nên dữ liệu cũ tự lành.
+    var values = [PC_UIDE_HEADERS].concat(order.filter(function (k) { return cur[k]; }).map(function (k) {
+      return cur[k].map(function (c) {
+        if (c && c.getTime) return Utilities.formatDate(c, cfg.TZ, 'yyyy-MM-dd HH:mm:ss');   // getValues trả Date cho cột At
+        return c == null ? '' : String(c);
+      });
+    }));
     sh.clearContents();
-    sh.getRange(1, 1, values.length, PC_UIDE_HEADERS.length).setValues(values);
+    sh.getRange(1, 1, values.length, PC_UIDE_HEADERS.length).setNumberFormat('@').setValues(values);
     return { status: 'success', rows: them, removed: xoa, total: values.length - 1, at: at, by: email,
       message: 'Đã lưu ' + them + ' Action' + (xoa ? (', gỡ ' + xoa) : '') + ' — tab ' + PC_UIDE_TAB + ' còn ' + (values.length - 1) + ' dòng.' + (loi.length ? (' Bỏ qua: ' + loi.join('; ')) : '') };
   } catch (err) {
