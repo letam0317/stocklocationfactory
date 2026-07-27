@@ -25,6 +25,7 @@
  *      if (data.action === 'pc_sync_whcode') return pcJson_(pcKeyOK_(data) ? pcSyncWarehouses() : pcKeyErr_());
  *      if (data.action === 'pc_set_key') return pcJson_(pcSetKey_(data));
  *      if (data.action === 'pc_adjust') return pcJson_(pcKeyOK_(data) ? pcAdjust_(data) : pcKeyErr_());
+ *      if (data.action === 'pc_uidgr_edit') return pcJson_(pcUidgrEdit_(data));   // KHÔNG PC_KEY — gác bằng email @hasaki.vn
  *  (bản đầy đủ đã nối sẵn trong doPost của hasaki/google-script.gs — dán nguyên file là đủ)
  *  Nếu deploy project RIÊNG: bỏ comment hàm doPost mẫu ở cuối file.
  *
@@ -357,6 +358,59 @@ function pcAdjust_(duLieu) {
     sh.getRange(1, 1, values.length, PC_ADJ_HEADERS.length).setValues(values);
     return { status: 'success', rows: them, removed: xoa, total: values.length - 1, at: at,
       message: 'Đã lưu ' + them + ' điều chỉnh' + (xoa ? (', gỡ ' + xoa) : '') + ' — tab ' + PC_ADJ_TAB + ' còn ' + (values.length - 1) + ' dòng.' + (loi.length ? (' Bỏ qua: ' + loi.join('; ')) : '') };
+  } catch (err) {
+    return pcErr_('build', String(err && err.message || err));
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/* ------------------- pc_uidgr_edit: LƯU "ACTION" TRÊN DÒNG UID GROUP LỆCH -------------------
+ * Pop-up Lệch âm/Lệch dương trên dashboard liệt kê UID group lệch (tab kiemke-uidgr do sync ghi)
+ * và cho NGƯỜI XEM ghi chú "Action" tự do trên từng dòng — KHÔNG cần PC_KEY (chủ đích: ai trong
+ * công ty cũng xử lý được). Hàng rào thay khoá: email PHẢI đúng định dạng ten@hasaki.vn (kiểm tra
+ * server-side, không tin client) + cap 200 dòng/lần + text cắt 500 ký tự + LockService.
+ * payload = { action:'pc_uidgr_edit', email, rows:[{ cid, tid, uid, loc, sku, txt }] }
+ * Upsert theo (Checklist ID | Tracking ID | UID Group) — txt rỗng '' = GỠ ghi chú đó. */
+var PC_UIDE_TAB = 'kiemke-uidgr-edit';
+var PC_UIDE_HEADERS = ['Checklist ID', 'Tracking ID', 'UID Group', 'Location', 'SKU', 'Action', 'By', 'At'];
+function pcUidgrEdit_(duLieu) {
+  var email = String((duLieu && duLieu.email) || '').trim().toLowerCase();
+  if (!/^[a-z0-9._%+-]+@hasaki\.vn$/.test(email)) return pcErr_('auth', 'Email không hợp lệ — cần đúng định dạng ten@hasaki.vn.', { code: 403 });
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(20000)) return pcErr_('build', 'Sheet đang bận (người khác đang lưu) — thử lại sau vài giây.');
+  try {
+    var rows = (duLieu && duLieu.rows) || [];
+    if (!rows.length) return pcErr_('config', 'Không có dòng nào.');
+    if (rows.length > 200) return pcErr_('config', 'Quá 200 dòng/lần lưu (' + rows.length + ') — tách nhỏ.');
+    var cfg = pcCFG_();
+    var at = Utilities.formatDate(new Date(), cfg.TZ, 'yyyy-MM-dd HH:mm:ss');
+    var ss = SpreadsheetApp.openById(cfg.SHEET_ID);
+    var sh = ss.getSheetByName(PC_UIDE_TAB) || ss.insertSheet(PC_UIDE_TAB);
+    var cur = {}, order = [];
+    var last = sh.getLastRow();
+    if (last >= 2) sh.getRange(2, 1, last - 1, PC_UIDE_HEADERS.length).getValues().forEach(function (r) {
+      var k = String(r[0]).trim() + '|' + String(r[1]).trim() + '|' + String(r[2]).trim();
+      if (!String(r[0]).trim() || cur[k]) return;
+      cur[k] = r; order.push(k);
+    });
+    var them = 0, xoa = 0, loi = [];
+    rows.forEach(function (x, i) {
+      var cid = String(x.cid == null ? '' : x.cid).trim(), tid = String(x.tid == null ? '' : x.tid).trim(), uid = String(x.uid == null ? '' : x.uid).trim();
+      if (!cid || !tid) { loi.push('dòng ' + (i + 1) + ' thiếu cid/tid'); return; }
+      var k = cid + '|' + tid + '|' + uid;
+      var txt = String(x.txt == null ? '' : x.txt).replace(/\s+/g, ' ').trim().slice(0, 500);
+      if (txt === '') { if (cur[k]) { delete cur[k]; xoa++; } return; }   // ô trống = gỡ ghi chú
+      if (!cur[k]) order.push(k);
+      cur[k] = [cid, tid, uid, String(x.loc || ''), String(x.sku || ''), txt, email, at];
+      them++;
+    });
+    if (loi.length && !them && !xoa) return pcErr_('config', 'Toàn bộ dòng lỗi: ' + loi.join('; '));
+    var values = [PC_UIDE_HEADERS].concat(order.filter(function (k) { return cur[k]; }).map(function (k) { return cur[k]; }));
+    sh.clearContents();
+    sh.getRange(1, 1, values.length, PC_UIDE_HEADERS.length).setValues(values);
+    return { status: 'success', rows: them, removed: xoa, total: values.length - 1, at: at, by: email,
+      message: 'Đã lưu ' + them + ' Action' + (xoa ? (', gỡ ' + xoa) : '') + ' — tab ' + PC_UIDE_TAB + ' còn ' + (values.length - 1) + ' dòng.' + (loi.length ? (' Bỏ qua: ' + loi.join('; ')) : '') };
   } catch (err) {
     return pcErr_('build', String(err && err.message || err));
   } finally {

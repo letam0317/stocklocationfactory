@@ -818,6 +818,12 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 .adjmeta b{color:var(--warn)}
 /* Cờ ✎ trên ID trong pop-up drill-down: phiếu đã có điều chỉnh lưu trên Sheet */
 .adjflag{display:inline-block;margin-left:4px;font-size:10px;color:var(--warn);font-weight:750;cursor:default}
+/* Pop-up Lệch âm/dương — view UID group lệch: ô Action text tự do (tái dùng pill .adjinp) + chip UID mini trong modal phiếu */
+.adjinp.uide{width:170px;text-align:left;font-variant-numeric:normal}
+.uidmini{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.uidchip{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;color:var(--ink2);border:1px solid var(--line);border-radius:999px;padding:2px 8px;background:var(--surface);font-variant-numeric:tabular-nums}
+.uidchip code{font-size:10.5px}
+#kkmBody .kktabs{margin:0 0 10px}
 /* Footer lưu điều chỉnh: tái dùng dáng .pcfoot */
 .pcdfoot{display:flex;align-items:center;gap:10px;padding:12px 0 2px;border-top:1px solid var(--line);margin-top:12px;flex-wrap:wrap}
 .pcdfoot .fld2{display:flex;align-items:center;height:32px;padding:0 5px 0 12px;border-radius:999px;border:1px solid var(--border);background:var(--surface)}
@@ -970,7 +976,7 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
   <div id="abnState" class="state"><div class="spin"></div>Đang tải dữ liệu tồn kho bất thường…</div>
 </div>
 
-<footer>Dashboard đọc trực tiếp online từ Google Sheet “stocklocationfactory” (gviz API).<br>Trạng thái lưu trữ: SKU đếm distinct theo Kho × Category · Kiểm kê: tab kiemke-sku / kiemke-location (bấm ID trong pop-up để xem chi tiết phiếu; SL điều chỉnh lưu tab kiemke-adjust) · Nút “Tải lại dữ liệu” (trong menu Cài đặt) kéo trực tiếp từ WMS (tối đa 4 giờ/lần).</footer>
+<footer>Dashboard đọc trực tiếp online từ Google Sheet “stocklocationfactory” (gviz API).<br>Trạng thái lưu trữ: SKU đếm distinct theo Kho × Category · Kiểm kê: tab kiemke-sku / kiemke-location (bấm ID trong pop-up để xem chi tiết phiếu; SL điều chỉnh lưu tab kiemke-adjust) · Pop-up Lệch âm/dương liệt kê thẳng UID group lệch (tab kiemke-uidgr; cột Action sửa tự do, lưu tab kiemke-uidgr-edit bằng email @hasaki.vn) · Nút “Tải lại dữ liệu” (trong menu Cài đặt) kéo trực tiếp từ WMS (tối đa 4 giờ/lần).</footer>
 
 <div class="footbar">
   <span class="chip">Nguồn: stocklocationfactory</span>
@@ -1908,7 +1914,7 @@ function kkEval(inv,cnt){ if(cnt==null||cnt==='') return {d:0,counted:false}; va
 var CACHE_TTL=10*60*1000;
 function cacheGet(k){ try{ var o=JSON.parse(sessionStorage.getItem(k)||'null'); if(o&&(Date.now()-o.at)<CACHE_TTL) return o.d; }catch(e){} return null; }
 function cacheSet(k,d){ try{ sessionStorage.setItem(k,JSON.stringify({at:Date.now(),d:d})); }catch(e){ /* quá quota -> bỏ qua, không cache */ } }
-function clearCaches(){ try{ ['slf-kk-sku','slf-kk-loc','slf-kk3-sku','slf-kk3-loc','slf-hist','slf-hist2','slf-abn3','slf-adj'].forEach(function(k){ sessionStorage.removeItem(k); }); }catch(e){} }
+function clearCaches(){ try{ ['slf-kk-sku','slf-kk-loc','slf-kk3-sku','slf-kk3-loc','slf-hist','slf-hist2','slf-abn3','slf-adj','slf-uidgr','slf-uide'].forEach(function(k){ sessionStorage.removeItem(k); }); }catch(e){} }
 function gvizP(sheet,params,cb){
   return new Promise(function(res){
     // null = LỖI TẢI (mạng/treo/chặn) — khác "tab rỗng"; caller phân biệt để không hiển thị nhầm "không có dữ liệu"
@@ -2974,7 +2980,8 @@ function kkOpen(kind,metric){
   var rows=(metric==='total')?kkStockUniverseRows(kind,false)
           :(metric==='notcount')?kkRemaining(kind)
           :kkMetricRows(kind,metric);
-  KK_MODAL={kind:kind,metric:metric,rows:rows};
+  var lech=(metric==='negative'||metric==='positive');
+  KK_MODAL={kind:kind,metric:metric,rows:rows,view:lech?'uid':''};   // lệch âm/dương: mặc định view UID GROUP LỆCH
   var U=(kind==='loc')?'Mã vị trí':'SKU';
   var lab=(metric.indexOf('st:')===0)?('trạng thái '+kkStMeta(metric.slice(3))[0]):KK_METRIC_LABEL[metric];
   document.getElementById('kkmTitle').textContent=U+' · '+lab+(KK.wh?(' · kho '+KK.wh):'')+' — '+nf(rows.length)+' dòng';
@@ -2982,11 +2989,17 @@ function kkOpen(kind,metric){
     ? 'Mẫu số tuyệt đối: distinct (kho|mã) tồn kho từ Stock Location — 1 mã nằm nhiều vị trí chỉ tính 1, kèm cột trạng thái kiểm kê'
     : metric==='notcount'
     ? 'Anti-join: tồn kho từ Stock Location TRỪ tập (kho|mã) đã kiểm — đây là phần chưa được đụng tới'
-    : (metric==='counted'||metric==='negative'||metric==='positive')
+    : lech
+    ? 'Mặc định liệt kê UID GROUP đang lệch của từng phiếu (đủ trường như Detail UIDgr trên WMS, cột Action sửa tự do) · chuyển "Danh sách phiếu" để xem như cũ · đã khử trùng phiếu: mỗi (kho|mã) chỉ tính 1 phiếu mới nhất'
+    : (metric==='counted')
     ? 'Đã khử trùng phiếu: mỗi (kho|mã) chỉ tính 1 phiếu đã kiểm MỚI NHẤT (ưu tiên phiếu không bị từ chối/huỷ) · bấm ID xem chi tiết phiếu ngay tại đây (icon ↗ mở WMS)'
     : 'Bấm ID xem chi tiết phiếu ngay tại đây (icon ↗ mở WMS) · ✎ = phiếu có số lượng điều chỉnh');
   kkmBuildFilters();
   kkmRender();
+  if(lech) Promise.all([uidgrLoad(),uideLoad()]).then(function(){
+    var m2=document.getElementById('kkmodal');
+    if(m2.classList.contains('show')&&KK_MODAL.view==='uid') kkmRender();   // dữ liệu về sau khi mở -> vẽ lại
+  });
   var m=document.getElementById('kkmodal'); m.style.display='flex';
   requestAnimationFrame(function(){ m.classList.add('show'); });
 }
@@ -3072,14 +3085,31 @@ function kkmApply(){
 }
 function kkmRender(){
   var state=kkmState(), q=kkmQval();
+  var body=document.getElementById('kkmBody');
+  /* View UID GROUP LỆCH (mặc định của lệch âm/dương): combo cột lọc cấp PHIẾU, tìm nhanh áp lên dòng UID */
+  if(KK_MODAL.view==='uid'){
+    var rsP=kkmRowsWith(null,state,'');
+    var nAct1=state.filter(function(f){ return f.v; }).length+(q?1:0);
+    if(!UIDGR.map){
+      document.getElementById('kkmSum').textContent=nf(rsP.length)+' phiếu lệch'+(nAct1?' · '+nAct1+' bộ lọc đang áp dụng':'');
+      body.innerHTML=kkViewBar()+'<div class="state" style="padding:22px"><div class="spin"></div>Đang tải chi tiết UID group từ Sheet…</div>';
+      return;
+    }
+    var ug=kkUidRows(rsP,q);
+    document.getElementById('kkmSum').textContent=nf(ug.rows.length)+' dòng UID group · '+nf(ug.nPhieu)+'/'+nf(rsP.length)+' phiếu lệch có chi tiết'+(nAct1?' · '+nAct1+' bộ lọc đang áp dụng':'');
+    body.innerHTML=kkViewBar()+((UIDGR.err&&!ug.rows.length)
+      ? '<div class="state" style="padding:22px;white-space:normal">⚠ Chưa đọc được tab <code>kiemke-uidgr</code> trên Sheet (tab chưa được cụm sync tạo, hoặc lỗi mạng). Chuyển tạm sang "Danh sách phiếu" để xem, hoặc chờ cụm sync kế. <button class="fcg" onclick="uidgrLoad(true).then(kkmRender)">Thử lại</button></div>'
+      : kkUidTable(ug.rows,ug.thieu));
+    kkSwap(body);
+    return;
+  }
   var rs=kkmRowsWith(null,state,q);
   /* dòng tổng kết .msum — cùng vị trí/kiểu với pop-up Trạng thái lưu trữ */
   var nAct=state.filter(function(f){ return f.v; }).length+(q?1:0);
   document.getElementById('kkmSum').textContent=nf(rs.length)+' / '+nf(KK_MODAL.rows.length)+' dòng'+(nAct?' · '+nAct+' bộ lọc đang áp dụng':'');
-  var body=document.getElementById('kkmBody');
-  body.innerHTML=(KK_MODAL.metric==='notcount')?kkTableRemain(KK_MODAL.kind,rs)
+  body.innerHTML=kkViewBar()+((KK_MODAL.metric==='notcount')?kkTableRemain(KK_MODAL.kind,rs)
     :(KK_MODAL.metric==='total')?kkTableRemain(KK_MODAL.kind,rs,true)
-    :kkTable(KK_MODAL.kind,rs);
+    :kkTable(KK_MODAL.kind,rs));
   kkSwap(body);   // fadeUp — chuẩn animation dự án
   pcSyncAll(body,rs);   // ô "chọn tất cả" phản ánh đúng tập đang lọc (chỉ khối SKU mới có)
 }
@@ -4037,6 +4067,155 @@ function adjBuild(rows){
   ADJ.map={}; ADJ.cids={};
   (rows||[]).forEach(function(a){ ADJ.map[adjKey(a.cid,a.tid)]=a; ADJ.cids[String(a.cid)]=1; });
 }
+
+/* ===== UID GROUP LỆCH (27/07/2026) ==============================================================
+   Pop-up Lệch âm/Lệch dương mặc định liệt kê THẲNG các UID group đang lệch của từng phiếu — hết
+   cảnh bấm từng ID mới thấy chi tiết. Nguồn: tab Sheet kiemke-uidgr (push-pc-to-sheet kéo tracking
+   của phiếu lệch, UID group lấy từ exp_by_user/exp_by_sys nhúng sẵn trong response) — người xem đọc
+   gviz, KHÔNG cần token WMS/PC_KEY. Batch/Roll/Description WMS không phát qua API -> hiện "—".
+   Cột Action: ai cũng sửa được, lưu tab kiemke-uidgr-edit qua GAS pc_uidgr_edit — KHÔNG cần PC_KEY,
+   hàng rào là email đúng định dạng @hasaki.vn (GAS kiểm server-side). */
+var UIDGR={map:null,err:false,loading:false};   // cid -> [dòng UID group lệch của phiếu đó]
+var UIDE={map:null};                             // 'cid|tid|uid' -> {txt,by,at} (Action đã lưu)
+var KK_UIDV=[];                                  // dòng đang hiển thị trong view UID (input data-i trỏ vào đây)
+async function uidgrLoad(force){
+  if(UIDGR.map&&!force) return UIDGR.map;
+  var hit=force?null:cacheGet('slf-uidgr');
+  if(hit){ uidgrBuild(hit); return UIDGR.map; }
+  var rows=[]; UIDGR.err=false;
+  try{
+    var resp=await gvizP('kiemke-uidgr','&headers=1','uggv'+(force?'_f':''));
+    var H=(resp.table&&resp.table.cols||[]).map(function(c){ return String((c&&c.label)||'').replace(/\s+/g,' ').trim().toLowerCase(); });
+    var iK=H.indexOf('kind'); if(iK<0) throw 0;   // tab chưa tồn tại -> gviz fallback tab đầu (thiếu 'kind')
+    var IX={cid:'checklist id',tid:'tracking id',req:'request code',wh:'warehouse',type:'type',loc:'location',sku:'sku',pn:'product name',lc:'line qty count',li:'line inventory',ld:'line diff',ls:'line status',uid:'uid group',gst:'group status',qu:'qty count',qs:'qty system',exp:'expiration date',cd:'counted date'};
+    var I={}; Object.keys(IX).forEach(function(k){ I[k]=H.indexOf(IX[k]); });
+    (resp.table.rows||[]).forEach(function(r){
+      var c=r.c||[], g=function(i){ return (i>=0&&c[i]&&c[i].v!=null)?c[i].v:''; };
+      var o={kind:String(g(iK))};
+      Object.keys(I).forEach(function(k){ o[k]=g(I[k]); });
+      o.cid=String(o.cid); o.tid=String(o.tid); o.uid=String(o.uid);
+      if(o.cid==='') return;
+      rows.push(o);
+    });
+    cacheSet('slf-uidgr',rows);
+  }catch(e){ UIDGR.err=true; }
+  uidgrBuild(rows);
+  return UIDGR.map;
+}
+function uidgrBuild(rows){ UIDGR.map={}; (rows||[]).forEach(function(o){ (UIDGR.map[o.cid]=UIDGR.map[o.cid]||[]).push(o); }); }
+async function uideLoad(force){
+  if(UIDE.map&&!force) return UIDE.map;
+  var hit=force?null:cacheGet('slf-uide');
+  if(hit){ uideBuild(hit); return UIDE.map; }
+  var rows=[];
+  try{
+    var resp=await gvizP('kiemke-uidgr-edit','&headers=1','uegv'+(force?'_f':''));
+    var H=(resp.table&&resp.table.cols||[]).map(function(c){ return String((c&&c.label)||'').replace(/\s+/g,' ').trim().toLowerCase(); });
+    var iA=H.indexOf('action'); if(iA<0) throw 0;   // tab chưa có -> coi như chưa ai ghi Action (không lỗi)
+    var iC=H.indexOf('checklist id'),iT=H.indexOf('tracking id'),iU=H.indexOf('uid group'),iB=H.indexOf('by'),iAt=H.indexOf('at');
+    (resp.table.rows||[]).forEach(function(r){
+      var c=r.c||[], g=function(i){ return (i>=0&&c[i]&&c[i].v!=null)?c[i].v:''; };
+      if(String(g(iC))==='') return;
+      rows.push({cid:String(g(iC)),tid:String(g(iT)),uid:String(g(iU)),txt:String(g(iA)),by:String(g(iB)),at:String(g(iAt))});
+    });
+    cacheSet('slf-uide',rows);
+  }catch(e){ /* chưa có tab / lỗi tải -> không có Action nào */ }
+  uideBuild(rows);
+  return UIDE.map;
+}
+function uideBuild(rows){ UIDE.map={}; (rows||[]).forEach(function(a){ UIDE.map[a.cid+'|'+a.tid+'|'+a.uid]=a; }); }
+function kkUidStBadge(st){
+  if(!st) return '—';
+  var cls=(st==='Not found')?'b-rej':(st==='Matched')?'b-ok':'b-proc';   // New / Diff qty = amber
+  return '<span class="badge '+cls+'">'+esc(st)+'</span>';
+}
+/* Gom dòng UID theo tập PHIẾU đã lọc trong pop-up; q (tìm nhanh) áp lên chính dòng UID */
+function kkUidRows(phieuRows,q){
+  var rows=[],thieu=0,coCid={},nPhieu=0,map=UIDGR.map||{};
+  phieuRows.forEach(function(p){
+    var cid=String(p.id); if(coCid[cid]) return; coCid[cid]=1;
+    var us=map[cid];
+    if(!us||!us.length){ thieu++; return; }
+    nPhieu++;
+    us.forEach(function(u){
+      if(q&&((u.uid+' '+u.sku+' '+u.pn+' '+u.loc+' '+cid).toLowerCase().indexOf(q)<0)) return;
+      rows.push(u);
+    });
+  });
+  return {rows:rows,thieu:thieu,nPhieu:nPhieu};
+}
+/* Thanh chuyển view trong pop-up lệch: UID group lệch (mặc định) ↔ danh sách phiếu cũ */
+function kkViewBar(){
+  if(KK_MODAL.metric!=='negative'&&KK_MODAL.metric!=='positive') return '';
+  function b(v,lb,tip){ return '<button class="kktab'+(((KK_MODAL.view==='uid')===(v==='uid'))?' active':'')+'" onclick="kkSetView(\''+v+'\')" title="'+tip+'">'+lb+'</button>'; }
+  return '<div class="kktabs">'+b('uid','UID group lệch','Liệt kê thẳng UID group đang lệch của từng phiếu — đủ trường như Detail UIDgr trên WMS')+b('phieu','Danh sách phiếu','Danh sách phiếu như trước — bấm ID xem chi tiết')+'</div>';
+}
+function kkSetView(v){ v=(v==='uid')?'uid':''; if(KK_MODAL.view===v) return; KK_MODAL.view=v; kkmRender(); }
+function kkUidTable(rows,thieu){
+  var CAP=400, out=[], kind=KK_MODAL.kind;
+  KK_UIDV=rows;
+  for(var i=0;i<rows.length&&out.length<CAP;i++){
+    var u=rows[i], d=Number(u.ld)||0, dCls=(d<0?'d-am':d>0?'d-duong':'d-khop');
+    var k=u.cid+'|'+u.tid+'|'+u.uid, a=UIDE.map&&UIDE.map[k];
+    out.push('<tr><td class="num">'+(i+1)+'</td><td>'+kkIdLink(u.cid,kind)+'</td><td class="loc">'+esc(u.loc)+'</td>'+
+      '<td><b>'+esc(u.sku)+'</b><div class="pn2">'+esc(u.pn)+'</div></td>'+
+      '<td class="num">'+(u.lc===''?'—':nf(Number(u.lc)||0))+'</td><td class="num">'+(u.li===''?'—':nf(Number(u.li)||0))+'</td>'+
+      '<td class="num '+dCls+'">'+(d>0?'+':'')+nf(d)+'</td>'+
+      '<td>'+(u.uid?('<code>'+esc(u.uid)+'</code>'):'—')+'</td><td>'+kkUidStBadge(u.gst)+'</td>'+
+      '<td class="num">'+(u.qu===''?'—':nf(Number(u.qu)||0))+'</td><td class="num">'+(u.qs===''?'—':nf(Number(u.qs)||0))+'</td>'+
+      '<td>—</td><td>—</td>'+   // Batch/Roll: WMS không phát qua API tracking (trang WMS cũng hiện "—")
+      '<td>'+kkDash(u.exp)+'</td><td>'+esc(pcdAt(u.cd))+'</td>'+
+      '<td><input class="adjinp uide" data-i="'+i+'" data-cu="'+(a?esc(String(a.txt)):'')+'" value="'+(a?esc(String(a.txt)):'')+'" placeholder="—" oninput="uideMark(this)" title="Action — sửa tự do, lưu trên Sheet (cần email @hasaki.vn)">'+
+      (a?'<div class="adjmeta">'+esc(a.by||'?')+' · '+esc(pcdAt(a.at))+'</div>':'')+'</td></tr>');
+  }
+  var html='<div class="kkwrap"><table><thead><tr><th class="num">No</th><th>ID</th><th>Location</th><th>SKU · Tên hàng</th><th class="num">SL đếm</th><th class="num">Tồn HT</th><th class="num">Diff</th><th>UID group</th><th>Group status</th><th class="num">SL group đếm</th><th class="num">SL group HT</th><th>Batch code</th><th>Roll code</th><th>HSD</th><th>Counted date</th><th>Action</th></tr></thead><tbody>'+
+    (out.join('')||kkEmpty(16))+'</tbody></table></div>'+
+    '<div class="kknote">'+(rows.length>CAP?('Hiển thị '+nf(CAP)+' / '+nf(rows.length)+' dòng — lọc để thu hẹp.'):(nf(rows.length)+' dòng UID group.'))+
+    (thieu?(' <span style="color:var(--warn)">⚠ '+nf(thieu)+' phiếu lệch chưa có chi tiết trên Sheet — đợi cụm sync kế (poller trưa/chiều hoặc 7h).</span>'):'')+'</div>';
+  if(rows.length){
+    var mail=''; try{ mail=localStorage.getItem('uide-mail')||''; }catch(e){}
+    html+='<div class="pcdfoot">'+
+      '<div class="fld2"><label>Email Hasaki</label><input id="uideBy" value="'+esc(mail)+'" placeholder="ten@hasaki.vn" inputmode="email"></div>'+
+      '<div class="sp"></div><span class="hint" id="uideSt"></span>'+
+      '<button class="primary" id="uideSave" disabled onclick="uideSave()">Lưu Action</button></div>'+
+      '<div class="pcdnote" style="background:color-mix(in srgb,var(--info,#3b82f6) 10%,var(--surface));color:var(--ink2)">Cột <b>Action</b> ai cũng sửa được — lưu trên <b>Google Sheet</b> (tab <code>kiemke-uidgr-edit</code>), <b>không</b> ghi về WMS, <b>không</b> cần khóa PC_KEY: chỉ cần email đúng định dạng <code>ten@hasaki.vn</code>. Xoá trắng ô = gỡ Action.</div>';
+  }
+  return html;
+}
+function uideMark(inp){
+  var doi=(inp.value.trim()!==String(inp.getAttribute('data-cu')||''));
+  inp.classList.toggle('changed',doi);
+  var btn=document.getElementById('uideSave'); if(btn) btn.disabled=!document.querySelector('#kkmBody .uide.changed');
+}
+async function uideSave(){
+  var btn=document.getElementById('uideSave'), st=document.getElementById('uideSt');
+  var mail=((document.getElementById('uideBy')||{}).value||'').trim().toLowerCase();
+  if(!/^[a-z0-9._%+-]+@hasaki\.vn$/.test(mail)){ toast('Nhập email đúng định dạng ten@hasaki.vn để lưu Action.','err'); var e=document.getElementById('uideBy'); if(e) e.focus(); return; }
+  try{ localStorage.setItem('uide-mail',mail); }catch(e2){}
+  var rows=[];
+  document.querySelectorAll('#kkmBody .uide.changed').forEach(function(inp){
+    var u=KK_UIDV[Number(inp.getAttribute('data-i'))]; if(!u) return;
+    rows.push({cid:u.cid,tid:u.tid,uid:u.uid,loc:u.loc,sku:u.sku,txt:inp.value.trim()});
+  });
+  if(!rows.length) return;
+  btn.disabled=true; if(st) st.textContent='Đang lưu…';
+  try{
+    var j=await pcGas({action:'pc_uidgr_edit',email:mail,rows:rows});
+    if(j.status!=='success') throw new Error(j.message||'GAS từ chối');
+    rows.forEach(function(x){
+      var k=x.cid+'|'+x.tid+'|'+x.uid;
+      if(x.txt===''){ if(UIDE.map) delete UIDE.map[k]; }
+      else UIDE.map[k]={cid:x.cid,tid:x.tid,uid:x.uid,txt:x.txt,by:mail,at:j.at||''};
+    });
+    try{ sessionStorage.removeItem('slf-uide'); }catch(e3){}
+    toast('Đã lưu '+rows.length+' Action vào Sheet.','ok');
+    if(st) st.textContent='';
+    kkmRender();
+  }catch(err){
+    if(st) st.textContent=''; btn.disabled=false;
+    toast('Lưu Action thất bại: '+String(err&&err.message||err),'err');
+  }
+}
 function pcdOpen(id,kind){
   PCD={id:String(id),kind:kind,rows:[],hdr:null,total:null,edits:{},live:false};
   document.getElementById('pcdTitle').textContent='Phiếu kiểm kê #'+id;
@@ -4096,6 +4275,28 @@ function pcdExp(r){
     return ds.length?ds.map(esc).join('<br>'):'N/A';
   }catch(e){ return 'N/A'; }
 }
+/* Chip UID group của 1 dòng phiếu (modal chi tiết): hợp nhất exp_by_user (đếm) & exp_by_sys (hệ thống)
+   — cùng nguồn/logic với tab kiemke-uidgr, hiện NGAY dưới SKU để khỏi phải sang WMS bấm Detail UIDgr */
+function pcdUidMini(r){
+  if(r._offline) return '';
+  var m={};
+  function gop(raw,phia){
+    var arr; try{ arr=JSON.parse(raw||'[]')||[]; }catch(e){ arr=[]; }
+    arr.forEach(function(e2){
+      if(!e2) return;
+      var uid=(e2.group_uid_code!=null&&e2.group_uid_code!=='')?String(e2.group_uid_code):'';
+      if(!uid) return;
+      var o=m[uid]||(m[uid]={});
+      o[phia]=(o[phia]||0)+(Number(e2.qty)||0);
+    });
+  }
+  gop(r.exp_by_user,'u'); gop(r.exp_by_sys,'s');
+  var parts=Object.keys(m).map(function(uid){
+    var o=m[uid], st=(o.u!=null&&o.s==null)?'New':(o.u==null&&o.s!=null)?'Not found':(o.u===o.s?'Matched':'Diff qty');
+    return '<span class="uidchip" title="UID group '+esc(uid)+' · '+st+'"><code>'+esc(uid)+'</code> '+kkUidStBadge(st)+' <b>'+nf(o.u!=null?o.u:o.s)+'</b></span>';
+  });
+  return parts.length?'<div class="uidmini">'+parts.join('')+'</div>':'';
+}
 function pcdHdrItem(lb,vl){ return '<div class="it"><div class="lb">'+lb+'</div><div class="vl">'+(vl||'—')+'</div></div>'; }
 function pcdAt(s){ var ms=kkParseDate(s); return isNaN(ms)?String(s||'—'):kkFmtD(ms); }
 function pcdRender(loi){
@@ -4146,7 +4347,7 @@ function pcdRender(loi){
     if(mobile){
       tr.push('<div class="pcdcard">'+
         '<div class="cr1"><span class="cno">#'+(i+1)+'</span><span class="cloc">'+esc(r.bin_location||'')+'</span>'+pcdStatusCell(r.status_id)+'</div>'+
-        '<div class="csku"><b>'+esc(r.sku||'')+'</b><div class="pn2">'+esc(r.product_name||'')+'</div></div>'+
+        '<div class="csku"><b>'+esc(r.sku||'')+'</b><div class="pn2">'+esc(r.product_name||'')+'</div>'+pcdUidMini(r)+'</div>'+
         (expHtml==='N/A'?'':'<div class="cexp">HSD: '+expHtml+'</div>')+
         '<div class="cstats"><span><label>SL đếm</label><b>'+(r._offline?'—':nf(cnt))+'</b></span>'+
         '<span><label>Tồn HT</label><b>'+(r._offline?'—':nf(inv))+'</b></span>'+
@@ -4154,7 +4355,7 @@ function pcdRender(loi){
         '<div class="cadj"><label>SL điều chỉnh</label>'+inputHtml+'</div></div>');
     }else{
       tr.push('<tr><td class="num">'+(i+1)+'</td><td class="loc">'+esc(r.bin_location||'')+'</td>'+
-        '<td><b>'+esc(r.sku||'')+'</b><div class="pn2">'+esc(r.product_name||'')+'</div></td>'+
+        '<td><b>'+esc(r.sku||'')+'</b><div class="pn2">'+esc(r.product_name||'')+'</div>'+pcdUidMini(r)+'</td>'+
         '<td>'+expHtml+'</td>'+
         '<td class="num">'+(r._offline?'—':nf(cnt))+'</td><td class="num">'+(r._offline?'—':nf(inv))+'</td>'+
         '<td class="num '+dCls+'">'+(r._offline?'—':((diff>0?'+':'')+nf(diff)))+'</td>'+
