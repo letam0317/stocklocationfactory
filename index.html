@@ -773,6 +773,10 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
   #kkmodal .locchip{display:inline-block;background:var(--surface2);border-radius:6px;padding:2px 7px}   /* mã vị trí dạng chip monospace (kế thừa .loc) */
   #kkmBody .uidskuin{position:sticky;left:0;max-width:calc(100vw - 72px)}   /* tiêu đề SKU dính mép trái khi cuộn ngang */
   #kkmodal .adjinp.uide{width:130px}
+  /* Pop-up Bất thường cùng bệnh: cột Kho bẻ 4 tầng (dính quy tắc nth-child(2) của modal SKU) —
+     nén nowrap + tên SP giữ bẻ dòng, bảng rộng cuộn ngang ngay trong modalbody */
+  #abnmodal .mtbl td{white-space:nowrap;padding:6px 8px}
+  #abnmodal .mtbl .pn{white-space:normal;min-width:170px;max-width:230px}
 }
 
 /* ===== TAB 3: Tồn kho bất thường — thẻ chỉ số gọn + 2 chart cạnh nhau (theo kho | theo loại) ===== */
@@ -1738,6 +1742,8 @@ document.addEventListener('keydown',function(e){
   var km=document.getElementById('kkmodal');
   if(km && km.classList.contains('show')){ closeKkModal(); return; }
   if(document.querySelector('#abnmFilters .combo-menu.show')){ abnmCloseCombos(); return; }
+  var afx=document.getElementById('abnmFilters');   // sheet bộ lọc trên điện thoại đóng TRƯỚC pop-up Bất thường
+  if(afx && afx.classList.contains('mf-xo')){ abnmFltThu(); return; }
   var am=document.getElementById('abnmodal');
   if(am && am.classList.contains('show')){ closeAbnModal(); return; }
   if(document.querySelector('#kkFilters .combo-menu.show')){ kkfCloseCombos(); return; }   // bộ lọc cấp tab Kiểm kê
@@ -3487,11 +3493,34 @@ function abnmBuildFilters(){
   });
   // Ô Tìm nhanh đứng CUỐI hàng lọc (quy ước chung mọi pop-up: combo cột trước, tìm tự do sau)
   html+='<div class="fld q"><label>Tìm nhanh</label><input id="abnmQ" autocomplete="off" placeholder="SKU / tên sản phẩm / thương hiệu…" oninput="abnmQuick()"></div>';
+  // Điện thoại: thu gọn + bottom sheet — cùng bộ CSS .mfbtn/.mf-thu/.mf-xo với pop-up Kiểm kê
+  html+='<button type="button" class="mfbtn" onclick="abnmFltThu()">Bộ lọc <span class="n" id="abnmFltN"></span><span id="abnmFltCh">▾</span></button>';
+  html+='<div class="mfsh">Bộ lọc <button type="button" class="mclose" onclick="abnmFltThu()" aria-label="Đóng">&times;</button></div>';
+  html+='<div class="mfsf"><button type="button" onclick="abnmFltClear()">Xóa lọc</button><button type="button" class="mfok" onclick="abnmFltThu()">Áp dụng</button></div>';
   var el=document.getElementById('abnmFilters'); el.innerHTML=html;
+  var mob=window.matchMedia&&window.matchMedia('(max-width:640px)').matches;
+  el.classList.toggle('mf-thu',mob);   // điện thoại: mặc định thu gọn như pop-up Kiểm kê
+  el.classList.remove('mf-xo');
   if(ABN_MODAL.preset){   // áp preset: combo Loại (hoặc kho) được chọn sẵn = khớp chính xác
     var p=ABN_MODAL.preset, inp=el.querySelector('.combo[data-fk="'+p.k+'"] input');
     if(inp){ inp.value=p.raw; inp.setAttribute('data-exact','1'); }
   }
+  abnmFltBadge();
+}
+function abnmFltThu(){
+  var c=document.getElementById('abnmFilters'), thu=c.classList.toggle('mf-thu');
+  c.classList.toggle('mf-xo',!thu&&window.matchMedia&&window.matchMedia('(max-width:640px)').matches);   // xổ trên điện thoại = bottom sheet
+  var ch=document.getElementById('abnmFltCh'); if(ch) ch.textContent=thu?'▾':'▴';
+}
+function abnmFltClear(){
+  document.querySelectorAll('#abnmFilters .combo input').forEach(function(i2){ i2.value=''; i2.removeAttribute('data-exact'); });
+  var q=document.getElementById('abnmQ'); if(q) q.value='';
+  abnmApply();
+}
+function abnmFltBadge(){
+  var n=0;
+  document.querySelectorAll('#abnmFilters .combo input').forEach(function(i2){ if(i2.value.trim()) n++; });
+  var b=document.getElementById('abnmFltN'); if(b) b.textContent=n?String(n):'';
 }
 function abnmQval(){ return ((document.getElementById('abnmQ')||{}).value||'').trim().toLowerCase(); }
 function abnmState(){
@@ -3533,7 +3562,7 @@ function abnmCloseCombos(except){
 }
 var _abnmDeb=null,_abnmT=null;
 function abnmQuick(){ clearTimeout(_abnmDeb); _abnmDeb=setTimeout(abnmApply,120); }
-function abnmApply(){ var b=document.getElementById('abnmBody'); if(b) b.classList.add('is-filtering'); clearTimeout(_abnmT); _abnmT=setTimeout(function(){ abnmRender(); if(b) b.classList.remove('is-filtering'); },150); }
+function abnmApply(){ var b=document.getElementById('abnmBody'); if(b) b.classList.add('is-filtering'); clearTimeout(_abnmT); _abnmT=setTimeout(function(){ abnmRender(); abnmFltBadge(); if(b) b.classList.remove('is-filtering'); },150); }
 function abnmRender(){
   var state=abnmState(), q=abnmQval();
   var rows=abnmRowsWith(null,state,q);
@@ -3564,6 +3593,7 @@ function closeAbnModal(){
 }
 /* Delegation 1 lần trên container cố định — innerHTML rebuild mỗi lần mở modal không mất listener */
 document.getElementById('abnmFilters').addEventListener('click',function(e){
+  if(e.target===this&&this.classList.contains('mf-xo')){ abnmFltThu(); return; }   // chạm backdrop (::before của sheet) = đóng sheet
   var it=e.target.closest('.combo-item'); if(!it) return;
   var inp=it.closest('.combo').querySelector('input');
   inp.value=it.getAttribute('data-v')||'';
