@@ -4298,7 +4298,7 @@ function kkUidTable(ug){
     '<div class="kknote">'+(ug.nRows>CAP?('Hiển thị '+nf(CAP)+' / '+nf(ug.nRows)+' dòng — lọc để thu hẹp.'):(nf(ug.groups.length)+' SKU lệch · '+nf(ug.nRows)+' dòng vị trí × UID group.'))+
     ' SKU thiếu bin này thừa bin kia đã TỰ BÙ TRỪ — chỉ SKU có tổng sau bù trừ ≠ 0 mới xuất hiện (net = Σ diff các vị trí); thứ tự vị trí theo lối đi của cate (phụ liệu 507→513 kệ 15→01 · nguyên liệu 507→501 kệ 10→15).'+
     (ug.thieu?(' <span style="color:var(--warn)">⚠ '+nf(ug.thieu)+' phiếu lệch chưa có chi tiết trên Sheet — đợi cụm sync kế (poller trưa/chiều hoặc 7h).</span>'):'')+'</div>';
-  if(rows.length){
+  if(flat.length){
     var mail=''; try{ mail=localStorage.getItem('uide-mail')||''; }catch(e){}
     html+='<div class="pcdfoot">'+
       '<div class="fld2"><label>Email Hasaki</label><input id="uideBy" value="'+esc(mail)+'" placeholder="ten@hasaki.vn" inputmode="email"></div>'+
