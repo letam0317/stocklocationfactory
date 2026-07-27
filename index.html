@@ -4126,10 +4126,11 @@ async function uideLoad(force){
 function uideBuild(rows){ UIDE.map={}; (rows||[]).forEach(function(a){ UIDE.map[a.cid+'|'+a.tid+'|'+a.uid]=a; }); }
 function kkUidStBadge(st){
   if(!st) return '—';
-  var cls=(st==='Not found')?'b-rej':(st==='Matched')?'b-ok':'b-proc';   // New / Diff qty = amber
+  var cls=(st==='Not found')?'b-rej':(st==='Available'||st==='Matched')?'b-ok':'b-proc';   // New = amber; Matched = tên cũ v1, giữ tương thích
   return '<span class="badge '+cls+'">'+esc(st)+'</span>';
 }
-/* Gom dòng UID theo tập PHIẾU đã lọc trong pop-up; q (tìm nhanh) áp lên chính dòng UID */
+/* Gom dòng UID theo tập PHIẾU đã lọc trong pop-up; q (tìm nhanh) áp lên chính dòng UID.
+   Counted by không nằm trong tab uidgr -> mượn từ dòng phiếu (bản sao nông, không đụng UIDGR.map). */
 function kkUidRows(phieuRows,q){
   var rows=[],thieu=0,coCid={},nPhieu=0,map=UIDGR.map||{};
   phieuRows.forEach(function(p){
@@ -4138,8 +4139,9 @@ function kkUidRows(phieuRows,q){
     if(!us||!us.length){ thieu++; return; }
     nPhieu++;
     us.forEach(function(u){
-      if(q&&((u.uid+' '+u.sku+' '+u.pn+' '+u.loc+' '+cid).toLowerCase().indexOf(q)<0)) return;
-      rows.push(u);
+      if(q&&((u.uid+' '+u.sku+' '+u.pn+' '+u.loc+' '+cid+' '+(p.by||'')).toLowerCase().indexOf(q)<0)) return;
+      var b=Object.create(u); b.by=p.by||'';
+      rows.push(b);
     });
   });
   return {rows:rows,thieu:thieu,nPhieu:nPhieu};
@@ -4155,21 +4157,21 @@ function kkUidTable(rows,thieu){
   var CAP=400, out=[], kind=KK_MODAL.kind;
   KK_UIDV=rows;
   for(var i=0;i<rows.length&&out.length<CAP;i++){
-    var u=rows[i], d=Number(u.ld)||0, dCls=(d<0?'d-am':d>0?'d-duong':'d-khop');
+    var u=rows[i];
+    /* Diff + SL đếm/Tồn HT của CHÍNH NHÓM này (chỉ thị 27/07) — không dùng số tổng của dòng SKU */
+    var d=(Number(u.qu)||0)-(Number(u.qs)||0), dCls=(d<0?'d-am':d>0?'d-duong':'d-khop');
     var k=u.cid+'|'+u.tid+'|'+u.uid, a=UIDE.map&&UIDE.map[k];
     out.push('<tr><td class="num">'+(i+1)+'</td><td>'+kkIdLink(u.cid,kind)+'</td><td class="loc">'+esc(u.loc)+'</td>'+
       '<td><b>'+esc(u.sku)+'</b><div class="pn2">'+esc(u.pn)+'</div></td>'+
-      '<td class="num">'+(u.lc===''?'—':nf(Number(u.lc)||0))+'</td><td class="num">'+(u.li===''?'—':nf(Number(u.li)||0))+'</td>'+
       '<td class="num '+dCls+'">'+(d>0?'+':'')+nf(d)+'</td>'+
       '<td>'+(u.uid?('<code>'+esc(u.uid)+'</code>'):'—')+'</td><td>'+kkUidStBadge(u.gst)+'</td>'+
       '<td class="num">'+(u.qu===''?'—':nf(Number(u.qu)||0))+'</td><td class="num">'+(u.qs===''?'—':nf(Number(u.qs)||0))+'</td>'+
-      '<td>—</td><td>—</td>'+   // Batch/Roll: WMS không phát qua API tracking (trang WMS cũng hiện "—"); HSD bỏ theo chỉ thị 27/07 (vải cuộn không có hạn dùng)
-      '<td>'+esc(pcdAt(u.cd))+'</td>'+
+      '<td>'+esc(pcdAt(u.cd))+'</td><td>'+kkDash(u.by)+'</td>'+
       '<td><input class="adjinp uide" data-i="'+i+'" data-cu="'+(a?esc(String(a.txt)):'')+'" value="'+(a?esc(String(a.txt)):'')+'" placeholder="—" oninput="uideMark(this)" title="Action — sửa tự do, lưu trên Sheet (cần email @hasaki.vn)">'+
       (a?'<div class="adjmeta">'+esc(a.by||'?')+' · '+esc(pcdAt(a.at))+'</div>':'')+'</td></tr>');
   }
-  var html='<div class="kkwrap"><table><thead><tr><th class="num">No</th><th>ID</th><th>Location</th><th>SKU · Tên hàng</th><th class="num">SL đếm</th><th class="num">Tồn HT</th><th class="num">Diff</th><th>UID group</th><th>Group status</th><th class="num">SL group đếm</th><th class="num">SL group HT</th><th>Batch code</th><th>Roll code</th><th>Counted date</th><th>Action</th></tr></thead><tbody>'+
-    (out.join('')||kkEmpty(15))+'</tbody></table></div>'+
+  var html='<div class="kkwrap"><table><thead><tr><th class="num">No</th><th>ID</th><th>Location</th><th>SKU · Tên hàng</th><th class="num">Diff</th><th>UID group</th><th>Group status</th><th class="num">SL đếm</th><th class="num">Tồn HT</th><th>Counted date</th><th>Counted by</th><th>Action</th></tr></thead><tbody>'+
+    (out.join('')||kkEmpty(12))+'</tbody></table></div>'+
     '<div class="kknote">'+(rows.length>CAP?('Hiển thị '+nf(CAP)+' / '+nf(rows.length)+' dòng — lọc để thu hẹp.'):(nf(rows.length)+' dòng UID group.'))+
     (thieu?(' <span style="color:var(--warn)">⚠ '+nf(thieu)+' phiếu lệch chưa có chi tiết trên Sheet — đợi cụm sync kế (poller trưa/chiều hoặc 7h).</span>'):'')+'</div>';
   if(rows.length){
@@ -4292,8 +4294,8 @@ function pcdUidMini(r){
   }
   gop(r.exp_by_user,'u'); gop(r.exp_by_sys,'s');
   var parts=Object.keys(m).map(function(uid){
-    var o=m[uid], st=(o.u!=null&&o.s==null)?'New':(o.u==null&&o.s!=null)?'Not found':(o.u===o.s?'Matched':'Diff qty');
-    return '<span class="uidchip" title="UID group '+esc(uid)+' · '+st+'"><code>'+esc(uid)+'</code> '+kkUidStBadge(st)+' <b>'+nf(o.u!=null?o.u:o.s)+'</b></span>';
+    var o=m[uid], st=(o.u!=null&&o.s==null)?'New':(o.u==null&&o.s!=null)?'Not found':'Available';   // từ ngữ khớp WMS Detail UIDgr
+    return '<span class="uidchip" title="UID group '+esc(uid)+' · '+st+' · đếm '+nf(o.u||0)+' / tồn '+nf(o.s||0)+'"><code>'+esc(uid)+'</code> '+kkUidStBadge(st)+' <b>'+nf(o.u!=null?o.u:o.s)+'</b></span>';
   });
   return parts.length?'<div class="uidmini">'+parts.join('')+'</div>':'';
 }
