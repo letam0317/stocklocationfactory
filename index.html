@@ -1968,7 +1968,7 @@ async function kkLoad(){
     document.getElementById('kkStatus-'+k).innerHTML='<div class="sk" style="height:44px;border-radius:8px"></div>';
     document.getElementById('kkHist-'+k).innerHTML='<div class="sk" style="height:180px;border-radius:10px"></div>';
   });
-  var res=await Promise.all([kkFetch('sku'),kkFetch('loc'),adjLoad()]);   // 2 nguồn + tab điều chỉnh chạy song song (adjLoad không bao giờ reject — lỗi coi như chưa có điều chỉnh)
+  var res=await Promise.all([kkFetch('sku'),kkFetch('loc'),adjLoad(),uidgrLoad()]);   // 2 nguồn + tab điều chỉnh + tab UID lệch (thẻ Lệch âm/dương khối vị trí đếm theo SKU-NET bù trừ) — 2 tab phụ không bao giờ reject
   KK.data={sku:res[0].rows,loc:res[1].rows};
   KK.loadErr={sku:res[0].err,loc:res[1].err};
   kkRender();
@@ -2536,8 +2536,15 @@ function kkRenderPanel(kind){
      1 mã vừa nằm ở "lệch âm" (phiếu cũ) vừa nằm ở "lệch dương" (phiếu kiểm lại) */
   var latest=kkLatestByKey(kind);
   var chk=new Set(Object.keys(latest));
-  var neg=0, pos=0;
-  Object.keys(latest).forEach(function(k){
+  /* Lệch âm/dương khối VỊ TRÍ (chỉ thị 27/07): đếm theo SKU SAU BÙ TRỪ chéo vị trí (net = Σ diff
+     các bin) — thiếu bin A thừa bin B bù nhau thì KHÔNG lệch. Chưa có dữ liệu uidgr -> đếm theo
+     phiếu như cũ. Khối SKU giữ nguyên: diff phiếu vốn đã là net của SKU. */
+  var neg=0, pos=0, netTile=false;
+  if(kind==='loc'&&UIDGR.map&&!UIDGR.err){
+    var nn=kkUidNets('loc',kkLechReps('loc'));
+    if(nn){ nn.order.forEach(function(gk){ var n=nn.gs[gk].net; if(n<0) neg++; else if(n>0) pos++; }); netTile=true; }
+  }
+  if(!netTile) Object.keys(latest).forEach(function(k){
     var d=kkDiffOf(kind,latest[k].r);
     if(d!=null){ if(d<0) neg++; else if(d>0) pos++; }
   });
@@ -2574,8 +2581,8 @@ function kkRenderPanel(kind){
     it('total','',denom,'Tổng '+U+' tồn kho')+
     it('counted','ok',counted,'Đã kiểm · '+pct(rate))+
     it('notcount','mut',notc,'Còn lại')+
-    it('negative','neg',neg,'Lệch âm')+
-    it('positive','pos',pos,'Lệch dương')+
+    it('negative','neg',neg,netTile?'Lệch âm · SKU':'Lệch âm')+
+    it('positive','pos',pos,netTile?'Lệch dương · SKU':'Lệch dương')+
     fcHtml;
   kkSwap(strip);
   /* Tầng 2: thanh trạng thái 100% + chips đếm (Verified/Đã duyệt/Đang xử lý/Pending/Đã huỷ...) */
@@ -2982,20 +2989,22 @@ var KK_MODAL={kind:null,metric:null,rows:[]};
 function kkOpen(kind,metric){
   /* CT1: "Tổng" = TOÀN BỘ universe tồn kho (kèm cờ đã kiểm) — khớp 1:1 với số trên dải;
      "Còn lại" = ANTI-JOIN trên danh sách tồn gốc; các metric khác lọc trên phiếu kiểm kê */
+  var lech=(metric==='negative'||metric==='positive');
   var rows=(metric==='total')?kkStockUniverseRows(kind,false)
           :(metric==='notcount')?kkRemaining(kind)
+          :lech?kkLechReps(kind)   // nền bù trừ SKU: MỌI phiếu đại diện đã kiểm (kể cả net 0)
           :kkMetricRows(kind,metric);
-  var lech=(metric==='negative'||metric==='positive');
   KK_MODAL={kind:kind,metric:metric,rows:rows,view:lech?'uid':''};   // lệch âm/dương: mặc định view UID GROUP LỆCH
   var U=(kind==='loc')?'Mã vị trí':'SKU';
   var lab=(metric.indexOf('st:')===0)?('trạng thái '+kkStMeta(metric.slice(3))[0]):KK_METRIC_LABEL[metric];
-  document.getElementById('kkmTitle').textContent=U+' · '+lab+(KK.wh?(' · kho '+KK.wh):'')+' — '+nf(rows.length)+' dòng';
+  if(lech) kkLechTitle();
+  else document.getElementById('kkmTitle').textContent=U+' · '+lab+(KK.wh?(' · kho '+KK.wh):'')+' — '+nf(rows.length)+' dòng';
   document.getElementById('kkmSub').textContent=(KK.wh?('Đang lọc theo kho '+KK.wh+' · '):'')+(metric==='total'
     ? 'Mẫu số tuyệt đối: distinct (kho|mã) tồn kho từ Stock Location — 1 mã nằm nhiều vị trí chỉ tính 1, kèm cột trạng thái kiểm kê'
     : metric==='notcount'
     ? 'Anti-join: tồn kho từ Stock Location TRỪ tập (kho|mã) đã kiểm — đây là phần chưa được đụng tới'
     : lech
-    ? 'Mặc định liệt kê UID GROUP đang lệch của từng phiếu (đủ trường như Detail UIDgr trên WMS, cột Action sửa tự do) · chuyển "Danh sách phiếu" để xem như cũ · đã khử trùng phiếu: mỗi (kho|mã) chỉ tính 1 phiếu mới nhất'
+    ? 'Gộp theo SKU SAU BÙ TRỪ vị trí: thiếu bin này thừa bin kia tự bù, chỉ SKU có tổng ≠ 0 mới tính lệch · dưới mỗi SKU là từng vị trí × UID group (Action sửa tự do) · chuyển "Danh sách phiếu" để xem theo phiếu như cũ'
     : (metric==='counted')
     ? 'Đã khử trùng phiếu: mỗi (kho|mã) chỉ tính 1 phiếu đã kiểm MỚI NHẤT (ưu tiên phiếu không bị từ chối/huỷ) · bấm ID xem chi tiết phiếu ngay tại đây (icon ↗ mở WMS)'
     : 'Bấm ID xem chi tiết phiếu ngay tại đây (icon ↗ mở WMS) · ✎ = phiếu có số lượng điều chỉnh');
@@ -3004,7 +3013,10 @@ function kkOpen(kind,metric){
   kkmRender();
   if(lech) Promise.all([uidgrLoad(),uideLoad()]).then(function(){
     var m2=document.getElementById('kkmodal');
-    if(m2.classList.contains('show')&&KK_MODAL.view==='uid') kkmRender();   // dữ liệu về sau khi mở -> vẽ lại
+    if(m2.classList.contains('show')&&(KK_MODAL.metric==='negative'||KK_MODAL.metric==='positive')){
+      kkLechTitle();   // tiêu đề đổi sang số SKU sau bù trừ khi dữ liệu về
+      if(KK_MODAL.view==='uid') kkmRender();   // dữ liệu về sau khi mở -> vẽ lại
+    }
   });
   var m=document.getElementById('kkmodal'); m.style.display='flex';
   requestAnimationFrame(function(){ m.classList.add('show'); });
@@ -3061,10 +3073,11 @@ function kkmComboMenu(combo){
   var uniq=new Set(), cnt={};
   if(k==='ucat'||k==='ugst'){   // menu 2 combo cấp dòng UID: sinh từ chính các dòng UID đang lọc (chain-filter, trừ combo này)
     var stM=kkmState();
-    kkUidRows(kkmRowsWith(null,stM,''),kkmQval(),stM,k).rows.forEach(function(u){
+    var ugM=kkUidGroups(KK_MODAL.kind,KK_MODAL.metric,kkmRowsWith(null,stM,''),kkmQval(),stM,k);
+    if(ugM) ugM.groups.forEach(function(g){ g.rows.forEach(function(u){
       var v=(k==='ucat')?kkUidCat(u):String(u.gst||'').trim();
       if(!v) return; uniq.add(v); cnt[v]=(cnt[v]||0)+1;
-    });
+    }); });
   }
   else kkmRowsWith(k,kkmState(),kkmQval()).forEach(function(r){ var v=String(r[k]||'').trim(); if(!v) return; uniq.add(v); cnt[v]=(cnt[v]||0)+1; });
   var typed=inp.getAttribute('data-exact')?'':inp.value.trim().toLowerCase();   // giá trị đã chọn -> mở menu thấy đủ danh sách
@@ -3114,15 +3127,21 @@ function kkmRender(){
       body.innerHTML=kkViewBar()+'<div class="state" style="padding:22px"><div class="spin"></div>Đang tải chi tiết UID group từ Sheet…</div>';
       return;
     }
-    var ug=kkUidRows(rsP,q,state);
-    document.getElementById('kkmSum').textContent=nf(ug.rows.length)+' dòng UID group · '+nf(ug.nPhieu)+'/'+nf(rsP.length)+' phiếu lệch có chi tiết'+(nAct1?' · '+nAct1+' bộ lọc đang áp dụng':'');
-    body.innerHTML=kkViewBar()+((UIDGR.err&&!ug.rows.length)
+    var ug=kkUidGroups(KK_MODAL.kind,KK_MODAL.metric,rsP,q,state,null);
+    document.getElementById('kkmSum').textContent=nf(ug.groups.length)+' SKU lệch (sau bù trừ vị trí) · '+nf(ug.nRows)+' dòng UID group'+(nAct1?' · '+nAct1+' bộ lọc đang áp dụng':'');
+    body.innerHTML=kkViewBar()+((UIDGR.err&&!ug.groups.length)
       ? '<div class="state" style="padding:22px;white-space:normal">⚠ Chưa đọc được tab <code>kiemke-uidgr</code> trên Sheet (tab chưa được cụm sync tạo, hoặc lỗi mạng). Chuyển tạm sang "Danh sách phiếu" để xem, hoặc chờ cụm sync kế. <button class="fcg" onclick="uidgrLoad(true).then(kkmRender)">Thử lại</button></div>'
-      : kkUidTable(ug.rows,ug.thieu));
+      : kkUidTable(ug));
     kkSwap(body);
     return;
   }
   var rs=kkmRowsWith(null,state,q);
+  /* View "Danh sách phiếu" của pop-up lệch: KK_MODAL.rows là MỌI phiếu đại diện đã kiểm (nền cho
+     bù trừ SKU) -> hiển thị kiểu cũ vẫn chỉ phiếu lệch đúng dấu */
+  if(KK_MODAL.metric==='negative'||KK_MODAL.metric==='positive'){
+    var mm=KK_MODAL.metric;
+    rs=rs.filter(function(r){ var d=kkDiffOf(KK_MODAL.kind,r); return d!=null&&(mm==='positive'?d>0:d<0); });
+  }
   /* dòng tổng kết .msum — cùng vị trí/kiểu với pop-up Trạng thái lưu trữ */
   var nAct=state.filter(function(f){ return f.v; }).length+(q?1:0);
   document.getElementById('kkmSum').textContent=nf(rs.length)+' / '+nf(KK_MODAL.rows.length)+' dòng'+(nAct?' · '+nAct+' bộ lọc đang áp dụng':'');
@@ -4161,29 +4180,85 @@ function kkSkuCatMap(){
   _skuCat=m; return m;
 }
 function kkUidCat(u){ return kkSkuCatMap()[String(u.sku)]||''; }
-/* Gom dòng UID theo tập PHIẾU đã lọc trong pop-up; q (tìm nhanh) + 2 combo ucat/ugst áp lên chính dòng UID.
-   Counted by không nằm trong tab uidgr -> mượn từ dòng phiếu (bản sao nông, không đụng UIDGR.map). */
-function kkUidRows(phieuRows,q,state,excludeK){
-  var rows=[],thieu=0,coCid={},nPhieu=0,map=UIDGR.map||{};
-  var fs=(state||[]).filter(function(f){ return (f.k==='ucat'||f.k==='ugst')&&f.k!==excludeK&&f.v; });
+/* Vị trí vật lý F0-KHO-<khu 3 số>-<kệ>-… — thứ tự duyệt theo cate (chỉ thị 27/07):
+   PHỤ LIỆU khu 507→513 & kệ 15→01 · NGUYÊN LIỆU khu 507→501 & kệ 10→15 · khác: khu/kệ tăng dần */
+function kkLocKey(loc){ var m=String(loc||'').match(/-(\d{3})-(\d{1,2})\b/); return m?{khu:+m[1],ke:+m[2]}:null; }
+function kkUidSortRows(g){
+  var cat=(kkUidCat({sku:g.sku})||'').toLowerCase();
+  var phu=cat.indexOf('phụ liệu')>=0||cat.indexOf('phu lieu')>=0;
+  var nguyen=!phu&&(cat.indexOf('nguyên liệu')>=0||cat.indexOf('nguyen lieu')>=0);
+  g.rows.sort(function(a,b){
+    var A=kkLocKey(a.loc),B=kkLocKey(b.loc);
+    if(!A||!B) return String(a.loc).localeCompare(String(b.loc));
+    if(A.khu!==B.khu) return nguyen?(B.khu-A.khu):(A.khu-B.khu);
+    if(A.ke!==B.ke) return phu?(B.ke-A.ke):(A.ke-B.ke);
+    return String(a.loc).localeCompare(String(b.loc));
+  });
+}
+/* SKU-NET (bù trừ vị trí, chỉ thị 27/07): gom mọi dòng UID lệch của các PHIẾU ĐẠI DIỆN đã kiểm
+   theo (kho|SKU) — SKU thiếu bin A + thừa bin B TỰ BÙ TRỪ qua net = Σ line-diff (khử trùng theo
+   tracking id); net = 0 -> SKU coi như KHÔNG lệch. Counted by mượn từ dòng phiếu. */
+function kkUidNets(kind,phieuRows){
+  if(!UIDGR.map) return null;
+  var gs={},order=[],thieu=0,coCid={},nPhieu=0;
   phieuRows.forEach(function(p){
     var cid=String(p.id); if(coCid[cid]) return; coCid[cid]=1;
-    var us=map[cid];
-    if(!us||!us.length){ thieu++; return; }
+    var us=UIDGR.map[cid];
+    if(!us||!us.length){ if((kkDiffOf(kind,p)||0)!==0) thieu++; return; }   // phiếu KHỚP HẲN không có dòng nào là bình thường
     nPhieu++;
     us.forEach(function(u){
       if((Number(u.qu)||0)===(Number(u.qs)||0)) return;   // CHỈ nhóm LỆCH — chặn cả dữ liệu tab định dạng cũ còn trong cache phiên
-      for(var x=0;x<fs.length;x++){
-        var f=fs[x], cell=(f.k==='ucat')?kkUidCat(u):String(u.gst||'').trim();
-        if(f.exact){ if(cell!==f.raw) return; }
-        else if(cell.toLowerCase().indexOf(f.v)<0) return;
-      }
-      if(q&&((u.uid+' '+u.sku+' '+u.pn+' '+u.loc+' '+cid+' '+u.gst+' '+kkUidCat(u)+' '+(p.by||'')).toLowerCase().indexOf(q)<0)) return;
+      var gk=p.wh+'|'+u.sku, g=gs[gk];
+      if(!g){ g=gs[gk]={wh:p.wh,sku:String(u.sku),pn:String(u.pn||''),net:0,sc:0,si:0,rows:[],_t:{}}; order.push(gk); }
+      if(u.tid&&!g._t[u.tid]){ g._t[u.tid]=1; g.net+=Number(u.ld)||0; g.sc+=Number(u.lc)||0; g.si+=Number(u.li)||0; }
       var b=Object.create(u); b.by=p.by||'';
-      rows.push(b);
+      g.rows.push(b);
     });
   });
-  return {rows:rows,thieu:thieu,nPhieu:nPhieu};
+  return {gs:gs,order:order,thieu:thieu,nPhieu:nPhieu};
+}
+/* Nhóm SKU cho pop-up: chọn theo DẤU của net (dương/âm), rồi q + 2 combo ucat/ugst lọc dòng chi tiết */
+function kkUidGroups(kind,metric,phieuRows,q,state,excludeK){
+  var nets=kkUidNets(kind,phieuRows);
+  if(!nets) return null;
+  var fs=(state||[]).filter(function(f){ return (f.k==='ucat'||f.k==='ugst')&&f.k!==excludeK&&f.v; });
+  var groups=[],nRows=0;
+  nets.order.forEach(function(gk){
+    var g=nets.gs[gk];
+    if(metric==='positive'?g.net<=0:g.net>=0) return;   // net=0 = bù trừ đủ -> không thuộc pop-up lệch nào
+    var rs=g.rows.filter(function(u){
+      for(var x=0;x<fs.length;x++){
+        var f=fs[x], cell=(f.k==='ucat')?kkUidCat(u):String(u.gst||'').trim();
+        if(f.exact){ if(cell!==f.raw) return false; }
+        else if(cell.toLowerCase().indexOf(f.v)<0) return false;
+      }
+      if(q&&((u.uid+' '+u.sku+' '+u.pn+' '+u.loc+' '+u.cid+' '+u.gst+' '+kkUidCat(u)+' '+(u.by||'')).toLowerCase().indexOf(q)<0)) return false;
+      return true;
+    });
+    if(!rs.length) return;
+    var g2={wh:g.wh,sku:g.sku,pn:g.pn,net:g.net,sc:g.sc,si:g.si,rows:rs};
+    kkUidSortRows(g2);
+    groups.push(g2); nRows+=rs.length;
+  });
+  groups.sort(function(a,b){ return Math.abs(b.net)-Math.abs(a.net); });   // SKU lệch nặng đứng trước
+  return {groups:groups,nRows:nRows,thieu:nets.thieu,nPhieu:nets.nPhieu};
+}
+/* Nền của pop-up lệch: MỌI phiếu đại diện ĐÃ KIỂM (kể cả net 0 — bên trong vẫn có SKU lệch bù trừ chéo bin) */
+function kkLechReps(kind){
+  var latest=kkLatestByKey(kind), reps=[];
+  Object.keys(latest).forEach(function(k){ var r=latest[k].r; if(kkIsCounted(kind,r)) reps.push(r); });
+  return reps;
+}
+/* Tiêu đề pop-up lệch = SỐ SKU SAU BÙ TRỪ (khớp thẻ chỉ số); uidgr chưa tải -> tạm đếm theo phiếu */
+function kkLechTitle(){
+  var kind=KK_MODAL.kind, metric=KK_MODAL.metric, lab=KK_METRIC_LABEL[metric], txt;
+  var ug=kkUidGroups(kind,metric,KK_MODAL.rows,'',[],null);
+  if(ug) txt='SKU · '+lab+' (sau bù trừ vị trí)'+(KK.wh?(' · kho '+KK.wh):'')+' — '+nf(ug.groups.length)+' SKU';
+  else{
+    var n=0; KK_MODAL.rows.forEach(function(r){ var d=kkDiffOf(kind,r); if(d!=null&&(metric==='positive'?d>0:d<0)) n++; });
+    txt=((kind==='loc')?'Mã vị trí':'SKU')+' · '+lab+(KK.wh?(' · kho '+KK.wh):'')+' — '+nf(n)+' dòng';
+  }
+  document.getElementById('kkmTitle').textContent=txt;
 }
 /* Thanh chuyển view trong pop-up lệch: UID group lệch (mặc định) ↔ danh sách phiếu cũ */
 function kkViewBar(){
@@ -4192,36 +4267,37 @@ function kkViewBar(){
   return '<div class="kktabs">'+b('uid','UID group lệch','Liệt kê thẳng UID group đang lệch của từng phiếu — đủ trường như Detail UIDgr trên WMS')+b('phieu','Danh sách phiếu','Danh sách phiếu như trước — bấm ID xem chi tiết')+'</div>';
 }
 function kkSetView(v){ v=(v==='uid')?'uid':''; if(KK_MODAL.view===v) return; KK_MODAL.view=v; kkmRender(); }
-function kkUidTable(rows,thieu){
-  /* GỘP THEO DÒNG SKU (chỉ thị 27/07): mỗi (phiếu|dòng SKU) 1 hàng tiêu đề nền mờ mang SỐ TỔNG của
-     dòng (SL đếm/Tồn HT/Diff từ tracking) — các UID group lệch đánh số 1..n nằm ngay dưới. */
-  var CAP=400, out=[], kind=KK_MODAL.kind, nSku=0, hienThi=0, curKey=null, j=0;
-  KK_UIDV=rows;
-  for(var i=0;i<rows.length&&hienThi<CAP;i++){
-    var u=rows[i], key=u.cid+'|'+u.tid;
-    if(key!==curKey){
-      curKey=key; nSku++; j=0;
-      var ld=(u.ld===''?null:Number(u.ld)||0), lCls=(ld==null||ld===0)?'d-khop':(ld<0?'d-am':'d-duong');
-      var cat=kkUidCat(u);
-      out.push('<tr class="uidsku"><td colspan="9">'+kkIdLink(u.cid,kind)+' · <span class="loc">'+esc(u.loc)+'</span> · <b>'+esc(u.sku)+'</b> <span class="pn2i">'+esc(u.pn)+'</span>'+
-        (cat?' <span class="catchip">'+esc(cat)+'</span>':'')+
-        '<span class="tot">SL đếm <b>'+(u.lc===''?'—':nf(Number(u.lc)||0))+'</b> · Tồn HT <b>'+(u.li===''?'—':nf(Number(u.li)||0))+'</b> · Diff <b class="'+lCls+'">'+(ld==null?'—':((ld>0?'+':'')+nf(ld)))+'</b></span></td></tr>');
+function kkUidTable(ug){
+  /* GỘP THEO SKU SAU BÙ TRỪ VỊ TRÍ (chỉ thị 27/07): hàng tiêu đề nền mờ = 1 SKU với NET sau bù trừ
+     mọi vị trí (kèm Σ SL đếm/Tồn của các vị trí lệch); bên dưới là từng VỊ TRÍ × UID group lệch,
+     thứ tự vị trí theo lối đi của cate (kkUidSortRows). */
+  var CAP=400, out=[], kind=KK_MODAL.kind, hienThi=0, flat=[];
+  for(var gi=0;gi<ug.groups.length&&hienThi<CAP;gi++){
+    var g=ug.groups[gi], cat=kkUidCat({sku:g.sku}), nCls=g.net<0?'d-am':'d-duong';
+    var vitri={}; g.rows.forEach(function(u2){ vitri[u2.loc]=1; });
+    out.push('<tr class="uidsku"><td colspan="9"><b>'+esc(g.sku)+'</b> <span class="pn2i">'+esc(g.pn)+'</span>'+
+      (cat?' <span class="catchip">'+esc(cat)+'</span>':'')+' <span class="catchip">'+esc(g.wh)+'</span>'+
+      '<span class="tot">'+nf(Object.keys(vitri).length)+' vị trí lệch · SL đếm <b>'+nf(g.sc)+'</b> · Tồn HT <b>'+nf(g.si)+'</b> · Sau bù trừ <b class="'+nCls+'">'+(g.net>0?'+':'')+nf(g.net)+'</b></span></td></tr>');
+    for(var i=0;i<g.rows.length&&hienThi<CAP;i++){
+      var u=g.rows[i]; hienThi++;
+      var idx=flat.length; flat.push(u);
+      var d=(Number(u.qu)||0)-(Number(u.qs)||0), dCls=(d<0?'d-am':d>0?'d-duong':'d-khop');
+      var k=u.cid+'|'+u.tid+'|'+u.uid, a=UIDE.map&&UIDE.map[k];
+      out.push('<tr><td class="loc">'+esc(u.loc)+' <span class="pn2i">· phiếu '+kkIdLink(u.cid,kind)+'</span></td>'+
+        '<td>'+(u.uid?('<code>'+esc(u.uid)+'</code>'):'—')+'</td><td>'+kkUidStBadge(u.gst)+'</td>'+
+        '<td class="num">'+(u.qu===''?'—':nf(Number(u.qu)||0))+'</td><td class="num">'+(u.qs===''?'—':nf(Number(u.qs)||0))+'</td>'+
+        '<td class="num '+dCls+'">'+(d>0?'+':'')+nf(d)+'</td>'+
+        '<td>'+esc(pcdAt(u.cd))+'</td><td>'+kkDash(u.by)+'</td>'+
+        '<td><input class="adjinp uide" data-i="'+idx+'" data-cu="'+(a?esc(String(a.txt)):'')+'" value="'+(a?esc(String(a.txt)):'')+'" placeholder="—" oninput="uideMark(this)" title="Action — sửa tự do, lưu trên Sheet (cần email @hasaki.vn)">'+
+        (a?'<div class="adjmeta">'+esc(a.by||'?')+' · '+esc(pcdAt(a.at))+'</div>':'')+'</td></tr>');
     }
-    j++; hienThi++;
-    var d=(Number(u.qu)||0)-(Number(u.qs)||0), dCls=(d<0?'d-am':d>0?'d-duong':'d-khop');
-    var k=u.cid+'|'+u.tid+'|'+u.uid, a=UIDE.map&&UIDE.map[k];
-    out.push('<tr><td class="num">'+j+'</td><td>'+(u.uid?('<code>'+esc(u.uid)+'</code>'):'—')+'</td><td>'+kkUidStBadge(u.gst)+'</td>'+
-      '<td class="num">'+(u.qu===''?'—':nf(Number(u.qu)||0))+'</td><td class="num">'+(u.qs===''?'—':nf(Number(u.qs)||0))+'</td>'+
-      '<td class="num '+dCls+'">'+(d>0?'+':'')+nf(d)+'</td>'+
-      '<td>'+esc(pcdAt(u.cd))+'</td><td>'+kkDash(u.by)+'</td>'+
-      '<td><input class="adjinp uide" data-i="'+i+'" data-cu="'+(a?esc(String(a.txt)):'')+'" value="'+(a?esc(String(a.txt)):'')+'" placeholder="—" oninput="uideMark(this)" title="Action — sửa tự do, lưu trên Sheet (cần email @hasaki.vn)">'+
-      (a?'<div class="adjmeta">'+esc(a.by||'?')+' · '+esc(pcdAt(a.at))+'</div>':'')+'</td></tr>');
   }
-  var html='<div class="kkwrap"><table><thead><tr><th class="num">No</th><th>UID group</th><th>Group status</th><th class="num">SL đếm</th><th class="num">Tồn HT</th><th class="num">Diff</th><th>Counted date</th><th>Counted by</th><th>Action</th></tr></thead><tbody>'+
+  KK_UIDV=flat;
+  var html='<div class="kkwrap"><table><thead><tr><th>Location</th><th>UID group</th><th>Group status</th><th class="num">SL đếm</th><th class="num">Tồn HT</th><th class="num">Diff</th><th>Counted date</th><th>Counted by</th><th>Action</th></tr></thead><tbody>'+
     (out.join('')||kkEmpty(9))+'</tbody></table></div>'+
-    '<div class="kknote">'+(rows.length>CAP?('Hiển thị '+nf(CAP)+' / '+nf(rows.length)+' dòng — lọc để thu hẹp.'):(nf(rows.length)+' dòng UID group · '+nf(nSku)+' dòng SKU.'))+
-    ' Hàng nền mờ = dòng SKU với SỐ TỔNG (SL đếm/Tồn/Diff của cả dòng); bên dưới CHỈ liệt kê nhóm ĐANG LỆCH — gồm cả nhóm thiếu/lệch âm nằm trong phiếu lệch dương; nhóm khớp đã ẩn.'+
-    (thieu?(' <span style="color:var(--warn)">⚠ '+nf(thieu)+' phiếu lệch chưa có chi tiết trên Sheet — đợi cụm sync kế (poller trưa/chiều hoặc 7h).</span>'):'')+'</div>';
+    '<div class="kknote">'+(ug.nRows>CAP?('Hiển thị '+nf(CAP)+' / '+nf(ug.nRows)+' dòng — lọc để thu hẹp.'):(nf(ug.groups.length)+' SKU lệch · '+nf(ug.nRows)+' dòng vị trí × UID group.'))+
+    ' SKU thiếu bin này thừa bin kia đã TỰ BÙ TRỪ — chỉ SKU có tổng sau bù trừ ≠ 0 mới xuất hiện (net = Σ diff các vị trí); thứ tự vị trí theo lối đi của cate (phụ liệu 507→513 kệ 15→01 · nguyên liệu 507→501 kệ 10→15).'+
+    (ug.thieu?(' <span style="color:var(--warn)">⚠ '+nf(ug.thieu)+' phiếu lệch chưa có chi tiết trên Sheet — đợi cụm sync kế (poller trưa/chiều hoặc 7h).</span>'):'')+'</div>';
   if(rows.length){
     var mail=''; try{ mail=localStorage.getItem('uide-mail')||''; }catch(e){}
     html+='<div class="pcdfoot">'+
