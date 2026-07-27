@@ -18,10 +18,14 @@
  *  import tay — luồng vẫn dùng được ngay khi chưa bắt được endpoint.
  *
  *  GẮN VÀO WEB APP: project bộ 5S đã có doPost (force_sync_wms) — KHÔNG định
- *  nghĩa doPost ở file này (đè nhau). Thêm vào doPost hiện có 3 dòng:
+ *  nghĩa doPost ở file này (đè nhau). Thêm vào doPost hiện có các dòng:
  *      if (data.action === 'pc_import') return pcJson_(pcKeyOK_(data) ? pcImport_(data) : pcKeyErr_());
+ *      if (data.action === 'pc_token') return pcJson_(pcKeyOK_(data) ? pcToken_() : pcKeyErr_());
+ *      if (data.action === 'pc_save_whcode') return pcJson_(pcKeyOK_(data) ? pcSaveWhcode_(data) : pcKeyErr_());
  *      if (data.action === 'pc_sync_whcode') return pcJson_(pcKeyOK_(data) ? pcSyncWarehouses() : pcKeyErr_());
  *      if (data.action === 'pc_set_key') return pcJson_(pcSetKey_(data));
+ *      if (data.action === 'pc_adjust') return pcJson_(pcKeyOK_(data) ? pcAdjust_(data) : pcKeyErr_());
+ *  (bản đầy đủ đã nối sẵn trong doPost của hasaki/google-script.gs — dán nguyên file là đủ)
  *  Nếu deploy project RIÊNG: bỏ comment hàm doPost mẫu ở cuối file.
  *
  *  CÀI ĐẶT: xem backend/README.md (mục PhysicalCountImport).
@@ -307,6 +311,57 @@ function pcMergeWhcode_(cfg, got, replace) {
   sh.getRange(1, 1, values.length, 4).setNumberFormat('@').setValues(values);
   return { status: 'success', rows: values.length - 1, synced: got.length,
     message: 'Tab "' + cfg.WHCODE_SHEET + '": ' + (values.length - 1) + ' kho (cập nhật ' + got.length + ' mã).' };
+}
+
+/* ------------------- pc_adjust: LƯU SỐ LƯỢNG ĐIỀU CHỈNH (Physical Count Detail) -------------------
+ * Dashboard mở chi tiết phiếu kiểm kê (checklist/tracking) và cho sửa lại số lượng — KHÔNG ghi ngược
+ * WMS, chỉ UPSERT vào tab 'kiemke-adjust' trên Sheet factory (PC_SHEET_ID) để dashboard đọc lại bằng
+ * gviz và thể hiện cho mọi người xem. Khoá: PC_KEY (cùng bộ pc_*; sheet public gviz nhưng GHI phải khoá).
+ * payload = { action:'pc_adjust', key, rows:[{ cid, tid, loc, sku, pn, qwms, qadj, note, by }] }
+ * Upsert theo (Checklist ID | Tracking ID) — bản mới đè bản cũ; qadj rỗng '' = GỠ điều chỉnh đó. */
+var PC_ADJ_TAB = 'kiemke-adjust';
+var PC_ADJ_HEADERS = ['Checklist ID', 'Tracking ID', 'Location', 'SKU', 'Product Name', 'Qty WMS', 'Qty Adjust', 'Note', 'By', 'At'];
+function pcAdjust_(duLieu) {
+  var lock = LockService.getScriptLock();   // 2 người lưu cùng lúc không được đè mất dòng của nhau
+  if (!lock.tryLock(20000)) return pcErr_('build', 'Sheet đang bận (người khác đang lưu) — thử lại sau vài giây.');
+  try {
+    var rows = (duLieu && duLieu.rows) || [];
+    if (!rows.length) return pcErr_('config', 'Không có dòng điều chỉnh nào.');
+    if (rows.length > 200) return pcErr_('config', 'Quá 200 dòng/lần lưu (' + rows.length + ') — tách nhỏ.');
+    var cfg = pcCFG_();
+    var at = Utilities.formatDate(new Date(), cfg.TZ, 'yyyy-MM-dd HH:mm:ss');
+    var ss = SpreadsheetApp.openById(cfg.SHEET_ID);
+    var sh = ss.getSheetByName(PC_ADJ_TAB) || ss.insertSheet(PC_ADJ_TAB);
+    var cur = {}, order = [];
+    var last = sh.getLastRow();
+    if (last >= 2) sh.getRange(2, 1, last - 1, PC_ADJ_HEADERS.length).getValues().forEach(function (r) {
+      var k = String(r[0]).trim() + '|' + String(r[1]).trim();
+      if (!String(r[1]).trim() || cur[k]) return;
+      cur[k] = r; order.push(k);
+    });
+    var them = 0, xoa = 0, loi = [];
+    rows.forEach(function (x, i) {
+      var cid = String(x.cid == null ? '' : x.cid).trim(), tid = String(x.tid == null ? '' : x.tid).trim();
+      if (!cid || !tid) { loi.push('dòng ' + (i + 1) + ' thiếu cid/tid'); return; }
+      var k = cid + '|' + tid;
+      if (x.qadj === '' || x.qadj == null) { if (cur[k]) { delete cur[k]; xoa++; } return; }   // ô trống = gỡ điều chỉnh
+      var qadj = Number(x.qadj);
+      if (isNaN(qadj)) { loi.push('dòng ' + (i + 1) + ' (tid ' + tid + ') qadj không phải số'); return; }
+      if (!cur[k]) order.push(k);
+      cur[k] = [cid, tid, String(x.loc || ''), String(x.sku || ''), String(x.pn || ''), Number(x.qwms) || 0, qadj, String(x.note || ''), String(x.by || ''), at];
+      them++;
+    });
+    if (loi.length && !them && !xoa) return pcErr_('config', 'Toàn bộ dòng lỗi: ' + loi.join('; '));
+    var values = [PC_ADJ_HEADERS].concat(order.filter(function (k) { return cur[k]; }).map(function (k) { return cur[k]; }));
+    sh.clearContents();
+    sh.getRange(1, 1, values.length, PC_ADJ_HEADERS.length).setValues(values);
+    return { status: 'success', rows: them, removed: xoa, total: values.length - 1, at: at,
+      message: 'Đã lưu ' + them + ' điều chỉnh' + (xoa ? (', gỡ ' + xoa) : '') + ' — tab ' + PC_ADJ_TAB + ' còn ' + (values.length - 1) + ' dòng.' + (loi.length ? (' Bỏ qua: ' + loi.join('; ')) : '') };
+  } catch (err) {
+    return pcErr_('build', String(err && err.message || err));
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 /* ------------------------------- TEST TAY ------------------------------- */

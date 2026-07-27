@@ -114,12 +114,31 @@ validate:  POST /wms/counting-plan/checklists/validate/type-sku
 import:    POST /wms/counting-plan/checklists/import/type-sku
            (multipart, file trong field "chunk"; import trang location: .../type-location)
 template:  GET  /wms/counting-plan/checklists/download-template/type-sku
+detail:    GET  /wms/counting-plan/checklist/tracking?checklist_id=…&page=&size=
+           (dòng chi tiết 1 phiếu — trang /physical-count/result/{location|sku}/…; response kèm
+            object `checklist` = header phiếu + `total` {total_user,total_sys,total_diff};
+            record: tracking_id, sku, bin_location, qty_by_user, qty_by_sys, qty_diff,
+            exp_by_user/exp_by_sys (JSON), status_id: 4=Counted, 2=Count cancelled, khác=Not counted)
 ```
+
+### pc_adjust — SL điều chỉnh của Physical Count Detail (27/07/2026)
+Dashboard bấm ID phiếu trong pop-up Kiểm kê → modal chi tiết đọc LIVE `checklist/tracking`
+(token extension Token Bridge, fallback `pc_token`); ô **SL điều chỉnh** lưu qua
+`{action:'pc_adjust', key:PC_KEY, rows:[{cid,tid,loc,sku,pn,qwms,qadj,note,by}]}` →
+UPSERT tab `kiemke-adjust` trên Sheet factory theo khoá (Checklist ID | Tracking ID);
+`qadj` rỗng = gỡ điều chỉnh; có LockService chống 2 người lưu đè nhau. KHÔNG ghi ngược WMS —
+dashboard đọc lại tab bằng gviz (cờ ✎ trên ID + overlay trong modal, xem được cả khi offline WMS).
 
 ### Trạng thái triển khai (đã làm qua clasp — 2026-07-20)
 - ✅ `PhysicalCountImport.js` đã push vào project 5S; router `pc_import / pc_token /
   pc_save_whcode / pc_sync_whcode / pc_set_key` đã nối vào `doPost` của `sa.js`;
   deployment `AKfycbzIE6E…` cập nhật version mới (URL web app KHÔNG đổi).
+- ⚠️ **SỰ CỐ 26/07/2026 (phát hiện 27/07):** lượt dán `sa.js` ngày 26/07 lấy từ
+  `google-script.gs` nguồn — bản nguồn KHÔNG có router pc_* (trước đây chỉ thêm tay trên
+  bản deploy) → live trả `"Action không hỗ trợ: pc_token"`, nút Tạo lệnh + sổ Kế hoạch đứt.
+  ĐÃ VÁ TẬN NGUỒN 27/07: router pc_* (kèm `pc_adjust` mới) nay nằm ngay trong
+  `hasaki/google-script.gs` VÀ `hasaki/.clasp-deploy/sa.js` — dán nguyên file là đủ,
+  không còn bước thêm tay. Cần DÁN LẠI `sa.js` + `PhysicalCountImport.js` để khôi phục.
 - ✅ `PC_KEY` đã đặt (TOFU qua `pc_set_key`; đổi khóa cần `oldKey`+`newKey`). Operator nhập
   khóa 1 lần trên dashboard (lưu localStorage) — khóa KHÔNG nằm trong mã nguồn trang.
 - ✅ Tab `Warehouse code` đã tạo (seed `1436 | SHOP - 170 QUOC LO 1A`); danh mục 13 kho material

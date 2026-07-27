@@ -797,6 +797,82 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 .pcfoot button:disabled{opacity:.55;cursor:not-allowed}
 .pcx{border:0;background:0;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:2px 6px;border-radius:6px}
 .pcx:hover{color:var(--bad);background:var(--hover)}
+/* ===== Modal chi tiết phiếu kiểm kê (Physical Count Detail) — nổi TRÊN pop-up drill-down (z106 > pcmodal 105 > modal 99) ===== */
+#pcdmodal{z-index:106}
+.modalbox.pcdbox{width:min(1240px,96vw)}
+/* Header phiếu: lưới nhãn/giá trị gọn như trang WMS */
+.pcdhdr{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:7px 18px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface2);margin-bottom:12px}
+.pcdhdr .it{min-width:0}
+.pcdhdr .lb{font-size:9.5px;font-weight:750;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.pcdhdr .vl{font-size:12.5px;color:var(--ink);font-weight:600;word-wrap:break-word}
+.pcdtot{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-variant-numeric:tabular-nums}
+.pcdtot .tt{border:1px solid var(--line);border-radius:999px;padding:5px 13px;font-size:12px;background:var(--surface);color:var(--ink2)}
+.pcdtot .tt b{font-weight:750}
+#pcdmodal .mtbl td.num,#pcdmodal .mtbl th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+#pcdmodal .mtbl .pn2{min-width:150px;max-width:320px;font-size:11px;color:var(--ink3);white-space:normal;word-wrap:break-word}
+/* Ô chỉnh sửa số lượng: pill nhỏ, focus ring chuẩn dự án */
+.adjinp{width:96px;padding:5px 9px;border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--ink);font-size:12px;font-family:inherit;text-align:right;font-variant-numeric:tabular-nums;transition:border-color .15s var(--ease),box-shadow .15s var(--ease)}
+.adjinp:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}
+.adjinp.changed{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 9%,var(--surface))}
+.adjmeta{font-size:10px;color:var(--ink3);margin-top:3px;white-space:normal}
+.adjmeta b{color:var(--warn)}
+/* Cờ ✎ trên ID trong pop-up drill-down: phiếu đã có điều chỉnh lưu trên Sheet */
+.adjflag{display:inline-block;margin-left:4px;font-size:10px;color:var(--warn);font-weight:750;cursor:default}
+/* Footer lưu điều chỉnh: tái dùng dáng .pcfoot */
+.pcdfoot{display:flex;align-items:center;gap:10px;padding:12px 0 2px;border-top:1px solid var(--line);margin-top:12px;flex-wrap:wrap}
+.pcdfoot .fld2{display:flex;align-items:center;height:32px;padding:0 5px 0 12px;border-radius:999px;border:1px solid var(--border);background:var(--surface)}
+.pcdfoot .fld2:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 13%,transparent)}
+.pcdfoot .fld2 label{font-size:9px;font-weight:750;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap;padding-right:9px;margin-right:2px;border-right:1px solid var(--border)}
+.pcdfoot .fld2 input{border:0;background:transparent;color:var(--ink);font-size:12px;font-family:inherit;padding:6px 7px;min-width:150px}
+#pcdNote{min-width:220px}   /* desktop: ô ghi chú rộng hơn; mobile ghi đè min-width:0 trong media 744 */
+.pcdfoot .fld2 input:focus{outline:0}
+.pcdfoot .sp{flex:1}
+.pcdfoot button{border:1px solid var(--border);background:var(--surface);color:var(--ink);border-radius:9px;padding:9px 16px;font-size:13px;font-weight:650;cursor:pointer;font-family:inherit}
+.pcdfoot button:hover:not(:disabled){border-color:var(--accent);background:var(--hover)}
+.pcdfoot button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-text)}
+.pcdfoot button.primary:hover:not(:disabled){background:var(--accent-hover)}
+.pcdfoot button:disabled{opacity:.55;cursor:not-allowed}
+.pcdnote{margin:10px 0 0;padding:9px 12px;border-radius:9px;font-size:12px;line-height:1.6;background:color-mix(in srgb,var(--warn) 12%,var(--surface));color:var(--warn)}
+#pcdmodal .kkwrap{overflow-x:auto}   /* desktop: phòng hờ bảng rộng hơn khung (không để tràn modal) */
+/* ===== ĐIỆN THOẠI — modal chi tiết phiếu (mục tiêu: xem chính trên phone, desktop giữ nguyên bảng) ===== */
+@media(max-width:744px){
+  .modalbox.pcdbox{width:95vw;max-height:94vh}
+  #pcdmodal .modalhd{padding:12px 14px}
+  #pcdmodal .modalbody{padding:0 10px 12px}
+  #pcdmodal .pcdhdr{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px;padding:10px 12px}
+  #pcdmodal .pcdhdr .vl{font-size:12px}
+  #pcdmodal .pcdtot{gap:6px}
+  #pcdmodal .pcdtot .tt{padding:4px 10px;font-size:11.5px}
+  .adjinp{font-size:16px;padding:8px 12px;width:120px}   /* ≥16px: iOS Safari KHÔNG tự phóng to trang khi focus input */
+  /* Thanh lưu dính đáy vùng cuộn: sửa xong không phải cuộn ngược tìm nút. GỌN 2 hàng:
+     [Người sửa | Ghi chú] cạnh nhau + nút Lưu full-width — đỡ che danh sách trên màn 844px */
+  .pcdfoot{position:sticky;bottom:-1px;z-index:2;background:var(--surface);box-shadow:0 -8px 16px -12px rgba(0,0,0,.3);padding:10px 0;flex-wrap:wrap;gap:8px}
+  .pcdfoot .fld2{flex:1 1 calc(50% - 5px);min-width:0;height:38px}
+  .pcdfoot .fld2 input,#pcdNote{width:100%;min-width:0;font-size:16px}
+  .pcdfoot .sp{display:none}
+  .pcdfoot button{flex:1 1 100%;padding:11px 16px;font-size:14px}   /* nút to cho ngón tay */
+  .pcdnote{font-size:11.5px}
+}
+/* ≤640px JS render CARD bằng DIV thật (.pcdcards) thay bảng — KHÔNG ép <table> đổi display:
+   đã đo thực nghiệm Chromium: display:block giữ min-content kiểu bảng (banh 1080px),
+   display:contents làm kkwrap sập chiều cao (card đè lên nội dung sau). */
+.pcdcards{display:flex;flex-direction:column;gap:8px}
+.pcdcard{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:10px 12px}
+.pcdcard .cr1{display:flex;align-items:center;gap:8px}
+.pcdcard .cno{font-size:10.5px;color:var(--ink3);flex:0 0 auto}
+.pcdcard .cloc{flex:1;min-width:0;font-size:11px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcdcard .cr1 .badge{flex:0 0 auto}
+.pcdcard .csku{margin-top:4px;font-size:13px}
+.pcdcard .csku .pn2{max-width:none;min-width:0}
+.pcdcard .cexp{margin-top:3px;font-size:11px;color:var(--ink3)}
+.pcdcard .cstats{display:flex;gap:12px;margin-top:7px}
+.pcdcard .cstats span{flex:1;min-width:0}
+.pcdcard .cstats label{display:block;font-size:9px;font-weight:750;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.pcdcard .cstats b{font-size:13.5px;font-variant-numeric:tabular-nums}
+.pcdcard .cadj{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-top:1px dashed var(--line);margin-top:8px;padding-top:8px}
+.pcdcard .cadj label{font-size:9px;font-weight:750;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);flex:0 0 auto}
+.pcdcard .cadj .adjinp{flex:0 0 128px}
+.pcdcard .cadj .adjmeta{margin-top:0;flex:1;min-width:130px}
 /* Dải hướng dẫn 3 bước tự-import (ghi đúng người tạo) */
 .pcsteps{padding:10px 16px;border-top:1px solid var(--line);background:color-mix(in srgb,var(--good) 8%,var(--surface));font-size:12px;line-height:1.6;color:var(--ink2)}
 .pcsteps b{color:var(--ink)}
@@ -894,7 +970,7 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
   <div id="abnState" class="state"><div class="spin"></div>Đang tải dữ liệu tồn kho bất thường…</div>
 </div>
 
-<footer>Dashboard đọc trực tiếp online từ Google Sheet “stocklocationfactory” (gviz API).<br>Trạng thái lưu trữ: SKU đếm distinct theo Kho × Category · Kiểm kê: tab kiemke-sku / kiemke-location · Nút “Tải lại dữ liệu” (trong menu Cài đặt) kéo trực tiếp từ WMS (tối đa 4 giờ/lần).</footer>
+<footer>Dashboard đọc trực tiếp online từ Google Sheet “stocklocationfactory” (gviz API).<br>Trạng thái lưu trữ: SKU đếm distinct theo Kho × Category · Kiểm kê: tab kiemke-sku / kiemke-location (bấm ID trong pop-up để xem chi tiết phiếu; SL điều chỉnh lưu tab kiemke-adjust) · Nút “Tải lại dữ liệu” (trong menu Cài đặt) kéo trực tiếp từ WMS (tối đa 4 giờ/lần).</footer>
 
 <div class="footbar">
   <span class="chip">Nguồn: stocklocationfactory</span>
@@ -1006,6 +1082,16 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
     <div class="mfilters kkmf" id="kkmFilters"></div>
     <div class="msum" id="kkmSum"></div>
     <div class="modalbody" id="kkmBody" style="padding-top:12px"></div>
+  </div>
+</div>
+
+<!-- Modal chi tiết phiếu kiểm kê (Physical Count Detail): đọc LIVE checklist/tracking từ WMS ngay trong dashboard
+     (token bridge của operator, fallback token robot PC_KEY); cột "SL điều chỉnh" lưu tab kiemke-adjust trên Sheet
+     qua action pc_adjust để dashboard thể hiện lại cho mọi người xem — KHÔNG ghi ngược WMS. -->
+<div id="pcdmodal" class="modal" onclick="if(event.target===this)closePcdModal()">
+  <div class="modalbox pcdbox">
+    <div class="modalhd"><div><div class="mt" id="pcdTitle"></div><div class="mtsub" id="pcdSub"></div></div><button class="mclose" onclick="closePcdModal()">&times;</button></div>
+    <div class="modalbody" id="pcdBody" style="padding-top:12px"></div>
   </div>
 </div>
 
@@ -1822,7 +1908,7 @@ function kkEval(inv,cnt){ if(cnt==null||cnt==='') return {d:0,counted:false}; va
 var CACHE_TTL=10*60*1000;
 function cacheGet(k){ try{ var o=JSON.parse(sessionStorage.getItem(k)||'null'); if(o&&(Date.now()-o.at)<CACHE_TTL) return o.d; }catch(e){} return null; }
 function cacheSet(k,d){ try{ sessionStorage.setItem(k,JSON.stringify({at:Date.now(),d:d})); }catch(e){ /* quá quota -> bỏ qua, không cache */ } }
-function clearCaches(){ try{ ['slf-kk-sku','slf-kk-loc','slf-kk3-sku','slf-kk3-loc','slf-hist','slf-hist2','slf-abn3'].forEach(function(k){ sessionStorage.removeItem(k); }); }catch(e){} }
+function clearCaches(){ try{ ['slf-kk-sku','slf-kk-loc','slf-kk3-sku','slf-kk3-loc','slf-hist','slf-hist2','slf-abn3','slf-adj'].forEach(function(k){ sessionStorage.removeItem(k); }); }catch(e){} }
 function gvizP(sheet,params,cb){
   return new Promise(function(res){
     // null = LỖI TẢI (mạng/treo/chặn) — khác "tab rỗng"; caller phân biệt để không hiển thị nhầm "không có dữ liệu"
@@ -1871,7 +1957,7 @@ async function kkLoad(){
     document.getElementById('kkStatus-'+k).innerHTML='<div class="sk" style="height:44px;border-radius:8px"></div>';
     document.getElementById('kkHist-'+k).innerHTML='<div class="sk" style="height:180px;border-radius:10px"></div>';
   });
-  var res=await Promise.all([kkFetch('sku'),kkFetch('loc')]);   // 2 nguồn chạy song song
+  var res=await Promise.all([kkFetch('sku'),kkFetch('loc'),adjLoad()]);   // 2 nguồn + tab điều chỉnh chạy song song (adjLoad không bao giờ reject — lỗi coi như chưa có điều chỉnh)
   KK.data={sku:res[0].rows,loc:res[1].rows};
   KK.loadErr={sku:res[0].err,loc:res[1].err};
   kkRender();
@@ -1926,12 +2012,18 @@ function kkDash(v){ return v?esc(v):'—'; }
 function kkDcell(d){ return '<td class="num '+(d<0?'d-am':d>0?'d-duong':'d-khop')+'">'+(d>0?'+':'')+nf(d)+'</td>'; }
 function kkEmpty(n){ return '<tr><td colspan="'+n+'" style="text-align:center;color:var(--ink3);padding:28px;white-space:normal">Không có dòng phù hợp</td></tr>'; }
 /* CT1: định tuyến URL WMS theo ngữ cảnh — location KHÔNG có /detail/, sku CÓ /detail/ */
-function kkIdLink(id,kind){
-  if(!id) return '—';
-  var url=(kind==='loc')
+function kkWmsUrl(id,kind){
+  return (kind==='loc')
     ? 'https://wms.inshasaki.com/physical-count/result/location/'+encodeURIComponent(id)+'?page=1&size=20'
     : 'https://wms.inshasaki.com/physical-count/result/sku/detail/'+encodeURIComponent(id)+'?page=1&size=20';
-  return '<a class="wlink" href="'+url+'" target="_blank" rel="noopener">'+esc(id)+KK_ICON+'</a>';
+}
+/* ID bấm được: mở modal CHI TIẾT PHIẾU ngay trong dashboard (icon ↗ vẫn sang WMS);
+   ✎ = phiếu có số lượng điều chỉnh đã lưu trên Sheet (tab kiemke-adjust) */
+function kkIdLink(id,kind){
+  if(!id) return '—';
+  return '<a class="wlink" href="javascript:void(0)" onclick="pcdOpen(\''+esc(String(id))+'\',\''+kind+'\')" title="Xem chi tiết phiếu ngay trên dashboard">'+esc(id)+'</a>'+
+    '<a class="wlink" href="'+kkWmsUrl(id,kind)+'" target="_blank" rel="noopener" title="Mở phiếu trên WMS">'+KK_ICON+'</a>'+
+    (adjHasCid(id)?'<span class="adjflag" title="Phiếu có số lượng điều chỉnh lưu trên Sheet">✎</span>':'');
 }
 /* 1 dòng "có số liệu đếm dùng được" — CHỈ dùng cho diff/drill-down (kkDiffOf).
    Thẻ chỉ số + chart + anti-join đều dùng kkIsChecked (thống nhất 25/07/2026). */
@@ -2891,8 +2983,8 @@ function kkOpen(kind,metric){
     : metric==='notcount'
     ? 'Anti-join: tồn kho từ Stock Location TRỪ tập (kho|mã) đã kiểm — đây là phần chưa được đụng tới'
     : (metric==='counted'||metric==='negative'||metric==='positive')
-    ? 'Đã khử trùng phiếu: mỗi (kho|mã) chỉ tính 1 phiếu đã kiểm MỚI NHẤT (ưu tiên phiếu không bị từ chối/huỷ) · bấm ID để mở WMS'
-    : 'Bấm ID để mở WMS');
+    ? 'Đã khử trùng phiếu: mỗi (kho|mã) chỉ tính 1 phiếu đã kiểm MỚI NHẤT (ưu tiên phiếu không bị từ chối/huỷ) · bấm ID xem chi tiết phiếu ngay tại đây (icon ↗ mở WMS)'
+    : 'Bấm ID xem chi tiết phiếu ngay tại đây (icon ↗ mở WMS) · ✎ = phiếu có số lượng điều chỉnh');
   kkmBuildFilters();
   kkmRender();
   var m=document.getElementById('kkmodal'); m.style.display='flex';
@@ -3901,6 +3993,260 @@ function plRender(){
   document.getElementById('plBody').innerHTML=out.join('')||'<tr><td colspan="8" class="empty">Không có kế hoạch phù hợp</td></tr>';
   document.getElementById('plSum').textContent=nf(rows.length)+' / '+nf(PL.rows.length)+' kế hoạch (tải mới nhất từ WMS lúc '+new Date(PL.at).toLocaleTimeString('vi-VN')+')'+(rows.length>cap?(' · hiển thị '+nf(cap)+' dòng đầu'):'');
 }
+
+/* ===== CHI TIẾT PHIẾU KIỂM KÊ (Physical Count Detail) ==========================================
+   Bấm ID trong pop-up drill-down Kiểm kê -> xem NGAY TRONG dashboard các dòng của phiếu như trang
+   WMS /physical-count/result/{location|sku}: No · Location · SKU · Tên hàng · HSD · SL đếm ·
+   Tồn hệ thống · Diff · Trạng thái dòng.
+   API: GET /wms/counting-plan/checklist/tracking?checklist_id=…&page=&size= (dò từ bundle SPA
+   index-a02da192.js 27/07/2026; response kèm object `checklist` = header phiếu + `total`
+   {total_user,total_sys,total_diff}; status_id dòng: 4=Counted, 2=Count cancelled, khác=Not counted).
+   Token đọc như sổ Kế hoạch (plLoad): ưu tiên extension Token Bridge (phiên CHÍNH operator),
+   fallback token robot qua GAS pc_token (PC_KEY đã lưu). Không có token -> vẫn mở được modal ở
+   chế độ OFFLINE: header từ dữ liệu Sheet + các dòng điều chỉnh đã lưu.
+   Ô "SL điều chỉnh": lưu tab kiemke-adjust trên Sheet (action pc_adjust, khoá PC_KEY) — KHÔNG ghi
+   ngược WMS; dashboard đọc lại tab này bằng gviz để mọi người cùng thấy (✎ trên ID). */
+var PCD={id:null,kind:null,rows:[],hdr:null,total:null,edits:{},live:false};
+var ADJ={map:null,cids:{}};   // map 'cid|tid' -> bản ghi điều chỉnh · cids: phiếu nào có điều chỉnh (cờ ✎)
+function adjKey(cid,tid){ return String(cid)+'|'+String(tid); }
+function adjHasCid(cid){ return !!ADJ.cids[String(cid)]; }
+/* Đọc tab kiemke-adjust (gviz, cache phiên 10' như các tab khác). Tab CHƯA TỒN TẠI -> gviz fallback
+   về tab đầu: nhận diện bằng header thiếu "tracking id" -> coi như chưa có điều chỉnh nào (không lỗi).
+   Không bao giờ reject — lỗi tải chỉ làm mất cờ ✎, không được chặn tab Kiểm kê. */
+async function adjLoad(force){
+  if(ADJ.map&&!force) return ADJ.map;
+  var hit=force?null:cacheGet('slf-adj');
+  if(hit){ adjBuild(hit); return ADJ.map; }
+  var rows=[];
+  try{
+    var resp=await gvizP('kiemke-adjust','&headers=1','adjgv'+(force?'_f':''));
+    var H=(resp.table&&resp.table.cols||[]).map(function(c){ return String((c&&c.label)||'').replace(/\s+/g,' ').trim().toLowerCase(); });
+    var iT=H.indexOf('tracking id'); if(iT<0) throw 0;
+    var iC=H.indexOf('checklist id'),iL=H.indexOf('location'),iS=H.indexOf('sku'),iP=H.indexOf('product name'),iW=H.indexOf('qty wms'),iA=H.indexOf('qty adjust'),iN=H.indexOf('note'),iB=H.indexOf('by'),iAt=H.indexOf('at');
+    (resp.table.rows||[]).forEach(function(r){
+      var c=r.c||[], g=function(i){ return (i>=0&&c[i]&&c[i].v!=null)?c[i].v:''; };
+      if(String(g(iT))==='') return;
+      rows.push({cid:String(g(iC)),tid:String(g(iT)),loc:String(g(iL)),sku:String(g(iS)),pn:String(g(iP)),qwms:g(iW),qadj:g(iA),note:String(g(iN)),by:String(g(iB)),at:String(g(iAt))});
+    });
+    cacheSet('slf-adj',rows);
+  }catch(e){ /* tab chưa có / lỗi tải -> không có điều chỉnh */ }
+  adjBuild(rows);
+  return ADJ.map;
+}
+function adjBuild(rows){
+  ADJ.map={}; ADJ.cids={};
+  (rows||[]).forEach(function(a){ ADJ.map[adjKey(a.cid,a.tid)]=a; ADJ.cids[String(a.cid)]=1; });
+}
+function pcdOpen(id,kind){
+  PCD={id:String(id),kind:kind,rows:[],hdr:null,total:null,edits:{},live:false};
+  document.getElementById('pcdTitle').textContent='Phiếu kiểm kê #'+id;
+  document.getElementById('pcdSub').innerHTML='Physical Count Detail · <a class="wlink" href="'+kkWmsUrl(id,kind)+'" target="_blank" rel="noopener">mở trên WMS'+KK_ICON+'</a>';
+  document.getElementById('pcdBody').innerHTML='<div class="state" style="padding:22px"><div class="spin"></div>Đang tải chi tiết phiếu từ WMS…</div>';
+  var m=document.getElementById('pcdmodal'); m.style.display='flex';
+  document.body.classList.add('ovl-open');   // giỏ nổi (z110) không được đè lên modal này
+  requestAnimationFrame(function(){ m.classList.add('show'); });
+  pcdLoad();
+}
+function closePcdModal(){ var m=document.getElementById('pcdmodal'); m.classList.remove('show'); document.body.classList.remove('ovl-open'); setTimeout(function(){ m.style.display='none'; },240); }
+async function pcdLoad(){
+  var idLuc=PCD.id;
+  try{ await adjLoad(); }catch(e){}
+  var tok='';
+  try{
+    tok=await wmsExtToken();   // ưu tiên phiên của CHÍNH operator — không đụng token robot
+    if(!tok){ var khoa=pcKeyLuu(); if(khoa) tok=await pcWmsToken(khoa); }   // CHỈ khoá đã lưu, luồng xem không bật prompt
+  }catch(e){ if(e&&e.pc&&e.j&&e.j.code===403) pcKeyForget(); tok=''; }
+  if(PCD.id!==idLuc) return;   // người dùng đã mở phiếu khác trong lúc chờ
+  if(!tok){ pcdRender('Cần extension WMS Token Bridge (đọc bằng phiên của chính bạn) hoặc khóa PC_KEY (token robot) để đọc chi tiết trực tiếp từ WMS. <button class="fcg" onclick="pcdNhapKhoa()">Nhập khóa PC_KEY</button>'); return; }
+  try{
+    var all=[], hdr=null, total=null, SIZE=200;
+    for(var page=1;page<=10;page++){   // 10 trang × 200 dòng — 1 vị trí full-location thực tế vài chục dòng
+      var r=await fetch(PC_WMS_BASE+'/wms/counting-plan/checklist/tracking?checklist_id='+encodeURIComponent(PCD.id)+'&page='+page+'&size='+SIZE,{headers:{'Authorization':'Bearer '+tok}});
+      if(r.status===401){ _pcTok=''; throw new Error('Token WMS đang bị chiếm phiên — thử lại sau, hoặc cài extension Token Bridge để đọc bằng phiên của chính bạn.'); }
+      if(!r.ok) throw new Error('WMS trả HTTP '+r.status);
+      var j=await r.json(), d=j.data||j, recs=d.records||[];
+      if(!hdr) hdr=d.checklist||null;
+      if(!total) total=d.total||null;
+      all=all.concat(recs);
+      var cnt=(d.count!=null)?Number(d.count):null;
+      if(recs.length<SIZE||(cnt!=null&&all.length>=cnt)) break;
+    }
+    if(PCD.id!==idLuc) return;
+    PCD.rows=all; PCD.hdr=hdr; PCD.total=total; PCD.live=true;
+    pcdRender();
+  }catch(e){ if(PCD.id===idLuc) pcdRender(esc(String(e&&e.message||e))); }
+}
+function pcdNhapKhoa(){ if(pcKeyGet()) pcdLoad(); }
+/* Dòng phiếu trong dữ liệu Sheet (fallback header khi không đọc được WMS) */
+function pcdKkRow(){
+  var rs=(KK.data&&KK.data[PCD.kind])||[];
+  for(var i=0;i<rs.length;i++) if(String(rs[i].id)===PCD.id) return rs[i];
+  return null;
+}
+function pcdStatusCell(sid){
+  var m=(sid===4)?['Counted','b-ok']:(sid===2)?['Count cancelled','b-rej']:['Not counted','b-pend'];
+  return '<span class="badge '+m[1]+'">'+m[0]+'</span>';
+}
+/* HSD: exp_by_user/exp_by_sys là chuỗi JSON [{qty, exp?, group_uid_code?, date_added?}] — vải cuộn
+   theo group_uid không có hạn dùng -> N/A (đúng như trang WMS) */
+function pcdExp(r){
+  var raw=r.exp_by_user||r.exp_by_sys; if(!raw) return 'N/A';
+  try{
+    var ds=(JSON.parse(raw)||[]).map(function(x){ return x&&(x.exp||x.expiration_date||x.expiry_date)||''; }).filter(Boolean);
+    return ds.length?ds.map(esc).join('<br>'):'N/A';
+  }catch(e){ return 'N/A'; }
+}
+function pcdHdrItem(lb,vl){ return '<div class="it"><div class="lb">'+lb+'</div><div class="vl">'+(vl||'—')+'</div></div>'; }
+function pcdAt(s){ var ms=kkParseDate(s); return isNaN(ms)?String(s||'—'):kkFmtD(ms); }
+function pcdRender(loi){
+  PCD._loi=loi;   // giữ lại để re-render khi xoay máy/đổi breakpoint (pcdOnMQ)
+  var h=PCD.hdr, kk=pcdKkRow(), body=document.getElementById('pcdBody'), out='';
+  /* Header phiếu: ưu tiên bản LIVE từ WMS, fallback dòng trên Sheet */
+  var st=h?String(h.status_name||''):(kk?kk.st:''), wh=h?h.warehouse_name:(kk?kk.wh:''), tp=h?h.plan_type:(kk?kk.type:'');
+  out+='<div class="pcdhdr">'+
+    pcdHdrItem('Trạng thái',st?'<span class="badge '+kkBadge(st)+'">'+esc(st)+'</span>':'—')+
+    pcdHdrItem('Warehouse',esc(wh||''))+
+    pcdHdrItem('Type',esc(tp||''))+
+    pcdHdrItem(PCD.kind==='loc'?'Mã vị trí':'SKU',esc(h?(h.plan_object_code||''):(kk?(PCD.kind==='loc'?kk.loc:kk.sku):'')))+
+    pcdHdrItem('Priority',esc(h?(h.priority_name||''):(kk?kk.pri||'':'')))+
+    pcdHdrItem('Created by',esc(h?(h.created_by_name||''):''))+
+    pcdHdrItem('Created at',h?esc(pcdAt(h.created_at)):'—')+
+    pcdHdrItem('Counted by',esc(h?(h.checklist_by_name||''):(kk?kk.by:'')))+
+    pcdHdrItem('Counted date',esc(pcdAt(h?h.checklist_at:(kk?kk.cdate:''))))+
+    pcdHdrItem('Approved by',esc(h?(h.approved_by_name||''):''))+
+    pcdHdrItem('Approve at',h?esc(pcdAt(h.approved_at)):'—')+
+    pcdHdrItem('Plan date',esc(h?(h.plan_date||''):(kk&&kk.plan?kkFmtD(kkParseDate(kk.plan),true):'')))+
+  '</div>';
+  if(PCD.total) out+='<div class="pcdtot">'+
+    '<span class="tt">SL đếm <b>'+nf(Number(PCD.total.total_user)||0)+'</b></span>'+
+    '<span class="tt">Tồn hệ thống <b>'+nf(Number(PCD.total.total_sys)||0)+'</b></span>'+
+    '<span class="tt">Diff <b style="color:'+((Number(PCD.total.total_diff)||0)<0?'var(--bad)':(Number(PCD.total.total_diff)||0)>0?'var(--warn)':'var(--good)')+'">'+((Number(PCD.total.total_diff)||0)>0?'+':'')+nf(Number(PCD.total.total_diff)||0)+'</b></span></div>';
+  if(loi) out+='<div class="pcdnote">⚠ '+loi+'<br>Đang hiển thị chế độ OFFLINE: header từ Sheet + các dòng điều chỉnh đã lưu (nếu có).</div>';
+  /* Bảng dòng: LIVE từ WMS; offline thì dựng từ các dòng điều chỉnh đã lưu của phiếu này */
+  var rows=PCD.rows;
+  if(!PCD.live&&!rows.length&&ADJ.map){
+    rows=Object.keys(ADJ.map).filter(function(k){ return ADJ.map[k].cid===PCD.id; }).map(function(k){
+      var a=ADJ.map[k];
+      return {tracking_id:a.tid,sku:a.sku,bin_location:a.loc,product_name:a.pn,qty_by_user:Number(a.qwms)||0,status_id:4,_offline:true};
+    });
+  }
+  /* ĐIỆN THOẠI (≤640px): render CARD bằng DIV thật — KHÔNG ép <table> đổi display (Chromium giữ
+     min-content kiểu bảng với display:block, còn display:contents làm kkwrap sập chiều cao — đã đo
+     thực nghiệm cả 2). 1 bộ .adjinp duy nhất cho cả 2 nhánh; đổi breakpoint sẽ re-render (pcdOnMQ). */
+  var mobile=window.matchMedia&&window.matchMedia('(max-width:640px)').matches;
+  var trongRong=PCD.live?'Phiếu chưa có dòng chi tiết nào':'Chưa đọc được WMS và phiếu chưa có điều chỉnh nào lưu trên Sheet';
+  var tr=[];
+  for(var i=0;i<rows.length;i++){
+    var r=rows[i], cnt=Number(r.qty_by_user)||0, inv=Number(r.qty_by_sys)||0;
+    var diff=(r.qty_diff!=null)?(Number(r.qty_diff)||0):(cnt-inv);
+    var a=ADJ.map&&ADJ.map[adjKey(PCD.id,r.tracking_id)];
+    var expHtml=pcdExp(r), dCls=(r._offline?'d-khop':(diff<0?'d-am':diff>0?'d-duong':'d-khop'));
+    var inputHtml='<input class="adjinp" data-tid="'+esc(String(r.tracking_id))+'" data-loc="'+esc(r.bin_location||'')+'" data-sku="'+esc(r.sku||'')+'" data-qwms="'+cnt+'" data-cu="'+(a?esc(String(a.qadj)):'')+'" value="'+(a?esc(String(a.qadj)):'')+'" placeholder="—" inputmode="numeric" oninput="pcdMark(this)" title="Số lượng điều chỉnh — lưu trên Sheet, không ghi về WMS">'+
+      (a?'<div class="adjmeta"><b>✎ '+nf(Number(a.qadj)||0)+'</b> — '+esc(a.by||'?')+' · '+esc(pcdAt(a.at))+(a.note?'<br>'+esc(a.note):'')+'</div>':'');
+    if(mobile){
+      tr.push('<div class="pcdcard">'+
+        '<div class="cr1"><span class="cno">#'+(i+1)+'</span><span class="cloc">'+esc(r.bin_location||'')+'</span>'+pcdStatusCell(r.status_id)+'</div>'+
+        '<div class="csku"><b>'+esc(r.sku||'')+'</b><div class="pn2">'+esc(r.product_name||'')+'</div></div>'+
+        (expHtml==='N/A'?'':'<div class="cexp">HSD: '+expHtml+'</div>')+
+        '<div class="cstats"><span><label>SL đếm</label><b>'+(r._offline?'—':nf(cnt))+'</b></span>'+
+        '<span><label>Tồn HT</label><b>'+(r._offline?'—':nf(inv))+'</b></span>'+
+        '<span class="'+dCls+'"><label>Diff</label><b>'+(r._offline?'—':((diff>0?'+':'')+nf(diff)))+'</b></span></div>'+
+        '<div class="cadj"><label>SL điều chỉnh</label>'+inputHtml+'</div></div>');
+    }else{
+      tr.push('<tr><td class="num">'+(i+1)+'</td><td class="loc">'+esc(r.bin_location||'')+'</td>'+
+        '<td><b>'+esc(r.sku||'')+'</b><div class="pn2">'+esc(r.product_name||'')+'</div></td>'+
+        '<td>'+expHtml+'</td>'+
+        '<td class="num">'+(r._offline?'—':nf(cnt))+'</td><td class="num">'+(r._offline?'—':nf(inv))+'</td>'+
+        '<td class="num '+dCls+'">'+(r._offline?'—':((diff>0?'+':'')+nf(diff)))+'</td>'+
+        '<td>'+pcdStatusCell(r.status_id)+'</td>'+
+        '<td class="num">'+inputHtml+'</td></tr>');
+    }
+  }
+  if(mobile){
+    out+='<div class="pcdcards">'+(tr.join('')||'<div class="state" style="padding:20px;text-align:center;color:var(--ink3)">'+trongRong+'</div>')+'</div>';
+  }else{
+    out+='<div class="kkwrap"><table class="mtbl"><thead><tr><th class="num">No</th><th>Location</th><th>SKU · Tên hàng</th><th>HSD</th><th class="num">SL đếm</th><th class="num">Tồn hệ thống</th><th class="num">Diff</th><th>Trạng thái dòng</th><th class="num">SL điều chỉnh</th></tr></thead><tbody>'+
+      (tr.join('')||'<tr><td colspan="9" style="text-align:center;color:var(--ink3);padding:28px">'+trongRong+'</td></tr>')+'</tbody></table></div>';
+  }
+  out+='<div class="kknote">'+nf(rows.length)+' dòng'+(PCD.live?' — đọc trực tiếp từ WMS':' (offline)')+'.</div>';
+  /* Footer lưu điều chỉnh — chỉ khi có dòng để sửa */
+  if(rows.length){
+    var byLuu=''; try{ byLuu=localStorage.getItem('pcd-by')||''; }catch(e){}
+    out+='<div class="pcdfoot">'+
+      '<div class="fld2"><label>Người sửa</label><input id="pcdBy" value="'+esc(byLuu)+'" placeholder="tên / email…"></div>'+
+      '<div class="fld2"><label>Ghi chú</label><input id="pcdNote" placeholder="lý do điều chỉnh (tuỳ chọn)…"></div>'+
+      '<div class="sp"></div><span class="hint" id="pcdSt"></span>'+
+      '<button class="primary" id="pcdSave" disabled onclick="pcdSave()">Lưu điều chỉnh</button></div>'+
+      '<div class="pcdnote" style="background:color-mix(in srgb,var(--info,#3b82f6) 10%,var(--surface));color:var(--ink2)">Số điều chỉnh chỉ lưu trên <b>Google Sheet</b> (tab <code>kiemke-adjust</code>) để dashboard thể hiện — <b>không</b> ghi ngược về WMS. Xoá trắng ô = gỡ điều chỉnh. Cần khóa PC_KEY khi lưu.</div>';
+  }
+  body.innerHTML=out;
+}
+/* Đánh dấu ô đã đổi so với điều chỉnh ĐANG LƯU + bật nút Lưu */
+function pcdMark(inp){
+  var moi=inp.value.trim();
+  if(moi!==''&&!/^-?[\d.,\s]+$/.test(moi)){ inp.value=moi.replace(/[^\d.,\s-]/g,''); moi=inp.value.trim(); }
+  var doi=(moi!==String(inp.getAttribute('data-cu')||''));
+  inp.classList.toggle('changed',doi);
+  var co=document.querySelector('#pcdBody .adjinp.changed');
+  var btn=document.getElementById('pcdSave'); if(btn) btn.disabled=!co;
+}
+function pcdNum(s){ return Number(String(s).replace(/[,\s]/g,''))||0; }
+async function pcdSave(){
+  var btn=document.getElementById('pcdSave'), st=document.getElementById('pcdSt');
+  var by=(document.getElementById('pcdBy')||{}).value||'', note=(document.getElementById('pcdNote')||{}).value||'';
+  by=by.trim(); note=note.trim();
+  try{ localStorage.setItem('pcd-by',by); }catch(e){}
+  var rows=[];
+  document.querySelectorAll('#pcdBody .adjinp.changed').forEach(function(inp){
+    var v=inp.value.trim();
+    rows.push({cid:PCD.id,tid:inp.getAttribute('data-tid'),loc:inp.getAttribute('data-loc'),sku:inp.getAttribute('data-sku'),
+      pn:'',qwms:pcdNum(inp.getAttribute('data-qwms')),qadj:(v===''?'':pcdNum(v)),note:note,by:by});
+  });
+  /* Tên hàng gửi kèm để bản ghi trên Sheet tự đọc được (offline view) */
+  rows.forEach(function(x){ for(var i=0;i<PCD.rows.length;i++) if(String(PCD.rows[i].tracking_id)===String(x.tid)){ x.pn=PCD.rows[i].product_name||''; break; } });
+  if(!rows.length) return;
+  var khoa=pcKeyGet(); if(!khoa) return;   // người dùng CHỦ ĐỘNG lưu -> được phép prompt khoá
+  btn.disabled=true; st.textContent='Đang lưu…';
+  try{
+    var j=await pcGas({action:'pc_adjust',key:khoa,rows:rows});
+    if(j.status!=='success'){
+      if(j.code===403) pcKeyForget();
+      throw new Error(j.message||'GAS từ chối');
+    }
+    /* Cập nhật tại chỗ + xoá cache phiên để lượt tải sau đọc bản mới từ Sheet */
+    rows.forEach(function(x){
+      var k=adjKey(x.cid,x.tid);
+      if(x.qadj===''){ delete ADJ.map[k]; }
+      else ADJ.map[k]={cid:x.cid,tid:x.tid,loc:x.loc,sku:x.sku,pn:x.pn,qwms:x.qwms,qadj:x.qadj,note:x.note,by:x.by,at:j.at||new Date().toISOString()};
+    });
+    ADJ.cids={}; Object.keys(ADJ.map).forEach(function(k){ ADJ.cids[String(ADJ.map[k].cid)]=1; });
+    try{ sessionStorage.removeItem('slf-adj'); }catch(e){}
+    toast('Đã lưu '+rows.length+' điều chỉnh vào Sheet.','ok');
+    st.textContent='';
+    pcdRender();   // vẽ lại bảng với ✎ mới
+    if(document.getElementById('kkmodal').classList.contains('show')) kkmRender();   // cờ ✎ trong pop-up bên dưới
+  }catch(e){
+    st.textContent=''; btn.disabled=false;
+    toast('Lưu điều chỉnh thất bại: '+String(e&&e.message||e),'err');
+  }
+}
+/* Xoay máy / đổi cỡ cửa sổ QUA breakpoint 640px khi modal đang mở: render lại đúng dạng
+   (card ↔ bảng) và GIỮ NGUYÊN các ô đang sửa dở (chưa bấm Lưu). */
+(function(){
+  if(!window.matchMedia) return;
+  var mq=window.matchMedia('(max-width:640px)');
+  function pcdOnMQ(){
+    if(!document.getElementById('pcdmodal').classList.contains('show')) return;
+    var giu={};
+    document.querySelectorAll('#pcdBody .adjinp.changed').forEach(function(inp){ giu[inp.getAttribute('data-tid')]=inp.value; });
+    pcdRender(PCD._loi);
+    Object.keys(giu).forEach(function(tid){
+      var inp=document.querySelector('#pcdBody .adjinp[data-tid="'+tid+'"]');
+      if(inp){ inp.value=giu[tid]; pcdMark(inp); }
+    });
+  }
+  mq.addEventListener?mq.addEventListener('change',pcdOnMQ):mq.addListener(pcdOnMQ);
+})();
 
 /* Khôi phục giỏ từ phiên (F5 không mất lựa chọn) */
 try{ PC.sel=JSON.parse(sessionStorage.getItem('pc-sel')||'{}')||{}; }catch(e){ PC.sel={}; }
