@@ -4139,7 +4139,8 @@ function kkUidRows(phieuRows,q){
     if(!us||!us.length){ thieu++; return; }
     nPhieu++;
     us.forEach(function(u){
-      if(q&&((u.uid+' '+u.sku+' '+u.pn+' '+u.loc+' '+cid+' '+(p.by||'')).toLowerCase().indexOf(q)<0)) return;
+      if((Number(u.qu)||0)===(Number(u.qs)||0)) return;   // CHỈ nhóm LỆCH — chặn cả dữ liệu tab định dạng cũ còn trong cache phiên
+      if(q&&((u.uid+' '+u.sku+' '+u.pn+' '+u.loc+' '+cid+' '+u.gst+' '+(p.by||'')).toLowerCase().indexOf(q)<0)) return;
       var b=Object.create(u); b.by=p.by||'';
       rows.push(b);
     });
@@ -4173,6 +4174,7 @@ function kkUidTable(rows,thieu){
   var html='<div class="kkwrap"><table><thead><tr><th class="num">No</th><th>ID</th><th>Location</th><th>SKU · Tên hàng</th><th class="num">Diff</th><th>UID group</th><th>Group status</th><th class="num">SL đếm</th><th class="num">Tồn HT</th><th>Counted date</th><th>Counted by</th><th>Action</th></tr></thead><tbody>'+
     (out.join('')||kkEmpty(12))+'</tbody></table></div>'+
     '<div class="kknote">'+(rows.length>CAP?('Hiển thị '+nf(CAP)+' / '+nf(rows.length)+' dòng — lọc để thu hẹp.'):(nf(rows.length)+' dòng UID group.'))+
+    ' Chỉ liệt kê nhóm ĐANG LỆCH (đếm ≠ tồn của chính nhóm) — gồm cả nhóm thiếu/lệch âm nằm bên trong phiếu lệch dương (Diff tô màu theo dấu); nhóm khớp đã ẩn.'+
     (thieu?(' <span style="color:var(--warn)">⚠ '+nf(thieu)+' phiếu lệch chưa có chi tiết trên Sheet — đợi cụm sync kế (poller trưa/chiều hoặc 7h).</span>'):'')+'</div>';
   if(rows.length){
     var mail=''; try{ mail=localStorage.getItem('uide-mail')||''; }catch(e){}
