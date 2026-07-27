@@ -4226,7 +4226,13 @@ function kkUidGroups(kind,metric,phieuRows,q,state,excludeK){
   nets.order.forEach(function(gk){
     var g=nets.gs[gk];
     if(metric==='positive'?g.net<=0:g.net>=0) return;   // net=0 = bù trừ đủ -> không thuộc pop-up lệch nào
+    /* Bù trừ theo MÃ UID GROUP (chỉ thị 27/07): cùng mã UID "New" bin này + "Not found" bin kia,
+       tổng đếm − tổng tồn = 0 -> chỉ CHUYỂN VỊ TRÍ, không phải lệch -> ẩn khỏi bảng (cặp này tự
+       triệt tiêu trong net của SKU nên số "Sau bù trừ" không đổi). Hàng không mã UID gom chung 1 rọ. */
+    var uidNet={};
+    g.rows.forEach(function(u2){ var kU=u2.uid||' '; uidNet[kU]=(uidNet[kU]||0)+((Number(u2.qu)||0)-(Number(u2.qs)||0)); });
     var rs=g.rows.filter(function(u){
+      if(uidNet[u.uid||' ']===0) return false;   // mã UID chỉ đổi chỗ -> ẩn
       for(var x=0;x<fs.length;x++){
         var f=fs[x], cell=(f.k==='ucat')?kkUidCat(u):String(u.gst||'').trim();
         if(f.exact){ if(cell!==f.raw) return false; }
@@ -4296,7 +4302,7 @@ function kkUidTable(ug){
   var html='<div class="kkwrap"><table><thead><tr><th>Location</th><th>UID group</th><th>Group status</th><th class="num">SL đếm</th><th class="num">Tồn HT</th><th class="num">Diff</th><th>Counted date</th><th>Counted by</th><th>Action</th></tr></thead><tbody>'+
     (out.join('')||kkEmpty(9))+'</tbody></table></div>'+
     '<div class="kknote">'+(ug.nRows>CAP?('Hiển thị '+nf(CAP)+' / '+nf(ug.nRows)+' dòng — lọc để thu hẹp.'):(nf(ug.groups.length)+' SKU lệch · '+nf(ug.nRows)+' dòng vị trí × UID group.'))+
-    ' SKU thiếu bin này thừa bin kia đã TỰ BÙ TRỪ — chỉ SKU có tổng sau bù trừ ≠ 0 mới xuất hiện (net = Σ diff các vị trí); thứ tự vị trí theo lối đi của cate (phụ liệu 507→513 kệ 15→01 · nguyên liệu 507→501 kệ 10→15).'+
+    ' SKU thiếu bin này thừa bin kia đã TỰ BÙ TRỪ — chỉ SKU có tổng sau bù trừ ≠ 0 mới xuất hiện (net = Σ diff các vị trí); cùng MÃ UID thiếu chỗ này thừa chỗ kia (chỉ chuyển vị trí) cũng đã ẩn; thứ tự vị trí theo lối đi của cate (phụ liệu 507→513 kệ 15→01 · nguyên liệu 507→501 kệ 10→15).'+
     (ug.thieu?(' <span style="color:var(--warn)">⚠ '+nf(ug.thieu)+' phiếu lệch chưa có chi tiết trên Sheet — đợi cụm sync kế (poller trưa/chiều hoặc 7h).</span>'):'')+'</div>';
   if(flat.length){
     var mail=''; try{ mail=localStorage.getItem('uide-mail')||''; }catch(e){}
