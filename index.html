@@ -377,6 +377,40 @@ body:has(.modal.show) .footbar{z-index:98}
 .kkfbar .fld .combo-menu{width:max-content;min-width:100%;max-width:340px;right:auto}   /* menu nở theo nội dung (mã request + ngày · số dòng) dù pill hẹp */
 .kkfbar .date-btn{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font-size:12px;font-family:inherit;text-align:left;padding:6px 7px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kkfbar .date-btn .ph{color:var(--ink3);opacity:.75}
+/* ===== NGÀY KIỂM — lịch NEO TRỰC TIẾP vào nút (bottom-start), 31/07/2026 =====
+   BUG ĐÃ VÁ: `.date-pop` dùng position:fixed + JS ghi toạ độ VIEWPORT, nhưng `#viewKK` mang
+   `.vfade{will-change:opacity,transform}` → chính nó thành CONTAINING BLOCK của mọi position:fixed
+   bên trong, nên left/top viewport bị cộng thêm offset của #viewKK ⇒ lịch nhảy lơ lửng giữa màn
+   hình. (Bản trong modal Dự báo không lỗi vì fcPositionDatePop có trừ rect .modalbox — kkfPosDatePop
+   thì không.) Cách chữa gốc: desktop dùng position:absolute trong .fld.dt ⇒ miễn nhiễm hoàn toàn. */
+.kkfbar .fld.dt{position:relative}
+#kkfDatePop{position:absolute;top:calc(100% + 6px);left:0;right:auto;bottom:auto;z-index:1050;padding:10px;
+  box-shadow:0 10px 25px -5px rgba(0,0,0,.1),0 8px 10px -6px rgba(0,0,0,.1)}
+#kkfDatePop.dp-up{top:auto;bottom:calc(100% + 6px)}   /* hụt chỗ phía dưới -> lật lên trên nút */
+#kkfDatePop.dp-right{left:auto;right:0}               /* sát mép phải viewport -> neo mép phải nút */
+/* Bố cục gọn theo chỉ thị: preset 12px/4×10 · 2 tháng cách 16px · ô ngày 32×32 chữ 13px căn giữa */
+#kkfDatePop .dp-presets{gap:5px;margin-bottom:8px}
+#kkfDatePop .dp-presets button{font-size:12px;padding:4px 10px}
+#kkfDatePop .dp-nav{margin-bottom:6px}
+#kkfDatePop .dp-months{gap:16px}
+#kkfDatePop .dp-day{width:32px;height:32px;font-size:13px}
+#kkfDatePop .dp-foot{margin-top:8px;padding-top:8px}
+/* ĐIỆN THOẠI ≤768px: đổi thành BOTTOM SHEET xổ từ dưới lên + backdrop mờ.
+   kkfDpMount() DỜI element sang <body> ở breakpoint này, nhờ vậy position:fixed neo đúng viewport và
+   left/right/bottom:0 là đủ — KHÔNG cần JS tính toạ độ (xem chú thích kkfDpMount về 2 cách đã bỏ).
+   Backdrop cũng là element rời gắn vào <body> nên phủ đủ màn hình, kể cả vùng header. */
+@media(max-width:768px){
+  #kkfDatePop{position:fixed;left:0;right:0;bottom:0;top:auto;width:auto;max-width:none;max-height:82vh;
+    border-radius:16px 16px 0 0;border-bottom:0;padding:12px 14px 14px;
+    box-shadow:0 -12px 30px -8px rgba(0,0,0,.28);animation:dpSheetUp .22s cubic-bezier(.16,1,.3,1)}
+  #kkfDatePop.dp-up,#kkfDatePop.dp-right{top:auto;bottom:0;left:0;right:0}
+  #kkfDatePop .dp-months{flex-direction:column;gap:14px;align-items:center}   /* ô ngày giữ 32px, canh giữa sheet */
+  #kkfDatePop .dp-foot{position:sticky;bottom:-1px;background:var(--surface);z-index:1}
+}
+@keyframes dpSheetUp{from{opacity:0;transform:translate3d(0,16px,0)} to{opacity:1;transform:none}}
+#kkfDpBack{position:fixed;inset:0;z-index:1049;background:rgba(15,23,42,.42);opacity:0;transition:opacity .18s var(--ease)}
+#kkfDpBack.show{opacity:1}
+@media(min-width:769px){#kkfDpBack{display:none}}
 .kkfbar .fclr{height:32px;display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--brand2);font-weight:650;font-size:12px;cursor:pointer;white-space:nowrap;padding:0 12px;font-family:inherit}
 .kkfbar .fclr:hover{border-color:var(--brand2);background:var(--hover)}
 /* Hàng điều khiển 1 DÒNG đầu tab Kiểm kê: chip kho + pill lọc + nút Kế hoạch chảy chung 1 hàng flex (tự wrap khi hẹp);
@@ -2171,6 +2205,7 @@ function kkfBuild(){
     cb('ts','Type SKU','Tất cả…')+
     cb('tl','Type vị trí','Tất cả…')+
     '<div class="fld bare"><button type="button" class="fclr" id="kkfClear" hidden onclick="kkfReset()" title="Bỏ toàn bộ bộ lọc ngày / request / type">✕ Xoá lọc</button></div>';
+  document.getElementById('kkfDatePop').addEventListener('click',kkfDpClickSelf);   // lịch có thể bị portal sang <body> (sheet mobile) -> phải có listener riêng
 }
 /* Nguồn dòng cho menu combo: tôn trọng kho đang chọn + các bộ lọc CÒN LẠI (trừ chính nó) — đúng pattern pop-up */
 function kkfMenuRows(k){
@@ -2255,7 +2290,11 @@ function kkfOpenDatePop(){
 }
 function kkfCloseDatePop(){
   var pop=document.getElementById('kkfDatePop');
-  if(pop&&!pop.classList.contains('hidden')){ pop.classList.add('hidden'); pop.innerHTML=''; pop.style.maxHeight=''; pop.style.left=pop.style.top=''; }
+  if(pop&&!pop.classList.contains('hidden')){
+    pop.classList.add('hidden'); pop.classList.remove('dp-up','dp-right');
+    pop.innerHTML=''; pop.style.maxHeight=''; pop.style.left=pop.style.top=pop.style.width='';
+  }
+  kkfDpBack(false);
   kkfBindRepos(false);
 }
 function kkfRenderCal(){
@@ -2278,19 +2317,45 @@ function kkfPaint(){
   var s=document.querySelector('#kkfDatePop .dpsel');
   if(s) s.textContent=a?(b&&b!==a?fcFmtVN(a)+' → '+fcFmtVN(b):fcFmtVN(a)):'Chưa chọn';
 }
-/* Lịch position:fixed bám nút, tự lật lên/né mép — bản rút gọn của fcPositionDatePop (ngoài modal nên toạ độ = viewport) */
+function kkfDpMobile(){ return window.matchMedia&&window.matchMedia('(max-width:768px)').matches; }
+/* PORTAL cho bottom sheet. Sheet phải position:fixed dán đáy VIEWPORT, nhưng nằm trong #viewKK thì
+   `.vfade{will-change:transform}` biến #viewKK thành containing block ⇒ fixed neo sai. Cách chữa
+   sạch nhất: mobile thì DỜI hẳn element sang <body> (body không có transform) — `left/right/bottom:0`
+   thuần CSS là đúng tuyệt đối, không cần đo đạc gì. Desktop dời trả về .fld.dt để neo absolute.
+   ĐÃ THỬ VÀ BỎ: tính toạ độ = viewport − rect(ancestor) (lệch 30px) và vòng lặp đo-rồi-bù (lệch 5–19px
+   vì animation đang chạy + innerHeight mobile dao động). */
+function kkfDpMount(mob){
+  var pop=document.getElementById('kkfDatePop'); if(!pop) return;
+  var dich=mob?document.body:document.querySelector('#kkFilters .fld.dt');
+  if(dich&&pop.parentNode!==dich) dich.appendChild(pop);
+}
+/* Backdrop của bottom sheet: element rời gắn vào <body> để phủ ĐỦ màn hình (nếu dùng ::before trên
+   pop thì cũng bị neo theo #viewKK, hụt phần header). Bấm backdrop = click ngoài -> tự đóng. */
+function kkfDpBack(on){
+  var b=document.getElementById('kkfDpBack');
+  if(on){
+    if(!b){ b=document.createElement('div'); b.id='kkfDpBack'; document.body.appendChild(b); }
+    requestAnimationFrame(function(){ b.classList.add('show'); });
+  } else if(b) b.remove();
+}
+/* Định vị lịch NGÀY KIỂM.
+   Desktop: CSS đã neo bottom-start (absolute trong .fld.dt) — JS chỉ lật lên (.dp-up) / neo mép phải
+   (.dp-right) khi hụt chỗ + chặn chiều cao, KHÔNG ghi left/top nữa.
+   Mobile ≤768px: sheet fixed dán đáy viewport, toạ độ quy về hệ containing block. */
 function kkfPosDatePop(){
   var pop=document.getElementById('kkfDatePop'), btn=document.getElementById('kkfDateBtn');
   if(!pop||!btn||pop.classList.contains('hidden')) return;
-  pop.style.maxHeight='';
-  var r=btn.getBoundingClientRect(), vw=window.innerWidth, vh=window.innerHeight, M=8;
-  var pw=pop.offsetWidth, ph=pop.offsetHeight;
-  var left=Math.max(M, Math.min(r.left, vw-pw-M));
-  var below=vh-r.bottom-M, above=r.top-M, top;
-  if(ph<=below || below>=above){ top=r.bottom+6; if(ph>below) pop.style.maxHeight=Math.max(160,below-6)+'px'; }
-  else { var h=Math.min(ph,above-6); pop.style.maxHeight=Math.max(160,h)+'px'; top=Math.max(M,r.top-6-h); }
-  pop.style.left=Math.round(left)+'px';
-  pop.style.top=Math.round(top)+'px';
+  pop.style.maxHeight=''; pop.style.left=pop.style.top=pop.style.width='';
+  pop.classList.remove('dp-up','dp-right');
+  var mob=kkfDpMobile();
+  kkfDpMount(mob);  // đổi chiều màn hình khi đang mở -> chuyển giữa sheet (body) và popover (.fld.dt)
+  kkfDpBack(mob);   // ... backdrop bật/tắt theo
+  if(mob) return;   // sheet dán đáy hoàn toàn bằng CSS (left/right/bottom:0), không cần tính toạ độ
+  var r=btn.getBoundingClientRect(), vw2=window.innerWidth, vh2=window.innerHeight, M=8;
+  if(r.left+pop.offsetWidth>vw2-M) pop.classList.add('dp-right');
+  var ph=pop.offsetHeight, below=vh2-r.bottom-M, above=r.top-M;
+  if(ph>below&&above>below){ pop.classList.add('dp-up'); if(ph>above) pop.style.maxHeight=Math.max(160,above-6)+'px'; }
+  else if(ph>below) pop.style.maxHeight=Math.max(160,below-6)+'px';
 }
 var _kkfBound=false;
 function kkfBindRepos(on){
@@ -2311,24 +2376,33 @@ function kkfCommit(){
   KKF.s=a||''; KKF.e=a?(b||a):'';   // chọn 1 ngày = lọc đúng ngày đó
   kkfCloseDatePop(); kkfUpdateBtn(); kkRender();
 }
-/* Delegation 1 lần trên container cố định — cùng pattern #kkmFilters/#fcBody */
-document.getElementById('kkFilters').addEventListener('click',function(e){
-  if(e.target.closest('#kkfDateBtn')){ e.preventDefault();
-    var hid=document.getElementById('kkfDatePop').classList.contains('hidden');
-    kkfCloseCombos(); if(hid) kkfOpenDatePop(); else kkfCloseDatePop(); return; }
+/* Click TRONG lịch — tách riêng vì trên mobile lịch được portal sang <body>, không còn nằm trong
+   #kkFilters nên delegation của thanh lọc không với tới. Trả true = đã xử lý. */
+function kkfDpClick(e){
   var day=e.target.closest('.dp-day');
   if(day){ e.preventDefault();
     var iso=day.getAttribute('data-iso');
     if(!KKF_DP.selS||(KKF_DP.selS&&KKF_DP.selE)){ KKF_DP.selS=iso; KKF_DP.selE=''; }   // bắt đầu dải MỚI
     else if(iso<KKF_DP.selS){ KKF_DP.selE=KKF_DP.selS; KKF_DP.selS=iso; }              // chọn ngược -> hoán đổi
     else KKF_DP.selE=iso;
-    kkfPaint(); return; }
-  var pr=e.target.closest('#kkfDatePop .dp-presets button'); if(pr){ e.preventDefault(); kkfPreset(pr.getAttribute('data-preset')); return; }
-  if(e.target.closest('#kkfDpPrev')){ e.preventDefault(); var v=KKF_DP.view, m=v.m-1, y=v.y; if(m<0){m=11;y--;} KKF_DP.view={y:y,m:m}; kkfRenderCal(); return; }
-  if(e.target.closest('#kkfDpNext')){ e.preventDefault(); var v2=KKF_DP.view, m2=v2.m+1, y2=v2.y; if(m2>11){m2=0;y2++;} KKF_DP.view={y:y2,m:m2}; kkfRenderCal(); return; }
-  if(e.target.closest('#kkfDpApply')){ e.preventDefault(); kkfCommit(); return; }
-  if(e.target.closest('#kkfDpClear')){ e.preventDefault(); KKF_DP.selS=KKF_DP.selE=''; KKF.s=KKF.e=''; kkfCloseDatePop(); kkfUpdateBtn(); kkRender(); return; }
-  if(e.target.closest('#kkfDatePop')) return;   // click nền lịch: không làm gì
+    kkfPaint(); return true; }
+  var pr=e.target.closest('#kkfDatePop .dp-presets button'); if(pr){ e.preventDefault(); kkfPreset(pr.getAttribute('data-preset')); return true; }
+  if(e.target.closest('#kkfDpPrev')){ e.preventDefault(); var v=KKF_DP.view, m=v.m-1, y=v.y; if(m<0){m=11;y--;} KKF_DP.view={y:y,m:m}; kkfRenderCal(); return true; }
+  if(e.target.closest('#kkfDpNext')){ e.preventDefault(); var v2=KKF_DP.view, m2=v2.m+1, y2=v2.y; if(m2>11){m2=0;y2++;} KKF_DP.view={y:y2,m:m2}; kkfRenderCal(); return true; }
+  if(e.target.closest('#kkfDpApply')){ e.preventDefault(); kkfCommit(); return true; }
+  if(e.target.closest('#kkfDpClear')){ e.preventDefault(); KKF_DP.selS=KKF_DP.selE=''; KKF.s=KKF.e=''; kkfCloseDatePop(); kkfUpdateBtn(); kkRender(); return true; }
+  return !!e.target.closest('#kkfDatePop');   // click nền lịch: coi như đã xử lý, không làm gì thêm
+}
+/* Listener gắn trên CHÍNH element lịch (bind trong kkfBuild sau khi innerHTML dựng xong). Khi lịch còn
+   nằm trong .fld.dt thì click sẽ bubble lên #kkFilters -> phải stopPropagation kẻo bị xử lý 2 lần
+   (bấm 1 ngày mà tính thành chọn cả dải bắt đầu = kết thúc). */
+function kkfDpClickSelf(e){ if(kkfDpClick(e)) e.stopPropagation(); }
+/* Delegation 1 lần trên container cố định — cùng pattern #kkmFilters/#fcBody */
+document.getElementById('kkFilters').addEventListener('click',function(e){
+  if(e.target.closest('#kkfDateBtn')){ e.preventDefault();
+    var hid=document.getElementById('kkfDatePop').classList.contains('hidden');
+    kkfCloseCombos(); if(hid) kkfOpenDatePop(); else kkfCloseDatePop(); return; }
+  if(kkfDpClick(e)) return;
   var it=e.target.closest('.combo-item'); if(!it) return;
   var inp=it.closest('.combo').querySelector('input');
   inp.value=it.getAttribute('data-v')||'';
@@ -2337,7 +2411,9 @@ document.getElementById('kkFilters').addEventListener('click',function(e){
 });
 document.addEventListener('click',function(e){
   if(!e.target.closest('#kkFilters .combo')) kkfCloseCombos();
-  if(!e.target.closest('#kkFilters .fld.dt')) kkfCloseDatePop();
+  /* Click outside đóng lịch — phải xét CẢ #kkfDatePop vì trên mobile nó được portal ra <body>,
+     không còn là con của .fld.dt nữa (bấm trong lịch sẽ bị coi là bấm ra ngoài). */
+  if(!e.target.closest('#kkFilters .fld.dt')&&!e.target.closest('#kkfDatePop')) kkfCloseDatePop();
 });
 /* CT3: MẪU SỐ TUYỆT ĐỐI — Tổng lấy từ dữ liệu Stock Location (distinct SKU/mã vị trí tồn của kho,
    tab mastige/garment đã có trong G-Sheet), bất kể đã kiểm hay chưa. */
