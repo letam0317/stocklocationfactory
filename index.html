@@ -640,9 +640,23 @@ code{background:var(--surface2);padding:1px 7px;border-radius:6px;font-size:12px
 .modal.show{opacity:1}
 .modalbox{background:var(--surface);border-radius:18px;width:min(1280px,96vw);max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);will-change:transform,opacity;transform:translateZ(0)}
 .modal.show .modalbox{animation:sheetIn .38s var(--ez-apple)}   /* rơi vào + nảy nhẹ rồi đậu — bê từ kiemsoatkho */
+/* DRILL-DOWN 1 TẦNG (31/07): mở chi tiết phiếu từ trong pop-up khác thì pop-up MẸ TẠM ẨN (giữ nguyên
+   DOM + bộ lọc + vị trí cuộn) chứ KHÔNG chồng pop-up lên pop-up; đóng chi tiết là mẹ hiện lại đúng chỗ
+   đang xem (display:none -> flex tự chạy lại sheetIn, đúng animation chuẩn của dự án). */
+.modal.stash{display:none!important}
 .modalhd{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--line)}
+.modalhd .hdl{display:flex;align-items:center;gap:11px;min-width:0}
 .modalhd .mt{font-weight:700;font-size:15.5px;color:var(--ink);letter-spacing:-.01em}
 .modalhd .mtsub{font-size:11.5px;color:var(--ink3);font-weight:500;margin-top:2px}
+/* Nút quay lại — cùng khuôn viên bo tròn .fcg (viền, chữ 650, focus ring accent) cho đồng bộ toàn dự án */
+.mback{display:none;align-items:center;gap:7px;flex:0 0 auto;border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:6px 13px;font-size:12px;font-weight:650;
+  cursor:pointer;color:var(--ink2);font-family:inherit;max-width:230px;transition:background .15s var(--ease),color .15s var(--ease),border-color .15s var(--ease)}
+.mback.on{display:inline-flex;animation:popIn .18s cubic-bezier(.16,1,.3,1)}
+.mback .ar{font-size:14px;line-height:1;margin-top:-1px}
+.mback .lb{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mback:hover{background:var(--hover);color:var(--ink);border-color:var(--accent)}
+.mback:focus-visible{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}
+@media(max-width:640px){.mback{padding:6px 11px;max-width:132px}.mback .lb{font-size:11.5px}}
 .mclose{background:0;border:0;font-size:24px;line-height:1;cursor:pointer;color:var(--ink3);padding:4px;border-radius:8px;transition:.15s var(--ease)}
 .mclose:hover{color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--surface))}
 .tabs{display:flex;gap:8px;padding:14px 22px 0}
@@ -1171,7 +1185,7 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
      qua action pc_adjust để dashboard thể hiện lại cho mọi người xem — KHÔNG ghi ngược WMS. -->
 <div id="pcdmodal" class="modal" onclick="if(event.target===this)closePcdModal()">
   <div class="modalbox pcdbox">
-    <div class="modalhd"><div><div class="mt" id="pcdTitle"></div><div class="mtsub" id="pcdSub"></div></div><button class="mclose" onclick="closePcdModal()">&times;</button></div>
+    <div class="modalhd"><div class="hdl"><button type="button" class="mback" id="pcdBack" onclick="closePcdModal()"><span class="ar">←</span><span class="lb">Quay lại</span></button><div><div class="mt" id="pcdTitle"></div><div class="mtsub" id="pcdSub"></div></div></div><button class="mclose" onclick="closePcdModal()">&times;</button></div>
     <div class="modalbody" id="pcdBody" style="padding-top:12px"></div>
   </div>
 </div>
@@ -1739,6 +1753,8 @@ document.addEventListener('keydown',function(e){
   if(m && m.classList.contains('show')){ closeCat(); return; }
   var cm=document.getElementById('catmodal');
   if(cm && cm.classList.contains('show')){ closeCatWhModal(); return; }
+  var pdm=document.getElementById('pcdmodal');   // chi tiết phiếu đứng TRƯỚC pop-up Kiểm kê: Esc = quay lại pop-up mẹ
+  if(pdm && pdm.classList.contains('show')){ closePcdModal(); return; }
   if(document.querySelector('#kkmFilters .combo-menu.show')){ kkmCloseCombos(); return; }
   var kfx=document.getElementById('kkmFilters');   // sheet bộ lọc trên điện thoại đóng TRƯỚC pop-up Kiểm kê
   if(kfx && kfx.classList.contains('mf-xo')){ kkmFltThu(); return; }
@@ -3114,6 +3130,7 @@ function kkOpen(kind,metric){
     }
   });
   var m=document.getElementById('kkmodal'); m.style.display='flex';
+  m.classList.remove('stash'); PCD_BACK=null;   // mở pop-up mới -> huỷ mọi trạng thái "đang tạm ẩn" còn sót
   requestAnimationFrame(function(){ m.classList.add('show'); });
 }
 function kkmBuildFilters(){
@@ -3276,7 +3293,7 @@ function kkmRender(){
   pcSyncAll(body,rs);   // ô "chọn tất cả" phản ánh đúng tập đang lọc (chỉ khối SKU mới có)
 }
 function closeKkModal(){
-  var m=document.getElementById('kkmodal'); m.classList.remove('show');
+  var m=document.getElementById('kkmodal'); m.classList.remove('show','stash'); PCD_BACK=null;
   setTimeout(function(){ m.style.display='none'; document.getElementById('kkmBody').innerHTML=''; document.getElementById('kkmFilters').innerHTML=''; document.getElementById('kkmSum').textContent=''; },240);   // dọn DOM khi đóng
 }
 
@@ -4521,17 +4538,54 @@ async function uideSave(){
     });
   }
 }
+/* ---- Drill-down 1 tầng: pop-up mẹ đang tạm ẩn để nhường chỗ cho chi tiết phiếu (chỉ thị 31/07) ---- */
+var PCD_BACK=null;
+/* Rút gọn tiêu đề pop-up mẹ cho nhãn nút: "SKU · lệch âm (sau bù trừ vị trí) — 116 SKU" -> "SKU · lệch âm" */
+function pcdBackLb(t){ t=String(t||'').split(' (')[0].split(' — ')[0].trim(); return t||'Quay lại'; }
+function pcdAnMe(){
+  PCD_BACK=null;
+  var km=document.getElementById('kkmodal');
+  if(!km||!km.classList.contains('show')||km.classList.contains('stash')) return;
+  var body=document.getElementById('kkmBody');
+  PCD_BACK={el:km,body:body,sc:body?body.scrollTop:0,ten:(document.getElementById('kkmTitle')||{}).textContent||''};
+  kkmCloseCombos();          // combo đang xổ trong pop-up mẹ phải đóng, không để treo lơ lửng khi quay lại
+  km.classList.add('stash');
+}
+function pcdHienMe(){
+  var b=PCD_BACK; PCD_BACK=null;
+  if(!b) return false;
+  b.el.classList.remove('stash');   // display:none -> flex: sheetIn tự chạy lại, mẹ "rơi" về như lúc mở
+  if(b.body){
+    var cu=b.body.style.scrollBehavior;
+    b.body.style.scrollBehavior='auto';   // .modalbody có scroll-behavior:smooth — không để nó cuộn trườn từ đầu bảng
+    b.body.scrollTop=b.sc;
+    requestAnimationFrame(function(){ b.body.scrollTop=b.sc; b.body.style.scrollBehavior=cu||''; });
+  }
+  return true;
+}
 function pcdOpen(id,kind){
+  pcdAnMe();   // KHÔNG chồng pop-up lên pop-up: mẹ tạm ẩn trước khi chi tiết phiếu hiện ra
   PCD={id:String(id),kind:kind,rows:[],hdr:null,total:null,edits:{},live:false};
   document.getElementById('pcdTitle').textContent='Phiếu kiểm kê #'+id;
   document.getElementById('pcdSub').innerHTML='Physical Count Detail · <a class="wlink" href="'+kkWmsUrl(id,kind)+'" target="_blank" rel="noopener">mở trên WMS'+KK_ICON+'</a>';
   document.getElementById('pcdBody').innerHTML='<div class="state" style="padding:22px"><div class="spin"></div>Đang tải chi tiết phiếu từ WMS…</div>';
+  var bk=document.getElementById('pcdBack');
+  if(bk){   // chỉ có nút quay lại khi thật sự đi ra từ một pop-up
+    bk.classList.toggle('on',!!PCD_BACK);
+    bk.title=PCD_BACK?('Quay lại '+PCD_BACK.ten):'';
+    if(PCD_BACK) bk.querySelector('.lb').textContent=pcdBackLb(PCD_BACK.ten);
+  }
   var m=document.getElementById('pcdmodal'); m.style.display='flex';
   document.body.classList.add('ovl-open');   // giỏ nổi (z110) không được đè lên modal này
   requestAnimationFrame(function(){ m.classList.add('show'); });
   pcdLoad();
 }
-function closePcdModal(){ var m=document.getElementById('pcdmodal'); m.classList.remove('show'); document.body.classList.remove('ovl-open'); setTimeout(function(){ m.style.display='none'; },240); }
+function closePcdModal(){
+  var m=document.getElementById('pcdmodal'); m.classList.remove('show');
+  pcdHienMe();   // đóng chi tiết = QUAY LẠI pop-up mẹ (nếu có), không đóng luôn cả cụm
+  document.body.classList.remove('ovl-open');   // giỏ nổi lại được nổi trên pop-up mẹ như trước
+  setTimeout(function(){ m.style.display='none'; },240);
+}
 async function pcdLoad(){
   var idLuc=PCD.id;
   try{ await adjLoad(); }catch(e){}
