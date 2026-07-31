@@ -439,8 +439,9 @@ body:has(.modal.show) .footbar{z-index:98}
 .b-ok{background:#d1faf3;color:var(--good)} .b-proc{background:#fdecd0;color:#b45309} .b-pend{background:#eceff3;color:#6b7280} .b-rej{background:#fdecea;color:#b42318}
 .wlink{color:var(--brand2);text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:3px}
 .wlink:hover{text-decoration:underline} .wlink svg{width:11px;height:11px}
-/* Số phiếu KHÔNG bấm được (mọi bảng, 31/07): chữ thường, không màu link, chỉ ↗ mới mở WMS */
-.pid{font-weight:600;color:var(--ink2);font-variant-numeric:tabular-nums;margin-right:3px;cursor:default}
+/* Số phiếu = hyperlink SANG WMS (tab mới), KHÔNG mở pop-up chi tiết trong dashboard nữa (31/07):
+   cả con số + icon ↗ nằm trong 1 thẻ <a>, bấm đâu cũng sang WMS */
+.pid{font-variant-numeric:tabular-nums}
 .kknote{padding:8px 2px 0;font-size:11.5px;color:var(--ink3)}
 code{background:var(--surface2);padding:1px 7px;border-radius:6px;font-size:12px;color:var(--bad);font-family:ui-monospace,Consolas,monospace}
 .hint{font-weight:400;color:var(--ink3);font-size:11.5px;letter-spacing:0}
@@ -1013,7 +1014,7 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
   <div id="abnState" class="state"><div class="spin"></div>Đang tải dữ liệu tồn kho bất thường…</div>
 </div>
 
-<footer>Dashboard đọc trực tiếp online từ Google Sheet “stocklocationfactory” (gviz API).<br>Trạng thái lưu trữ: SKU đếm distinct theo Kho × Category · Kiểm kê: tab kiemke-sku / kiemke-location (bấm ↗ cạnh mã phiếu để mở phiếu trên WMS ở tab mới; ✎ = phiếu có SL điều chỉnh lưu tab kiemke-adjust) · Pop-up Lệch âm/dương liệt kê thẳng UID group lệch (tab kiemke-uidgr; cột Action sửa tự do, lưu tab kiemke-uidgr-edit bằng email @hasaki.vn) · Nút “Tải lại dữ liệu” (trong menu Cài đặt) kéo trực tiếp từ WMS (tối đa 4 giờ/lần).</footer>
+<footer>Dashboard đọc trực tiếp online từ Google Sheet “stocklocationfactory” (gviz API).<br>Trạng thái lưu trữ: SKU đếm distinct theo Kho × Category · Kiểm kê: tab kiemke-sku / kiemke-location (bấm mã phiếu để mở phiếu đó trên WMS ở tab mới; ✎ = phiếu có SL điều chỉnh lưu tab kiemke-adjust) · Pop-up Lệch âm/dương liệt kê thẳng UID group lệch (tab kiemke-uidgr; cột Action sửa tự do, lưu tab kiemke-uidgr-edit bằng email @hasaki.vn) · Nút “Tải lại dữ liệu” (trong menu Cài đặt) kéo trực tiếp từ WMS (tối đa 4 giờ/lần).</footer>
 
 <div class="footbar">
   <span class="chip">Nguồn: stocklocationfactory</span>
@@ -1128,9 +1129,10 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
   </div>
 </div>
 
-<!-- Modal "Phiếu kiểm kê #…" (Physical Count Detail) ĐÃ GỠ 31/07/2026: mã phiếu trong mọi bảng là chữ
-     thuần, xem chi tiết phiếu thì bấm ↗ mở thẳng trang WMS ở tab mới (kkIdLink + kkWmsUrl) — hết
-     cảnh pop-up nổ lên pop-up. Các dòng lệch kèm UID group vẫn xem tại view "UID group lệch". -->
+<!-- Modal "Phiếu kiểm kê #…" (Physical Count Detail) ĐÃ GỠ 31/07/2026: mã phiếu trong mọi bảng là
+     HYPERLINK mở thẳng trang phiếu trên WMS ở tab mới (kkIdLink + kkWmsUrl) — hết cảnh pop-up nổ
+     lên pop-up, nhưng vẫn trỏ sang WMS xem chi tiết được khi cần.
+     Các dòng lệch kèm UID group vẫn xem ngay tại view "UID group lệch". -->
 
 <!-- Pop-up Dự báo hoàn thành kiểm kê: ① máy tự tính từ dữ liệu quá khứ, ② người chọn mô phỏng nhân sự/nhóm hàng -->
 <div id="fcmodal" class="modal" onclick="if(event.target===this)closeFcModal()">
@@ -2065,13 +2067,12 @@ function kkWmsUrl(id,kind){
     ? 'https://wms.inshasaki.com/physical-count/result/location/'+encodeURIComponent(id)+'?page=1&size=20'
     : 'https://wms.inshasaki.com/physical-count/result/sku/detail/'+encodeURIComponent(id)+'?page=1&size=20';
 }
-/* Số phiếu KHÔNG mở pop-up nữa (user chốt 31/07): mã phiếu là CHỮ THƯỜNG ở MỌI bảng — hết cảnh
-   pop-up thứ 2 "Phiếu kiểm kê #…" nổ ra khi bấm ID. Muốn xem phiếu thì bấm ↗ sang WMS ở tab mới.
+/* Mã phiếu = HYPERLINK sang WMS, mở TAB MỚI (user chốt 31/07): bỏ pop-up chi tiết trong dashboard,
+   nhưng chính CON SỐ phải bấm được để trỏ sang WMS xem khi cần — số + icon ↗ gói trong 1 thẻ <a>.
    ✎ = phiếu có số lượng điều chỉnh đã lưu trên Sheet (tab kiemke-adjust). */
 function kkIdLink(id,kind){
   if(!id) return '—';
-  return '<span class="pid">'+esc(id)+'</span>'+
-    '<a class="wlink" href="'+kkWmsUrl(id,kind)+'" target="_blank" rel="noopener" title="Mở phiếu '+esc(id)+' trên WMS (tab mới)">'+KK_ICON+'</a>'+
+  return '<a class="wlink pid" href="'+kkWmsUrl(id,kind)+'" target="_blank" rel="noopener" title="Mở phiếu '+esc(id)+' trên WMS (tab mới)">'+esc(id)+KK_ICON+'</a>'+
     (adjHasCid(id)?'<span class="adjflag" title="Phiếu có số lượng điều chỉnh lưu trên Sheet">✎</span>':'');
 }
 /* 1 dòng "có số liệu đếm dùng được" — CHỈ dùng cho diff/drill-down (kkDiffOf).
@@ -3056,10 +3057,10 @@ function kkOpen(kind,metric){
     : metric==='notcount'
     ? 'Anti-join: tồn kho từ Stock Location TRỪ tập (kho|mã) đã kiểm — đây là phần chưa được đụng tới'
     : lech
-    ? 'Gộp theo SKU SAU BÙ TRỪ vị trí TRONG TỪNG ĐỢT KIỂM (request): thiếu bin này thừa bin kia tự bù, chỉ SKU có tổng ≠ 0 mới tính lệch · bộ lọc ngày không áp ở đây (đợt kiểm vắt ngày) · dưới mỗi SKU là từng vị trí × UID group (Action sửa tự do) · bấm ↗ để xem phiếu trên WMS · chuyển "Danh sách phiếu" để xem theo phiếu như cũ'
+    ? 'Gộp theo SKU SAU BÙ TRỪ vị trí TRONG TỪNG ĐỢT KIỂM (request): thiếu bin này thừa bin kia tự bù, chỉ SKU có tổng ≠ 0 mới tính lệch · bộ lọc ngày không áp ở đây (đợt kiểm vắt ngày) · dưới mỗi SKU là từng vị trí × UID group (Action sửa tự do) · bấm MÃ PHIẾU để mở phiếu đó trên WMS (tab mới) · chuyển "Danh sách phiếu" để xem theo phiếu như cũ'
     : (metric==='counted')
-    ? 'Đã khử trùng phiếu: mỗi (kho|mã) chỉ tính 1 phiếu đã kiểm MỚI NHẤT (ưu tiên phiếu không bị từ chối/huỷ) · bấm ↗ để mở phiếu trên WMS (tab mới)'
-    : 'Bấm ↗ để mở phiếu trên WMS (tab mới) · ✎ = phiếu có số lượng điều chỉnh');
+    ? 'Đã khử trùng phiếu: mỗi (kho|mã) chỉ tính 1 phiếu đã kiểm MỚI NHẤT (ưu tiên phiếu không bị từ chối/huỷ) · bấm MÃ PHIẾU để mở phiếu đó trên WMS (tab mới)'
+    : 'Bấm MÃ PHIẾU để mở phiếu đó trên WMS (tab mới) · ✎ = phiếu có số lượng điều chỉnh');
   kkmBuildFilters();
   _skuCat=null;   // dữ liệu tồn kho/phiếu có thể vừa nạp lại — map SKU→Category dựng tươi mỗi lượt mở
   kkmRender();
@@ -4170,7 +4171,8 @@ function plRender(){
 /* ===== CỜ ĐIỀU CHỈNH TRÊN SỐ PHIẾU (tab kiemke-adjust) =========================================
    GỠ 31/07/2026: modal "Phiếu kiểm kê #…" (Physical Count Detail — đọc LIVE checklist/tracking từ
    WMS, kèm ô nhập "SL điều chỉnh" ghi tab kiemke-adjust qua action pc_adjust) đã bỏ hẳn theo yêu
-   cầu "không nổ pop-up thứ 2". Xem chi tiết 1 phiếu: bấm ↗ mở trang WMS ở tab mới; xem các dòng
+   cầu "không nổ pop-up thứ 2". Xem chi tiết 1 phiếu: bấm MÃ PHIẾU (hyperlink) mở trang WMS ở tab
+   mới; xem các dòng
    lệch kèm UID group: view "UID group lệch" (nguồn tab kiemke-uidgr, không cần token).
    Phần còn giữ dưới đây CHỈ để đọc tab kiemke-adjust và gắn cờ ✎ lên số phiếu — cho biết phiếu đó
    đã có số lượng điều chỉnh lưu trên Sheet (bản ghi cũ vẫn hiển thị được; dashboard không còn ghi
@@ -4370,7 +4372,7 @@ function kkLechTitle(){
 function kkViewBar(){
   if(KK_MODAL.metric!=='negative'&&KK_MODAL.metric!=='positive') return '';
   function b(v,lb,tip){ return '<button class="kktab'+(((KK_MODAL.view==='uid')===(v==='uid'))?' active':'')+'" onclick="kkSetView(\''+v+'\')" title="'+tip+'">'+lb+'</button>'; }
-  return '<div class="kktabs">'+b('uid','UID group lệch','Liệt kê thẳng UID group đang lệch của từng phiếu — đủ trường như Detail UIDgr trên WMS')+b('phieu','Danh sách phiếu','Danh sách phiếu như trước — bấm ↗ mở phiếu trên WMS ở tab mới')+'</div>';
+  return '<div class="kktabs">'+b('uid','UID group lệch','Liệt kê thẳng UID group đang lệch của từng phiếu — đủ trường như Detail UIDgr trên WMS')+b('phieu','Danh sách phiếu','Danh sách phiếu như trước — bấm mã phiếu để mở trên WMS ở tab mới')+'</div>';
 }
 function kkSetView(v){ v=(v==='uid')?'uid':''; if(KK_MODAL.view===v) return; KK_MODAL.view=v; kkmRender(); }
 function kkUidTable(ug){
