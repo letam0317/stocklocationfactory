@@ -439,6 +439,8 @@ body:has(.modal.show) .footbar{z-index:98}
 .b-ok{background:#d1faf3;color:var(--good)} .b-proc{background:#fdecd0;color:#b45309} .b-pend{background:#eceff3;color:#6b7280} .b-rej{background:#fdecea;color:#b42318}
 .wlink{color:var(--brand2);text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:3px}
 .wlink:hover{text-decoration:underline} .wlink svg{width:11px;height:11px}
+/* Số phiếu KHÔNG bấm được (pop-up Lệch âm/dương, 31/07): chữ thường, không màu link, chỉ ↗ mới mở WMS */
+.pid{font-weight:600;color:var(--ink2);font-variant-numeric:tabular-nums;margin-right:3px;cursor:default}
 .kknote{padding:8px 2px 0;font-size:11.5px;color:var(--ink3)}
 code{background:var(--surface2);padding:1px 7px;border-radius:6px;font-size:12px;color:var(--bad);font-family:ui-monospace,Consolas,monospace}
 .hint{font-weight:400;color:var(--ink3);font-size:11.5px;letter-spacing:0}
@@ -2127,8 +2129,13 @@ function kkWmsUrl(id,kind){
 }
 /* ID bấm được: mở modal CHI TIẾT PHIẾU ngay trong dashboard (icon ↗ vẫn sang WMS);
    ✎ = phiếu có số lượng điều chỉnh đã lưu trên Sheet (tab kiemke-adjust) */
-function kkIdLink(id,kind){
+function kkIdLink(id,kind,phang){
   if(!id) return '—';
+  /* phang=true (pop-up Lệch âm/dương — user chốt 31/07): BỎ HẲN đường mở pop-up con, số phiếu là
+     CHỮ THƯỜNG; muốn xem phiếu thì bấm ↗ sang WMS ở tab mới. Pop-up khác vẫn mở chi tiết tại chỗ. */
+  if(phang) return '<span class="pid">'+esc(id)+'</span>'+
+    '<a class="wlink" href="'+kkWmsUrl(id,kind)+'" target="_blank" rel="noopener" title="Mở phiếu '+esc(id)+' trên WMS (tab mới)">'+KK_ICON+'</a>'+
+    (adjHasCid(id)?'<span class="adjflag" title="Phiếu có số lượng điều chỉnh lưu trên Sheet">✎</span>':'');
   return '<a class="wlink" href="javascript:void(0)" onclick="pcdOpen(\''+esc(String(id))+'\',\''+kind+'\')" title="Xem chi tiết phiếu ngay trên dashboard">'+esc(id)+'</a>'+
     '<a class="wlink" href="'+kkWmsUrl(id,kind)+'" target="_blank" rel="noopener" title="Mở phiếu trên WMS">'+KK_ICON+'</a>'+
     (adjHasCid(id)?'<span class="adjflag" title="Phiếu có số lượng điều chỉnh lưu trên Sheet">✎</span>':'');
@@ -3080,16 +3087,18 @@ function kkMetricRows(kind,metric){
 }
 function kkTable(kind,rs){
   var CAP=300, out=[];
+  /* Pop-up Lệch âm/dương (cả view "Danh sách phiếu") KHÔNG mở pop-up con — số phiếu phẳng + ↗ WMS */
+  var phang=(KK_MODAL.metric==='negative'||KK_MODAL.metric==='positive');
   if(kind==='sku'){
     for(var i=0;i<rs.length&&out.length<CAP;i++){ var r=rs[i], e=kkEval(r.inv,r.cnt);
-      out.push('<tr>'+pcCell(r.wh,r.sku,r.pn,pcTypeOf(r.type),kkReason(r))+'<td>'+kkIdLink(r.id,'sku')+'</td><td><b>'+esc(r.sku)+'</b><div class="pn2">'+esc(r.pn)+'</div></td><td>'+kkDash(r.cat)+'</td>'+
+      out.push('<tr>'+pcCell(r.wh,r.sku,r.pn,pcTypeOf(r.type),kkReason(r))+'<td>'+kkIdLink(r.id,'sku',phang)+'</td><td><b>'+esc(r.sku)+'</b><div class="pn2">'+esc(r.pn)+'</div></td><td>'+kkDash(r.cat)+'</td>'+
         kkDcell(r.cnt==null?0:e.d)+'<td class="num">'+nf(r.inv)+'</td><td class="num">'+(r.cnt==null?'—':nf(r.cnt))+'</td><td>'+kkDash(r.type)+'</td><td>'+kkDash(r.req)+'</td><td>'+kkDash(r.by)+'</td><td>'+kkFmtD(kkParseDate(r.cdate))+'</td><td>'+kkFmtD(kkParseDate(r.plan),true)+'</td><td><span class="badge '+kkBadge(r.st)+'">'+(r.st?esc(r.st):'—')+'</span></td></tr>');
     }
     return '<div class="kkwrap"><table><thead><tr>'+pcHeadCell()+'<th>ID</th><th>SKU</th><th>Category</th><th class="num">Diff</th><th class="num">Inventory</th><th class="num">Qty count</th><th>Type</th><th>Request</th><th>Counted by</th><th>Counted date</th><th>Plan date</th><th>Status</th></tr></thead><tbody>'+(out.join('')||kkEmpty(13))+'</tbody></table></div>'+
       '<div class="kknote">'+(rs.length>CAP?('Hiển thị '+nf(CAP)+' / '+nf(rs.length)+' dòng — lọc để thu hẹp.'):(nf(rs.length)+' dòng.'))+'</div>';
   }
   for(var j=0;j<rs.length&&out.length<CAP;j++){ var l=rs[j];
-    out.push('<tr><td>'+kkIdLink(l.id,'loc')+'</td><td class="loc">'+esc(l.loc)+'</td><td>'+kkDash(l.wh)+'</td><td>'+kkDash(l.type)+'</td><td>'+kkDash(l.pri)+'</td>'+kkDcell(l.diff)+'<td>'+kkDash(l.req)+'</td><td>'+kkDash(l.by)+'</td><td>'+kkFmtD(kkParseDate(l.cdate))+'</td><td>'+kkFmtD(kkParseDate(l.plan),true)+'</td><td><span class="badge '+kkBadge(l.st)+'">'+(l.st?esc(l.st):'—')+'</span></td></tr>');
+    out.push('<tr><td>'+kkIdLink(l.id,'loc',phang)+'</td><td class="loc">'+esc(l.loc)+'</td><td>'+kkDash(l.wh)+'</td><td>'+kkDash(l.type)+'</td><td>'+kkDash(l.pri)+'</td>'+kkDcell(l.diff)+'<td>'+kkDash(l.req)+'</td><td>'+kkDash(l.by)+'</td><td>'+kkFmtD(kkParseDate(l.cdate))+'</td><td>'+kkFmtD(kkParseDate(l.plan),true)+'</td><td><span class="badge '+kkBadge(l.st)+'">'+(l.st?esc(l.st):'—')+'</span></td></tr>');
   }
   return '<div class="kkwrap"><table><thead><tr><th>ID</th><th>Location</th><th>Warehouse</th><th>Type</th><th>Priority</th><th class="num">Diff</th><th>Request</th><th>Counted by</th><th>Counted date</th><th>Plan date</th><th>Status</th></tr></thead><tbody>'+(out.join('')||kkEmpty(11))+'</tbody></table></div>'+
     '<div class="kknote">'+(rs.length>CAP?('Hiển thị '+nf(CAP)+' / '+nf(rs.length)+' dòng — lọc để thu hẹp.'):(nf(rs.length)+' dòng.'))+'</div>';
@@ -3115,7 +3124,7 @@ function kkOpen(kind,metric){
     : metric==='notcount'
     ? 'Anti-join: tồn kho từ Stock Location TRỪ tập (kho|mã) đã kiểm — đây là phần chưa được đụng tới'
     : lech
-    ? 'Gộp theo SKU SAU BÙ TRỪ vị trí TRONG TỪNG ĐỢT KIỂM (request): thiếu bin này thừa bin kia tự bù, chỉ SKU có tổng ≠ 0 mới tính lệch · bộ lọc ngày không áp ở đây (đợt kiểm vắt ngày) · dưới mỗi SKU là từng vị trí × UID group (Action sửa tự do) · chuyển "Danh sách phiếu" để xem theo phiếu như cũ'
+    ? 'Gộp theo SKU SAU BÙ TRỪ vị trí TRONG TỪNG ĐỢT KIỂM (request): thiếu bin này thừa bin kia tự bù, chỉ SKU có tổng ≠ 0 mới tính lệch · bộ lọc ngày không áp ở đây (đợt kiểm vắt ngày) · dưới mỗi SKU là từng vị trí × UID group (Action sửa tự do) · số phiếu ở đây KHÔNG mở pop-up con, bấm ↗ để xem phiếu trên WMS · chuyển "Danh sách phiếu" để xem theo phiếu như cũ'
     : (metric==='counted')
     ? 'Đã khử trùng phiếu: mỗi (kho|mã) chỉ tính 1 phiếu đã kiểm MỚI NHẤT (ưu tiên phiếu không bị từ chối/huỷ) · bấm ID xem chi tiết phiếu ngay tại đây (icon ↗ mở WMS)'
     : 'Bấm ID xem chi tiết phiếu ngay tại đây (icon ↗ mở WMS) · ✎ = phiếu có số lượng điều chỉnh');
@@ -4454,7 +4463,7 @@ function kkUidTable(ug){
       var idx=flat.length; flat.push(u);
       var d=(Number(u.qu)||0)-(Number(u.qs)||0), dCls=(d<0?'d-am':d>0?'d-duong':'d-khop');
       var k=u.cid+'|'+u.tid+'|'+u.uid, a=UIDE.map&&UIDE.map[k];
-      out.push('<tr><td class="loc"><span class="locchip">'+esc(u.loc)+'</span> <span class="pn2i">· phiếu '+kkIdLink(u.cid,kind)+'</span></td>'+
+      out.push('<tr><td class="loc"><span class="locchip">'+esc(u.loc)+'</span> <span class="pn2i">· phiếu '+kkIdLink(u.cid,kind,true)+'</span></td>'+
         '<td>'+(u.uid?('<code>'+esc(u.uid)+'</code>'):'—')+'</td><td>'+(u.uid?kkUidStBadge(u.gst):'—')+'</td>'+   // không có UID code -> không hiện status (27/07: "có đâu mà hiển thị")
         '<td class="num">'+(u.qu===''?'—':nf(Number(u.qu)||0))+'</td><td class="num">'+(u.qs===''?'—':nf(Number(u.qs)||0))+'</td>'+
         '<td class="num '+dCls+'">'+(d>0?'+':'')+nf(d)+'</td>'+
