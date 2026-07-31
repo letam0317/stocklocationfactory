@@ -439,7 +439,7 @@ body:has(.modal.show) .footbar{z-index:98}
 .b-ok{background:#d1faf3;color:var(--good)} .b-proc{background:#fdecd0;color:#b45309} .b-pend{background:#eceff3;color:#6b7280} .b-rej{background:#fdecea;color:#b42318}
 .wlink{color:var(--brand2);text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:3px}
 .wlink:hover{text-decoration:underline} .wlink svg{width:11px;height:11px}
-/* Số phiếu KHÔNG bấm được (pop-up Lệch âm/dương, 31/07): chữ thường, không màu link, chỉ ↗ mới mở WMS */
+/* Số phiếu KHÔNG bấm được (mọi bảng, 31/07): chữ thường, không màu link, chỉ ↗ mới mở WMS */
 .pid{font-weight:600;color:var(--ink2);font-variant-numeric:tabular-nums;margin-right:3px;cursor:default}
 .kknote{padding:8px 2px 0;font-size:11.5px;color:var(--ink3)}
 code{background:var(--surface2);padding:1px 7px;border-radius:6px;font-size:12px;color:var(--bad);font-family:ui-monospace,Consolas,monospace}
@@ -642,23 +642,11 @@ code{background:var(--surface2);padding:1px 7px;border-radius:6px;font-size:12px
 .modal.show{opacity:1}
 .modalbox{background:var(--surface);border-radius:18px;width:min(1280px,96vw);max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);will-change:transform,opacity;transform:translateZ(0)}
 .modal.show .modalbox{animation:sheetIn .38s var(--ez-apple)}   /* rơi vào + nảy nhẹ rồi đậu — bê từ kiemsoatkho */
-/* DRILL-DOWN 1 TẦNG (31/07): mở chi tiết phiếu từ trong pop-up khác thì pop-up MẸ TẠM ẨN (giữ nguyên
-   DOM + bộ lọc + vị trí cuộn) chứ KHÔNG chồng pop-up lên pop-up; đóng chi tiết là mẹ hiện lại đúng chỗ
-   đang xem (display:none -> flex tự chạy lại sheetIn, đúng animation chuẩn của dự án). */
-.modal.stash{display:none!important}
+/* .modal.stash + .modalhd .hdl + .mback (nút "Quay lại") đã GỠ 31/07/2026 cùng modal chi tiết phiếu:
+   dashboard không còn pop-up lồng pop-up nên không cần cơ chế tạm ẩn pop-up mẹ / nút quay lại. */
 .modalhd{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--line)}
-.modalhd .hdl{display:flex;align-items:center;gap:11px;min-width:0}
 .modalhd .mt{font-weight:700;font-size:15.5px;color:var(--ink);letter-spacing:-.01em}
 .modalhd .mtsub{font-size:11.5px;color:var(--ink3);font-weight:500;margin-top:2px}
-/* Nút quay lại — cùng khuôn viên bo tròn .fcg (viền, chữ 650, focus ring accent) cho đồng bộ toàn dự án */
-.mback{display:none;align-items:center;gap:7px;flex:0 0 auto;border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:6px 13px;font-size:12px;font-weight:650;
-  cursor:pointer;color:var(--ink2);font-family:inherit;max-width:230px;transition:background .15s var(--ease),color .15s var(--ease),border-color .15s var(--ease)}
-.mback.on{display:inline-flex;animation:popIn .18s cubic-bezier(.16,1,.3,1)}
-.mback .ar{font-size:14px;line-height:1;margin-top:-1px}
-.mback .lb{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mback:hover{background:var(--hover);color:var(--ink);border-color:var(--accent)}
-.mback:focus-visible{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}
-@media(max-width:640px){.mback{padding:6px 11px;max-width:132px}.mback .lb{font-size:11.5px}}
 .mclose{background:0;border:0;font-size:24px;line-height:1;cursor:pointer;color:var(--ink3);padding:4px;border-radius:8px;transition:.15s var(--ease)}
 .mclose:hover{color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--surface))}
 .tabs{display:flex;gap:8px;padding:14px 22px 0}
@@ -878,28 +866,18 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 .pcfoot button:disabled{opacity:.55;cursor:not-allowed}
 .pcx{border:0;background:0;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:2px 6px;border-radius:6px}
 .pcx:hover{color:var(--bad);background:var(--hover)}
-/* ===== Modal chi tiết phiếu kiểm kê (Physical Count Detail) — nổi TRÊN pop-up drill-down (z106 > pcmodal 105 > modal 99) ===== */
-#pcdmodal{z-index:106}
-.modalbox.pcdbox{width:min(1240px,96vw)}
-/* Header phiếu: lưới nhãn/giá trị gọn như trang WMS */
-.pcdhdr{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:7px 18px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface2);margin-bottom:12px}
-.pcdhdr .it{min-width:0}
-.pcdhdr .lb{font-size:9.5px;font-weight:750;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
-.pcdhdr .vl{font-size:12.5px;color:var(--ink);font-weight:600;word-wrap:break-word}
-.pcdtot{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-variant-numeric:tabular-nums}
-.pcdtot .tt{border:1px solid var(--line);border-radius:999px;padding:5px 13px;font-size:12px;background:var(--surface);color:var(--ink2)}
-.pcdtot .tt b{font-weight:750}
-#pcdmodal .mtbl td.num,#pcdmodal .mtbl th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
-#pcdmodal .mtbl .pn2{min-width:150px;max-width:320px;font-size:11px;color:var(--ink3);white-space:normal;word-wrap:break-word}
-/* Ô chỉnh sửa số lượng: pill nhỏ, focus ring chuẩn dự án */
+/* ===== Modal chi tiết phiếu kiểm kê (#pcdmodal + .pcdbox/.pcdhdr/.pcdtot) đã GỠ 31/07/2026 =====
+   Các lớp .adjinp/.adjmeta/.adjflag/.pcdfoot/.pcdnote dưới đây GIỮ LẠI vì view "UID group lệch"
+   trong pop-up Lệch âm/dương đang tái dùng (ô Action + thanh lưu + dải ghi chú). */
+/* Ô chỉnh sửa: pill nhỏ, focus ring chuẩn dự án */
 .adjinp{width:96px;padding:5px 9px;border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--ink);font-size:12px;font-family:inherit;text-align:right;font-variant-numeric:tabular-nums;transition:border-color .15s var(--ease),box-shadow .15s var(--ease)}
 .adjinp:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}
 .adjinp.changed{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 9%,var(--surface))}
 .adjmeta{font-size:10px;color:var(--ink3);margin-top:3px;white-space:normal}
 .adjmeta b{color:var(--warn)}
-/* Cờ ✎ trên ID trong pop-up drill-down: phiếu đã có điều chỉnh lưu trên Sheet */
+/* Cờ ✎ cạnh số phiếu: phiếu đã có điều chỉnh lưu trên Sheet (tab kiemke-adjust) */
 .adjflag{display:inline-block;margin-left:4px;font-size:10px;color:var(--warn);font-weight:750;cursor:default}
-/* Pop-up Lệch âm/dương — view UID group lệch: ô Action text tự do (tái dùng pill .adjinp) + chip UID mini trong modal phiếu */
+/* Pop-up Lệch âm/dương — view UID group lệch: ô Action text tự do (tái dùng pill .adjinp) */
 .adjinp.uide{width:170px;text-align:left;font-variant-numeric:normal}
 /* Hàng tiêu đề DÒNG SKU trong bảng UID group (gộp theo SKU, 27/07): nền mờ + số tổng dồn phải */
 #kkmBody tr.uidsku td{background:var(--hover);border-top:2px solid var(--line);padding:7px 10px;font-size:12px;white-space:normal}
@@ -911,17 +889,13 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
   #kkmBody tr.uidsku .tot{float:none;display:block;white-space:normal;margin:3px 0 0}
 }
 #kkmBody tr.uidsku .catchip{display:inline-block;font-size:10px;font-weight:650;color:var(--ink2);border:1px solid var(--line);border-radius:999px;padding:1px 7px;background:var(--surface);vertical-align:1px}
-.uidmini{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
-.uidchip{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;color:var(--ink2);border:1px solid var(--line);border-radius:999px;padding:2px 8px;background:var(--surface);font-variant-numeric:tabular-nums}
-.uidchip code{font-size:10.5px}
 #kkmBody .kktabs{margin:0 0 10px}
-/* Footer lưu điều chỉnh: tái dùng dáng .pcfoot */
+/* Thanh lưu (view UID group lệch): tái dùng dáng .pcfoot */
 .pcdfoot{display:flex;align-items:center;gap:10px;padding:12px 0 2px;border-top:1px solid var(--line);margin-top:12px;flex-wrap:wrap}
 .pcdfoot .fld2{display:flex;align-items:center;height:32px;padding:0 5px 0 12px;border-radius:999px;border:1px solid var(--border);background:var(--surface)}
 .pcdfoot .fld2:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 13%,transparent)}
 .pcdfoot .fld2 label{font-size:9px;font-weight:750;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap;padding-right:9px;margin-right:2px;border-right:1px solid var(--border)}
 .pcdfoot .fld2 input{border:0;background:transparent;color:var(--ink);font-size:12px;font-family:inherit;padding:6px 7px;min-width:150px}
-#pcdNote{min-width:220px}   /* desktop: ô ghi chú rộng hơn; mobile ghi đè min-width:0 trong media 744 */
 .pcdfoot .fld2 input:focus{outline:0}
 .pcdfoot .sp{flex:1}
 .pcdfoot button{border:1px solid var(--border);background:var(--surface);color:var(--ink);border-radius:9px;padding:9px 16px;font-size:13px;font-weight:650;cursor:pointer;font-family:inherit}
@@ -930,46 +904,18 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 .pcdfoot button.primary:hover:not(:disabled){background:var(--accent-hover)}
 .pcdfoot button:disabled{opacity:.55;cursor:not-allowed}
 .pcdnote{margin:10px 0 0;padding:9px 12px;border-radius:9px;font-size:12px;line-height:1.6;background:color-mix(in srgb,var(--warn) 12%,var(--surface));color:var(--warn)}
-#pcdmodal .kkwrap{overflow-x:auto}   /* desktop: phòng hờ bảng rộng hơn khung (không để tràn modal) */
-/* ===== ĐIỆN THOẠI — modal chi tiết phiếu (mục tiêu: xem chính trên phone, desktop giữ nguyên bảng) ===== */
+/* ===== ĐIỆN THOẠI — ô sửa + thanh lưu của view UID group lệch (khối .pcdcard render card cho modal
+   chi tiết phiếu đã gỡ cùng modal 31/07/2026) ===== */
 @media(max-width:744px){
-  .modalbox.pcdbox{width:95vw;max-height:94vh}
-  #pcdmodal .modalhd{padding:12px 14px}
-  #pcdmodal .modalbody{padding:0 10px 12px}
-  #pcdmodal .pcdhdr{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px;padding:10px 12px}
-  #pcdmodal .pcdhdr .vl{font-size:12px}
-  #pcdmodal .pcdtot{gap:6px}
-  #pcdmodal .pcdtot .tt{padding:4px 10px;font-size:11.5px}
   .adjinp{font-size:16px;padding:8px 12px;width:120px}   /* ≥16px: iOS Safari KHÔNG tự phóng to trang khi focus input */
-  /* Thanh lưu dính đáy vùng cuộn: sửa xong không phải cuộn ngược tìm nút. GỌN 2 hàng:
-     [Người sửa | Ghi chú] cạnh nhau + nút Lưu full-width — đỡ che danh sách trên màn 844px */
+  /* Thanh lưu dính đáy vùng cuộn: sửa xong không phải cuộn ngược tìm nút */
   .pcdfoot{position:sticky;bottom:-1px;z-index:2;background:var(--surface);box-shadow:0 -8px 16px -12px rgba(0,0,0,.3);padding:10px 0;flex-wrap:wrap;gap:8px}
   .pcdfoot .fld2{flex:1 1 calc(50% - 5px);min-width:0;height:38px}
-  .pcdfoot .fld2 input,#pcdNote{width:100%;min-width:0;font-size:16px}
+  .pcdfoot .fld2 input{width:100%;min-width:0;font-size:16px}
   .pcdfoot .sp{display:none}
   .pcdfoot button{flex:1 1 100%;padding:11px 16px;font-size:14px}   /* nút to cho ngón tay */
   .pcdnote{font-size:11.5px}
 }
-/* ≤640px JS render CARD bằng DIV thật (.pcdcards) thay bảng — KHÔNG ép <table> đổi display:
-   đã đo thực nghiệm Chromium: display:block giữ min-content kiểu bảng (banh 1080px),
-   display:contents làm kkwrap sập chiều cao (card đè lên nội dung sau). */
-.pcdcards{display:flex;flex-direction:column;gap:8px}
-.pcdcard{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:10px 12px}
-.pcdcard .cr1{display:flex;align-items:center;gap:8px}
-.pcdcard .cno{font-size:10.5px;color:var(--ink3);flex:0 0 auto}
-.pcdcard .cloc{flex:1;min-width:0;font-size:11px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pcdcard .cr1 .badge{flex:0 0 auto}
-.pcdcard .csku{margin-top:4px;font-size:13px}
-.pcdcard .csku .pn2{max-width:none;min-width:0}
-.pcdcard .cexp{margin-top:3px;font-size:11px;color:var(--ink3)}
-.pcdcard .cstats{display:flex;gap:12px;margin-top:7px}
-.pcdcard .cstats span{flex:1;min-width:0}
-.pcdcard .cstats label{display:block;font-size:9px;font-weight:750;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
-.pcdcard .cstats b{font-size:13.5px;font-variant-numeric:tabular-nums}
-.pcdcard .cadj{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-top:1px dashed var(--line);margin-top:8px;padding-top:8px}
-.pcdcard .cadj label{font-size:9px;font-weight:750;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);flex:0 0 auto}
-.pcdcard .cadj .adjinp{flex:0 0 128px}
-.pcdcard .cadj .adjmeta{margin-top:0;flex:1;min-width:130px}
 /* Dải hướng dẫn 3 bước tự-import (ghi đúng người tạo) */
 .pcsteps{padding:10px 16px;border-top:1px solid var(--line);background:color-mix(in srgb,var(--good) 8%,var(--surface));font-size:12px;line-height:1.6;color:var(--ink2)}
 .pcsteps b{color:var(--ink)}
@@ -1067,7 +1013,7 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
   <div id="abnState" class="state"><div class="spin"></div>Đang tải dữ liệu tồn kho bất thường…</div>
 </div>
 
-<footer>Dashboard đọc trực tiếp online từ Google Sheet “stocklocationfactory” (gviz API).<br>Trạng thái lưu trữ: SKU đếm distinct theo Kho × Category · Kiểm kê: tab kiemke-sku / kiemke-location (bấm ID trong pop-up để xem chi tiết phiếu; SL điều chỉnh lưu tab kiemke-adjust) · Pop-up Lệch âm/dương liệt kê thẳng UID group lệch (tab kiemke-uidgr; cột Action sửa tự do, lưu tab kiemke-uidgr-edit bằng email @hasaki.vn) · Nút “Tải lại dữ liệu” (trong menu Cài đặt) kéo trực tiếp từ WMS (tối đa 4 giờ/lần).</footer>
+<footer>Dashboard đọc trực tiếp online từ Google Sheet “stocklocationfactory” (gviz API).<br>Trạng thái lưu trữ: SKU đếm distinct theo Kho × Category · Kiểm kê: tab kiemke-sku / kiemke-location (bấm ↗ cạnh mã phiếu để mở phiếu trên WMS ở tab mới; ✎ = phiếu có SL điều chỉnh lưu tab kiemke-adjust) · Pop-up Lệch âm/dương liệt kê thẳng UID group lệch (tab kiemke-uidgr; cột Action sửa tự do, lưu tab kiemke-uidgr-edit bằng email @hasaki.vn) · Nút “Tải lại dữ liệu” (trong menu Cài đặt) kéo trực tiếp từ WMS (tối đa 4 giờ/lần).</footer>
 
 <div class="footbar">
   <span class="chip">Nguồn: stocklocationfactory</span>
@@ -1182,15 +1128,9 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
   </div>
 </div>
 
-<!-- Modal chi tiết phiếu kiểm kê (Physical Count Detail): đọc LIVE checklist/tracking từ WMS ngay trong dashboard
-     (token bridge của operator, fallback token robot PC_KEY); cột "SL điều chỉnh" lưu tab kiemke-adjust trên Sheet
-     qua action pc_adjust để dashboard thể hiện lại cho mọi người xem — KHÔNG ghi ngược WMS. -->
-<div id="pcdmodal" class="modal" onclick="if(event.target===this)closePcdModal()">
-  <div class="modalbox pcdbox">
-    <div class="modalhd"><div class="hdl"><button type="button" class="mback" id="pcdBack" onclick="closePcdModal()"><span class="ar">←</span><span class="lb">Quay lại</span></button><div><div class="mt" id="pcdTitle"></div><div class="mtsub" id="pcdSub"></div></div></div><button class="mclose" onclick="closePcdModal()">&times;</button></div>
-    <div class="modalbody" id="pcdBody" style="padding-top:12px"></div>
-  </div>
-</div>
+<!-- Modal "Phiếu kiểm kê #…" (Physical Count Detail) ĐÃ GỠ 31/07/2026: mã phiếu trong mọi bảng là chữ
+     thuần, xem chi tiết phiếu thì bấm ↗ mở thẳng trang WMS ở tab mới (kkIdLink + kkWmsUrl) — hết
+     cảnh pop-up nổ lên pop-up. Các dòng lệch kèm UID group vẫn xem tại view "UID group lệch". -->
 
 <!-- Pop-up Dự báo hoàn thành kiểm kê: ① máy tự tính từ dữ liệu quá khứ, ② người chọn mô phỏng nhân sự/nhóm hàng -->
 <div id="fcmodal" class="modal" onclick="if(event.target===this)closeFcModal()">
@@ -1755,8 +1695,6 @@ document.addEventListener('keydown',function(e){
   if(m && m.classList.contains('show')){ closeCat(); return; }
   var cm=document.getElementById('catmodal');
   if(cm && cm.classList.contains('show')){ closeCatWhModal(); return; }
-  var pdm=document.getElementById('pcdmodal');   // chi tiết phiếu đứng TRƯỚC pop-up Kiểm kê: Esc = quay lại pop-up mẹ
-  if(pdm && pdm.classList.contains('show')){ closePcdModal(); return; }
   if(document.querySelector('#kkmFilters .combo-menu.show')){ kkmCloseCombos(); return; }
   var kfx=document.getElementById('kkmFilters');   // sheet bộ lọc trên điện thoại đóng TRƯỚC pop-up Kiểm kê
   if(kfx && kfx.classList.contains('mf-xo')){ kkmFltThu(); return; }
@@ -2127,17 +2065,13 @@ function kkWmsUrl(id,kind){
     ? 'https://wms.inshasaki.com/physical-count/result/location/'+encodeURIComponent(id)+'?page=1&size=20'
     : 'https://wms.inshasaki.com/physical-count/result/sku/detail/'+encodeURIComponent(id)+'?page=1&size=20';
 }
-/* ID bấm được: mở modal CHI TIẾT PHIẾU ngay trong dashboard (icon ↗ vẫn sang WMS);
-   ✎ = phiếu có số lượng điều chỉnh đã lưu trên Sheet (tab kiemke-adjust) */
-function kkIdLink(id,kind,phang){
+/* Số phiếu KHÔNG mở pop-up nữa (user chốt 31/07): mã phiếu là CHỮ THƯỜNG ở MỌI bảng — hết cảnh
+   pop-up thứ 2 "Phiếu kiểm kê #…" nổ ra khi bấm ID. Muốn xem phiếu thì bấm ↗ sang WMS ở tab mới.
+   ✎ = phiếu có số lượng điều chỉnh đã lưu trên Sheet (tab kiemke-adjust). */
+function kkIdLink(id,kind){
   if(!id) return '—';
-  /* phang=true (pop-up Lệch âm/dương — user chốt 31/07): BỎ HẲN đường mở pop-up con, số phiếu là
-     CHỮ THƯỜNG; muốn xem phiếu thì bấm ↗ sang WMS ở tab mới. Pop-up khác vẫn mở chi tiết tại chỗ. */
-  if(phang) return '<span class="pid">'+esc(id)+'</span>'+
+  return '<span class="pid">'+esc(id)+'</span>'+
     '<a class="wlink" href="'+kkWmsUrl(id,kind)+'" target="_blank" rel="noopener" title="Mở phiếu '+esc(id)+' trên WMS (tab mới)">'+KK_ICON+'</a>'+
-    (adjHasCid(id)?'<span class="adjflag" title="Phiếu có số lượng điều chỉnh lưu trên Sheet">✎</span>':'');
-  return '<a class="wlink" href="javascript:void(0)" onclick="pcdOpen(\''+esc(String(id))+'\',\''+kind+'\')" title="Xem chi tiết phiếu ngay trên dashboard">'+esc(id)+'</a>'+
-    '<a class="wlink" href="'+kkWmsUrl(id,kind)+'" target="_blank" rel="noopener" title="Mở phiếu trên WMS">'+KK_ICON+'</a>'+
     (adjHasCid(id)?'<span class="adjflag" title="Phiếu có số lượng điều chỉnh lưu trên Sheet">✎</span>':'');
 }
 /* 1 dòng "có số liệu đếm dùng được" — CHỈ dùng cho diff/drill-down (kkDiffOf).
@@ -3087,18 +3021,16 @@ function kkMetricRows(kind,metric){
 }
 function kkTable(kind,rs){
   var CAP=300, out=[];
-  /* Pop-up Lệch âm/dương (cả view "Danh sách phiếu") KHÔNG mở pop-up con — số phiếu phẳng + ↗ WMS */
-  var phang=(KK_MODAL.metric==='negative'||KK_MODAL.metric==='positive');
   if(kind==='sku'){
     for(var i=0;i<rs.length&&out.length<CAP;i++){ var r=rs[i], e=kkEval(r.inv,r.cnt);
-      out.push('<tr>'+pcCell(r.wh,r.sku,r.pn,pcTypeOf(r.type),kkReason(r))+'<td>'+kkIdLink(r.id,'sku',phang)+'</td><td><b>'+esc(r.sku)+'</b><div class="pn2">'+esc(r.pn)+'</div></td><td>'+kkDash(r.cat)+'</td>'+
+      out.push('<tr>'+pcCell(r.wh,r.sku,r.pn,pcTypeOf(r.type),kkReason(r))+'<td>'+kkIdLink(r.id,'sku')+'</td><td><b>'+esc(r.sku)+'</b><div class="pn2">'+esc(r.pn)+'</div></td><td>'+kkDash(r.cat)+'</td>'+
         kkDcell(r.cnt==null?0:e.d)+'<td class="num">'+nf(r.inv)+'</td><td class="num">'+(r.cnt==null?'—':nf(r.cnt))+'</td><td>'+kkDash(r.type)+'</td><td>'+kkDash(r.req)+'</td><td>'+kkDash(r.by)+'</td><td>'+kkFmtD(kkParseDate(r.cdate))+'</td><td>'+kkFmtD(kkParseDate(r.plan),true)+'</td><td><span class="badge '+kkBadge(r.st)+'">'+(r.st?esc(r.st):'—')+'</span></td></tr>');
     }
     return '<div class="kkwrap"><table><thead><tr>'+pcHeadCell()+'<th>ID</th><th>SKU</th><th>Category</th><th class="num">Diff</th><th class="num">Inventory</th><th class="num">Qty count</th><th>Type</th><th>Request</th><th>Counted by</th><th>Counted date</th><th>Plan date</th><th>Status</th></tr></thead><tbody>'+(out.join('')||kkEmpty(13))+'</tbody></table></div>'+
       '<div class="kknote">'+(rs.length>CAP?('Hiển thị '+nf(CAP)+' / '+nf(rs.length)+' dòng — lọc để thu hẹp.'):(nf(rs.length)+' dòng.'))+'</div>';
   }
   for(var j=0;j<rs.length&&out.length<CAP;j++){ var l=rs[j];
-    out.push('<tr><td>'+kkIdLink(l.id,'loc',phang)+'</td><td class="loc">'+esc(l.loc)+'</td><td>'+kkDash(l.wh)+'</td><td>'+kkDash(l.type)+'</td><td>'+kkDash(l.pri)+'</td>'+kkDcell(l.diff)+'<td>'+kkDash(l.req)+'</td><td>'+kkDash(l.by)+'</td><td>'+kkFmtD(kkParseDate(l.cdate))+'</td><td>'+kkFmtD(kkParseDate(l.plan),true)+'</td><td><span class="badge '+kkBadge(l.st)+'">'+(l.st?esc(l.st):'—')+'</span></td></tr>');
+    out.push('<tr><td>'+kkIdLink(l.id,'loc')+'</td><td class="loc">'+esc(l.loc)+'</td><td>'+kkDash(l.wh)+'</td><td>'+kkDash(l.type)+'</td><td>'+kkDash(l.pri)+'</td>'+kkDcell(l.diff)+'<td>'+kkDash(l.req)+'</td><td>'+kkDash(l.by)+'</td><td>'+kkFmtD(kkParseDate(l.cdate))+'</td><td>'+kkFmtD(kkParseDate(l.plan),true)+'</td><td><span class="badge '+kkBadge(l.st)+'">'+(l.st?esc(l.st):'—')+'</span></td></tr>');
   }
   return '<div class="kkwrap"><table><thead><tr><th>ID</th><th>Location</th><th>Warehouse</th><th>Type</th><th>Priority</th><th class="num">Diff</th><th>Request</th><th>Counted by</th><th>Counted date</th><th>Plan date</th><th>Status</th></tr></thead><tbody>'+(out.join('')||kkEmpty(11))+'</tbody></table></div>'+
     '<div class="kknote">'+(rs.length>CAP?('Hiển thị '+nf(CAP)+' / '+nf(rs.length)+' dòng — lọc để thu hẹp.'):(nf(rs.length)+' dòng.'))+'</div>';
@@ -3124,10 +3056,10 @@ function kkOpen(kind,metric){
     : metric==='notcount'
     ? 'Anti-join: tồn kho từ Stock Location TRỪ tập (kho|mã) đã kiểm — đây là phần chưa được đụng tới'
     : lech
-    ? 'Gộp theo SKU SAU BÙ TRỪ vị trí TRONG TỪNG ĐỢT KIỂM (request): thiếu bin này thừa bin kia tự bù, chỉ SKU có tổng ≠ 0 mới tính lệch · bộ lọc ngày không áp ở đây (đợt kiểm vắt ngày) · dưới mỗi SKU là từng vị trí × UID group (Action sửa tự do) · số phiếu ở đây KHÔNG mở pop-up con, bấm ↗ để xem phiếu trên WMS · chuyển "Danh sách phiếu" để xem theo phiếu như cũ'
+    ? 'Gộp theo SKU SAU BÙ TRỪ vị trí TRONG TỪNG ĐỢT KIỂM (request): thiếu bin này thừa bin kia tự bù, chỉ SKU có tổng ≠ 0 mới tính lệch · bộ lọc ngày không áp ở đây (đợt kiểm vắt ngày) · dưới mỗi SKU là từng vị trí × UID group (Action sửa tự do) · bấm ↗ để xem phiếu trên WMS · chuyển "Danh sách phiếu" để xem theo phiếu như cũ'
     : (metric==='counted')
-    ? 'Đã khử trùng phiếu: mỗi (kho|mã) chỉ tính 1 phiếu đã kiểm MỚI NHẤT (ưu tiên phiếu không bị từ chối/huỷ) · bấm ID xem chi tiết phiếu ngay tại đây (icon ↗ mở WMS)'
-    : 'Bấm ID xem chi tiết phiếu ngay tại đây (icon ↗ mở WMS) · ✎ = phiếu có số lượng điều chỉnh');
+    ? 'Đã khử trùng phiếu: mỗi (kho|mã) chỉ tính 1 phiếu đã kiểm MỚI NHẤT (ưu tiên phiếu không bị từ chối/huỷ) · bấm ↗ để mở phiếu trên WMS (tab mới)'
+    : 'Bấm ↗ để mở phiếu trên WMS (tab mới) · ✎ = phiếu có số lượng điều chỉnh');
   kkmBuildFilters();
   _skuCat=null;   // dữ liệu tồn kho/phiếu có thể vừa nạp lại — map SKU→Category dựng tươi mỗi lượt mở
   kkmRender();
@@ -3139,7 +3071,6 @@ function kkOpen(kind,metric){
     }
   });
   var m=document.getElementById('kkmodal'); m.style.display='flex';
-  m.classList.remove('stash'); PCD_BACK=null;   // mở pop-up mới -> huỷ mọi trạng thái "đang tạm ẩn" còn sót
   requestAnimationFrame(function(){ m.classList.add('show'); });
 }
 function kkmBuildFilters(){
@@ -3302,7 +3233,7 @@ function kkmRender(){
   pcSyncAll(body,rs);   // ô "chọn tất cả" phản ánh đúng tập đang lọc (chỉ khối SKU mới có)
 }
 function closeKkModal(){
-  var m=document.getElementById('kkmodal'); m.classList.remove('show','stash'); PCD_BACK=null;
+  var m=document.getElementById('kkmodal'); m.classList.remove('show');
   setTimeout(function(){ m.style.display='none'; document.getElementById('kkmBody').innerHTML=''; document.getElementById('kkmFilters').innerHTML=''; document.getElementById('kkmSum').textContent=''; },240);   // dọn DOM khi đóng
 }
 
@@ -4236,19 +4167,14 @@ function plRender(){
   document.getElementById('plSum').textContent=nf(rows.length)+' / '+nf(PL.rows.length)+' kế hoạch (tải mới nhất từ WMS lúc '+new Date(PL.at).toLocaleTimeString('vi-VN')+')'+(rows.length>cap?(' · hiển thị '+nf(cap)+' dòng đầu'):'');
 }
 
-/* ===== CHI TIẾT PHIẾU KIỂM KÊ (Physical Count Detail) ==========================================
-   Bấm ID trong pop-up drill-down Kiểm kê -> xem NGAY TRONG dashboard các dòng của phiếu như trang
-   WMS /physical-count/result/{location|sku}: No · Location · SKU · Tên hàng · HSD · SL đếm ·
-   Tồn hệ thống · Diff · Trạng thái dòng.
-   API: GET /wms/counting-plan/checklist/tracking?checklist_id=…&page=&size= (dò từ bundle SPA
-   index-a02da192.js 27/07/2026; response kèm object `checklist` = header phiếu + `total`
-   {total_user,total_sys,total_diff}; status_id dòng: 4=Counted, 2=Count cancelled, khác=Not counted).
-   Token đọc như sổ Kế hoạch (plLoad): ưu tiên extension Token Bridge (phiên CHÍNH operator),
-   fallback token robot qua GAS pc_token (PC_KEY đã lưu). Không có token -> vẫn mở được modal ở
-   chế độ OFFLINE: header từ dữ liệu Sheet + các dòng điều chỉnh đã lưu.
-   Ô "SL điều chỉnh": lưu tab kiemke-adjust trên Sheet (action pc_adjust, khoá PC_KEY) — KHÔNG ghi
-   ngược WMS; dashboard đọc lại tab này bằng gviz để mọi người cùng thấy (✎ trên ID). */
-var PCD={id:null,kind:null,rows:[],hdr:null,total:null,edits:{},live:false};
+/* ===== CỜ ĐIỀU CHỈNH TRÊN SỐ PHIẾU (tab kiemke-adjust) =========================================
+   GỠ 31/07/2026: modal "Phiếu kiểm kê #…" (Physical Count Detail — đọc LIVE checklist/tracking từ
+   WMS, kèm ô nhập "SL điều chỉnh" ghi tab kiemke-adjust qua action pc_adjust) đã bỏ hẳn theo yêu
+   cầu "không nổ pop-up thứ 2". Xem chi tiết 1 phiếu: bấm ↗ mở trang WMS ở tab mới; xem các dòng
+   lệch kèm UID group: view "UID group lệch" (nguồn tab kiemke-uidgr, không cần token).
+   Phần còn giữ dưới đây CHỈ để đọc tab kiemke-adjust và gắn cờ ✎ lên số phiếu — cho biết phiếu đó
+   đã có số lượng điều chỉnh lưu trên Sheet (bản ghi cũ vẫn hiển thị được; dashboard không còn ghi
+   thêm điều chỉnh mới — ô sửa tự do hiện nằm ở cột Action của view UID group lệch). */
 var ADJ={map:null,cids:{}};   // map 'cid|tid' -> bản ghi điều chỉnh · cids: phiếu nào có điều chỉnh (cờ ✎)
 function adjKey(cid,tid){ return String(cid)+'|'+String(tid); }
 function adjHasCid(cid){ return !!ADJ.cids[String(cid)]; }
@@ -4444,7 +4370,7 @@ function kkLechTitle(){
 function kkViewBar(){
   if(KK_MODAL.metric!=='negative'&&KK_MODAL.metric!=='positive') return '';
   function b(v,lb,tip){ return '<button class="kktab'+(((KK_MODAL.view==='uid')===(v==='uid'))?' active':'')+'" onclick="kkSetView(\''+v+'\')" title="'+tip+'">'+lb+'</button>'; }
-  return '<div class="kktabs">'+b('uid','UID group lệch','Liệt kê thẳng UID group đang lệch của từng phiếu — đủ trường như Detail UIDgr trên WMS')+b('phieu','Danh sách phiếu','Danh sách phiếu như trước — bấm ID xem chi tiết')+'</div>';
+  return '<div class="kktabs">'+b('uid','UID group lệch','Liệt kê thẳng UID group đang lệch của từng phiếu — đủ trường như Detail UIDgr trên WMS')+b('phieu','Danh sách phiếu','Danh sách phiếu như trước — bấm ↗ mở phiếu trên WMS ở tab mới')+'</div>';
 }
 function kkSetView(v){ v=(v==='uid')?'uid':''; if(KK_MODAL.view===v) return; KK_MODAL.view=v; kkmRender(); }
 function kkUidTable(ug){
@@ -4463,7 +4389,7 @@ function kkUidTable(ug){
       var idx=flat.length; flat.push(u);
       var d=(Number(u.qu)||0)-(Number(u.qs)||0), dCls=(d<0?'d-am':d>0?'d-duong':'d-khop');
       var k=u.cid+'|'+u.tid+'|'+u.uid, a=UIDE.map&&UIDE.map[k];
-      out.push('<tr><td class="loc"><span class="locchip">'+esc(u.loc)+'</span> <span class="pn2i">· phiếu '+kkIdLink(u.cid,kind,true)+'</span></td>'+
+      out.push('<tr><td class="loc"><span class="locchip">'+esc(u.loc)+'</span> <span class="pn2i">· phiếu '+kkIdLink(u.cid,kind)+'</span></td>'+
         '<td>'+(u.uid?('<code>'+esc(u.uid)+'</code>'):'—')+'</td><td>'+(u.uid?kkUidStBadge(u.gst):'—')+'</td>'+   // không có UID code -> không hiện status (27/07: "có đâu mà hiển thị")
         '<td class="num">'+(u.qu===''?'—':nf(Number(u.qu)||0))+'</td><td class="num">'+(u.qs===''?'—':nf(Number(u.qs)||0))+'</td>'+
         '<td class="num '+dCls+'">'+(d>0?'+':'')+nf(d)+'</td>'+
@@ -4547,301 +4473,9 @@ async function uideSave(){
     });
   }
 }
-/* ---- Drill-down 1 tầng: pop-up mẹ đang tạm ẩn để nhường chỗ cho chi tiết phiếu (chỉ thị 31/07) ---- */
-var PCD_BACK=null;
-/* Rút gọn tiêu đề pop-up mẹ cho nhãn nút: "SKU · lệch âm (sau bù trừ vị trí) — 116 SKU" -> "SKU · lệch âm" */
-function pcdBackLb(t){ t=String(t||'').split(' (')[0].split(' — ')[0].trim(); return t||'Quay lại'; }
-function pcdAnMe(){
-  PCD_BACK=null;
-  var km=document.getElementById('kkmodal');
-  if(!km||!km.classList.contains('show')||km.classList.contains('stash')) return;
-  var body=document.getElementById('kkmBody');
-  PCD_BACK={el:km,body:body,sc:body?body.scrollTop:0,ten:(document.getElementById('kkmTitle')||{}).textContent||''};
-  kkmCloseCombos();          // combo đang xổ trong pop-up mẹ phải đóng, không để treo lơ lửng khi quay lại
-  km.classList.add('stash');
-}
-function pcdHienMe(){
-  var b=PCD_BACK; PCD_BACK=null;
-  if(!b) return false;
-  b.el.classList.remove('stash');   // display:none -> flex: sheetIn tự chạy lại, mẹ "rơi" về như lúc mở
-  if(b.body){
-    var cu=b.body.style.scrollBehavior;
-    b.body.style.scrollBehavior='auto';   // .modalbody có scroll-behavior:smooth — không để nó cuộn trườn từ đầu bảng
-    b.body.scrollTop=b.sc;
-    requestAnimationFrame(function(){ b.body.scrollTop=b.sc; b.body.style.scrollBehavior=cu||''; });
-  }
-  return true;
-}
-function pcdOpen(id,kind){
-  pcdAnMe();   // KHÔNG chồng pop-up lên pop-up: mẹ tạm ẩn trước khi chi tiết phiếu hiện ra
-  PCD={id:String(id),kind:kind,rows:[],hdr:null,total:null,edits:{},live:false};
-  document.getElementById('pcdTitle').textContent='Phiếu kiểm kê #'+id;
-  document.getElementById('pcdSub').innerHTML='Physical Count Detail · <a class="wlink" href="'+kkWmsUrl(id,kind)+'" target="_blank" rel="noopener">mở trên WMS'+KK_ICON+'</a>';
-  document.getElementById('pcdBody').innerHTML='<div class="state" style="padding:22px"><div class="spin"></div>Đang tải chi tiết phiếu từ WMS…</div>';
-  var bk=document.getElementById('pcdBack');
-  if(bk){   // chỉ có nút quay lại khi thật sự đi ra từ một pop-up
-    bk.classList.toggle('on',!!PCD_BACK);
-    bk.title=PCD_BACK?('Quay lại '+PCD_BACK.ten):'';
-    if(PCD_BACK) bk.querySelector('.lb').textContent=pcdBackLb(PCD_BACK.ten);
-  }
-  var m=document.getElementById('pcdmodal'); m.style.display='flex';
-  document.body.classList.add('ovl-open');   // giỏ nổi (z110) không được đè lên modal này
-  requestAnimationFrame(function(){ m.classList.add('show'); });
-  pcdLoad();
-}
-function closePcdModal(){
-  var m=document.getElementById('pcdmodal'); m.classList.remove('show');
-  pcdHienMe();   // đóng chi tiết = QUAY LẠI pop-up mẹ (nếu có), không đóng luôn cả cụm
-  document.body.classList.remove('ovl-open');   // giỏ nổi lại được nổi trên pop-up mẹ như trước
-  setTimeout(function(){ m.style.display='none'; },240);
-}
-async function pcdLoad(){
-  var idLuc=PCD.id;
-  try{ await adjLoad(); }catch(e){}
-  try{ await uidgrLoad(); }catch(e){}   // nguồn OFFLINE tầng 1: các dòng lệch của phiếu trên Sheet
-  var tok='';
-  try{
-    tok=await wmsExtToken();   // ưu tiên phiên của CHÍNH operator — không đụng token robot
-    if(!tok){ var khoa=pcKeyLuu(); if(khoa) tok=await pcWmsToken(khoa); }   // CHỈ khoá đã lưu, luồng xem không bật prompt
-  }catch(e){ if(e&&e.pc&&e.j&&e.j.code===403) pcKeyForget(); tok=''; }
-  if(PCD.id!==idLuc) return;   // người dùng đã mở phiếu khác trong lúc chờ
-  if(!tok){ pcdRender('Cần extension WMS Token Bridge (đọc bằng phiên của chính bạn) hoặc khóa PC_KEY (token robot) để đọc chi tiết trực tiếp từ WMS. <button class="fcg" onclick="pcdNhapKhoa()">Nhập khóa PC_KEY</button>'); return; }
-  try{
-    var all=[], hdr=null, total=null, SIZE=200;
-    for(var page=1;page<=10;page++){   // 10 trang × 200 dòng — 1 vị trí full-location thực tế vài chục dòng
-      var r=await fetch(PC_WMS_BASE+'/wms/counting-plan/checklist/tracking?checklist_id='+encodeURIComponent(PCD.id)+'&page='+page+'&size='+SIZE,{headers:{'Authorization':'Bearer '+tok}});
-      if(r.status===401){ _pcTok=''; throw new Error('Token WMS đang bị chiếm phiên — thử lại sau, hoặc cài extension Token Bridge để đọc bằng phiên của chính bạn.'); }
-      if(!r.ok) throw new Error('WMS trả HTTP '+r.status);
-      var j=await r.json(), d=j.data||j, recs=d.records||[];
-      if(!hdr) hdr=d.checklist||null;
-      if(!total) total=d.total||null;
-      all=all.concat(recs);
-      var cnt=(d.count!=null)?Number(d.count):null;
-      if(recs.length<SIZE||(cnt!=null&&all.length>=cnt)) break;
-    }
-    if(PCD.id!==idLuc) return;
-    PCD.rows=all; PCD.hdr=hdr; PCD.total=total; PCD.live=true;
-    pcdRender();
-  }catch(e){ if(PCD.id===idLuc) pcdRender(esc(String(e&&e.message||e))); }
-}
-function pcdNhapKhoa(){ if(pcKeyGet()) pcdLoad(); }
-/* Dòng phiếu trong dữ liệu Sheet (fallback header khi không đọc được WMS) */
-function pcdKkRow(){
-  var rs=(KK.data&&KK.data[PCD.kind])||[];
-  for(var i=0;i<rs.length;i++) if(String(rs[i].id)===PCD.id) return rs[i];
-  return null;
-}
-function pcdStatusCell(sid){
-  var m=(sid===4)?['Counted','b-ok']:(sid===2)?['Count cancelled','b-rej']:['Not counted','b-pend'];
-  return '<span class="badge '+m[1]+'">'+m[0]+'</span>';
-}
-/* HSD: exp_by_user/exp_by_sys là chuỗi JSON [{qty, exp?, group_uid_code?, date_added?}] — vải cuộn
-   theo group_uid không có hạn dùng -> N/A (đúng như trang WMS) */
-function pcdExp(r){
-  var raw=r.exp_by_user||r.exp_by_sys; if(!raw) return 'N/A';
-  try{
-    var ds=(JSON.parse(raw)||[]).map(function(x){ return x&&(x.exp||x.expiration_date||x.expiry_date)||''; }).filter(Boolean);
-    return ds.length?ds.map(esc).join('<br>'):'N/A';
-  }catch(e){ return 'N/A'; }
-}
-/* Chip UID group của 1 dòng phiếu (modal chi tiết): hợp nhất exp_by_user (đếm) & exp_by_sys (hệ thống)
-   — cùng nguồn/logic với tab kiemke-uidgr, hiện NGAY dưới SKU để khỏi phải sang WMS bấm Detail UIDgr */
-function pcdUidMini(r){
-  if(r._uidgr){   // dòng dựng từ tab kiemke-uidgr (offline không token): chip từ chính dữ liệu Sheet
-    var ps=r._uidgr.map(function(u){
-      return '<span class="uidchip" title="UID group '+esc(u.uid)+' · '+esc(u.gst)+' · đếm '+(u.qu===''?'—':nf(Number(u.qu)||0))+' / tồn '+(u.qs===''?'—':nf(Number(u.qs)||0))+'"><code>'+esc(u.uid)+'</code> '+kkUidStBadge(u.gst)+' <b>'+nf(Number(u.qu===''?u.qs:u.qu)||0)+'</b></span>';
-    });
-    return ps.length?'<div class="uidmini">'+ps.join('')+'</div>':'';
-  }
-  if(r._offline) return '';
-  var m={};
-  function gop(raw,phia){
-    var arr; try{ arr=JSON.parse(raw||'[]')||[]; }catch(e){ arr=[]; }
-    arr.forEach(function(e2){
-      if(!e2) return;
-      var uid=(e2.group_uid_code!=null&&e2.group_uid_code!=='')?String(e2.group_uid_code):'';
-      if(!uid) return;
-      var o=m[uid]||(m[uid]={});
-      o[phia]=(o[phia]||0)+(Number(e2.qty)||0);
-    });
-  }
-  gop(r.exp_by_user,'u'); gop(r.exp_by_sys,'s');
-  var parts=Object.keys(m).map(function(uid){
-    var o=m[uid], st=(o.u!=null&&o.s==null)?'New':(o.u==null&&o.s!=null)?'Not found':'Available';   // từ ngữ khớp WMS Detail UIDgr
-    return '<span class="uidchip" title="UID group '+esc(uid)+' · '+st+' · đếm '+nf(o.u||0)+' / tồn '+nf(o.s||0)+'"><code>'+esc(uid)+'</code> '+kkUidStBadge(st)+' <b>'+nf(o.u!=null?o.u:o.s)+'</b></span>';
-  });
-  return parts.length?'<div class="uidmini">'+parts.join('')+'</div>':'';
-}
-function pcdHdrItem(lb,vl){ return '<div class="it"><div class="lb">'+lb+'</div><div class="vl">'+(vl||'—')+'</div></div>'; }
+/* pcdAt: định dạng ngày/giờ dùng chung — bảng UID group lệch + ô Action đều gọi (giữ lại sau khi
+   modal "Phiếu kiểm kê #…" bị gỡ 31/07/2026). */
 function pcdAt(s){ var ms=kkParseDate(s); return isNaN(ms)?String(s||'—'):kkFmtD(ms); }
-function pcdRender(loi){
-  PCD._loi=loi;   // giữ lại để re-render khi xoay máy/đổi breakpoint (pcdOnMQ)
-  var h=PCD.hdr, kk=pcdKkRow(), body=document.getElementById('pcdBody'), out='';
-  /* Header phiếu: ưu tiên bản LIVE từ WMS, fallback dòng trên Sheet */
-  var st=h?String(h.status_name||''):(kk?kk.st:''), wh=h?h.warehouse_name:(kk?kk.wh:''), tp=h?h.plan_type:(kk?kk.type:'');
-  out+='<div class="pcdhdr">'+
-    pcdHdrItem('Trạng thái',st?'<span class="badge '+kkBadge(st)+'">'+esc(st)+'</span>':'—')+
-    pcdHdrItem('Warehouse',esc(wh||''))+
-    pcdHdrItem('Type',esc(tp||''))+
-    pcdHdrItem(PCD.kind==='loc'?'Mã vị trí':'SKU',esc(h?(h.plan_object_code||''):(kk?(PCD.kind==='loc'?kk.loc:kk.sku):'')))+
-    pcdHdrItem('Priority',esc(h?(h.priority_name||''):(kk?kk.pri||'':'')))+
-    pcdHdrItem('Created by',esc(h?(h.created_by_name||''):''))+
-    pcdHdrItem('Created at',h?esc(pcdAt(h.created_at)):'—')+
-    pcdHdrItem('Counted by',esc(h?(h.checklist_by_name||''):(kk?kk.by:'')))+
-    pcdHdrItem('Counted date',esc(pcdAt(h?h.checklist_at:(kk?kk.cdate:''))))+
-    pcdHdrItem('Approved by',esc(h?(h.approved_by_name||''):''))+
-    pcdHdrItem('Approve at',h?esc(pcdAt(h.approved_at)):'—')+
-    pcdHdrItem('Plan date',esc(h?(h.plan_date||''):(kk&&kk.plan?kkFmtD(kkParseDate(kk.plan),true):'')))+
-  '</div>';
-  if(PCD.total) out+='<div class="pcdtot">'+
-    '<span class="tt">SL đếm <b>'+nf(Number(PCD.total.total_user)||0)+'</b></span>'+
-    '<span class="tt">Tồn hệ thống <b>'+nf(Number(PCD.total.total_sys)||0)+'</b></span>'+
-    '<span class="tt">Diff <b style="color:'+((Number(PCD.total.total_diff)||0)<0?'var(--bad)':(Number(PCD.total.total_diff)||0)>0?'var(--warn)':'var(--good)')+'">'+((Number(PCD.total.total_diff)||0)>0?'+':'')+nf(Number(PCD.total.total_diff)||0)+'</b></span></div>';
-  /* Bảng dòng: LIVE từ WMS; OFFLINE 2 tầng (27/07) — ① tab kiemke-uidgr trên Sheet: đủ các dòng
-     LỆCH của phiếu (SL đếm/Tồn/Diff + UID group, KHÔNG cần token — dòng khớp không nằm trong tab);
-     ② hết mới rơi về các dòng điều chỉnh đã lưu như cũ. */
-  var rows=PCD.rows, nguonSheet=false;
-  if(!PCD.live&&!rows.length){
-    var ulist=(typeof UIDGR!=='undefined'&&UIDGR.map&&UIDGR.map[PCD.id])||[];
-    if(ulist.length){
-      nguonSheet=true;
-      var byTid={}, ordT=[];
-      ulist.forEach(function(u2){ var k2=String(u2.tid||u2.loc+'|'+u2.sku); if(!byTid[k2]){ byTid[k2]={u:u2,gr:[]}; ordT.push(k2); } if(u2.uid) byTid[k2].gr.push(u2); });
-      rows=ordT.map(function(k2){ var x=byTid[k2], u2=x.u;
-        return {tracking_id:u2.tid,sku:u2.sku,bin_location:u2.loc,product_name:u2.pn,
-          qty_by_user:(u2.lc===''?null:Number(u2.lc)||0),qty_by_sys:(u2.li===''?null:Number(u2.li)||0),
-          qty_diff:Number(u2.ld)||0,status_id:(u2.ls==='Counted'?4:u2.ls==='Count cancelled'?2:0),_uidgr:x.gr};
-      });
-    }
-    else if(ADJ.map){
-      rows=Object.keys(ADJ.map).filter(function(k){ return ADJ.map[k].cid===PCD.id; }).map(function(k){
-        var a=ADJ.map[k];
-        return {tracking_id:a.tid,sku:a.sku,bin_location:a.loc,product_name:a.pn,qty_by_user:Number(a.qwms)||0,status_id:4,_offline:true};
-      });
-    }
-  }
-  if(loi) out+='<div class="pcdnote">⚠ '+loi+'<br>'+(nguonSheet
-    ? 'Đang hiển thị CHI TIẾT TỪ SHEET (tab <code>kiemke-uidgr</code>): đủ các dòng LỆCH của phiếu kèm UID group — dòng khớp không nằm trong tab; SL điều chỉnh vẫn lưu bình thường.'
-    : 'Đang hiển thị chế độ OFFLINE: header từ Sheet + các dòng điều chỉnh đã lưu (nếu có).')+'</div>';
-  /* ĐIỆN THOẠI (≤640px): render CARD bằng DIV thật — KHÔNG ép <table> đổi display (Chromium giữ
-     min-content kiểu bảng với display:block, còn display:contents làm kkwrap sập chiều cao — đã đo
-     thực nghiệm cả 2). 1 bộ .adjinp duy nhất cho cả 2 nhánh; đổi breakpoint sẽ re-render (pcdOnMQ). */
-  var mobile=window.matchMedia&&window.matchMedia('(max-width:640px)').matches;
-  var trongRong=PCD.live?'Phiếu chưa có dòng chi tiết nào':'Chưa đọc được WMS; phiếu không có dòng LỆCH trên Sheet (phiếu khớp hoàn toàn cũng thế) và chưa có điều chỉnh nào';
-  var tr=[];
-  for(var i=0;i<rows.length;i++){
-    var r=rows[i];
-    var cnt=(r.qty_by_user==null?null:Number(r.qty_by_user)||0), inv=(r.qty_by_sys==null?null:Number(r.qty_by_sys)||0);
-    var diff=(r.qty_diff!=null)?(Number(r.qty_diff)||0):((cnt||0)-(inv||0));
-    var a=ADJ.map&&ADJ.map[adjKey(PCD.id,r.tracking_id)];
-    var expHtml=pcdExp(r), dCls=(r._offline?'d-khop':(diff<0?'d-am':diff>0?'d-duong':'d-khop'));
-    var sC=(r._offline||cnt==null)?'—':nf(cnt), sI=(r._offline||inv==null)?'—':nf(inv), sD=r._offline?'—':((diff>0?'+':'')+nf(diff));
-    var inputHtml='<input class="adjinp" data-tid="'+esc(String(r.tracking_id))+'" data-loc="'+esc(r.bin_location||'')+'" data-sku="'+esc(r.sku||'')+'" data-qwms="'+(cnt==null?0:cnt)+'" data-cu="'+(a?esc(String(a.qadj)):'')+'" value="'+(a?esc(String(a.qadj)):'')+'" placeholder="—" inputmode="numeric" oninput="pcdMark(this)" title="Số lượng điều chỉnh — lưu trên Sheet, không ghi về WMS">'+
-      (a?'<div class="adjmeta"><b>✎ '+nf(Number(a.qadj)||0)+'</b> — '+esc(a.by||'?')+' · '+esc(pcdAt(a.at))+(a.note?'<br>'+esc(a.note):'')+'</div>':'');
-    if(mobile){
-      tr.push('<div class="pcdcard">'+
-        '<div class="cr1"><span class="cno">#'+(i+1)+'</span><span class="cloc">'+esc(r.bin_location||'')+'</span>'+pcdStatusCell(r.status_id)+'</div>'+
-        '<div class="csku"><b>'+esc(r.sku||'')+'</b><div class="pn2">'+esc(r.product_name||'')+'</div>'+pcdUidMini(r)+'</div>'+
-        (expHtml==='N/A'?'':'<div class="cexp">HSD: '+expHtml+'</div>')+
-        '<div class="cstats"><span><label>SL đếm</label><b>'+sC+'</b></span>'+
-        '<span><label>Tồn HT</label><b>'+sI+'</b></span>'+
-        '<span class="'+dCls+'"><label>Diff</label><b>'+sD+'</b></span></div>'+
-        '<div class="cadj"><label>SL điều chỉnh</label>'+inputHtml+'</div></div>');
-    }else{
-      tr.push('<tr><td class="num">'+(i+1)+'</td><td class="loc">'+esc(r.bin_location||'')+'</td>'+
-        '<td><b>'+esc(r.sku||'')+'</b><div class="pn2">'+esc(r.product_name||'')+'</div>'+pcdUidMini(r)+'</td>'+
-        '<td>'+expHtml+'</td>'+
-        '<td class="num">'+sC+'</td><td class="num">'+sI+'</td>'+
-        '<td class="num '+dCls+'">'+sD+'</td>'+
-        '<td>'+pcdStatusCell(r.status_id)+'</td>'+
-        '<td class="num">'+inputHtml+'</td></tr>');
-    }
-  }
-  if(mobile){
-    out+='<div class="pcdcards">'+(tr.join('')||'<div class="state" style="padding:20px;text-align:center;color:var(--ink3)">'+trongRong+'</div>')+'</div>';
-  }else{
-    out+='<div class="kkwrap"><table class="mtbl"><thead><tr><th class="num">No</th><th>Location</th><th>SKU · Tên hàng</th><th>HSD</th><th class="num">SL đếm</th><th class="num">Tồn hệ thống</th><th class="num">Diff</th><th>Trạng thái dòng</th><th class="num">SL điều chỉnh</th></tr></thead><tbody>'+
-      (tr.join('')||'<tr><td colspan="9" style="text-align:center;color:var(--ink3);padding:28px">'+trongRong+'</td></tr>')+'</tbody></table></div>';
-  }
-  out+='<div class="kknote">'+nf(rows.length)+' dòng'+(PCD.live?' — đọc trực tiếp từ WMS':(nguonSheet?' — từ Sheet, CHỈ các dòng lệch của phiếu':' (offline)'))+'.</div>';
-  /* Footer lưu điều chỉnh — chỉ khi có dòng để sửa */
-  if(rows.length){
-    var byLuu=''; try{ byLuu=localStorage.getItem('pcd-by')||''; }catch(e){}
-    out+='<div class="pcdfoot">'+
-      '<div class="fld2"><label>Người sửa</label><input id="pcdBy" value="'+esc(byLuu)+'" placeholder="tên / email…"></div>'+
-      '<div class="fld2"><label>Ghi chú</label><input id="pcdNote" placeholder="lý do điều chỉnh (tuỳ chọn)…"></div>'+
-      '<div class="sp"></div><span class="hint" id="pcdSt"></span>'+
-      '<button class="primary" id="pcdSave" disabled onclick="pcdSave()">Lưu điều chỉnh</button></div>'+
-      '<div class="pcdnote" style="background:color-mix(in srgb,var(--info,#3b82f6) 10%,var(--surface));color:var(--ink2)">Số điều chỉnh chỉ lưu trên <b>Google Sheet</b> (tab <code>kiemke-adjust</code>) để dashboard thể hiện — <b>không</b> ghi ngược về WMS. Xoá trắng ô = gỡ điều chỉnh. Cần khóa PC_KEY khi lưu.</div>';
-  }
-  body.innerHTML=out;
-}
-/* Đánh dấu ô đã đổi so với điều chỉnh ĐANG LƯU + bật nút Lưu */
-function pcdMark(inp){
-  var moi=inp.value.trim();
-  if(moi!==''&&!/^-?[\d.,\s]+$/.test(moi)){ inp.value=moi.replace(/[^\d.,\s-]/g,''); moi=inp.value.trim(); }
-  var doi=(moi!==String(inp.getAttribute('data-cu')||''));
-  inp.classList.toggle('changed',doi);
-  var co=document.querySelector('#pcdBody .adjinp.changed');
-  var btn=document.getElementById('pcdSave'); if(btn) btn.disabled=!co;
-}
-function pcdNum(s){ return Number(String(s).replace(/[,\s]/g,''))||0; }
-async function pcdSave(){
-  var btn=document.getElementById('pcdSave'), st=document.getElementById('pcdSt');
-  var by=(document.getElementById('pcdBy')||{}).value||'', note=(document.getElementById('pcdNote')||{}).value||'';
-  by=by.trim(); note=note.trim();
-  try{ localStorage.setItem('pcd-by',by); }catch(e){}
-  var rows=[];
-  document.querySelectorAll('#pcdBody .adjinp.changed').forEach(function(inp){
-    var v=inp.value.trim();
-    rows.push({cid:PCD.id,tid:inp.getAttribute('data-tid'),loc:inp.getAttribute('data-loc'),sku:inp.getAttribute('data-sku'),
-      pn:'',qwms:pcdNum(inp.getAttribute('data-qwms')),qadj:(v===''?'':pcdNum(v)),note:note,by:by});
-  });
-  /* Tên hàng gửi kèm để bản ghi trên Sheet tự đọc được (offline view) */
-  rows.forEach(function(x){ for(var i=0;i<PCD.rows.length;i++) if(String(PCD.rows[i].tracking_id)===String(x.tid)){ x.pn=PCD.rows[i].product_name||''; break; } });
-  if(!rows.length) return;
-  var khoa=pcKeyGet(); if(!khoa) return;   // người dùng CHỦ ĐỘNG lưu -> được phép prompt khoá
-  btn.disabled=true; st.textContent='Đang lưu…';
-  try{
-    var j=await pcGas({action:'pc_adjust',key:khoa,rows:rows});
-    if(j.status!=='success'){
-      if(j.code===403) pcKeyForget();
-      throw new Error(j.message||'GAS từ chối');
-    }
-    /* Cập nhật tại chỗ + xoá cache phiên để lượt tải sau đọc bản mới từ Sheet */
-    rows.forEach(function(x){
-      var k=adjKey(x.cid,x.tid);
-      if(x.qadj===''){ delete ADJ.map[k]; }
-      else ADJ.map[k]={cid:x.cid,tid:x.tid,loc:x.loc,sku:x.sku,pn:x.pn,qwms:x.qwms,qadj:x.qadj,note:x.note,by:x.by,at:j.at||new Date().toISOString()};
-    });
-    ADJ.cids={}; Object.keys(ADJ.map).forEach(function(k){ ADJ.cids[String(ADJ.map[k].cid)]=1; });
-    try{ sessionStorage.removeItem('slf-adj'); }catch(e){}
-    toast('Đã lưu '+rows.length+' điều chỉnh vào Sheet.','ok');
-    st.textContent='';
-    pcdRender();   // vẽ lại bảng với ✎ mới
-    if(document.getElementById('kkmodal').classList.contains('show')) kkmRender();   // cờ ✎ trong pop-up bên dưới
-  }catch(e){
-    st.textContent=''; btn.disabled=false;
-    toast('Lưu điều chỉnh thất bại: '+String(e&&e.message||e),'err');
-  }
-}
-/* Xoay máy / đổi cỡ cửa sổ QUA breakpoint 640px khi modal đang mở: render lại đúng dạng
-   (card ↔ bảng) và GIỮ NGUYÊN các ô đang sửa dở (chưa bấm Lưu). */
-(function(){
-  if(!window.matchMedia) return;
-  var mq=window.matchMedia('(max-width:640px)');
-  function pcdOnMQ(){
-    if(!document.getElementById('pcdmodal').classList.contains('show')) return;
-    var giu={};
-    document.querySelectorAll('#pcdBody .adjinp.changed').forEach(function(inp){ giu[inp.getAttribute('data-tid')]=inp.value; });
-    pcdRender(PCD._loi);
-    Object.keys(giu).forEach(function(tid){
-      var inp=document.querySelector('#pcdBody .adjinp[data-tid="'+tid+'"]');
-      if(inp){ inp.value=giu[tid]; pcdMark(inp); }
-    });
-  }
-  mq.addEventListener?mq.addEventListener('change',pcdOnMQ):mq.addListener(pcdOnMQ);
-})();
 
 /* Khôi phục giỏ từ phiên (F5 không mất lựa chọn) */
 try{ PC.sel=JSON.parse(sessionStorage.getItem('pc-sel')||'{}')||{}; }catch(e){ PC.sel={}; }
