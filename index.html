@@ -990,7 +990,7 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
       <div class="set-sec">
         <div class="set-h">Dữ liệu</div>
         <button id="reload" class="dropdown-action-btn" onclick="syncWms()" title="Kéo dữ liệu mới trực tiếp từ WMS"><span class="act">Tải lại dữ liệu</span><small class="timestamp-hint" id="tsReload"></small></button>
-        <a id="lnkSheet" class="set-link dropdown-action-btn" href="#" target="_blank" rel="noopener"><span class="act">Mở Google Sheet nguồn ↗</span></a>
+        <a id="lnkSheet" class="set-link dropdown-action-btn" hidden href="#" target="_blank" rel="noopener"><span class="act">Mở Google Sheet nguồn ↗</span></a>
       </div>
     </div>
   </div>
@@ -1052,7 +1052,7 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 
 <div class="footbar">
   <span class="chip">Nguồn: stocklocationfactory</span>
-  <a id="srclink" href="#" target="_blank" rel="noopener">Mở Google Sheet</a>
+  <a id="srclink" hidden href="#" target="_blank" rel="noopener">Mở Google Sheet</a>
   <span id="loadinfo" class="hint"></span>
 </div>
 </div>
@@ -1205,6 +1205,8 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 <script>
 var SHEET_ID = "1eY_oo9fAvWCTXp24x-Z0FXq9mp_jJPlTHg09qdemETs";
 var SHEET_URL = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/edit";
+/* ?src=1: chỉ quản trị mới thấy link Sheet nguồn — dashboard là trang công khai. */
+var SHOW_SRC = /[?&]src=1/.test(location.search);
 // Tên tab THẬT trên Sheet là "mastige"/"garment" (bản cũ ghi "MTG" chỉ chạy nhờ gviz fallback về tab đầu)
 var TABS = [{sheet:"mastige",div:"Mastige"},{sheet:"garment",div:"Garment"}];
 // Web App Apps Script (bộ 5S dùng chung) — nút "Tải lại dữ liệu" gọi requestStockSync ĐẶT CỜ để MÁY TRẠM kéo WMS (không đá phiên)
@@ -1220,7 +1222,8 @@ var WH_DATA = {}, WH_COLOR = {}, curWh = null, curTab = 'pend';
 var MODAL_ROWS = {shelf:[],pend:[]};   // bộ dữ liệu modal đang xem (1 kho hoặc 1 category gộp mọi kho)
 var CAT_DATA = {};                     // cate -> {sh,pe,whs:[[kho,skuSh,skuPe],...]} cho modal phân bổ kho
 
-document.getElementById('srclink').href = SHEET_URL;
+/* Sheet nguồn: bỏ khỏi DOM trên bản công khai — ?src=1 mới hiện cho quản trị. */
+(function(){ var a=document.getElementById('srclink'); if(!a) return; if(SHOW_SRC){ a.hidden=false; a.href=SHEET_URL; } else a.remove(); })();
 
 function nf(x){ return (x||0).toLocaleString('en-US'); }
 /* CT2: tỷ lệ %% chính xác — tối đa 2 số lẻ, số nguyên thì không hiện .00 (99.12% giữ nguyên, 100% ra 100%) */
@@ -1933,7 +1936,7 @@ document.addEventListener('click',function(e){
   if(b&&b.classList.contains('open')){ b.classList.remove('open'); document.getElementById('settingsPop').classList.add('hidden'); }
 });
 setTheme(curTheme());
-document.getElementById('lnkSheet').href=SHEET_URL;
+(function(){ var a=document.getElementById('lnkSheet'); if(!a) return; if(SHOW_SRC){ a.hidden=false; a.href=SHEET_URL; } else a.remove(); })();
 
 /* ===== Tab đầu trang: Trạng thái lưu trữ | Kiểm kê (fade mượt, giữ nguyên DOM/trạng thái) ===== */
 function showTab(t){
