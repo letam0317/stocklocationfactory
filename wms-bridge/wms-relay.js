@@ -6,7 +6,8 @@ window.addEventListener("message", (ev) => {
   const d = ev.data;
   if (!d || d.__wmsBridgeTok !== 1 || !d.tok) return;
   try {
-    chrome.runtime.sendMessage({ type: "wmsTokenFromPage", token: String(d.tok) }, () => {
+    // loai: "wms" | "wshr" (v1.4.0). Thiếu → coi là "wms" để bản hook cũ vẫn chạy.
+    chrome.runtime.sendMessage({ type: "wmsTokenFromPage", token: String(d.tok), loai: d.loai === "wshr" ? "wshr" : "wms" }, () => {
       // đọc lastError để khỏi văng "Unchecked runtime.lastError" khi SW đang khởi động lại
       void chrome.runtime.lastError;
     });
