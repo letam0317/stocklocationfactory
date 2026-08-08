@@ -977,27 +977,26 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 
    PHÂN VAI MÀU (theo đúng luật data-viz của dự án):
    · CATEGORICAL (định danh kho) — thang phân loại theo THỨ TỰ SLOT CỐ ĐỊNH, không xoay vòng.
-     Bản 08/08/2026 hạ độ chói: xanh nguyên #2a78d6 / cam nguyên #eb6834 tô kín 157 ô thì cả bản
-     vẽ chỉ còn là hai mảng màu gắt. Nay dùng cặp TRẦM, ít bão hoà hơn — XANH THÉP #2f5d8c và
-     ĐỒNG NUNG #b0603c (sáng) · #4a7ba6 và #ad5f3d (tối) — vẫn là trục lam↔cam nên giữ nguyên
-     ưu thế phân biệt cho người mù màu.
-     Đo lại bằng validator (WCAG + mô phỏng CVD Viénot):
-       chữ trắng trên nền ô  — sáng 6,85 / 4,58 · tối 4,49 / 4,69   (cũ chỉ 4,42/3,20 và 3,64/3,88
-                               → bản cũ KHÔNG đạt AA cho chữ, bản này đạt)
-       ΔE s1↔s2              — thường 72,3 · protan 59,0 · deutan 75,4 · tritan 132,2 (ngưỡng ≥8)
-       ô ↔ nền               — mọi theme sáng ≥3,7; 4 theme tối rơi 2,3–3,5 (Nord xấu nhất)
-     Chỗ rơi dưới 3 ở theme tối xử theo đúng luật "relief" như bản cũ, và mạnh hơn: mỗi ô LUÔN in
-     số cột + VIỀN RIÊNG nâng lên 30% --ink (kênh nhận dạng thứ hai, không phụ thuộc màu nền),
-     cộng chú giải, biển tên vùng kho và pop-up ghi tên kho ⇒ không bao giờ chỉ dựa vào màu.
+     08/08/2026 chuyển sang ĐÚNG THANH GHI MÀU của tab Planogram bên Audit Hasaki: bộ Tailwind-600
+     hex CỐ ĐỊNH cho mọi theme (bên đó CELLST dùng #059669 / #dc2626 / #f59e0b / #7c3aed / #2563eb,
+     không đổi theo theme). Hai bản trước đều lệch khỏi thanh ghi này: bản nguyên #2a78d6/#eb6834
+     quá chói, bản trầm #2f5d8c/#b0603c lại xỉn.
+     2 slot đang dùng: LAM #2563eb (blue-600) và CAM NUNG #c2410c (orange-700) — trục lam↔cam nên
+     giữ nguyên ưu thế phân biệt cho người mù màu.
+     Đo bằng validator (WCAG + mô phỏng CVD Viénot):
+       chữ trắng trên nền ô  — 5,17 / 5,18  (bản nguyên chỉ 4,42/3,20 → KHÔNG đạt AA; bản này đạt)
+       ΔE s1↔s2              — thường 129,2 · protan 122,5 · deutan 141,9   (ngưỡng ≥8)
+       ô ↔ nền               — 4 theme sáng ≥4,2; 4 theme tối 2,2 (mặt tối và ô đều tầm trung)
+     Chỗ rơi dưới 3 ở theme tối xử theo đúng luật "relief": mỗi ô LUÔN in số cột + VIỀN RIÊNG 30%
+     --ink (kênh nhận dạng thứ hai, không phụ thuộc màu nền), cộng chú giải màu ngay trên sơ đồ và
+     pop-up ghi tên kho ⇒ không bao giờ chỉ dựa vào màu.
    · STATUS (trạng thái vệ sinh) — dùng bộ status riêng (xanh/đỏ/hổ phách), TUYỆT ĐỐI không mượn
-     làm "slot phân loại thứ 3", và luôn kèm nhãn ở chú giải.
+     làm "slot phân loại thứ 3". Thang categorical dưới đây cũng CỐ Ý tránh 3 hex của bộ status
+     (#059669 · #dc2626 · #f59e0b) để 2 vai màu không bao giờ đọc nhầm sang nhau.
 
    Nét vẽ dùng color-mix trên --ink nên ăn cả 7 theme; hardcode #111 là mất hình ở theme tối. */
-:root,[data-theme="tokyo"],[data-theme="dracula"],[data-theme="nord"],[data-theme="mocha"]{
-  --s1:#4a7ba6; --s2:#ad5f3d; --s3:#46836f; --s4:#c0a04a; --s5:#9a5f80; --s6:#56764a; --s7:#655e9c; --s8:#a85757;
-}
-[data-theme="hasaki"],[data-theme="latte"],[data-theme="solar"]{
-  --s1:#2f5d8c; --s2:#b0603c; --s3:#3f7d6a; --s4:#b08a34; --s5:#97577a; --s6:#4a6b3f; --s7:#5b5391; --s8:#a34b4b;
+:root{
+  --s1:#2563eb; --s2:#c2410c; --s3:#0d9488; --s4:#ca8a04; --s5:#db2777; --s6:#4d7c0f; --s7:#7c3aed; --s8:#0e7490;
 }
 /* --- BỐ CỤC TAB — CÙNG KHUÔN với tab Planogram của Audit Hasaki (chỉ khác cái sơ đồ) --------
    thanh chips → hàng trên 2 cột (TRÁI sơ đồ ăn hết bề rộng còn lại · PHẢI 380px chỉ số, giãn
@@ -1143,8 +1142,11 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 .pg-alert b{color:var(--bad)}
 .pg-alert .ic{color:var(--bad);flex:none}
 .pg-note{font-size:11.5px;color:var(--ink3);margin:9px 2px 0;line-height:1.55}
-/* Chú giải nằm NGAY TRONG tiêu đề panel sơ đồ: gom 1 hàng, tràn thì cuộn ngang (không bung dòng
-   làm panel cao lên). Vẫn là NÚT bấm được — bấm để ẩn/hiện nhóm trên sơ đồ. */
+/* Hàng tiêu đề của khối sơ đồ: tên khối bên trái, ngay cạnh là CHÚ GIẢI MÀU — giải thích tại chỗ
+   ô nền màu nào là kho nào, viên thuốc trắng là nhãn dãy kệ. Trước để chú giải trên tiêu đề panel
+   và tên kho thì gắn ngay trên bản vẽ (rơi vào lối đi giữa ô 09 và 10 của dãy 507 — xấu). */
+.pg-maprow{display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap;margin:10px 2px 7px}
+.pg-maprow .pg-maphdr{margin:0;flex:none}
 .pg-legend{display:inline-flex;gap:5px;align-items:center;flex:1;min-width:0;flex-wrap:nowrap;
   overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
 .pg-legend::-webkit-scrollbar{display:none}
@@ -1155,8 +1157,13 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 .pg-legend button:hover{border-color:var(--brand2);color:var(--ink)}
 .pg-legend button.off{opacity:.38}
 .pg-legend button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.pg-legend i{width:10px;height:10px;border-radius:3px;flex:none}
+.pg-legend i{width:14px;height:11px;border-radius:3px;flex:none;border:1px solid color-mix(in srgb,var(--ink) 30%,transparent)}
 .pg-legend i.dash{background:transparent;border:1px dashed color-mix(in srgb,var(--ink3) 65%,transparent)}
+/* Mẫu "nhãn dãy kệ": vẽ y hệt viên thuốc trên sơ đồ để đối chiếu được ngay */
+.pg-legend i.chip{width:20px;height:11px;border-radius:999px;background:var(--surface);
+  border:1px solid color-mix(in srgb,var(--ink) 30%,transparent)}
+.pg-legend span.tinh{display:inline-flex;align-items:center;gap:6px;flex:none;white-space:nowrap;
+  font-size:11px;font-weight:600;color:var(--ink2);padding:4px 2px}
 .pg-legend .n{font-variant-numeric:tabular-nums;color:var(--ink3)}
 /* Khung sơ đồ: nền phẳng hơi lõm để bản vẽ nổi lên, bo góc như các card khác của dự án */
 .pg-wrap{border:1px solid var(--line);border-radius:12px;background:var(--surface2);
@@ -1166,7 +1173,11 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
    lọt 1 khung nhìn, không phải cuộn dọc mới thấy hết dãy như bản cũ. --pg-ar do JS gắn từ
    viewBox (W/H) nên đổi bản vẽ không phải sửa CSS. */
 .pg-fit{width:min(100%,calc((100vh - 330px) * var(--pg-ar,1.466)));min-width:760px;margin:0 auto}
-.pg-svg{display:block;width:100%;height:auto;font-family:inherit}
+/* shape-rendering:geometricPrecision — KHOÁ chế độ khử răng cưa, không để trình duyệt tự chọn
+   crispEdges (snap nét vào lưới pixel) tuỳ mức zoom. Đo tại DPR2 thì ảnh không đổi (Chromium vốn
+   đang dùng chế độ này), nên đây chỉ là chốt hành vi cho các trình duyệt/mức zoom khác — KHÔNG
+   phải thứ chữa hiện tượng rung; xem chú thích ở .pg-o về chuyện đó. */
+.pg-svg{display:block;width:100%;height:auto;font-family:inherit;shape-rendering:geometricPrecision}
 /* ===== LỚP NỀN — đọc như một bản vẽ mặt bằng, không phải mảng ô màu ==========================
    Thứ tự lùi dần: sàn (nền + lưới toạ độ mờ) → tường → phòng chức năng → ô kệ (dữ liệu, nổi nhất).
    vector-effect giữ nét mảnh đều ở mọi mức phóng, không dày lên khi SVG bị co. */
@@ -1175,11 +1186,6 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 /* Khung PHÒNG chức năng — nét duy nhất còn giữ ngoài ô kệ, vì phòng là "khu vực" */
 .pg-khung{fill:color-mix(in srgb,var(--ink) 2.5%,transparent);stroke:color-mix(in srgb,var(--ink) 14%,transparent);
   stroke-width:1.2;stroke-dasharray:8 6;vector-effect:non-scaling-stroke}
-/* Vùng của từng KHO: nền tô rất nhạt màu định danh kho + biển tên vùng — thay cho việc tách sơ
-   đồ thành nhiều khối như bên Hasaki (ở đây mặt bằng chỉ có một bản vẽ duy nhất) */
-.pg-zone{stroke:none}
-.pg-zonelb text{fill:#fff;font-weight:750;text-anchor:middle;dominant-baseline:central;letter-spacing:.07em}
-.pg-zonelb rect{stroke:none}
 /* Nền mềm sau mỗi DÃY kệ: gom các ô cùng dãy thành một khối đọc được, giúp mắt bám theo hàng */
 .pg-bed{fill:color-mix(in srgb,var(--ink) 5%,transparent);stroke:color-mix(in srgb,var(--ink) 9%,transparent);
   stroke-width:1;vector-effect:non-scaling-stroke;transition:fill .2s ease}
@@ -1207,21 +1213,30 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
   stroke-width:1;stroke-dasharray:6 5;vector-effect:non-scaling-stroke}
 .pg-room{pointer-events:none}
 .pg-khu{fill:var(--ink3);font-weight:700;text-anchor:middle;dominant-baseline:central;letter-spacing:.06em}
-/* 1 ô kệ = <g> chứa rect nền + lớp vát sáng-tối + số cột. transform-box:fill-box cho phép phóng
-   quanh TÂM Ô (mặc định transform-origin của SVG là gốc toạ độ -> ô sẽ bay đi chỗ khác khi hover). */
-.pg-o{cursor:pointer;transform-box:fill-box;transform-origin:center;
-  transition:transform .16s var(--ez-apple),filter .2s ease,opacity .2s ease}
-/* Viền ô là KÊNH NHẬN DẠNG THỨ HAI (luật relief): ở 4 theme tối, ô màu trầm và mặt nền tối chỉ
-   cách nhau 2,3–3,5:1 — chính cái viền 30% --ink này giữ cho ô vẫn tách khỏi nền. */
+/* 1 ô kệ = <g> chứa rect nền + lớp vát sáng-tối + số cột.
+   HOVER CHỈ ĐỔI MÀU NÉT — TUYỆT ĐỐI KHÔNG transform/filter (bỏ scale(1.16) + drop-shadow ngày
+   08/08/2026 vì rê chuột làm cả sơ đồ "nhích cỡ" trong tích tắc).
+   Đo được: bố cục KHÔNG hề đổi khi rê chuột (mọi bounding rect y hệt trước/trong/sau) ⇒ không
+   phải reflow mà là REPAINT. Bản vẽ này co từ khổ 2495 đơn vị xuống ~980px, và đo đối chứng cho
+   thấy mỗi lần rasterize lại nó cho ra 2 kết quả hơi khác nhau; transform + filter là hai thứ
+   buộc trình duyệt dựng lại layer nên phơi bày đúng cú nhích đó.
+   (Không đo được bằng so pixel trong headless: chính việc chụp ảnh cũng ép rasterize lại và sinh
+   ra đúng loại nhiễu ấy — đối chứng 8 lần chụp liên tiếp KHÔNG chạm chuột vẫn ra 2 trạng thái.)
+   Nay giữ nguyên cả hình học lẫn độ dày nét, chỉ đổi màu ⇒ vùng vẽ lại nhỏ nhất có thể. */
+.pg-o{cursor:pointer;transition:opacity .2s ease}
+/* Viền ô là KÊNH NHẬN DẠNG THỨ HAI (luật relief): ở 4 theme tối, ô và mặt nền đều tầm trung nên
+   tương phản chỉ ~2,2:1 — chính cái viền 30% --ink này giữ cho ô vẫn tách khỏi nền. */
 .pg-o rect.bg{stroke:color-mix(in srgb,var(--ink) 30%,transparent);stroke-width:.9;vector-effect:non-scaling-stroke}
 /* Lớp vát: trắng rất nhạt ở mép trên, tối nhẹ ở mép dưới — ô đọc thành viên gạch có khối, không
    phải mảng màu dán phẳng. CỐ TÌNH trong suốt ở khoảng giữa (nơi đặt số) để KHÔNG đụng vào tương
    phản chữ/nền mà bộ validator màu đã kiểm. */
-.pg-o rect.sheen{stroke:none;pointer-events:none}
+.pg-o rect.sheen{stroke:none;pointer-events:none;transition:opacity .18s ease}
 .pg-o text{font-weight:700;text-anchor:middle;dominant-baseline:central;pointer-events:none;user-select:none;
   paint-order:stroke;letter-spacing:.01em}
-.pg-o:hover{transform:scale(1.16);filter:drop-shadow(0 4px 10px rgba(16,24,40,.35))}
-.pg-o:hover rect.bg{stroke:var(--ink);stroke-width:1.8}
+/* Hover CHỈ đổi MÀU nét, giữ nguyên stroke-width: đổi độ dày là đổi vùng vẽ của nét, trình duyệt
+   phải tính lại bounds rồi vẽ lại vùng rộng hơn. Giữ nguyên hình học ⇒ chỉ tô lại đúng chỗ cũ. */
+.pg-o:hover rect.bg{stroke:var(--ink)}
+.pg-o:hover rect.sheen{opacity:.4}
 .pg-o:focus{outline:none}
 .pg-o:focus-visible rect.bg{stroke:var(--accent);stroke-width:2.8}
 .pg-o.dim{opacity:.18}
@@ -2575,6 +2590,9 @@ function plgVeTop(T){
    khối sơ đồ → bản vẽ → dòng hướng dẫn đọc màu. */
 function plgVeMap(g,T){
   var mode=T.mode, tong=T.tong, dem=T.dem, thu=T.thu, theoDay=T.theoDay, dsDay=T.dsDay, vs=T.vs;
+  /* CHÚ GIẢI MÀU — đứng ngay cạnh tên khối sơ đồ (góc trên bên trái), giải thích tại chỗ: ô nền
+     màu nào là kho nào, viên thuốc trắng là nhãn dãy kệ. Các mục nhóm vẫn bấm được để lọc; riêng
+     mục "Dãy kệ" chỉ để đối chiếu nên không phải nút. */
   var legend='<span class="pg-legend">'+thu.map(function(k){
     var d=dem[k], c=plgMau(k,d.cls);
     return '<button type="button" class="'+(PLG.tat[k]?'off':'')+'" data-k="'+esc(k)+'"'+
@@ -2582,7 +2600,10 @@ function plgVeMap(g,T){
       ' title="Bấm để ẩn/hiện nhóm này trên sơ đồ">'+
       '<i class="'+(c?'':'dash')+'"'+(c?' style="background:'+c+'"':'')+'></i>'+
       esc(plgTenNgan(d.lb))+' <span class="n">'+d.n+'</span></button>';
-  }).join('')+'</span>';
+  }).join('')+
+    '<span class="tinh" title="Viên thuốc trắng bên trái mỗi hàng kệ là nhãn dãy — bấm để soi riêng dãy đó">'+
+    '<i class="chip"></i>Dãy kệ <span class="n">'+dsDay.length+'</span></span>'+
+    '</span>';
 
   /* Dải cảnh báo: nêu ĐÚNG một việc phải làm, bấm được để mở danh sách vị trí liên quan */
   var al='';
@@ -2600,9 +2621,9 @@ function plgVeMap(g,T){
 
   document.getElementById('plgMap').innerHTML=
     '<section class="panel">'+
-    '<h2>Sơ đồ khu vực <span class="pg-chip">'+esc(PLG.area?plgTenNgan(PLG.area):'Tất cả')+' &middot; '+nf(tong)+' ô</span>'+legend+'</h2>'+
+    '<h2>Sơ đồ khu vực <span class="pg-chip">'+esc(PLG.area?plgTenNgan(PLG.area):'Tất cả')+' &middot; '+nf(tong)+' ô</span></h2>'+
     al+
-    '<div class="pg-maphdr">Kho nguyên liệu (F0-KHO) — '+dsDay.length+' dãy kệ</div>'+
+    '<div class="pg-maprow"><span class="pg-maphdr">Kho nguyên liệu (F0-KHO) — '+dsDay.length+' dãy kệ</span>'+legend+'</div>'+
     '<div class="pg-wrap"><div class="pg-scroll"><div class="pg-fit" style="--pg-ar:'+(g.W/g.H).toFixed(4)+'">'+
       plgSvg(g,mode,theoDay)+'</div></div></div>'+
     '<p class="pg-hint" style="margin:9px 2px 0">Bấm một ô để xem chi tiết vị trí, bấm nhãn dãy để soi riêng dãy đó &middot; '+
@@ -2759,58 +2780,9 @@ function plgSvg(g,mode,theoDay){
     '<stop offset="1" stop-color="#000" stop-opacity=".13"/></linearGradient></defs>');
   /* Sàn kho + lưới toạ độ mờ: bản vẽ có "thân" và đọc ra là mặt bằng kỹ thuật, không phải nền phẳng */
   out.push('<rect class="pg-floor" x="14" y="14" width="'+(g.W-28)+'" height="'+(g.H-28)+'" rx="16"/>');
-  /* ===== PHÂN VÙNG THEO KHO ===================================================================
-     Mặt bằng này do 2 kho dùng chung (MTG cột 01–09 · GARMENT cột 10–15, dãy 513 toàn GARMENT).
-     Bên Hasaki mỗi khu vực là một khối sơ đồ riêng có tiêu đề; ở đây chỉ có MỘT bản vẽ nên phân
-     vùng bằng nền tô nhạt màu của kho + biển tên vùng — nhìn là biết ranh giới 2 kho, không phải
-     suy từ màu từng ô. Chỉ vẽ ở chế độ "Theo kho" (chế độ vệ sinh dùng bộ màu trạng thái). */
-  var bienVung=[];   // biển tên vùng vẽ SAU cùng (xem cuối hàm) — vẽ trước thì bị ô kệ đè mất
-  if(mode==='kho'){
-    var K=plgKho();
-    K.ds.forEach(function(w){
-      if(PLG.area && w!==PLG.area) return;   // lọc khu vực thì vùng kho kia tắt luôn, không để lại vệt màu
-      var oCua=g.o.filter(function(c){ return plgKhoCua(c.loc)===w; });
-      if(!oCua.length) return;
-      /* Nền vùng: CHỈ tô loang, KHÔNG viền. 2 kho trải thành ~22 cụm, viền mỗi cụm là 22 đường
-         kẻ chồng lên khung kệ vốn đã có nét — hình rối ngay. Tô loang thì ranh giới kho vẫn đọc
-         được mà bản vẽ giữ được sự sạch sẽ. */
-      /* Trọng tâm mọi ô của kho → chọn cụm GẦN TRỌNG TÂM NHẤT để gắn biển tên. Chọn "cụm lớn
-         nhất" thì nhãn hay rơi ra rìa vùng (cụm rộng nhất thường nằm ở mép), đọc lệch ý. */
-      var gx=0, gy=0;
-      oCua.forEach(function(c){ gx+=c.x+c.w/2; gy+=c.y+c.h/2; });
-      gx/=oCua.length; gy/=oCua.length;
-      var mau='var(--s'+(K.slot[w]||8)+')', lon=null;
-      plgCum(oCua).forEach(function(b){
-        var kc=Math.hypot((b.x0+b.x1)/2-gx,(b.y0+b.y1)/2-gy); if(!lon||kc<lon.kc) lon={b:b,kc:kc};
-        out.push('<rect class="pg-zone" style="fill:color-mix(in srgb,'+mau+' 11%,transparent)"'+
-          ' x="'+(b.x0-12).toFixed(1)+'" y="'+(b.y0-12).toFixed(1)+
-          '" width="'+(b.x1-b.x0+24).toFixed(1)+'" height="'+(b.y1-b.y0+24).toFixed(1)+'" rx="15"/>');
-      });
-      /* Biển tên xin chỗ quanh cụm đó theo thứ tự phải → trái → trên → dưới, và CHỈ nhận chỗ nào
-         không chạm ô kệ nào (kể cả ô của kho kia). Đặt cứng bên phải thì có lúc rơi trúng ô nét
-         đứt của dãy bên cạnh — nhãn che mất một vị trí trên sơ đồ. */
-      if(lon){
-        var b=lon.b, lb=plgTenNgan(w), bw=lb.length*13+28, bh=32;
-        var ung=[[b.x1+22+bw/2,(b.y0+b.y1)/2],[b.x0-22-bw/2,(b.y0+b.y1)/2],
-                 [(b.x0+b.x1)/2,b.y0-24-bh/2],[(b.x0+b.x1)/2,b.y1+24+bh/2]];
-        var cho=null;
-        for(var u=0;u<ung.length && !cho;u++){
-          var tx0=ung[u][0]-bw/2, ty0=ung[u][1]-bh/2, tx1=tx0+bw, ty1=ty0+bh;
-          if(tx0<20 || tx1>g.W-20 || ty0<20 || ty1>g.H-20) continue;
-          var va=false;
-          for(var q=0;q<g.o.length && !va;q++){
-            var c2=g.o[q];
-            if(tx0<c2.x+c2.w+6 && tx1>c2.x-6 && ty0<c2.y+c2.h+6 && ty1>c2.y-6) va=true;
-          }
-          if(!va) cho=ung[u];
-        }
-        if(!cho) cho=ung[0];
-        bienVung.push('<g class="pg-zonelb"><rect x="'+(cho[0]-bw/2).toFixed(1)+'" y="'+(cho[1]-bh/2).toFixed(1)+'" width="'+bw.toFixed(1)+
-          '" height="'+bh+'" rx="'+(bh/2)+'" style="fill:color-mix(in srgb,'+mau+' 90%,var(--surface))"/>'+
-          '<text x="'+cho[0].toFixed(1)+'" y="'+cho[1].toFixed(1)+'" font-size="20">'+esc(lb)+'</text></g>');
-      }
-    });
-  }
+  /* KHÔNG vẽ nền vùng kho dưới ô kệ nữa: khối “Kho nguyên liệu” giờ chỉ còn NỀN SÀN + Ô KỆ.
+     Ranh giới 2 kho đọc bằng chính màu ô, còn tên kho chuyển ra CHÚ GIẢI ở góc trên bên trái —
+     biển tên gắn trên bản vẽ rơi vào lối đi giữa ô 09 và 10 của dãy 507, đặt ở đó xấu. */
   /* Nền mềm CHỈ vẽ cho dãy đang soi: bản vẽ đã có tường + khung kệ, tô nền cho cả 14 dãy chỉ làm
      đục hình (dãy vòng qua góc kho thì hộp bao còn trùm cả lối đi). */
   if(PLG.hiDay && theoDay[PLG.hiDay]){
@@ -2910,7 +2882,7 @@ function plgSvg(g,mode,theoDay){
       '<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+w+'" height="'+H+'" rx="'+(H/2)+'"/>'+
       '<text x="'+(x+w/2).toFixed(1)+'" y="'+n.cy.toFixed(1)+'" font-size="'+FS+'">'+esc(n.d)+'</text></g>');
   });
-  out.push('</g>'+bienVung.join('')+'</svg>');
+  out.push('</g></svg>');
   return out.join('');
 }
 
