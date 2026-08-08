@@ -1169,6 +1169,11 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 .pg-grid{fill:none;stroke:color-mix(in srgb,var(--ink) 5%,transparent);stroke-width:1;vector-effect:non-scaling-stroke}
 .pg-wall{fill:none;stroke:color-mix(in srgb,var(--ink) 26%,transparent);stroke-width:1.15;
   stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+/* Vùng của từng KHO: nền tô rất nhạt màu định danh kho + biển tên vùng — thay cho việc tách sơ
+   đồ thành nhiều khối như bên Hasaki (ở đây mặt bằng chỉ có một bản vẽ duy nhất) */
+.pg-zone{stroke:none}
+.pg-zonelb text{fill:#fff;font-weight:750;text-anchor:middle;dominant-baseline:central;letter-spacing:.07em}
+.pg-zonelb rect{stroke:none}
 /* Nền mềm sau mỗi DÃY kệ: gom các ô cùng dãy thành một khối đọc được, giúp mắt bám theo hàng */
 .pg-bed{fill:color-mix(in srgb,var(--ink) 5%,transparent);stroke:color-mix(in srgb,var(--ink) 9%,transparent);
   stroke-width:1;vector-effect:non-scaling-stroke;transition:fill .2s ease}
@@ -1178,11 +1183,12 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
    26 đơn vị — chip cao cố định 40 làm hai nhãn chồng lên nhau, đó là chỗ trông thô nhất của bản cũ.
    Bấm chip = soi cả dãy đó (cùng tác dụng với 1 hàng ở panel danh sách bên dưới). */
 .pg-dchip{cursor:pointer}
-.pg-dchip rect{fill:var(--surface);stroke:color-mix(in srgb,var(--ink) 16%,transparent);stroke-width:1;
+.pg-dchip rect{fill:var(--surface);stroke:color-mix(in srgb,var(--ink) 30%,transparent);stroke-width:1.2;
   vector-effect:non-scaling-stroke;transition:fill .18s ease,stroke .18s ease}
-.pg-dchip text{fill:var(--ink2);font-weight:700;text-anchor:middle;dominant-baseline:central;letter-spacing:.02em}
-/* Gạch nối chip → đầu dãy: buộc nhãn vào đúng hàng kệ của nó, thay vì thả trôi bên lề */
-.pg-dlink{stroke:color-mix(in srgb,var(--ink) 18%,transparent);stroke-width:1;vector-effect:non-scaling-stroke}
+.pg-dchip text{fill:var(--ink);font-weight:750;text-anchor:middle;dominant-baseline:central;letter-spacing:.02em}
+/* Đường dẫn chip → đầu dãy (khuỷu khi chip bị đẩy lệch): buộc nhãn vào đúng hàng kệ của nó */
+.pg-dlink{fill:none;stroke:color-mix(in srgb,var(--ink) 26%,transparent);stroke-width:1;
+  stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
 .pg-dchip:hover rect{fill:color-mix(in srgb,var(--brand2) 14%,transparent);stroke:var(--brand2)}
 .pg-dchip:hover text{fill:var(--brand2)}
 .pg-dchip.on rect{fill:var(--brand2);stroke:var(--brand2)}
@@ -2040,6 +2046,8 @@ document.addEventListener('keydown',function(e){
   if(pm && pm.classList.contains('show')){ closePcModal(); return; }
   var plm=document.getElementById('plmodal');
   if(plm && plm.classList.contains('show')){ closePlModal(); return; }
+  var pgn=document.getElementById('plgNgayMenu');   // menu chọn Ngày đóng trước mọi pop-up
+  if(pgn && pgn.classList.contains('show')){ plgDongNgay(); return; }
   /* 3 pop-up của tab Planogram — đóng theo thứ tự "cái nào nổi trên cùng thì đóng trước":
      chi tiết ô mở được TỪ trong 2 pop-up kia nên nó phải đứng đầu hàng. */
   var pgm=document.getElementById('plgmodal');
@@ -2079,6 +2087,8 @@ document.getElementById('catMenu').addEventListener('click',function(e){
 document.addEventListener('click',function(e){
   var combo=document.getElementById('catCombo');
   if(combo && !combo.contains(e.target)) closeCat();
+  var ngay=document.getElementById('plgNgayMenu');   // ô chọn Ngày của tab Planogram
+  if(ngay && ngay.classList.contains('show') && !ngay.parentNode.contains(e.target)) plgDongNgay();
 });
 
 /* ================= Đồng bộ WMS on-demand + cooldown 4h ================= */
@@ -2310,8 +2320,17 @@ var PLG_ST={
 };
 /* PLG.area = KHU VỰC đang lọc (tên kho, '' = tất cả) — lọc XUYÊN SUỐT cả 3 khối như S.area bên
    Hasaki: sơ đồ mờ ô ngoài phạm vi, panel Vệ sinh + Danh sách theo dõi chỉ đếm trong phạm vi. */
+/* Khoảng ngày của bộ lọc "Ngày:" — cùng vai trò với ô chọn ngày của tab Planogram Hasaki.
+   Bên đó dữ liệu là YÊU CẦU theo từng ngày nên chọn được đúng 1 ngày; tab Sheet của kho nguyên
+   liệu là ẢNH CHỤP hiện trạng, mỗi vị trí chỉ giữ MỐC vệ sinh/yêu cầu gần nhất — nên khoảng ngày
+   ở đây là "trong bao nhiêu ngày gần đây", và 45 ngày là trọn cửa sổ mà bộ sync quét. */
+var PLG_NGAY=[{k:'45',n:45,lb:'45 ngày gần nhất',sub:'trọn cửa sổ bộ sync quét'},
+              {k:'30',n:30,lb:'30 ngày gần nhất',sub:''},
+              {k:'7', n:7, lb:'7 ngày gần nhất', sub:''},
+              {k:'3', n:3, lb:'3 ngày gần nhất', sub:''},
+              {k:'1', n:1, lb:'Hôm nay',         sub:''}];
 var PLG={loadedOnce:false,by:{},ok:false,geo:null,tat:{},mode:'kho',kho:null,khoRaw:0,ngoai:[],
-         area:'',list:'vt',hiDay:'',q:'',st:'',traDay:'',traQ:''};
+         area:'',ngay:'45',list:'vt',hiDay:'',q:'',st:'',traDay:'',traQ:''};
 
 function plgCellVal(c){ return (c&&c.v!=null)?String(c.f!=null?c.f:c.v):''; }
 /* PLG_GEO đóng thành CHUỖI cho gọn (26KB thay vì 108KB JSON lồng) — tách 1 lần rồi nhớ lại. */
@@ -2356,12 +2375,36 @@ function plgKho(){
 /* Kho của 1 ô: chuỗi tên (nhiều kho thì nối " + "), '' nếu ô không có tồn */
 function plgKhoCua(loc){ var k=plgKho().byO[loc]; return k?Object.keys(k).sort().join(' + '):''; }
 
-/* Trạng thái vệ sinh 1 ô */
+/* Khoảng ngày đang xem → {n, lb, tu} (tu = mốc thời gian đầu khoảng, ms) */
+function plgKhoang(){
+  var m=PLG_NGAY[0];
+  for(var i=0;i<PLG_NGAY.length;i++) if(PLG_NGAY[i].k===PLG.ngay) m=PLG_NGAY[i];
+  var d=new Date(); d.setHours(0,0,0,0);
+  return {n:m.n,lb:m.lb,tu:d.getTime()-(m.n-1)*86400000};
+}
+/* Ngày trong ô Sheet ("2026-08-07 09:15" / "07/08/2026" / Date(...)) → ms; NaN nếu không đọc được */
+function plgNgayMs(s){
+  if(!s) return NaN;
+  s=String(s).trim();
+  var m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m) return new Date(+m[1],+m[2]-1,+m[3]).getTime();
+  m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(m) return new Date(+m[3],+m[2]-1,+m[1]).getTime();
+  m=s.match(/^Date\((\d+),(\d+),(\d+)/);
+  if(m) return new Date(+m[1],+m[2],+m[3]).getTime();
+  var t=Date.parse(s); return isNaN(t)?NaN:t;
+}
+/* Trạng thái vệ sinh 1 ô — XÉT TRONG KHOẢNG NGÀY đang chọn:
+   ô đã vệ sinh nhưng lần gần nhất nằm NGOÀI khoảng thì trong khoảng này nó vẫn là "chưa vệ sinh".
+   Mốc không đọc được ngày (bộ sync chỉ ghi cờ) thì giữ nguyên kết luận của Sheet, không đoán. */
 function plgState(r){
   if(!r) return 'nolich';
   if(String(r.coLich).trim()!=='Có') return 'nolich';
   if(!/approved/i.test(r.ttLich||'')) return 'nduyet';
-  return Number(r.daVS)>0?'da':'chua';
+  if(!(Number(r.daVS)>0)) return 'chua';
+  var ms=plgNgayMs(r.vsGan);
+  if(!isNaN(ms) && ms<plgKhoang().tu) return 'chua';
+  return 'da';
 }
 /* Nhóm của 1 ô theo CHẾ ĐỘ đang xem → {key, cls, lb} (key dùng cho chú giải + cross-filter) */
 function plgNhom(o){
@@ -2379,6 +2422,9 @@ function plgSetList(m){ if(PLG.list===m) return; PLG.list=m; plgRender(); }
 /* Bấm lại chip khu vực đang bật = bỏ lọc (đúng nết setArea của Hasaki) */
 function plgSetArea(a){ if(PLG.area===a) a=''; PLG.area=a; PLG.hiDay=''; plgRender(); }
 function plgSetSt(k){ if(PLG.st===k) k=''; PLG.st=k; plgRender(); }
+function plgSetNgay(k){ PLG.ngay=k; plgDongNgay(); plgRender(); }
+function plgMoNgay(){ var m=document.getElementById('plgNgayMenu'); if(m) m.classList.toggle('show'); }
+function plgDongNgay(){ var m=document.getElementById('plgNgayMenu'); if(m) m.classList.remove('show'); }
 var _plgQdeb;
 /* Tìm nhanh: CHỈ vẽ lại panel danh sách (sơ đồ SVG không đổi theo từ khoá) và trả lại con trỏ vào
    ô tìm — vẽ lại cả tab mỗi phím gõ vừa phí vừa làm mất focus giữa chừng. */
@@ -2493,12 +2539,24 @@ function plgVeTop(T){
         ' onclick="plgSetArea(this.getAttribute(\'data-a\'))"><span class="pg-dot" style="background:'+plgMauKho(w)+'"></span>'+
         esc(plgTenNgan(w))+'</button>';
     }).join('');
+  /* Ô chọn NGÀY — cùng vị trí (ngay sau Khu vực) và cùng lối bấm-xổ như tab Planogram Hasaki */
+  var kh=plgKhoang();
+  var ngay='<span style="width:8px"></span><span class="pg-hint" style="font-weight:650">Ngày:</span>'+
+    '<div class="combo" style="display:inline-block">'+
+      '<button type="button" class="pg-whtab active" onclick="event.stopPropagation();plgMoNgay()" title="Khoảng ngày dùng để xét ĐÃ/CHƯA vệ sinh">'+
+        esc(kh.lb)+' <span style="font-size:9px;opacity:.75">▼</span></button>'+
+      '<div class="combo-menu" id="plgNgayMenu" style="left:0;right:auto;min-width:250px">'+
+        PLG_NGAY.map(function(m){
+          return '<div class="combo-item'+(PLG.ngay===m.k?' active':'')+'" data-k="'+m.k+'" onclick="plgSetNgay(this.getAttribute(\'data-k\'))">'+
+            '<span class="nm">'+esc(m.lb)+'</span>'+(m.sub?'<span class="c">'+esc(m.sub)+'</span>':'')+'</div>';
+        }).join('')+
+      '</div></div>';
   var seg='<span style="width:8px"></span><span class="pg-hint" style="font-weight:650">Tô màu:</span>'+
     '<div class="pg-seg sm">'+
       '<button type="button" class="'+(PLG.mode==='kho'?'on':'')+'" onclick="plgSetMode(\'kho\')" aria-pressed="'+(PLG.mode==='kho')+'">Theo kho</button>'+
       '<button type="button" class="'+(PLG.mode==='vesinh'?'on':'')+'" onclick="plgSetMode(\'vesinh\')" aria-pressed="'+(PLG.mode==='vesinh')+'">Theo vệ sinh</button>'+
     '</div>';
-  document.getElementById('plgTop').innerHTML=chips+seg+
+  document.getElementById('plgTop').innerHTML=chips+ngay+seg+
     '<span style="flex:1"></span>'+
     '<button type="button" class="pg-whtab" onclick="plgOpenTra()" title="Xem từng dãy kệ: ô nào thuộc kho nào, trạng thái vệ sinh ra sao">Tra cứu dãy kệ &middot; '+nf(soDay)+'</button>'+
     '<button type="button" class="pg-whtab" onclick="plgOpenAll()" title="Bảng đầy đủ mọi ô kệ trên mặt bằng">Toàn bộ vị trí &middot; '+nf(tong)+'</button>';
@@ -2598,7 +2656,7 @@ function plgVeSide(T){
 
   document.getElementById('plgSide').innerHTML=
     '<section class="panel">'+
-    '<h2>Vệ sinh <span class="pg-chip">planogram WMS</span><span style="flex:1"></span>'+
+    '<h2>Vệ sinh <span class="pg-chip" title="Khoảng ngày đang xem — đổi ở ô Ngày phía trên">'+esc(plgKhoang().lb)+'</span><span style="flex:1"></span>'+
       '<a class="pg-hint" style="font-weight:600;color:var(--brand2);text-decoration:none" href="'+SHEET_URL+'" target="_blank" rel="noopener">Mở Google Sheet ↗</a></h2>'+
     '<div class="pg-tiles">'+tiles+'</div>'+bar+
     '<div class="pg-cov">'+
@@ -2633,6 +2691,44 @@ function plgCum(cells){
   return cum;
 }
 
+/* KHUNG PHÒNG quanh 1 mốc nhãn: bắn tia 4 hướng từ mốc, gặp bức tường nào trước thì đó là cạnh
+   phòng. Nhờ vậy biển tên luôn nằm gọn trong ô kẻ dù mốc nhãn của bản vẽ đặt lệch về một bên. */
+function plgPhong(g,k){
+  /* Quét trái/phải tại cao độ py — chỉ tính tường ĐỨNG có đoạn phủ qua py */
+  function quetX(py){
+    var x0=14, x1=g.W-14;
+    g.nen.forEach(function(a){
+      if(Math.abs(a[0]-a[2])>1.5) return;
+      var lo=Math.min(a[1],a[3]), hi=Math.max(a[1],a[3]);
+      if(py<=lo+2 || py>=hi-2) return;
+      if(a[0]<=k.x && a[0]>x0) x0=a[0];
+      if(a[0]>=k.x && a[0]<x1) x1=a[0];
+    });
+    return [x0,x1];
+  }
+  /* Quét trên/dưới tại hoành độ px — chỉ tính tường NGANG có đoạn phủ qua px */
+  function quetY(px){
+    var y0=14, y1=g.H-14;
+    g.nen.forEach(function(a){
+      if(Math.abs(a[1]-a[3])>1.5) return;
+      var lo=Math.min(a[0],a[2]), hi=Math.max(a[0],a[2]);
+      if(px<=lo+2 || px>=hi-2) return;
+      if(a[1]<=k.y && a[1]>y0) y0=a[1];
+      if(a[1]>=k.y && a[1]<y1) y1=a[1];
+    });
+    return [y0,y1];
+  }
+  /* Đo trục nào thì GIỮ NGUYÊN mốc gốc ở trục đó, chỉ dịch điểm bắn ở trục kia vào giữa phòng.
+     Mốc "Phòng kiểm soát kho" nằm ở x=2227 mà tường trần phòng chỉ bắt đầu từ x=2242 (góc phòng
+     bị vát) -> bắn thẳng lên là xuyên qua, lấy nhầm tường bao nhà. Dịch điểm bắn sang tâm ngang
+     (x≈2268) thì gặp đúng trần phòng. Bản trước dịch cả 2 trục nên điểm bắn trôi hẳn sang phòng
+     bên cạnh, hai biển tên chồng lên nhau. */
+  var X=quetX(k.y);
+  var Y=quetY((X[0]+X[1])/2);
+  X=quetX((Y[0]+Y[1])/2);
+  return {x0:X[0],x1:X[1],y0:Y[0],y1:Y[1]};
+}
+
 /* --- SVG: sàn + lưới → nền dãy đang soi → tường → phòng chức năng → ô kệ → nhãn dãy ------------
    MỌI TOẠ ĐỘ GIỮ NGUYÊN 100% theo PLG_GEO (bê từ bản vẽ MTG_zigzag) — phần dưới đây chỉ đổi CÁCH
    VẼ: thêm lưới toạ độ mờ, vát sáng-tối cho ô, biển tên phòng, nhãn dãy co theo chỗ trống. */
@@ -2653,6 +2749,39 @@ function plgSvg(g,mode,theoDay){
   for(var gx=FX+B; gx<FX+FW; gx+=B) luoi.push('M'+gx+' '+FY+'V'+(FY+FH));
   for(var gy=FY+B; gy<FY+FH; gy+=B) luoi.push('M'+FX+' '+gy+'H'+(FX+FW));
   out.push('<path class="pg-grid" d="'+luoi.join('')+'"/>');
+  /* ===== PHÂN VÙNG THEO KHO ===================================================================
+     Mặt bằng này do 2 kho dùng chung (MTG cột 01–09 · GARMENT cột 10–15, dãy 513 toàn GARMENT).
+     Bên Hasaki mỗi khu vực là một khối sơ đồ riêng có tiêu đề; ở đây chỉ có MỘT bản vẽ nên phân
+     vùng bằng nền tô nhạt màu của kho + biển tên vùng — nhìn là biết ranh giới 2 kho, không phải
+     suy từ màu từng ô. Chỉ vẽ ở chế độ "Theo kho" (chế độ vệ sinh dùng bộ màu trạng thái). */
+  var bienVung=[];   // biển tên vùng vẽ SAU cùng (xem cuối hàm) — vẽ trước thì bị ô kệ đè mất
+  if(mode==='kho'){
+    var K=plgKho();
+    K.ds.forEach(function(w){
+      if(PLG.area && w!==PLG.area) return;   // lọc khu vực thì vùng kho kia tắt luôn, không để lại vệt màu
+      var oCua=g.o.filter(function(c){ return plgKhoCua(c.loc)===w; });
+      if(!oCua.length) return;
+      /* Nền vùng: CHỈ tô loang, KHÔNG viền. 2 kho trải thành ~22 cụm, viền mỗi cụm là 22 đường
+         kẻ chồng lên khung kệ vốn đã có nét — hình rối ngay. Tô loang thì ranh giới kho vẫn đọc
+         được mà bản vẽ giữ được sự sạch sẽ. */
+      var mau='var(--s'+(K.slot[w]||8)+')', lon=null;
+      plgCum(oCua).forEach(function(b){
+        var dt=(b.x1-b.x0)*(b.y1-b.y0); if(!lon||dt>lon.dt) lon={b:b,dt:dt};
+        out.push('<rect class="pg-zone" style="fill:color-mix(in srgb,'+mau+' 11%,transparent)"'+
+          ' x="'+(b.x0-12).toFixed(1)+'" y="'+(b.y0-12).toFixed(1)+
+          '" width="'+(b.x1-b.x0+24).toFixed(1)+'" height="'+(b.y1-b.y0+24).toFixed(1)+'" rx="15"/>');
+      });
+      /* Biển tên đặt BÊN PHẢI cụm lớn nhất (lối đi — chỗ trống thật), lùi lên trên nếu chạm mép
+         phải bản vẽ. Đặt phía trên cụm như bản trước thì rơi trúng hàng kệ kế bên. */
+      if(lon){
+        var b=lon.b, lb=plgTenNgan(w), bw=lb.length*13+28, tx=b.x1+22+bw/2, ty=(b.y0+b.y1)/2;
+        if(tx+bw/2>g.W-24){ tx=(b.x0+b.x1)/2; ty=b.y0-30; }
+        bienVung.push('<g class="pg-zonelb"><rect x="'+(tx-bw/2).toFixed(1)+'" y="'+(ty-16).toFixed(1)+'" width="'+bw.toFixed(1)+
+          '" height="32" rx="16" style="fill:color-mix(in srgb,'+mau+' 90%,var(--surface))"/>'+
+          '<text x="'+tx.toFixed(1)+'" y="'+ty.toFixed(1)+'" font-size="20">'+esc(lb)+'</text></g>');
+      }
+    });
+  }
   /* Nền mềm CHỈ vẽ cho dãy đang soi: bản vẽ đã có tường + khung kệ, tô nền cho cả 14 dãy chỉ làm
      đục hình (dãy vòng qua góc kho thì hộp bao còn trùm cả lối đi). */
   if(PLG.hiDay && theoDay[PLG.hiDay]){
@@ -2666,19 +2795,26 @@ function plgSvg(g,mode,theoDay){
   out.push('<g class="pg-wall">');
   g.nen.forEach(function(a){ out.push('<path d="M'+a[0]+' '+a[1]+'L'+a[2]+' '+a[3]+'"/>'); });
   out.push('</g>');
-  /* Phòng chức năng: biển tên nét đứt bọc lấy chữ — đọc ra "đây là phòng", không lẫn với ô kệ */
+  /* Phòng chức năng: biển tên ĐẶT GIỮA ĐÚNG Ô KẺ của phòng và tự co chữ cho lọt.
+     Mốc nhãn trong bản vẽ nằm lệch về mép trái phòng (Khu PO: mốc x=2263 mà phòng là 2231→2439),
+     nên bản trước lấy mốc làm tâm chữ -> chữ thò ra ngoài tường. Nay dò 4 bức tường quanh mốc để
+     lấy đúng khung phòng rồi mới căn giữa. */
   g.khu.forEach(function(k){
-    /* Tách theo " · " thành nhiều dòng: "Khu PO · Đồng kiểm" ở cỡ 1 dòng rộng ~250 đơn vị mà hộp
-       của nó chỉ 208 -> tràn ra ngoài tường. Nhãn dọc (phòng hẹp cao) thì giữ 1 dòng. */
+    var p=plgPhong(g,k);
+    var cx=(p.x0+p.x1)/2, cy=(p.y0+p.y1)/2;
+    /* Phòng hẹp cao thì nhãn quay dọc: khi đó chỗ trống cho chữ là CHIỀU CAO phòng, không phải rộng */
+    var oW=k.doc?(p.y1-p.y0):(p.x1-p.x0), oH=k.doc?(p.x1-p.x0):(p.y1-p.y0);
+    /* Tách theo " · " thành nhiều dòng cho vừa bề ngang phòng; nhãn dọc giữ 1 dòng */
     var d=k.doc?[k.lb]:k.lb.split(' · ');
-    var fs=24, lh=fs*1.24, y0=k.y-(d.length-1)*fs*0.62;
     var dai=0; d.forEach(function(t){ dai=Math.max(dai,t.length); });
-    var bw=dai*fs*0.55+30, bh=d.length*lh+8;
-    var tr=k.doc?' transform="rotate(-90 '+k.x+' '+k.y+')"':'';
+    var fs=Math.max(13,Math.min(24,(oW-34)/(dai*0.55),(oH-20)/(d.length*1.24)));
+    var lh=fs*1.24, y0=cy-(d.length-1)*fs*0.62;
+    var bw=Math.min(oW-10,dai*fs*0.55+28), bh=Math.min(oH-8,d.length*lh+8);
+    var tr=k.doc?' transform="rotate(-90 '+cx.toFixed(1)+' '+cy.toFixed(1)+')"':'';
     out.push('<g class="pg-room"'+tr+'>'+
-      '<rect x="'+(k.x-bw/2).toFixed(1)+'" y="'+(k.y-bh/2).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="10"/>'+
-      '<text class="pg-khu" x="'+k.x+'" y="'+y0.toFixed(1)+'" font-size="'+fs+'">'+
-      d.map(function(t,i){ return '<tspan x="'+k.x+'"'+(i?' dy="'+lh.toFixed(1)+'"':'')+'>'+esc(t)+'</tspan>'; }).join('')+
+      '<rect x="'+(cx-bw/2).toFixed(1)+'" y="'+(cy-bh/2).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="9"/>'+
+      '<text class="pg-khu" x="'+cx.toFixed(1)+'" y="'+y0.toFixed(1)+'" font-size="'+fs.toFixed(1)+'">'+
+      d.map(function(t,i){ return '<tspan x="'+cx.toFixed(1)+'"'+(i?' dy="'+lh.toFixed(1)+'"':'')+'>'+esc(t)+'</tspan>'; }).join('')+
       '</text></g>');
   });
   out.push('<g>');
@@ -2705,28 +2841,43 @@ function plgSvg(g,mode,theoDay){
       '</g>');
   });
   out.push('</g><g>');
-  /* NHÃN DÃY — chip co theo khoảng cách tới nhãn kề: cặp 511/512 và 509/510 chỉ cách nhau 26 đơn
-     vị, chip cao cố định 40 làm hai nhãn CHỒNG LÊN NHAU (chỗ trông thô nhất của bản cũ). Bề rộng
-     cũng bám theo độ dài chữ ("507A" 4 ký tự) và mọi chip căn PHẢI về cùng một mép, có gạch nối
-     sang đầu dãy — thành một cột nhãn thẳng hàng thay vì mấy hộp xám thả trôi. */
-  var lys=g.day.map(function(d){ return d.ly; });
-  g.day.forEach(function(d){
-    var ke=1e9;
-    lys.forEach(function(y){ if(y!==d.ly) ke=Math.min(ke,Math.abs(y-d.ly)); });
-    var h=Math.max(19,Math.min(38,ke-6));
-    var fs=Math.max(12,Math.min(23,h*0.62));
-    var w=Math.round(fs*0.68*d.d.length)+20;
-    var x=d.lx-w-15, y=d.ly-h/2;
-    var soO=(theoDay[d.d]&&theoDay[d.d].n)||0;
-    out.push('<g class="pg-dchip'+(PLG.hiDay===d.d?' on':'')+'" tabindex="0" role="button" data-d="'+esc(d.d)+'"'+
+  /* ===== NHÃN DÃY =============================================================================
+     Cặp kệ 2 mặt (509/510, 511/512) chỉ cách nhau 26 đơn vị. Bản trước co chip cho vừa khe đó →
+     chữ còn ~5px trên màn hình, 508/509 nhìn như không có nhãn, trong khi 507A (khe rộng) lại to
+     gấp đôi — chính là chỗ bạn nói "507A thấy được còn 508/509 không thấy gì".
+     Nay MỌI CHIP CÙNG MỘT CỠ, đọc được ở tỷ lệ hiển thị thật; chip nào đụng nhau thì ĐẨY LỆCH
+     THEO CHIỀU DỌC vừa đủ và nối về đúng hàng kệ của nó bằng ĐƯỜNG DẪN KHUỶU — cách chú thích
+     chuẩn của bản vẽ kỹ thuật, không phải thu nhỏ chữ cho khỏi đè. */
+  var H=36, FS=24, GIAN=H+8;
+  var nhan=g.day.map(function(d){ return {d:d.d, lx:d.lx, ly:d.ly, cy:d.ly}; })
+                .sort(function(a,b){ return a.ly-b.ly; });
+  /* Gom các nhãn quá sát nhau thành 1 cụm rồi rải đều quanh tâm cụm — giữ đúng thứ tự trên/dưới */
+  for(var i=0;i<nhan.length;){
+    var j=i+1;
+    while(j<nhan.length && nhan[j].ly-nhan[j-1].ly<GIAN) j++;
+    if(j-i>1){
+      var tam=0; for(var t=i;t<j;t++) tam+=nhan[t].ly; tam/=(j-i);
+      for(var t2=i;t2<j;t2++) nhan[t2].cy=tam+(t2-i-(j-i-1)/2)*GIAN;
+    }
+    i=j;
+  }
+  nhan.forEach(function(n){
+    var w=Math.round(FS*0.66*n.d.length)+22;
+    var x=n.lx-w-16, y=n.cy-H/2, soO=(theoDay[n.d]&&theoDay[n.d].n)||0;
+    /* Đường dẫn: ra khỏi chip → chạy tới máng dọc sát đầu dãy → bẻ về đúng cao độ hàng kệ */
+    var mang=n.lx-9;
+    var dan=Math.abs(n.cy-n.ly)<0.5
+      ? 'M'+(x+w)+' '+n.ly.toFixed(1)+'H'+n.lx
+      : 'M'+(x+w)+' '+n.cy.toFixed(1)+'H'+mang.toFixed(1)+'V'+n.ly.toFixed(1)+'H'+n.lx;
+    out.push('<g class="pg-dchip'+(PLG.hiDay===n.d?' on':'')+'" tabindex="0" role="button" data-d="'+esc(n.d)+'"'+
       ' onclick="plgSoiDay(this.getAttribute(\'data-d\'))"'+
       ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();plgSoiDay(this.getAttribute(\'data-d\'))}">'+
-      '<title>'+esc('Dãy '+d.d+' — '+soO+' ô kệ\nBấm để soi riêng dãy này')+'</title>'+
-      '<line class="pg-dlink" x1="'+(x+w).toFixed(1)+'" y1="'+d.ly+'" x2="'+d.lx+'" y2="'+d.ly+'"/>'+
-      '<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+w+'" height="'+h.toFixed(1)+'" rx="'+(h/2).toFixed(1)+'"/>'+
-      '<text x="'+(x+w/2).toFixed(1)+'" y="'+d.ly+'" font-size="'+fs.toFixed(1)+'">'+esc(d.d)+'</text></g>');
+      '<title>'+esc('Dãy '+n.d+' — '+soO+' ô kệ\nBấm để soi riêng dãy này')+'</title>'+
+      '<path class="pg-dlink" d="'+dan+'"/>'+
+      '<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+w+'" height="'+H+'" rx="'+(H/2)+'"/>'+
+      '<text x="'+(x+w/2).toFixed(1)+'" y="'+n.cy.toFixed(1)+'" font-size="'+FS+'">'+esc(n.d)+'</text></g>');
   });
-  out.push('</g></svg>');
+  out.push('</g>'+bienVung.join('')+'</svg>');
   return out.join('');
 }
 
