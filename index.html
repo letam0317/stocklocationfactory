@@ -997,6 +997,8 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
    Nét vẽ dùng color-mix trên --ink nên ăn cả 7 theme; hardcode #111 là mất hình ở theme tối. */
 :root{
   --s1:#2563eb; --s2:#c2410c; --s3:#0d9488; --s4:#ca8a04; --s5:#db2777; --s6:#4d7c0f; --s7:#7c3aed; --s8:#0e7490;
+  /* tông ĐẬM của cùng hue (bậc 800 của thang) — chân ô chuyển sắc xuống màu này */
+  --s1d:#1e40af; --s2d:#7c2d12; --s3d:#115e59; --s4d:#854d0e; --s5d:#9d174d; --s6d:#365314; --s7d:#5b21b6; --s8d:#155e75;
 }
 /* --- BỐ CỤC TAB — CÙNG KHUÔN với tab Planogram của Audit Hasaki (chỉ khác cái sơ đồ) --------
    thanh chips → hàng trên 2 cột (TRÁI sơ đồ ăn hết bề rộng còn lại · PHẢI 380px chỉ số, giãn
@@ -1253,9 +1255,6 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
    khi hover (không có handler, không dựng lại DOM) — hover thuần CSS trên :hover, nên "danh sách
    ô kệ" vốn dĩ đã không bị dựng lại; thứ cần chặn là vòng REPAINT, và nó nằm ở transition. */
 .pg-o{cursor:pointer}
-/* Viền ô là KÊNH NHẬN DẠNG THỨ HAI (luật relief): ở 4 theme tối, ô và mặt nền đều tầm trung nên
-   tương phản chỉ ~2,2:1 — chính cái viền 30% --ink này giữ cho ô vẫn tách khỏi nền. */
-.pg-o rect.bg{stroke:color-mix(in srgb,var(--ink) 30%,transparent);stroke-width:.9;vector-effect:non-scaling-stroke}
 /* Lớp vát: trắng rất nhạt ở mép trên, tối nhẹ ở mép dưới — ô đọc thành viên gạch có khối, không
    phải mảng màu dán phẳng. CỐ TÌNH trong suốt ở khoảng giữa (nơi đặt số) để KHÔNG đụng vào tương
    phản chữ/nền mà bộ validator màu đã kiểm. */
@@ -1272,16 +1271,26 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 /* Đang soi 1 dãy: ô của dãy đó viền đậm hơn để nổi khỏi phần bị mờ */
 .pg-o.hi rect.bg{stroke:var(--ink);stroke-width:2}
 /* Ô "không có dữ liệu": nét đứt, không tô nền — ngoài phạm vi đánh giá, KHÔNG đọc thành "chưa làm" */
-.pg-o.trong rect.bg{fill:transparent;stroke-dasharray:4 3;stroke:color-mix(in srgb,var(--ink3) 62%,transparent)}
+.pg-o.trong rect.bg{fill:transparent;stroke-dasharray:4 3;stroke:color-mix(in srgb,var(--ink3) 62%,transparent);stroke-width:1}
 .pg-o.trong text{fill:var(--ink3)}
-.pg-o.w1 rect.bg{fill:var(--s1)} .pg-o.w2 rect.bg{fill:var(--s2)} .pg-o.w3 rect.bg{fill:var(--s3)}
-.pg-o.w4 rect.bg{fill:var(--s4)} .pg-o.w5 rect.bg{fill:var(--s5)} .pg-o.w6 rect.bg{fill:var(--s6)}
-.pg-o.w7 rect.bg{fill:var(--s7)} .pg-o.w8 rect.bg{fill:var(--s8)}
-.pg-o.w1 text,.pg-o.w2 text,.pg-o.w3 text,.pg-o.w6 text,.pg-o.w7 text,.pg-o.w8 text{fill:#fff}
-.pg-o.w4 text,.pg-o.w5 text{fill:#2a1a00}
-.pg-o.st-da rect.bg{fill:#059669} .pg-o.st-chua rect.bg{fill:#dc2626} .pg-o.st-nduyet rect.bg{fill:#f59e0b}
-.pg-o.st-da text,.pg-o.st-chua text{fill:#fff}
-.pg-o.st-nduyet text{fill:#422006}
+/* ===== KIỂU TÔ Ô: ĐẶC, CHUYỂN SẮC DỌC CÙNG HUE ===============================================
+   Đã THỬ kiểu "nền dịu + chữ cùng màu" (khuôn badge) và ĐO RA KHÔNG DÙNG ĐƯỢC cho bản đồ này:
+   chữ/nền chỉ 4,0-4,6:1 ở theme sáng và 2,3-2,9:1 ở 4 theme tối, tệ hơn nữa là ô/nền khung chỉ
+   1,1-1,3:1 nên ô chìm hẳn vào nền — với 157/161 ô có tồn thì mất luôn hình khối của dãy kệ.
+   Nay giữ TÔ ĐẶC (ô tách bạch, chữ trắng đạt AA) nhưng cho mỗi ô một CHUYỂN SẮC DỌC nhẹ từ tông
+   600 xuống tông 800 của chính hue đó. Ô có chiều sâu như vật thể thật thay vì mảng màu dán phẳng,
+   mà điểm SÁNG NHẤT của chuyển sắc vẫn là tông 600 nên tương phản chữ trắng không hề giảm:
+     chữ trắng / đỉnh chuyển sắc — MTG 5,17:1 · GARMENT 5,18:1   (chân chuyển sắc còn cao hơn: 8-9:1)
+   Chuyển sắc khai báo 1 lần trong <defs> theo từng slot, stop-color đọc thẳng biến --sN/--sNd nên
+   vẫn ăn theo theme. */
+.pg-o rect.bg{stroke:color-mix(in srgb,var(--ink) 30%,transparent);stroke-width:.9;vector-effect:non-scaling-stroke}
+.pg-o.w1 rect.bg{fill:url(#pgG1)} .pg-o.w2 rect.bg{fill:url(#pgG2)} .pg-o.w3 rect.bg{fill:url(#pgG3)}
+.pg-o.w4 rect.bg{fill:url(#pgG4)} .pg-o.w5 rect.bg{fill:url(#pgG5)} .pg-o.w6 rect.bg{fill:url(#pgG6)}
+.pg-o.w7 rect.bg{fill:url(#pgG7)} .pg-o.w8 rect.bg{fill:url(#pgG8)}
+.pg-o.st-da rect.bg{fill:url(#pgGda)} .pg-o.st-chua rect.bg{fill:url(#pgGchua)} .pg-o.st-nduyet rect.bg{fill:url(#pgGnd)}
+.pg-o.w1 text,.pg-o.w2 text,.pg-o.w3 text,.pg-o.w5 text,.pg-o.w6 text,.pg-o.w7 text,.pg-o.w8 text{fill:#fff}
+.pg-o.w4 text{fill:#2a1a00}
+.pg-o.st-da text,.pg-o.st-chua text,.pg-o.st-nduyet text{fill:#fff}
 /* Pop-up ô: bảng khoá-giá trị, khuôn .mtbl của dự án */
 .pg-kv{width:100%;border-collapse:collapse;font-size:13px}
 .pg-kv td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
@@ -1289,9 +1298,111 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 .pg-kv tr:last-child td{border-bottom:0}
 .pg-badge{display:inline-block;border-radius:999px;padding:3px 11px;font-size:11.5px;font-weight:700}
 @media(max-width:640px){ .pg-wrap{padding:10px} }
+
+/* ============ THANH BÊN — bê nguyên khuôn sidebar của Audit Hasaki (qc-side-css) ==============
+   DRAWER trượt (web + mobile), CHỈ thay lớp điều hướng: showTab() và ruột từng tab giữ nguyên.
+   Web ≥769px: mở ra thì GHIM, đẩy nội dung sang phải, không nền mờ.
+   Mobile ≤768px: phủ lên nội dung + nền mờ (không đủ chỗ để đẩy). */
+#sideNav{position:fixed;top:0;left:0;bottom:0;width:186px;background:var(--surface2);border-right:1px solid var(--line);z-index:60;
+  overflow-y:auto;display:flex;flex-direction:column;gap:1px;padding:52px 8px 18px;
+  transform:translate3d(-100%,0,0);transition:transform .32s var(--ez-apple);box-shadow:0 14px 46px rgba(0,0,0,.2);
+  will-change:transform;backface-visibility:hidden}
+body.side-open #sideNav{transform:none}
+/* NHÓM = tiêu đề (ô màu accent đánh dấu) — nhìn phát biết là hạng mục lớn chứa các tab con */
+#sideNav .s-grp{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:800;letter-spacing:.01em;
+  color:var(--ink);opacity:.95;padding:12px 7px 6px}
+#sideNav .s-grp::before{content:"";width:12px;height:12px;border-radius:3.5px;background:var(--accent);opacity:.9;flex:none}
+/* Tab con: thụt vào + đường dẫn dọc */
+#sideNav .s-sub{display:flex;flex-direction:column;gap:1px;margin:1px 0 3px 13px;padding-left:8px;border-left:1.5px solid var(--line)}
+#sideNav .s-item{display:flex;align-items:center;gap:8px;padding:6px 9px;border-radius:7px;font-size:12.5px;font-weight:600;
+  color:var(--ink);opacity:.72;cursor:pointer;border-left:3px solid transparent;margin-left:-2px;
+  transition:background .16s ease,opacity .16s ease,color .16s ease}
+#sideNav .s-item:hover{background:var(--hover);opacity:1}
+#sideNav .s-item.on{background:var(--surface);opacity:1;color:var(--accent);font-weight:700;border-left-color:var(--accent);
+  box-shadow:0 1px 3px rgba(16,24,40,.07)}
+#sideNav .s-item .di{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.4;flex:none}
+#sideNav .s-item.on .di{opacity:1}
+.toptabs{display:none !important}
+/* ===== NÚT ĐÓNG/MỞ — khung panel ĐỨNG YÊN, chỉ MŨI TÊN xoay 180° (mắt bám được vật thể) ===== */
+/* padding-left chừa chỗ cho nút mở thanh bên; margin-bottom bù lại 26px khoảng cách mà hàng
+   .toptabs cũ vốn tạo ra — ẩn nó đi thì thanh điều khiển của tab dính sát tiêu đề. */
+.wrap>header{padding-left:40px;margin-bottom:18px}
+#sideToggle{display:flex;align-items:center;justify-content:center;position:fixed;top:14px;left:7px;z-index:61;width:30px;height:30px;
+  background:var(--accent);color:var(--accent-text);border:0;border-radius:10px;line-height:0;padding:0;cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,.14);translate:0 0;
+  transition:translate .32s var(--ez-apple),background-color .2s var(--ez-apple),box-shadow .2s var(--ez-apple),transform .16s var(--ez-apple)}
+#sideToggle:hover{background:var(--accent-hover);box-shadow:0 4px 14px rgba(0,0,0,.2)}
+#sideToggle:active{transform:scale(.97)}
+#sideToggle:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 25%,transparent),0 2px 8px rgba(0,0,0,.14)}
+body.side-open #sideToggle{translate:186px 0}
+@supports not (translate:1px 0){
+  #sideToggle{transition:left .32s var(--ez-apple),background-color .2s var(--ez-apple),box-shadow .2s var(--ez-apple)}
+  body.side-open #sideToggle{left:193px}
+}
+#sideToggle .st-ico{width:17px;height:17px;display:block;overflow:visible}
+#sideToggle .st-arrow{transform-box:fill-box;transform-origin:center;transform:rotate(180deg);
+  transition:transform .26s var(--ez-apple)}
+body.side-open #sideToggle .st-arrow{transform:none}
+#sideToggle:hover .st-arrow{transform:translateX(1.6px) rotate(180deg)}
+body.side-open #sideToggle:hover .st-arrow{transform:translateX(-1.6px)}
+/* Tooltip lấy nội dung từ data-tip (JS đổi theo trạng thái) — hiện sau 300ms để rê ngang không nháy */
+#sideToggle::after{content:attr(data-tip);position:absolute;left:calc(100% + 9px);top:50%;
+  transform:translateY(-50%) translateX(-4px) scale(.94);transform-origin:left center;
+  background:var(--ink);color:var(--bg);font-size:11.5px;font-weight:650;letter-spacing:.1px;
+  padding:5px 9px;border-radius:7px;white-space:nowrap;pointer-events:none;box-shadow:0 6px 20px rgba(0,0,0,.22);
+  opacity:0;visibility:hidden;transition:opacity .16s var(--ez-apple),transform .16s var(--ez-apple),visibility .16s}
+#sideToggle::before{content:"";position:absolute;left:calc(100% + 3px);top:50%;width:0;height:0;pointer-events:none;
+  transform:translateY(-50%);border:5px solid transparent;border-right-color:var(--ink);
+  opacity:0;visibility:hidden;transition:opacity .16s var(--ez-apple),visibility .16s}
+#sideToggle:hover::after,#sideToggle:focus-visible::after{opacity:1;visibility:visible;
+  transform:translateY(-50%) translateX(0) scale(1);transition-delay:.3s}
+#sideToggle:hover::before,#sideToggle:focus-visible::before{opacity:1;visibility:visible;transition-delay:.3s}
+@media (hover:none){
+  #sideToggle::after{display:none}
+  #sideToggle::before{inset:-7px;width:auto;height:auto;border:0;transform:none;opacity:1;visibility:visible;
+    background:transparent;transition:none;pointer-events:auto}
+}
+#sideBackdrop{position:fixed;inset:0;background:rgba(0,0,0,.32);z-index:58;opacity:0;visibility:hidden;
+  transition:opacity .32s var(--ez-apple),visibility .32s}
+/* Mục điều hướng vào có nhịp (stagger). CỐ Ý chỉ animate transform, KHÔNG animate opacity: .s-item
+   có opacity .72 (và 1 khi hover/.on) mà animation fill thắng khai báo thường -> nhét opacity vào
+   keyframe là mất luôn hiệu ứng hover. */
+body.side-open #sideNav .s-grp,body.side-open #sideNav .s-item{animation:sideVao .34s var(--ez-apple) backwards}
+@keyframes sideVao{from{transform:translate3d(-12px,0,0)}to{transform:none}}
+body.side-open #sideNav .s-sub .s-item:nth-child(1){animation-delay:.03s}
+body.side-open #sideNav .s-sub .s-item:nth-child(2){animation-delay:.06s}
+body.side-open #sideNav .s-sub .s-item:nth-child(3){animation-delay:.09s}
+body.side-open #sideNav .s-sub .s-item:nth-child(4){animation-delay:.12s}
+body.side-open #sideNav .s-grp:nth-of-type(2){animation-delay:.05s}
+/* WEB: FLIP — KHÔNG transition padding-left (animate padding là reflow cả trang mỗi frame). Đặt
+   padding TỨC THÌ (1 reflow duy nhất) rồi bù lại bằng transform chạy trên compositor. */
+@media(min-width:769px){
+  body.side-open .wrap{padding-left:186px}
+  body.side-anim .wrap{will-change:transform}
+  body.side-anim.side-open .wrap{animation:wrapVao .32s var(--ez-apple)}
+  body.side-anim:not(.side-open) .wrap{animation:wrapRa .32s var(--ez-apple)}
+  @keyframes wrapVao{from{transform:translate3d(-186px,0,0)}to{transform:none}}
+  @keyframes wrapRa{from{transform:translate3d(186px,0,0)}to{transform:none}}
+}
+/* Trong lúc trượt, nội dung lấn ra ngoài -> clip ngang (clip KHÔNG tạo scroll container nên
+   header sticky vẫn dính bình thường, khác overflow:hidden). */
+body.side-anim{overflow-x:clip}
+@media(max-width:768px){
+  #sideNav{width:80vw;max-width:300px}
+  body.side-open #sideToggle{translate:min(80vw,300px) 0}
+  @supports not (translate:1px 0){ body.side-open #sideToggle{left:calc(min(80vw,300px) + 7px)} }
+  body.side-open #sideBackdrop{opacity:1;visibility:visible}
+}
 </style>
 </head>
 <body>
+<aside id="sideNav" aria-label="Điều hướng hạng mục"></aside>
+<button id="sideToggle" type="button" aria-controls="sideNav" aria-expanded="false"
+  aria-label="Mở rộng thanh bên" data-tip="Mở rộng thanh bên"><svg class="st-ico" viewBox="0 0 24 24" fill="none"
+  stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"
+  ><rect x="3" y="4" width="18" height="16" rx="2.6"></rect><line x1="9" y1="4" x2="9" y2="20"></line
+  ><path class="st-arrow" d="M16.6 9.4 13.9 12l2.7 2.6"></path></svg></button>
+<div id="sideBackdrop" aria-hidden="true"></div>
 <div class="wrap">
 <header class="hdr">
   <div class="hgrow"><h1 class="brand-title" id="brandTitle"></h1></div>
@@ -1309,7 +1420,6 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
       <div class="set-sec">
         <div class="set-h">Dữ liệu</div>
         <button id="reload" class="dropdown-action-btn" onclick="syncWms()" title="Kéo dữ liệu mới trực tiếp từ WMS"><span class="act">Tải lại dữ liệu</span><small class="timestamp-hint" id="tsReload"></small></button>
-        <a id="lnkSheet" class="set-link dropdown-action-btn" hidden href="#" target="_blank" rel="noopener"><span class="act">Mở Google Sheet nguồn ↗</span></a>
       </div>
     </div>
   </div>
@@ -1419,7 +1529,6 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 
 <div class="footbar">
   <span class="chip">Nguồn: stocklocationfactory</span>
-  <a id="srclink" hidden href="#" target="_blank" rel="noopener">Mở Google Sheet</a>
   <span id="loadinfo" class="hint"></span>
 </div>
 </div>
@@ -1590,7 +1699,8 @@ var MODAL_ROWS = {shelf:[],pend:[]};   // bộ dữ liệu modal đang xem (1 kh
 var CAT_DATA = {};                     // cate -> {sh,pe,whs:[[kho,skuSh,skuPe],...]} cho modal phân bổ kho
 
 /* Sheet nguồn: bỏ khỏi DOM trên bản công khai — ?src=1 mới hiện cho quản trị. */
-(function(){ var a=document.getElementById('srclink'); if(!a) return; if(SHOW_SRC){ a.hidden=false; a.href=SHEET_URL; } else a.remove(); })();
+/* Lối "Mở Google Sheet" đã bỏ khỏi giao diện (08/08/2026) — dashboard chỉ là nơi ĐỌC, ai cần
+   file nguồn thì vào Drive. SHEET_URL vẫn giữ để gviz dựng URL truy vấn. */
 
 function nf(x){ return (x||0).toLocaleString('en-US'); }
 /* CT2: tỷ lệ %% chính xác — tối đa 2 số lẻ, số nguyên thì không hiện .00 (99.12% giữ nguyên, 100% ra 100%) */
@@ -2498,6 +2608,18 @@ function plgMau(k,cls){
   if(PLG.mode==='vesinh') return (PLG_ST[k]&&PLG_ST[k].c)||'';
   return cls==='trong'?'':'var(--s'+(String(cls).replace('w','')||1)+')';
 }
+/* Nền cho Ô MẪU trong chú giải: dựng lại ĐÚNG chuyển sắc của ô thật trên sơ đồ (không thể tham
+   chiếu <linearGradient> của SVG từ HTML nên vẽ lại bằng linear-gradient của CSS). */
+function plgNenMau(k,cls){
+  if(PLG.mode==='vesinh'){
+    var m=PLG_ST[k]; if(!m||!m.c) return '';
+    var toi={da:'#046c4e',chua:'#991b1b',nduyet:'#92400e'}[k]||m.c;
+    return 'linear-gradient(180deg,'+m.c+','+toi+')';
+  }
+  if(cls==='trong') return '';
+  var i=String(cls).replace('w','')||1;
+  return 'linear-gradient(180deg,var(--s'+i+'),var(--s'+i+'d))';
+}
 /* Màu định danh 1 KHO (dùng cho chip khu vực + hàng độ phủ) — theo slot cố định của kho đó */
 function plgMauKho(w){ var s=plgKho().slot[w]; return s?'var(--s'+s+')':'var(--ink3)'; }
 function plgPct(a,b){ return b?Math.round(a/b*1000)/10:0; }
@@ -2582,15 +2704,11 @@ function plgRender(){
    vệ sinh phát theo ngày), kho nguyên liệu chưa có lịch nên chỗ đó là CHẾ ĐỘ TÔ MÀU sơ đồ. */
 function plgVeTop(T){
   var tong=T.tong, soDay=T.dsDay.length;
-  var K=plgKho(), dem=K.dem;
-  var chips='<span class="pg-hint" style="font-weight:650">Khu vực:</span>'+
-    '<button type="button" class="pg-whtab'+(PLG.area?'':' active')+'" onclick="plgSetArea(\'\')">Tất cả</button>'+
-    K.ds.map(function(w){
-      return '<button type="button" class="pg-whtab'+(PLG.area===w?' active':'')+'" data-a="'+esc(w)+'"'+
-        ' title="'+esc(w+' — '+nf(dem[w])+' dòng tồn theo mã vị trí')+'"'+
-        ' onclick="plgSetArea(this.getAttribute(\'data-a\'))"><span class="pg-dot" style="background:'+plgMauKho(w)+'"></span>'+
-        esc(plgTenNgan(w))+'</button>';
-    }).join('');
+  /* Chips "Khu vực" (Tất cả / MTG / GARMENT) đã bỏ 08/08/2026: hai kho vốn đã đọc được ngay trên
+     sơ đồ bằng màu ô + hộp chú giải, và bấm chú giải cũng ẩn/hiện được đúng nhóm đó. Thanh điều
+     khiển giờ chỉ còn BỘ LỌC NGÀY. PLG.area vẫn còn trong mã (mặc định rỗng) để mọi phép đếm giữ
+     nguyên một đường đi duy nhất, không phải rẽ nhánh. */
+  var chips='';
   /* Ô chọn NGÀY — cùng vị trí (ngay sau Khu vực) và cùng lối bấm-xổ như tab Planogram Hasaki */
   var kh=plgKhoang();
   var ngay='<span style="width:8px"></span><span class="pg-hint" style="font-weight:650">Ngày:</span>'+
@@ -2623,11 +2741,11 @@ function plgVeMap(g,T){
      chứ không rút gọn, vì đây là chỗ duy nhất còn giải nghĩa màu sau khi bỏ biển tên trên bản vẽ.
      Các mục nhóm vẫn bấm được để ẩn/hiện nhóm; mục "Dãy kệ" chỉ để đối chiếu nên không phải nút. */
   var legend='<div class="pg-legbox"><div class="lb-t">Chú giải</div>'+thu.map(function(k){
-    var d=dem[k], c=plgMau(k,d.cls);
+    var d=dem[k], nen=plgNenMau(k,d.cls);
     return '<button type="button" class="'+(PLG.tat[k]?'off':'')+'" data-k="'+esc(k)+'"'+
       ' onclick="plgToggle(this.getAttribute(\'data-k\'))" aria-pressed="'+(PLG.tat[k]?'false':'true')+'"'+
       ' title="Bấm để ẩn/hiện nhóm này trên sơ đồ">'+
-      '<i class="'+(c?'':'dash')+'"'+(c?' style="background:'+c+'"':'')+'></i>'+
+      '<i class="'+(nen?'':'dash')+'"'+(nen?' style="background:'+nen+'"':'')+'></i>'+
       esc(d.lb)+' <span class="n">'+d.n+'</span></button>';
   }).join('')+
     '<span class="tinh" title="Viên thuốc bên trái mỗi hàng kệ là nhãn dãy — bấm để soi riêng dãy đó">'+
@@ -2704,7 +2822,7 @@ function plgVeSide(T){
   document.getElementById('plgSide').innerHTML=
     '<section class="panel">'+
     '<h2>Vệ sinh <span class="pg-chip" title="Khoảng ngày đang xem — đổi ở ô Ngày phía trên">'+esc(plgKhoang().lb)+'</span><span style="flex:1"></span>'+
-      '<a class="pg-hint" style="font-weight:600;color:var(--brand2);text-decoration:none" href="'+SHEET_URL+'" target="_blank" rel="noopener">Mở Google Sheet ↗</a></h2>'+
+      '</h2>'+
     '<div class="pg-tiles">'+tiles+'</div>'+bar+
     '<div class="pg-cov">'+
       '<div class="pg-covhd" title="Danh mục vị trí lấy theo MẶT BẰNG THẬT (bản vẽ MTG_zigzag), không lấy từ chính dữ liệu lịch — có vậy vị trí bị bỏ quên mới lộ ra.">Độ phủ lịch vệ sinh'+
@@ -2791,8 +2909,18 @@ function plgSvg(g,mode,theoDay){
   var out=['<svg class="pg-svg" viewBox="0 0 '+g.W+' '+g.H+'" role="img" aria-label="Sơ đồ mặt bằng kho nguyên liệu">'];
   /* Lớp vát dùng CHUNG cho mọi ô (khai báo 1 lần): trắng nhạt ở mép trên, tối nhẹ ở mép dưới,
      TRONG SUỐT ở khoảng giữa nơi đặt số — không đụng vào tương phản chữ/nền đã kiểm bằng validator. */
-  out.push('<defs><linearGradient id="pgSheen" x1="0" y1="0" x2="0" y2="1">'+
-    '<stop offset="0" stop-color="#fff" stop-opacity=".17"/>'+
+  /* 8 slot phân loại + 3 trạng thái vệ sinh, mỗi cái một chuyển sắc dọc 600 -> 800 cùng hue */
+  var grad='';
+  for(var gi=1; gi<=8; gi++){
+    grad+='<linearGradient id="pgG'+gi+'" x1="0" y1="0" x2="0" y2="1">'+
+      '<stop offset="0" style="stop-color:var(--s'+gi+')"/><stop offset="1" style="stop-color:var(--s'+gi+'d)"/></linearGradient>';
+  }
+  [['da','#059669','#046c4e'],['chua','#dc2626','#991b1b'],['nd','#d97706','#92400e']].forEach(function(m){
+    grad+='<linearGradient id="pgG'+m[0]+'" x1="0" y1="0" x2="0" y2="1">'+
+      '<stop offset="0" stop-color="'+m[1]+'"/><stop offset="1" stop-color="'+m[2]+'"/></linearGradient>';
+  });
+  out.push('<defs>'+grad+'<linearGradient id="pgSheen" x1="0" y1="0" x2="0" y2="1">'+
+    '<stop offset="0" stop-color="#fff" stop-opacity=".12"/>'+
     '<stop offset=".42" stop-color="#fff" stop-opacity="0"/>'+
     '<stop offset=".58" stop-color="#000" stop-opacity="0"/>'+
     '<stop offset="1" stop-color="#000" stop-opacity=".13"/></linearGradient></defs>');
@@ -3046,7 +3174,6 @@ function plgVeFoot(T){
   el.innerHTML=
     '<div class="pg-srcbar">'+
       '<span class="pg-chip">Kho nguyên liệu — F0-KHO &middot; WH-MATERIAL-MTG &amp; GARMENT</span>'+
-      '<a href="'+SHEET_URL+'" target="_blank" rel="noopener" style="color:var(--brand2);font-weight:600;text-decoration:none">Mở Google Sheet</a>'+
       '<span class="pg-hint">'+nf(tong)+' vị trí'+(TAB_SYNC.plg?' &middot; cập nhật '+esc(fmtTime(TAB_SYNC.plg)):'')+'</span>'+
       '<button type="button" onclick="plgLamMoi(this)" title="Đọc lại tab '+esc(PLG_TAB)+' từ Google Sheet">Làm mới</button>'+
     '</div>'+
@@ -5779,6 +5906,76 @@ try{ PC.sel=JSON.parse(sessionStorage.getItem('pc-sel')||'{}')||{}; }catch(e){ P
 pcSyncBar();
 
 loadData();
+</script>
+
+<script>
+/* ============ THANH BÊN — chỉ dựng lớp điều hướng bên trái, tái dùng showTab() gốc ============
+ * Gom 4 tab thành 2 hạng mục đúng nếp Audit Hasaki. KHÔNG chạm showTab/view nào -> ruột mỗi tab
+ * hiển thị y hệt bản cũ. */
+(function(){
+  var HM=[
+    { g:'Hạng mục Tồn kho', items:[['stock','Trạng thái lưu trữ'],['kk','Kiểm kê'],['abn','Tồn kho bất thường']] },
+    { g:'Hạng mục 5S',      items:[['plg','Planogram']] }
+  ];
+  var nav=document.getElementById('sideNav'), tg=document.getElementById('sideToggle'), bd=document.getElementById('sideBackdrop');
+  function sync(){ nav.querySelectorAll('.s-item').forEach(function(el){ el.classList.toggle('on', el.getAttribute('data-tab')===TOPTAB); }); }
+  function build(){
+    nav.innerHTML=HM.map(function(grp){
+      return '<div class="s-grp">'+grp.g+'</div><div class="s-sub">'+
+        grp.items.map(function(x){ return '<div class="s-item" data-tab="'+x[0]+'"><span class="di"></span>'+x[1]+'</div>'; }).join('')+
+        '</div>';
+    }).join('');
+    /* Chọn tab KHÔNG tự đóng thanh bên — nó ghim tới khi bấm nút hoặc nền mờ (mobile) */
+    nav.querySelectorAll('.s-item').forEach(function(el){
+      el.addEventListener('click',function(){ showTab(el.getAttribute('data-tab')); });
+    });
+    sync();
+  }
+  /* Nút là SVG (không còn ký tự mũi tên) -> KHÔNG ghi textContent, chỉ đổi trạng thái + nhãn.
+     Hướng mũi tên do CSS lo theo body.side-open; nhãn = HÀNH ĐỘNG sắp xảy ra. */
+  function nhan(open){
+    var t=open?'Thu gọn thanh bên':'Mở rộng thanh bên';
+    tg.setAttribute('aria-expanded',open?'true':'false');
+    tg.setAttribute('aria-label',t); tg.setAttribute('data-tip',t);
+  }
+  /* .side-anim chỉ bật trong lúc trượt (~320ms): mở khoá animation FLIP của .wrap + will-change
+     + clip ngang, tắt ngay sau đó nên không giữ layer thừa khi đứng yên. */
+  var hetAnim=null;
+  function nhipAnim(){
+    document.body.classList.add('side-anim');
+    clearTimeout(hetAnim);
+    hetAnim=setTimeout(function(){
+      document.body.classList.remove('side-anim');
+      /* Bề rộng nội dung vừa đổi 186px NHƯNG đổi padding không bắn window.resize -> bảng/sơ đồ
+         không tự tính lại. Bắn resize SAU khi trượt xong: chỉnh đúng 1 lần, không cướp frame. */
+      if(window.matchMedia('(min-width:769px)').matches) window.dispatchEvent(new Event('resize'));
+    },360);
+  }
+  /* Thứ tự CÓ CHỦ Ý: đổi .side-open -> ép flush layout NGAY trong handler click -> rồi mới bật
+     .side-anim. Cú reflow duy nhất vì vậy nằm trong task click, không rơi vào frame đầu của
+     chuyển động; các frame trượt sau đó chỉ còn việc composite. */
+  function nhipDoi(open){
+    document.body.classList.toggle('side-open',open);
+    nhan(open);
+    void document.body.offsetWidth;   // cố tình đọc layout để flush — ĐỪNG xoá, không phải code chết
+    nhipAnim();
+  }
+  function daoChieu(){ nhipDoi(!document.body.classList.contains('side-open')); }
+  tg.addEventListener('click',daoChieu);
+  bd.addEventListener('click',function(){ nhipDoi(false); });
+  /* Phím tắt Ctrl/Cmd+B — bỏ qua khi đang gõ trong ô nhập (Esc để nguyên cho pop-up) */
+  document.addEventListener('keydown',function(e){
+    if(!(e.ctrlKey||e.metaKey)||e.altKey) return;
+    if(e.key!=='b'&&e.key!=='B') return;
+    var t=e.target;
+    if(t&&(/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)||t.isContentEditable)) return;
+    e.preventDefault(); daoChieu();
+  });
+  nhan(false);
+  /* Bọc showTab gốc để đồng bộ trạng thái active của thanh bên (kể cả khi gọi từ nơi khác) */
+  if(typeof window.showTab==='function'){ var _st=window.showTab; window.showTab=function(t){ _st(t); sync(); }; }
+  build();
+})();
 </script>
 </body>
 </html>
