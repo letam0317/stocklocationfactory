@@ -1188,6 +1188,11 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
    vốn khác hình dạng, để tự do thì mỗi dòng chữ bắt đầu ở một chỗ. */
 .pg-legbox i{width:20px;height:12px;border-radius:4px;flex:none;border:1px solid color-mix(in srgb,var(--ink) 30%,transparent)}
 .pg-legbox i.dash{background:transparent;border:1px dashed color-mix(in srgb,var(--ink3) 65%,transparent)}
+.pg-legbox i.ring{background:transparent}
+.pg-legbox i.ring.vs-nolich{border:1.5px dashed color-mix(in srgb,var(--ink) 42%,transparent)}
+.pg-legbox i.ring.vs-da{border:2px solid #34d399}
+.pg-legbox i.ring.vs-chua{border:2px solid #f87171}
+.pg-legbox i.ring.vs-nduyet{border:2px solid #fbbf24}
 .pg-legbox i.chip{border-radius:999px;background:var(--surface);
   border:1px solid color-mix(in srgb,var(--ink) 40%,transparent)}
 .pg-legbox .n{margin-left:auto;padding-left:10px;font-variant-numeric:tabular-nums;color:var(--ink3);font-weight:600}
@@ -1235,7 +1240,7 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 .pg-room rect{fill:color-mix(in srgb,var(--ink) 4%,transparent);stroke:color-mix(in srgb,var(--ink) 12%,transparent);
   stroke-width:1;stroke-dasharray:6 5;vector-effect:non-scaling-stroke}
 .pg-room{pointer-events:none}
-.pg-khu{fill:var(--ink3);font-weight:700;text-anchor:middle;dominant-baseline:central;letter-spacing:.06em}
+.pg-khu{fill:var(--ink2);font-weight:750;text-anchor:middle;dominant-baseline:central;letter-spacing:.05em}
 /* 1 ô kệ = <g> chứa rect nền + lớp vát sáng-tối + số cột.
    HOVER CHỈ ĐỔI MÀU NÉT — TUYỆT ĐỐI KHÔNG transform/filter (bỏ scale(1.16) + drop-shadow ngày
    08/08/2026 vì rê chuột làm cả sơ đồ "nhích cỡ" trong tích tắc).
@@ -1284,13 +1289,17 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
    Chuyển sắc khai báo 1 lần trong <defs> theo từng slot, stop-color đọc thẳng biến --sN/--sNd nên
    vẫn ăn theo theme. */
 .pg-o rect.bg{stroke:color-mix(in srgb,var(--ink) 30%,transparent);stroke-width:.9;vector-effect:non-scaling-stroke}
-.pg-o.w1 rect.bg{fill:url(#pgG1)} .pg-o.w2 rect.bg{fill:url(#pgG2)} .pg-o.w3 rect.bg{fill:url(#pgG3)}
-.pg-o.w4 rect.bg{fill:url(#pgG4)} .pg-o.w5 rect.bg{fill:url(#pgG5)} .pg-o.w6 rect.bg{fill:url(#pgG6)}
-.pg-o.w7 rect.bg{fill:url(#pgG7)} .pg-o.w8 rect.bg{fill:url(#pgG8)}
-.pg-o.st-da rect.bg{fill:url(#pgGda)} .pg-o.st-chua rect.bg{fill:url(#pgGchua)} .pg-o.st-nduyet rect.bg{fill:url(#pgGnd)}
-.pg-o.w1 text,.pg-o.w2 text,.pg-o.w3 text,.pg-o.w5 text,.pg-o.w6 text,.pg-o.w7 text,.pg-o.w8 text{fill:#fff}
-.pg-o.w4 text{fill:#2a1a00}
-.pg-o.st-da text,.pg-o.st-chua text,.pg-o.st-nduyet text{fill:#fff}
+.pg-o text{fill:#fff}
+/* VIỀN Ô = TRẠNG THÁI VỆ SINH (kênh thứ hai, độc lập với nền). Nhờ vậy một sơ đồ nói được cả hai
+   việc: ô này của kho nào, và lịch vệ sinh của nó đang ở đâu — không phải bấm qua lại 2 chế độ. */
+/* Nét đứt "chưa khai báo lịch" phải nằm TRÊN nền ô đã tô đậm -> dùng trắng mờ, không dùng --ink
+   (ở theme sáng --ink là mực đen, vẽ trên ô xanh/đỏ đậm gần như không thấy). */
+.pg-o.vs-nolich rect.bg{stroke:rgba(255,255,255,.55);stroke-dasharray:5 3.5;stroke-width:1.5}
+/* Ô KHÔNG CÓ TỒN không có nền để tựa vào -> giữ nét đứt xám trên nền sơ đồ (đặt SAU để thắng) */
+.pg-o.trong.vs-nolich rect.bg{stroke:color-mix(in srgb,var(--ink3) 62%,transparent);stroke-width:1;stroke-dasharray:4 3}
+.pg-o.vs-da rect.bg{stroke:#34d399;stroke-width:2.2}
+.pg-o.vs-chua rect.bg{stroke:#f87171;stroke-width:2.2}
+.pg-o.vs-nduyet rect.bg{stroke:#fbbf24;stroke-width:2.2}
 /* Pop-up ô: bảng khoá-giá trị, khuôn .mtbl của dự án */
 .pg-kv{width:100%;border-collapse:collapse;font-size:13px}
 .pg-kv td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
@@ -2486,13 +2495,28 @@ var PLG_ST={
    Bên đó dữ liệu là YÊU CẦU theo từng ngày nên chọn được đúng 1 ngày; tab Sheet của kho nguyên
    liệu là ẢNH CHỤP hiện trạng, mỗi vị trí chỉ giữ MỐC vệ sinh/yêu cầu gần nhất — nên khoảng ngày
    ở đây là "trong bao nhiêu ngày gần đây", và 45 ngày là trọn cửa sổ mà bộ sync quét. */
-var PLG_NGAY=[{k:'45',n:45,lb:'45 ngày gần nhất',sub:'trọn cửa sổ bộ sync quét'},
-              {k:'30',n:30,lb:'30 ngày gần nhất',sub:''},
-              {k:'7', n:7, lb:'7 ngày gần nhất', sub:''},
-              {k:'3', n:3, lb:'3 ngày gần nhất', sub:''},
-              {k:'1', n:1, lb:'Hôm nay',         sub:''}];
+var PLG_NGAY=[{k:'hnay',n:1, lb:'Hôm nay'},
+              {k:'hqua',n:1, lb:'Hôm qua',          lui:1},
+              {k:'3',   n:3, lb:'3 ngày gần nhất'},
+              {k:'7',   n:7, lb:'7 ngày gần nhất'},
+              {k:'30',  n:30,lb:'30 ngày gần nhất'},
+              {k:'45',  n:45,lb:'45 ngày gần nhất', sub:'trọn cửa sổ bộ sync quét'}];
+var PLG_THU=['CN','T2','T3','T4','T5','T6','T7'];
+function plg0(n){ return (n<10?'0':'')+n; }
+function plgNgayVN(d){ return plg0(d.getDate())+'/'+plg0(d.getMonth()+1); }
+function plgThuVN(d){ return PLG_THU[d.getDay()]; }
+function plgISO(d){ return d.getFullYear()+'-'+plg0(d.getMonth()+1)+'-'+plg0(d.getDate()); }
+function plgHomNay(){ var d=new Date(); d.setHours(0,0,0,0); return d; }
+/* 7 ngày gần nhất để chọn lẻ — Hasaki lấy từ chính các ngày có yêu cầu trong tab VESINH-YEUCAU;
+   tab Sheet của kho nguyên liệu không lưu theo ngày nên đếm lùi từ hôm nay. */
+function plgDsNgay(){
+  var t=plgHomNay(), a=[];
+  for(var i=0;i<7;i++){ var d=new Date(t); d.setDate(t.getDate()-i); a.push(d); }
+  return a;
+}
 var PLG={loadedOnce:false,by:{},ok:false,geo:null,tat:{},mode:'kho',kho:null,khoRaw:0,ngoai:[],
          area:'',ngay:'45',list:'vt',hiDay:'',q:'',st:'',traDay:'',traQ:''};
+/* PLG.mode giữ cứng 'kho': nền ô luôn tô theo kho, trạng thái vệ sinh đi bằng viền (xem plgSvg) */
 
 function plgCellVal(c){ return (c&&c.v!=null)?String(c.f!=null?c.f:c.v):''; }
 /* PLG_GEO đóng thành CHUỖI cho gọn (26KB thay vì 108KB JSON lồng) — tách 1 lần rồi nhớ lại. */
@@ -2537,12 +2561,21 @@ function plgKho(){
 /* Kho của 1 ô: chuỗi tên (nhiều kho thì nối " + "), '' nếu ô không có tồn */
 function plgKhoCua(loc){ var k=plgKho().byO[loc]; return k?Object.keys(k).sort().join(' + '):''; }
 
-/* Khoảng ngày đang xem → {n, lb, tu} (tu = mốc thời gian đầu khoảng, ms) */
+/* Khoảng ngày đang xem → {lb, tu, den} (ms, bao trọn ngày đầu và ngày cuối).
+   PLG.ngay là KHOÁ mốc sẵn ('hnay','hqua','3','7','30','45') HOẶC một ngày cụ thể 'YYYY-MM-DD'
+   khi người dùng chọn ở phần "Hoặc chọn 1 ngày" — đúng nếp ô chọn ngày bên Audit Hasaki. */
 function plgKhoang(){
-  var m=PLG_NGAY[0];
+  var t=plgHomNay();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(PLG.ngay||'')){
+    var p=PLG.ngay.split('-'), d=new Date(+p[0],+p[1]-1,+p[2]);
+    return {lb:plgThuVN(d)+' '+plgNgayVN(d),tu:d.getTime(),den:d.getTime()+86399999,mot:true};
+  }
+  var m=PLG_NGAY[PLG_NGAY.length-1];
   for(var i=0;i<PLG_NGAY.length;i++) if(PLG_NGAY[i].k===PLG.ngay) m=PLG_NGAY[i];
-  var d=new Date(); d.setHours(0,0,0,0);
-  return {n:m.n,lb:m.lb,tu:d.getTime()-(m.n-1)*86400000};
+  var den=t.getTime()+86399999;
+  if(m.lui){ den=t.getTime()-1; }                       // "Hôm qua": chốt hết ngày hôm qua
+  var tu=den+1-m.n*86400000;
+  return {lb:m.lb,tu:tu,den:den,mot:m.n===1};
 }
 /* Ngày trong ô Sheet ("2026-08-07 09:15" / "07/08/2026" / Date(...)) → ms; NaN nếu không đọc được */
 function plgNgayMs(s){
@@ -2564,8 +2597,8 @@ function plgState(r){
   if(String(r.coLich).trim()!=='Có') return 'nolich';
   if(!/approved/i.test(r.ttLich||'')) return 'nduyet';
   if(!(Number(r.daVS)>0)) return 'chua';
-  var ms=plgNgayMs(r.vsGan);
-  if(!isNaN(ms) && ms<plgKhoang().tu) return 'chua';
+  var ms=plgNgayMs(r.vsGan), k=plgKhoang();
+  if(!isNaN(ms) && (ms<k.tu || ms>k.den)) return 'chua';
   return 'da';
 }
 /* Nhóm của 1 ô theo CHẾ ĐỘ đang xem → {key, cls, lb} (key dùng cho chú giải + cross-filter) */
@@ -2578,7 +2611,6 @@ function plgNhom(o){
   var s=plgState(PLG.by[o.loc]);
   return {k:s,cls:PLG_ST[s].cls,lb:PLG_ST[s].lb};
 }
-function plgSetMode(m){ if(PLG.mode===m) return; PLG.mode=m; PLG.tat={}; plgRender(); }
 function plgToggle(k){ PLG.tat[k]=!PLG.tat[k]; plgRender(); }
 function plgSetList(m){ if(PLG.list===m) return; PLG.list=m; plgRender(); }
 /* Bấm lại chip khu vực đang bật = bỏ lọc (đúng nết setArea của Hasaki) */
@@ -2617,11 +2649,28 @@ function plgNenMau(k,cls){
     return 'linear-gradient(180deg,'+m.c+','+toi+')';
   }
   if(cls==='trong') return '';
+  if(k && k.indexOf('WH')===0){ var bc=plgBacKho(k); return 'linear-gradient(180deg,'+bc[0]+','+bc[1]+')'; }
   var i=String(cls).replace('w','')||1;
   return 'linear-gradient(180deg,var(--s'+i+'),var(--s'+i+'d))';
 }
-/* Màu định danh 1 KHO (dùng cho chip khu vực + hàng độ phủ) — theo slot cố định của kho đó */
-function plgMauKho(w){ var s=plgKho().slot[w]; return s?'var(--s'+s+')':'var(--ink3)'; }
+/* Màu định danh 1 KHO — LẤY THẲNG WH_COLOR, đúng bảng màu mà tab Trạng thái lưu trữ gán cho từng
+   kho và tab Kiểm kê / Tồn kho bất thường dùng lại (kkColor cũng đọc WH_COLOR trước). Nhờ vậy
+   WH-MATERIAL-MTG ở đâu cũng là một màu. Rớt về thang --sN chỉ khi tab kia chưa tải xong. */
+function plgMauKho(w){
+  if(typeof WH_COLOR!=='undefined' && WH_COLOR[w]) return WH_COLOR[w];
+  var s=plgKho().slot[w]; return s?'var(--s'+s+')':'var(--ink3)';
+}
+/* Làm tối một màu hex đi p phần — dựng chân chuyển sắc và bậc màu đủ tối cho chữ trắng */
+function plgToi(h,p){
+  h=String(h).trim(); if(h.charAt(0)!=='#'||h.length!==7) return h;
+  var r=parseInt(h.substr(1,2),16),g=parseInt(h.substr(3,2),16),b=parseInt(h.substr(5,2),16);
+  function x(v){ v=Math.max(0,Math.round(v*(1-p))); return (v<16?'0':'')+v.toString(16); }
+  return '#'+x(r)+x(g)+x(b);
+}
+/* Hai bậc màu của ô kệ. Màu gốc của dự án khá sáng (MTG #0ea5e9 chữ trắng chỉ 2,77:1) nên KHÔNG
+   tô nguyên bản: đỉnh chuyển sắc làm tối 28% (chữ trắng ~5:1), chân 55% (~9:1). Vẫn đúng hue của
+   kho nên đối chiếu với chấm màu ở các tab khác vẫn ra ngay. */
+function plgBacKho(w){ var c=plgMauKho(w); return [plgToi(c,0.28), plgToi(c,0.55)]; }
 function plgPct(a,b){ return b?Math.round(a/b*1000)/10:0; }
 function plgPctTxt(a,b){ return String(plgPct(a,b)).replace('.',','); }
 /* ---- PHẠM VI: ô nằm trong khu vực đang lọc hay không (khu vực = KHO giữ tồn ở ô đó) ---- */
@@ -2711,21 +2760,34 @@ function plgVeTop(T){
   var chips='';
   /* Ô chọn NGÀY — cùng vị trí (ngay sau Khu vực) và cùng lối bấm-xổ như tab Planogram Hasaki */
   var kh=plgKhoang();
+  /* Ô CHỌN NGÀY — clone tab Planogram Audit Hasaki: nút xổ hiện nhãn khoảng đang xem, menu gồm
+     các mốc sẵn (kèm dải ngày ở cột phụ), một dòng phân cách "Hoặc chọn 1 ngày", rồi 7 ngày gần
+     nhất dạng "T6 08/08". */
+  var dsNgay=plgDsNgay();
+  var mucNgay=function(k,lb,sub,on){
+    return '<div class="combo-item'+(on?' active':'')+'" data-k="'+esc(k)+'" onclick="plgSetNgay(this.getAttribute(\'data-k\'))">'+
+      '<span class="nm">'+esc(lb)+'</span>'+(sub?'<span class="c">'+esc(sub)+'</span>':'')+'</div>';
+  };
   var ngay='<span style="width:8px"></span><span class="pg-hint" style="font-weight:650">Ngày:</span>'+
     '<div class="combo" style="display:inline-block">'+
       '<button type="button" class="pg-whtab active" onclick="event.stopPropagation();plgMoNgay()" title="Khoảng ngày dùng để xét ĐÃ/CHƯA vệ sinh">'+
         esc(kh.lb)+' <span style="font-size:9px;opacity:.75">▼</span></button>'+
-      '<div class="combo-menu" id="plgNgayMenu" style="left:0;right:auto;min-width:250px">'+
+      '<div class="combo-menu" id="plgNgayMenu" style="left:0;right:auto;min-width:268px">'+
         PLG_NGAY.map(function(m){
-          return '<div class="combo-item'+(PLG.ngay===m.k?' active':'')+'" data-k="'+m.k+'" onclick="plgSetNgay(this.getAttribute(\'data-k\'))">'+
-            '<span class="nm">'+esc(m.lb)+'</span>'+(m.sub?'<span class="c">'+esc(m.sub)+'</span>':'')+'</div>';
+          var den=new Date(plgHomNay()); if(m.lui) den.setDate(den.getDate()-1);
+          var tu=new Date(den); tu.setDate(den.getDate()-(m.n-1));
+          var sub=m.sub||(m.n===1?plgNgayVN(den):plgNgayVN(tu)+' – '+plgNgayVN(den));
+          return mucNgay(m.k,m.lb,sub,PLG.ngay===m.k);
+        }).join('')+
+        '<div class="combo-item all" style="pointer-events:none"><span class="nm pg-hint">Hoặc chọn 1 ngày</span></div>'+
+        dsNgay.map(function(d,i){
+          return mucNgay(plgISO(d),plgThuVN(d)+' '+plgNgayVN(d),i===0?'hôm nay':'',PLG.ngay===plgISO(d));
         }).join('')+
       '</div></div>';
-  var seg='<span style="width:8px"></span><span class="pg-hint" style="font-weight:650">Tô màu:</span>'+
-    '<div class="pg-seg sm">'+
-      '<button type="button" class="'+(PLG.mode==='kho'?'on':'')+'" onclick="plgSetMode(\'kho\')" aria-pressed="'+(PLG.mode==='kho')+'">Theo kho</button>'+
-      '<button type="button" class="'+(PLG.mode==='vesinh'?'on':'')+'" onclick="plgSetMode(\'vesinh\')" aria-pressed="'+(PLG.mode==='vesinh')+'">Theo vệ sinh</button>'+
-    '</div>';
+  /* Bộ chuyển "Tô màu" đã bỏ 08/08/2026. Sơ đồ nay dùng ĐỒNG THỜI hai kênh nên không còn gì để
+     chọn: NỀN ô = kho giữ tồn (định danh, luôn có dữ liệu), VIỀN ô = trạng thái vệ sinh (nét đứt
+     = chưa khai báo lịch · xanh = đã vệ sinh · đỏ = chưa · hổ phách = lịch chưa duyệt). */
+  var seg='';
   document.getElementById('plgTop').innerHTML=chips+ngay+seg+
     '<span style="flex:1"></span>'+
     '<button type="button" class="pg-whtab" onclick="plgOpenTra()" title="Xem từng dãy kệ: ô nào thuộc kho nào, trạng thái vệ sinh ra sao">Tra cứu dãy kệ &middot; '+nf(soDay)+'</button>'+
@@ -2740,7 +2802,7 @@ function plgVeMap(g,T){
   /* HỘP CHÚ GIẢI neo ở GÓC TRÊN BÊN PHẢI của sơ đồ. Dùng TÊN KHO ĐẦY ĐỦ (WH - MATERIAL - MTG…)
      chứ không rút gọn, vì đây là chỗ duy nhất còn giải nghĩa màu sau khi bỏ biển tên trên bản vẽ.
      Các mục nhóm vẫn bấm được để ẩn/hiện nhóm; mục "Dãy kệ" chỉ để đối chiếu nên không phải nút. */
-  var legend='<div class="pg-legbox"><div class="lb-t">Chú giải</div>'+thu.map(function(k){
+  var legend='<div class="pg-legbox"><div class="lb-t">Kho giữ tồn (nền ô)</div>'+thu.map(function(k){
     var d=dem[k], nen=plgNenMau(k,d.cls);
     return '<button type="button" class="'+(PLG.tat[k]?'off':'')+'" data-k="'+esc(k)+'"'+
       ' onclick="plgToggle(this.getAttribute(\'data-k\'))" aria-pressed="'+(PLG.tat[k]?'false':'true')+'"'+
@@ -2748,6 +2810,11 @@ function plgVeMap(g,T){
       '<i class="'+(nen?'':'dash')+'"'+(nen?' style="background:'+nen+'"':'')+'></i>'+
       esc(d.lb)+' <span class="n">'+d.n+'</span></button>';
   }).join('')+
+    '<div class="lb-t" style="margin-top:3px">Trạng thái vệ sinh (viền ô)</div>'+
+    ['da','chua','nduyet','nolich'].map(function(k){
+      return '<span class="tinh"><i class="ring vs-'+k+'"></i>'+esc(PLG_ST[k].lb)+
+        ' <span class="n">'+nf(vs[k])+'</span></span>';
+    }).join('')+
     '<span class="tinh" title="Viên thuốc bên trái mỗi hàng kệ là nhãn dãy — bấm để soi riêng dãy đó">'+
     '<i class="chip"></i>Dãy kệ <span class="n">'+dsDay.length+'</span></span>'+
     '</div>';
@@ -2764,10 +2831,9 @@ function plgVeMap(g,T){
       plgSvg(g,mode,theoDay)+'</div></div></div>'+
     '<p class="pg-hint" style="margin:9px 2px 0">Bấm một ô để xem chi tiết vị trí, bấm nhãn dãy để soi riêng dãy đó &middot; '+
       'sơ đồ bê nguyên hình học bản vẽ <code>MTG_zigzag</code> (đúng tỷ lệ, nét kẻ, khoảng cách thật) — cách đọc màu: '+
-      (mode==='kho'?'<b>mỗi màu là một kho</b> đang giữ tồn ở ô đó, <b>nét đứt = ô không có tồn</b> (nguồn: tồn theo mã vị trí của tab Trạng thái lưu trữ)'
-                   :'<b>xanh = đã vệ sinh</b>, <b>đỏ = có lịch đã duyệt mà chưa vệ sinh</b>, <b>hổ phách = lịch chưa duyệt</b>, '+
-                    '<b>nét đứt = chưa khai báo lịch</b> (nguồn: planogram WMS, tab <code>'+esc(PLG_TAB)+'</code>)')+
-      '.</p>'+
+      '<b>nền ô = kho</b> đang giữ tồn ở đó (nguồn: tồn theo mã vị trí của tab Trạng thái lưu trữ, dùng chung bảng màu với các tab khác), '+
+      '<b>viền ô = trạng thái vệ sinh</b> — nét đứt là chưa khai báo lịch, xanh đã vệ sinh, đỏ chưa vệ sinh, hổ phách lịch chưa duyệt '+
+      '(nguồn: planogram WMS, tab <code>'+esc(PLG_TAB)+'</code>).</p>'+
     '</section>';
 }
 
@@ -2910,14 +2976,13 @@ function plgSvg(g,mode,theoDay){
   /* Lớp vát dùng CHUNG cho mọi ô (khai báo 1 lần): trắng nhạt ở mép trên, tối nhẹ ở mép dưới,
      TRONG SUỐT ở khoảng giữa nơi đặt số — không đụng vào tương phản chữ/nền đã kiểm bằng validator. */
   /* 8 slot phân loại + 3 trạng thái vệ sinh, mỗi cái một chuyển sắc dọc 600 -> 800 cùng hue */
+  /* Chuyển sắc dựng ĐỘNG theo WH_COLOR của từng kho — không hardcode, kho nào đổi màu ở tab
+     Trạng thái lưu trữ thì ô kệ đổi theo. */
   var grad='';
-  for(var gi=1; gi<=8; gi++){
-    grad+='<linearGradient id="pgG'+gi+'" x1="0" y1="0" x2="0" y2="1">'+
-      '<stop offset="0" style="stop-color:var(--s'+gi+')"/><stop offset="1" style="stop-color:var(--s'+gi+'d)"/></linearGradient>';
-  }
-  [['da','#059669','#046c4e'],['chua','#dc2626','#991b1b'],['nd','#d97706','#92400e']].forEach(function(m){
-    grad+='<linearGradient id="pgG'+m[0]+'" x1="0" y1="0" x2="0" y2="1">'+
-      '<stop offset="0" stop-color="'+m[1]+'"/><stop offset="1" stop-color="'+m[2]+'"/></linearGradient>';
+  plgKho().ds.forEach(function(w,gi){
+    var bc=plgBacKho(w);
+    grad+='<linearGradient id="pgW'+gi+'" x1="0" y1="0" x2="0" y2="1">'+
+      '<stop offset="0" stop-color="'+bc[0]+'"/><stop offset="1" stop-color="'+bc[1]+'"/></linearGradient>';
   });
   out.push('<defs>'+grad+'<linearGradient id="pgSheen" x1="0" y1="0" x2="0" y2="1">'+
     '<stop offset="0" stop-color="#fff" stop-opacity=".12"/>'+
@@ -2959,7 +3024,9 @@ function plgSvg(g,mode,theoDay){
     /* Tách theo " · " thành nhiều dòng cho vừa bề ngang phòng; nhãn dọc giữ 1 dòng */
     var d=k.doc?[k.lb]:k.lb.split(' · ');
     var dai=0; d.forEach(function(t){ dai=Math.max(dai,t.length); });
-    var fs=Math.max(13,Math.min(24,(oW-34)/(dai*0.55),(oH-20)/(d.length*1.24)));
+    /* Trần cỡ chữ nâng 24 -> 34: hai phòng này rộng 208-249 đơn vị nên vẫn còn chỗ, mà ở tỷ lệ
+       hiển thị thật thì 24 đơn vị chỉ còn ~9px, đọc rất bé so với số trong ô kệ. */
+    var fs=Math.max(15,Math.min(34,(oW-30)/(dai*0.54),(oH-18)/(d.length*1.24)));
     var lh=fs*1.24, y0=cy-(d.length-1)*fs*0.62;
     var bw=Math.min(oW-10,dai*fs*0.55+28), bh=Math.min(oH-8,d.length*lh+8);
     var tr=k.doc?' transform="rotate(-90 '+cx.toFixed(1)+' '+cy.toFixed(1)+')"':'';
@@ -2985,12 +3052,15 @@ function plgSvg(g,mode,theoDay){
     /* Mờ ô ngoài tầm nhìn hiện tại — 3 nguồn: KHU VỰC đang lọc, nhóm bị tắt ở chú giải, dãy đang
        soi. Vẫn VẼ chứ không xoá: sơ đồ là mặt bằng thật, ô biến mất là mất luôn manh mối. */
     var mo=!plgTrongPhamVi(c)||PLG.tat[n.k]||(PLG.hiDay&&c.d!==PLG.hiDay), hi=PLG.hiDay&&c.d===PLG.hiDay;
+    var vs=' vs-'+plgState(r);                       // viền = trạng thái vệ sinh
+    var iKho=plgKho().ds.indexOf(plgKhoCua(c.loc));  // nền = gradient của kho giữ tồn
+    var to=iKho>=0?' fill="url(#pgW'+iKho+')"':'';
     var hop=' x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+ww.toFixed(1)+'" height="'+hh.toFixed(1)+'" rx="'+rx+'"';
-    out.push('<g class="pg-o '+n.cls+(mo?' dim':'')+(hi?' hi':'')+'" tabindex="0" role="button"'+
+    out.push('<g class="pg-o '+n.cls+vs+(mo?' dim':'')+(hi?' hi':'')+'" tabindex="0" role="button"'+
       ' data-l="'+c.loc+'" onclick="plgOpen(this.getAttribute(\'data-l\'))"'+
       ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();plgOpen(this.getAttribute(\'data-l\'))}">'+
       '<title>'+esc(tip)+'</title>'+
-      '<rect class="bg"'+hop+'/>'+
+      '<rect class="bg"'+hop+to+'/>'+
       /* ô nét đứt (không có dữ liệu) thì KHÔNG vát: nó cố ý phẳng, rỗng, để đọc ra "ngoài phạm vi" */
       (n.cls==='trong'?'':'<rect class="sheen"'+hop+' fill="url(#pgSheen)"/>')+
       '<text x="'+(x+ww/2).toFixed(1)+'" y="'+(y+hh/2).toFixed(1)+'" font-size="'+fs.toFixed(1)+'">'+c.c+'</text>'+
