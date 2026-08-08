@@ -1142,10 +1142,10 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 .pg-alert b{color:var(--bad)}
 .pg-alert .ic{color:var(--bad);flex:none}
 .pg-note{font-size:11.5px;color:var(--ink3);margin:9px 2px 0;line-height:1.55}
-/* Hàng tiêu đề của khối sơ đồ: tên khối bên trái, ngay cạnh là CHÚ GIẢI MÀU — giải thích tại chỗ
-   ô nền màu nào là kho nào, viên thuốc trắng là nhãn dãy kệ. Trước để chú giải trên tiêu đề panel
-   và tên kho thì gắn ngay trên bản vẽ (rơi vào lối đi giữa ô 09 và 10 của dãy 507 — xấu). */
-.pg-maprow{display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap;margin:10px 2px 7px}
+/* Hàng tiêu đề của khối sơ đồ. Dải cảnh báo đỏ phía trên đã gỡ (08/08/2026) — cùng một con số đã
+   có ở panel Vệ sinh (khối Độ phủ + dải kết luận bấm được), để hai chỗ là lặp và ăn mất chiều cao
+   của bản vẽ. Margin trên thu còn 2px để tiêu đề + sơ đồ dịch sát lên. */
+.pg-maprow{display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap;margin:2px 2px 7px}
 .pg-maprow .pg-maphdr{margin:0;flex:none}
 .pg-legend{display:inline-flex;gap:5px;align-items:center;flex:1;min-width:0;flex-wrap:nowrap;
   overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
@@ -1165,10 +1165,31 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 .pg-legend span.tinh{display:inline-flex;align-items:center;gap:6px;flex:none;white-space:nowrap;
   font-size:11px;font-weight:600;color:var(--ink2);padding:4px 2px}
 .pg-legend .n{font-variant-numeric:tabular-nums;color:var(--ink3)}
-/* Khung sơ đồ: nền phẳng hơi lõm để bản vẽ nổi lên, bo góc như các card khác của dự án */
-.pg-wrap{border:1px solid var(--line);border-radius:12px;background:var(--surface2);
+/* Khung sơ đồ: MỘT màu nền duy nhất. Trước đây còn thêm một hộp "sàn kho" (.pg-floor) vẽ trong
+   SVG, tạo ra hai mảng nền lồng nhau đậm/nhạt khác tông — đã bỏ hẳn, giờ chỉ còn nền của khung
+   này. position:relative để hộp chú giải neo được vào góc trên bên phải của sơ đồ. */
+.pg-wrap{position:relative;border:1px solid var(--line);border-radius:12px;background:var(--surface2);
   padding:14px 16px;overflow:hidden;box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ink) 4%,transparent)}
 .pg-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+/* HỘP CHÚ GIẢI neo góc trên bên phải của sơ đồ. Đặt bằng HTML chứ không vẽ vào SVG: chữ giữ đúng
+   cỡ ở mọi mức co của bản vẽ (vẽ trong SVG thì chữ co theo, xuống ~8px là không đọc nổi). */
+.pg-legbox{position:absolute;top:12px;right:14px;z-index:2;display:flex;flex-direction:column;gap:6px;
+  background:color-mix(in srgb,var(--surface) 88%,transparent);border:1px solid var(--line);
+  border-radius:10px;padding:9px 12px;box-shadow:var(--shadow);backdrop-filter:blur(6px)}
+.pg-legbox .lb-t{font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3)}
+.pg-legbox button,.pg-legbox span.tinh{display:flex;align-items:center;gap:8px;white-space:nowrap;
+  border:0;background:transparent;padding:0;font-size:11.5px;font-weight:600;color:var(--ink);text-align:left}
+.pg-legbox button{cursor:pointer}
+.pg-legbox button.off{opacity:.4}
+.pg-legbox button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+/* MỌI ký hiệu cùng bề rộng 20px để cột chữ thẳng hàng — ô màu, ô nét đứt và viên thuốc "dãy kệ"
+   vốn khác hình dạng, để tự do thì mỗi dòng chữ bắt đầu ở một chỗ. */
+.pg-legbox i{width:20px;height:12px;border-radius:4px;flex:none;border:1px solid color-mix(in srgb,var(--ink) 30%,transparent)}
+.pg-legbox i.dash{background:transparent;border:1px dashed color-mix(in srgb,var(--ink3) 65%,transparent)}
+.pg-legbox i.chip{border-radius:999px;background:var(--surface);
+  border:1px solid color-mix(in srgb,var(--ink) 40%,transparent)}
+.pg-legbox .n{margin-left:auto;padding-left:10px;font-variant-numeric:tabular-nums;color:var(--ink3);font-weight:600}
+@media(max-width:900px){ .pg-legbox{position:static;margin:0 0 10px;align-items:flex-start} }
 /* VỪA MÀN HÌNH: bề rộng bản vẽ = min(chỗ còn lại, chiều cao cho phép × tỷ lệ khổ) — cả sơ đồ
    lọt 1 khung nhìn, không phải cuộn dọc mới thấy hết dãy như bản cũ. --pg-ar do JS gắn từ
    viewBox (W/H) nên đổi bản vẽ không phải sửa CSS. */
@@ -1178,28 +1199,28 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
    đang dùng chế độ này), nên đây chỉ là chốt hành vi cho các trình duyệt/mức zoom khác — KHÔNG
    phải thứ chữa hiện tượng rung; xem chú thích ở .pg-o về chuyện đó. */
 .pg-svg{display:block;width:100%;height:auto;font-family:inherit;shape-rendering:geometricPrecision}
-/* ===== LỚP NỀN — đọc như một bản vẽ mặt bằng, không phải mảng ô màu ==========================
-   Thứ tự lùi dần: sàn (nền + lưới toạ độ mờ) → tường → phòng chức năng → ô kệ (dữ liệu, nổi nhất).
-   vector-effect giữ nét mảnh đều ở mọi mức phóng, không dày lên khi SVG bị co. */
-.pg-floor{fill:color-mix(in srgb,var(--ink) 3%,transparent);
-  stroke:color-mix(in srgb,var(--ink) 9%,transparent);stroke-width:1;vector-effect:non-scaling-stroke}
+/* ===== LỚP NỀN =============================================================================
+   Thứ tự lùi dần: phòng chức năng → ô kệ (dữ liệu, nổi nhất). Không còn lớp "sàn kho": nó tạo ra
+   mảng nền thứ hai khác tông nằm trong nền khung, nhìn thành hai vùng đậm/nhạt.
+   vector-effect giữ nét mảnh đều ở mọi mức phóng, không dày lên khi SVG bị co.
+   KHÔNG transition cho bất cứ thứ gì trong SVG — xem chú thích ở .pg-o. */
 /* Khung PHÒNG chức năng — nét duy nhất còn giữ ngoài ô kệ, vì phòng là "khu vực" */
 .pg-khung{fill:color-mix(in srgb,var(--ink) 2.5%,transparent);stroke:color-mix(in srgb,var(--ink) 14%,transparent);
   stroke-width:1.2;stroke-dasharray:8 6;vector-effect:non-scaling-stroke}
 /* Nền mềm sau mỗi DÃY kệ: gom các ô cùng dãy thành một khối đọc được, giúp mắt bám theo hàng */
 .pg-bed{fill:color-mix(in srgb,var(--ink) 5%,transparent);stroke:color-mix(in srgb,var(--ink) 9%,transparent);
-  stroke-width:1;vector-effect:non-scaling-stroke;transition:fill .2s ease}
+  stroke-width:1;vector-effect:non-scaling-stroke}
 .pg-bed.hi{fill:color-mix(in srgb,var(--brand2) 15%,transparent);stroke:color-mix(in srgb,var(--brand2) 45%,transparent)}
 /* Nhãn dãy: chip gọn chỉ còn "501" thay cho "F0-KHO-501-" dài loằng ngoằng của bản in.
    CHIỀU CAO CHIP CO THEO KHOẢNG CÁCH tới nhãn kề (JS tính): cặp 511/512 và 509/510 chỉ cách nhau
    26 đơn vị — chip cao cố định 40 làm hai nhãn chồng lên nhau, đó là chỗ trông thô nhất của bản cũ.
    Bấm chip = soi cả dãy đó (cùng tác dụng với 1 hàng ở panel danh sách bên dưới). */
 .pg-dchip{cursor:pointer}
-.pg-dchip rect{fill:var(--surface);stroke:color-mix(in srgb,var(--ink) 30%,transparent);stroke-width:1.2;
-  vector-effect:non-scaling-stroke;transition:fill .18s ease,stroke .18s ease}
-.pg-dchip text{fill:var(--ink);font-weight:750;text-anchor:middle;dominant-baseline:central;letter-spacing:.02em}
+.pg-dchip rect{fill:var(--surface);stroke:color-mix(in srgb,var(--ink) 40%,transparent);stroke-width:1.4;
+  vector-effect:non-scaling-stroke}
+.pg-dchip text{fill:var(--ink);font-weight:800;text-anchor:middle;dominant-baseline:central;letter-spacing:.02em}
 /* Đường dẫn chip → đầu dãy (khuỷu khi chip bị đẩy lệch): buộc nhãn vào đúng hàng kệ của nó */
-.pg-dlink{fill:none;stroke:color-mix(in srgb,var(--ink) 26%,transparent);stroke-width:1;
+.pg-dlink{fill:none;stroke:color-mix(in srgb,var(--ink) 30%,transparent);stroke-width:1.1;
   stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
 .pg-dchip:hover rect{fill:color-mix(in srgb,var(--brand2) 14%,transparent);stroke:var(--brand2)}
 .pg-dchip:hover text{fill:var(--brand2)}
@@ -1222,15 +1243,23 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
    buộc trình duyệt dựng lại layer nên phơi bày đúng cú nhích đó.
    (Không đo được bằng so pixel trong headless: chính việc chụp ảnh cũng ép rasterize lại và sinh
    ra đúng loại nhiễu ấy — đối chứng 8 lần chụp liên tiếp KHÔNG chạm chuột vẫn ra 2 trạng thái.)
-   Nay giữ nguyên cả hình học lẫn độ dày nét, chỉ đổi màu ⇒ vùng vẽ lại nhỏ nhất có thể. */
-.pg-o{cursor:pointer;transition:opacity .2s ease}
+
+   08/08/2026 — GỠ NỐT MỌI TRANSITION BÊN TRONG SVG. Đây mới là thứ còn lại làm giật: một
+   transition 0,18-0,2s bắt trình duyệt vẽ lại layer SVG ở MỌI KHUNG HÌNH suốt thời gian chạy
+   (~11 lần ở 60fps). Layer này là cả bản vẽ, và mỗi lần rasterize lại nó ra kết quả hơi khác
+   nhau ⇒ đúng hiện tượng "số ở các ô khác nhấp nháy to nhỏ vài phần giây". Bỏ transition thì
+   hover chỉ còn MỘT lần vẽ lại duy nhất, đổi tức thì.
+   Đây cũng chính là chỗ tương đương React.memo trong file thuần này: không có re-render JS nào
+   khi hover (không có handler, không dựng lại DOM) — hover thuần CSS trên :hover, nên "danh sách
+   ô kệ" vốn dĩ đã không bị dựng lại; thứ cần chặn là vòng REPAINT, và nó nằm ở transition. */
+.pg-o{cursor:pointer}
 /* Viền ô là KÊNH NHẬN DẠNG THỨ HAI (luật relief): ở 4 theme tối, ô và mặt nền đều tầm trung nên
    tương phản chỉ ~2,2:1 — chính cái viền 30% --ink này giữ cho ô vẫn tách khỏi nền. */
 .pg-o rect.bg{stroke:color-mix(in srgb,var(--ink) 30%,transparent);stroke-width:.9;vector-effect:non-scaling-stroke}
 /* Lớp vát: trắng rất nhạt ở mép trên, tối nhẹ ở mép dưới — ô đọc thành viên gạch có khối, không
    phải mảng màu dán phẳng. CỐ TÌNH trong suốt ở khoảng giữa (nơi đặt số) để KHÔNG đụng vào tương
    phản chữ/nền mà bộ validator màu đã kiểm. */
-.pg-o rect.sheen{stroke:none;pointer-events:none;transition:opacity .18s ease}
+.pg-o rect.sheen{stroke:none;pointer-events:none}
 .pg-o text{font-weight:700;text-anchor:middle;dominant-baseline:central;pointer-events:none;user-select:none;
   paint-order:stroke;letter-spacing:.01em}
 /* Hover CHỈ đổi MÀU nét, giữ nguyên stroke-width: đổi độ dày là đổi vùng vẽ của nét, trình duyệt
@@ -2590,41 +2619,30 @@ function plgVeTop(T){
    khối sơ đồ → bản vẽ → dòng hướng dẫn đọc màu. */
 function plgVeMap(g,T){
   var mode=T.mode, tong=T.tong, dem=T.dem, thu=T.thu, theoDay=T.theoDay, dsDay=T.dsDay, vs=T.vs;
-  /* CHÚ GIẢI MÀU — đứng ngay cạnh tên khối sơ đồ (góc trên bên trái), giải thích tại chỗ: ô nền
-     màu nào là kho nào, viên thuốc trắng là nhãn dãy kệ. Các mục nhóm vẫn bấm được để lọc; riêng
-     mục "Dãy kệ" chỉ để đối chiếu nên không phải nút. */
-  var legend='<span class="pg-legend">'+thu.map(function(k){
+  /* HỘP CHÚ GIẢI neo ở GÓC TRÊN BÊN PHẢI của sơ đồ. Dùng TÊN KHO ĐẦY ĐỦ (WH - MATERIAL - MTG…)
+     chứ không rút gọn, vì đây là chỗ duy nhất còn giải nghĩa màu sau khi bỏ biển tên trên bản vẽ.
+     Các mục nhóm vẫn bấm được để ẩn/hiện nhóm; mục "Dãy kệ" chỉ để đối chiếu nên không phải nút. */
+  var legend='<div class="pg-legbox"><div class="lb-t">Chú giải</div>'+thu.map(function(k){
     var d=dem[k], c=plgMau(k,d.cls);
     return '<button type="button" class="'+(PLG.tat[k]?'off':'')+'" data-k="'+esc(k)+'"'+
       ' onclick="plgToggle(this.getAttribute(\'data-k\'))" aria-pressed="'+(PLG.tat[k]?'false':'true')+'"'+
       ' title="Bấm để ẩn/hiện nhóm này trên sơ đồ">'+
       '<i class="'+(c?'':'dash')+'"'+(c?' style="background:'+c+'"':'')+'></i>'+
-      esc(plgTenNgan(d.lb))+' <span class="n">'+d.n+'</span></button>';
+      esc(d.lb)+' <span class="n">'+d.n+'</span></button>';
   }).join('')+
-    '<span class="tinh" title="Viên thuốc trắng bên trái mỗi hàng kệ là nhãn dãy — bấm để soi riêng dãy đó">'+
+    '<span class="tinh" title="Viên thuốc bên trái mỗi hàng kệ là nhãn dãy — bấm để soi riêng dãy đó">'+
     '<i class="chip"></i>Dãy kệ <span class="n">'+dsDay.length+'</span></span>'+
-    '</span>';
+    '</div>';
 
-  /* Dải cảnh báo: nêu ĐÚNG một việc phải làm, bấm được để mở danh sách vị trí liên quan */
-  var al='';
-  if(vs.nolich===tong && tong){
-    al='<div class="pg-alertbar" onclick="plgOpenAll(\'nolich\')" title="Bấm xem danh sách vị trí chưa khai báo lịch">'+
-      '<span class="ic">&#9888;</span><span><b>'+nf(tong)+'</b> vị trí chưa được khai báo lịch vệ sinh trên planogram — '+
-      'đã dò cả 2 kho chứa mã <code>F0-KHO</code> (1339 GARMENT · 1177 MTG): 0 lịch gốc, 0 yêu cầu. Bấm xem danh sách</span></div>';
-  } else if(vs.nduyet>0){
-    al='<div class="pg-alertbar warn" onclick="plgOpenAll(\'nduyet\')" title="Bấm xem danh sách vị trí có lịch chưa duyệt">'+
-      '<span class="ic">&#9888;</span><span><b>'+nf(vs.nduyet)+'</b> ô có lịch nhưng chưa được DUYỆT — lịch chưa Approved thì WMS không sinh yêu cầu. Bấm xem</span></div>';
-  } else if(vs.chua>0){
-    al='<div class="pg-alertbar" onclick="plgOpenAll(\'chua\')" title="Bấm xem danh sách vị trí chưa vệ sinh">'+
-      '<span class="ic">&#9888;</span><span><b>'+nf(vs.chua)+'</b> vị trí có lịch đã duyệt mà chưa ai vệ sinh — bấm để xử lý</span></div>';
-  }
+  /* KHÔNG dựng dải cảnh báo đỏ ở panel sơ đồ nữa (08/08/2026): đúng con số đó đã có ở panel Vệ
+     sinh — khối Độ phủ + dải kết luận bấm được. Để cả hai chỗ là lặp thông tin, và nó ăn mất một
+     khoảng chiều cao quý giá ngay phía trên bản vẽ. */
 
   document.getElementById('plgMap').innerHTML=
     '<section class="panel">'+
     '<h2>Sơ đồ khu vực <span class="pg-chip">'+esc(PLG.area?plgTenNgan(PLG.area):'Tất cả')+' &middot; '+nf(tong)+' ô</span></h2>'+
-    al+
-    '<div class="pg-maprow"><span class="pg-maphdr">Kho nguyên liệu (F0-KHO) — '+dsDay.length+' dãy kệ</span>'+legend+'</div>'+
-    '<div class="pg-wrap"><div class="pg-scroll"><div class="pg-fit" style="--pg-ar:'+(g.W/g.H).toFixed(4)+'">'+
+    '<div class="pg-maprow"><span class="pg-maphdr">Kho nguyên liệu (F0-KHO) — '+dsDay.length+' dãy kệ</span></div>'+
+    '<div class="pg-wrap">'+legend+'<div class="pg-scroll"><div class="pg-fit" style="--pg-ar:'+(g.W/g.H).toFixed(4)+'">'+
       plgSvg(g,mode,theoDay)+'</div></div></div>'+
     '<p class="pg-hint" style="margin:9px 2px 0">Bấm một ô để xem chi tiết vị trí, bấm nhãn dãy để soi riêng dãy đó &middot; '+
       'sơ đồ bê nguyên hình học bản vẽ <code>MTG_zigzag</code> (đúng tỷ lệ, nét kẻ, khoảng cách thật) — cách đọc màu: '+
@@ -2765,9 +2783,9 @@ function plgPhong(g,k){
   return {x0:X[0],x1:X[1],y0:Y[0],y1:Y[1]};
 }
 
-/* --- SVG: sàn + lưới → nền dãy đang soi → tường → phòng chức năng → ô kệ → nhãn dãy ------------
-   MỌI TOẠ ĐỘ GIỮ NGUYÊN 100% theo PLG_GEO (bê từ bản vẽ MTG_zigzag) — phần dưới đây chỉ đổi CÁCH
-   VẼ: thêm lưới toạ độ mờ, vát sáng-tối cho ô, biển tên phòng, nhãn dãy co theo chỗ trống. */
+/* --- SVG: nền dãy đang soi → phòng chức năng → ô kệ → nhãn dãy --------------------------------
+   TOẠ ĐỘ Ô KỆ GIỮ NGUYÊN 100% theo PLG_GEO (bê từ bản vẽ MTG_zigzag). Phần đổi chỉ là CÁCH VẼ và
+   hai thứ phụ trợ: khung phòng (căn lại mép phải cho thẳng nhau) + nhãn dãy (dồn về một cột). */
 function plgSvg(g,mode,theoDay){
   var GAP=3.2;   // khe hở giữa 2 ô cạnh nhau: ô đọc thành từng viên gạch chứ không thành 1 khối liền
   var out=['<svg class="pg-svg" viewBox="0 0 '+g.W+' '+g.H+'" role="img" aria-label="Sơ đồ mặt bằng kho nguyên liệu">'];
@@ -2778,11 +2796,9 @@ function plgSvg(g,mode,theoDay){
     '<stop offset=".42" stop-color="#fff" stop-opacity="0"/>'+
     '<stop offset=".58" stop-color="#000" stop-opacity="0"/>'+
     '<stop offset="1" stop-color="#000" stop-opacity=".13"/></linearGradient></defs>');
-  /* Sàn kho + lưới toạ độ mờ: bản vẽ có "thân" và đọc ra là mặt bằng kỹ thuật, không phải nền phẳng */
-  out.push('<rect class="pg-floor" x="14" y="14" width="'+(g.W-28)+'" height="'+(g.H-28)+'" rx="16"/>');
-  /* KHÔNG vẽ nền vùng kho dưới ô kệ nữa: khối “Kho nguyên liệu” giờ chỉ còn NỀN SÀN + Ô KỆ.
-     Ranh giới 2 kho đọc bằng chính màu ô, còn tên kho chuyển ra CHÚ GIẢI ở góc trên bên trái —
-     biển tên gắn trên bản vẽ rơi vào lối đi giữa ô 09 và 10 của dãy 507, đặt ở đó xấu. */
+  /* KHÔNG vẽ lớp sàn, KHÔNG vẽ nền vùng kho: khối “Kho nguyên liệu” chỉ còn MỘT màu nền (của
+     .pg-wrap) + ô kệ. Ranh giới 2 kho đọc bằng chính màu ô, tên kho nằm ở hộp chú giải góc trên
+     bên phải sơ đồ. */
   /* Nền mềm CHỈ vẽ cho dãy đang soi: bản vẽ đã có tường + khung kệ, tô nền cho cả 14 dãy chỉ làm
      đục hình (dãy vòng qua góc kho thì hộp bao còn trùm cả lối đi). */
   if(PLG.hiDay && theoDay[PLG.hiDay]){
@@ -2800,8 +2816,15 @@ function plgSvg(g,mode,theoDay){
      Mốc nhãn trong bản vẽ nằm lệch về mép trái phòng (Khu PO: mốc x=2263 mà phòng là 2231→2439),
      nên bản trước lấy mốc làm tâm chữ -> chữ thò ra ngoài tường. Nay dò 4 bức tường quanh mốc để
      lấy đúng khung phòng rồi mới căn giữa. */
+  /* CĂN MÉP PHẢI CÁC PHÒNG THẲNG HÀNG: bản vẽ gốc cho "Khu PO · Đồng kiểm" hết ở x=2439 còn
+     "Phòng kiểm soát kho" hết ở x=2346 — lệch 93 đơn vị, nhìn như hai khối rời rạc dán lệch nhau.
+     Kéo mép phải mọi phòng về cùng một trục (mép phải xa nhất). Chỉ NỚI khung phòng ra vùng trống
+     phía phải (ô kệ xa nhất kết thúc ở x=2178) nên không đè lên mã vị trí nào. */
+  var mepPhai=0;
+  g.khu.forEach(function(k){ mepPhai=Math.max(mepPhai,plgPhong(g,k).x1); });
   g.khu.forEach(function(k){
     var p=plgPhong(g,k);
+    p.x1=mepPhai;
     var cx=(p.x0+p.x1)/2, cy=(p.y0+p.y1)/2;
     /* Phòng hẹp cao thì nhãn quay dọc: khi đó chỗ trống cho chữ là CHIỀU CAO phòng, không phải rộng */
     var oW=k.doc?(p.y1-p.y0):(p.x1-p.x0), oH=k.doc?(p.x1-p.x0):(p.y1-p.y0);
@@ -2853,10 +2876,21 @@ function plgSvg(g,mode,theoDay){
      Nay MỌI CHIP CÙNG MỘT CỠ, đọc được ở tỷ lệ hiển thị thật; chip nào đụng nhau thì ĐẨY LỆCH
      THEO CHIỀU DỌC vừa đủ và nối về đúng hàng kệ của nó bằng ĐƯỜNG DẪN KHUỶU — cách chú thích
      chuẩn của bản vẽ kỹ thuật, không phải thu nhỏ chữ cho khỏi đè. */
-  var H=36, FS=24, GIAN=H+8;
-  var nhan=g.day.map(function(d){ return {d:d.d, lx:d.lx, ly:d.ly, cy:d.ly}; })
+  /* MỘT CỘT DUY NHẤT, MỌI CHIP CÙNG CỠ: bề rộng lấy theo nhãn dài nhất ("507A") nên cả mép trái
+     lẫn mép phải đều thẳng tắp. Trước đây mỗi chip nép sát đầu dãy của nó, mà đầu dãy so le
+     (302 · 325 · 434 · 499 · 639 · 706) nên cột nhãn răng cưa.
+     Cỡ chữ 24 → 28 và chip cao 36 → 42 (+17%), nét viền và chữ đậm hơn cho nổi trên nền sơ đồ. */
+  var H=42, FS=28, GIAN=H+8;
+  var daiNhat=0; g.day.forEach(function(d){ daiNhat=Math.max(daiNhat,d.d.length); });
+  var W_CHIP=Math.round(FS*0.66*daiNhat)+26, X_CHIP=34;
+  /* Đầu dãy = mép trái ô đầu tiên của dãy đó, lấy thẳng từ hình học (không qua bộ lọc khu vực,
+     để dãy bị lọc mờ vẫn có đường dẫn đúng chỗ) */
+  var dauDay={};
+  g.o.forEach(function(c){ if(dauDay[c.d]==null||c.x<dauDay[c.d]) dauDay[c.d]=c.x; });
+  var nhan=g.day.map(function(d){ return {d:d.d, lx:(dauDay[d.d]!=null?dauDay[d.d]:d.lx), ly:d.ly, cy:d.ly}; })
                 .sort(function(a,b){ return a.ly-b.ly; });
-  /* Gom các nhãn quá sát nhau thành 1 cụm rồi rải đều quanh tâm cụm — giữ đúng thứ tự trên/dưới */
+  /* Gom các nhãn quá sát nhau thành 1 cụm rồi rải đều quanh tâm cụm — giữ đúng thứ tự trên/dưới.
+     Cặp kệ 2 mặt (509/510, 511/512) chỉ cách nhau 26 đơn vị, không đẩy thì chồng lên nhau. */
   for(var i=0;i<nhan.length;){
     var j=i+1;
     while(j<nhan.length && nhan[j].ly-nhan[j-1].ly<GIAN) j++;
@@ -2867,20 +2901,20 @@ function plgSvg(g,mode,theoDay){
     i=j;
   }
   nhan.forEach(function(n){
-    var w=Math.round(FS*0.66*n.d.length)+22;
-    var x=n.lx-w-16, y=n.cy-H/2, soO=(theoDay[n.d]&&theoDay[n.d].n)||0;
-    /* Đường dẫn: ra khỏi chip → chạy tới máng dọc sát đầu dãy → bẻ về đúng cao độ hàng kệ */
-    var mang=n.lx-9;
+    var x=X_CHIP, y=n.cy-H/2, soO=(theoDay[n.d]&&theoDay[n.d].n)||0;
+    /* ĐƯỜNG DẪN: ra khỏi chip → chạy ngang tới máng dọc sát đầu dãy → bẻ về đúng cao độ hàng kệ.
+       Nhờ đó nhãn đứng một cột mà vẫn chỉ đích danh hàng kệ của nó. */
+    var mang=n.lx-14;
     var dan=Math.abs(n.cy-n.ly)<0.5
-      ? 'M'+(x+w)+' '+n.ly.toFixed(1)+'H'+n.lx
-      : 'M'+(x+w)+' '+n.cy.toFixed(1)+'H'+mang.toFixed(1)+'V'+n.ly.toFixed(1)+'H'+n.lx;
+      ? 'M'+(x+W_CHIP)+' '+n.ly.toFixed(1)+'H'+n.lx.toFixed(1)
+      : 'M'+(x+W_CHIP)+' '+n.cy.toFixed(1)+'H'+mang.toFixed(1)+'V'+n.ly.toFixed(1)+'H'+n.lx.toFixed(1);
     out.push('<g class="pg-dchip'+(PLG.hiDay===n.d?' on':'')+'" tabindex="0" role="button" data-d="'+esc(n.d)+'"'+
       ' onclick="plgSoiDay(this.getAttribute(\'data-d\'))"'+
       ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();plgSoiDay(this.getAttribute(\'data-d\'))}">'+
       '<title>'+esc('Dãy '+n.d+' — '+soO+' ô kệ\nBấm để soi riêng dãy này')+'</title>'+
       '<path class="pg-dlink" d="'+dan+'"/>'+
-      '<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+w+'" height="'+H+'" rx="'+(H/2)+'"/>'+
-      '<text x="'+(x+w/2).toFixed(1)+'" y="'+n.cy.toFixed(1)+'" font-size="'+FS+'">'+esc(n.d)+'</text></g>');
+      '<rect x="'+x+'" y="'+y.toFixed(1)+'" width="'+W_CHIP+'" height="'+H+'" rx="'+(H/2)+'"/>'+
+      '<text x="'+(x+W_CHIP/2).toFixed(1)+'" y="'+n.cy.toFixed(1)+'" font-size="'+FS+'">'+esc(n.d)+'</text></g>');
   });
   out.push('</g></svg>');
   return out.join('');
