@@ -976,21 +976,28 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
    nét kẻ và khoảng cách dãy/vật thể phải giữ nguyên tỷ lệ.
 
    PHÂN VAI MÀU (theo đúng luật data-viz của dự án):
-   · CATEGORICAL (định danh kho) — dùng thang phân loại theo THỨ TỰ SLOT CỐ ĐỊNH, không xoay vòng.
-     2 slot đang dùng: xanh #2a78d6 / cam #eb6834 (sáng), #3987e5 / #d95926 (tối). Đã chạy validator:
-     PASS cả 5 mục ở light và ở 4 mặt tối, CVD ΔE 24.7–26.8 (ngưỡng ≥8), normal-vision 31.8–33.6
-     (≥15). Riêng theme Nord mặt #333b4a: cam đạt 2.9:1 < 3:1 → theo luật "relief" phải có nhãn
-     hiển thị: mỗi ô LUÔN in số cột + có viền riêng không phụ thuộc màu nền, cộng chú giải và
-     pop-up ghi tên kho ⇒ định danh không bao giờ chỉ dựa vào màu.
+   · CATEGORICAL (định danh kho) — thang phân loại theo THỨ TỰ SLOT CỐ ĐỊNH, không xoay vòng.
+     Bản 08/08/2026 hạ độ chói: xanh nguyên #2a78d6 / cam nguyên #eb6834 tô kín 157 ô thì cả bản
+     vẽ chỉ còn là hai mảng màu gắt. Nay dùng cặp TRẦM, ít bão hoà hơn — XANH THÉP #2f5d8c và
+     ĐỒNG NUNG #b0603c (sáng) · #4a7ba6 và #ad5f3d (tối) — vẫn là trục lam↔cam nên giữ nguyên
+     ưu thế phân biệt cho người mù màu.
+     Đo lại bằng validator (WCAG + mô phỏng CVD Viénot):
+       chữ trắng trên nền ô  — sáng 6,85 / 4,58 · tối 4,49 / 4,69   (cũ chỉ 4,42/3,20 và 3,64/3,88
+                               → bản cũ KHÔNG đạt AA cho chữ, bản này đạt)
+       ΔE s1↔s2              — thường 72,3 · protan 59,0 · deutan 75,4 · tritan 132,2 (ngưỡng ≥8)
+       ô ↔ nền               — mọi theme sáng ≥3,7; 4 theme tối rơi 2,3–3,5 (Nord xấu nhất)
+     Chỗ rơi dưới 3 ở theme tối xử theo đúng luật "relief" như bản cũ, và mạnh hơn: mỗi ô LUÔN in
+     số cột + VIỀN RIÊNG nâng lên 30% --ink (kênh nhận dạng thứ hai, không phụ thuộc màu nền),
+     cộng chú giải, biển tên vùng kho và pop-up ghi tên kho ⇒ không bao giờ chỉ dựa vào màu.
    · STATUS (trạng thái vệ sinh) — dùng bộ status riêng (xanh/đỏ/hổ phách), TUYỆT ĐỐI không mượn
      làm "slot phân loại thứ 3", và luôn kèm nhãn ở chú giải.
 
-   Nét tường dùng color-mix trên --ink nên ăn cả 7 theme; hardcode #111 là mất hình ở theme tối. */
+   Nét vẽ dùng color-mix trên --ink nên ăn cả 7 theme; hardcode #111 là mất hình ở theme tối. */
 :root,[data-theme="tokyo"],[data-theme="dracula"],[data-theme="nord"],[data-theme="mocha"]{
-  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300; --s7:#9085e9; --s8:#e66767;
+  --s1:#4a7ba6; --s2:#ad5f3d; --s3:#46836f; --s4:#c0a04a; --s5:#9a5f80; --s6:#56764a; --s7:#655e9c; --s8:#a85757;
 }
 [data-theme="hasaki"],[data-theme="latte"],[data-theme="solar"]{
-  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4; --s6:#008300; --s7:#4a3aa7; --s8:#e34948;
+  --s1:#2f5d8c; --s2:#b0603c; --s3:#3f7d6a; --s4:#b08a34; --s5:#97577a; --s6:#4a6b3f; --s7:#5b5391; --s8:#a34b4b;
 }
 /* --- BỐ CỤC TAB — CÙNG KHUÔN với tab Planogram của Audit Hasaki (chỉ khác cái sơ đồ) --------
    thanh chips → hàng trên 2 cột (TRÁI sơ đồ ăn hết bề rộng còn lại · PHẢI 380px chỉ số, giãn
@@ -1165,10 +1172,9 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
    vector-effect giữ nét mảnh đều ở mọi mức phóng, không dày lên khi SVG bị co. */
 .pg-floor{fill:color-mix(in srgb,var(--ink) 3%,transparent);
   stroke:color-mix(in srgb,var(--ink) 9%,transparent);stroke-width:1;vector-effect:non-scaling-stroke}
-/* Lưới toạ độ mờ trong lòng nhà xưởng — thứ cho hình cảm giác "bản vẽ kỹ thuật" thay vì nền phẳng */
-.pg-grid{fill:none;stroke:color-mix(in srgb,var(--ink) 5%,transparent);stroke-width:1;vector-effect:non-scaling-stroke}
-.pg-wall{fill:none;stroke:color-mix(in srgb,var(--ink) 26%,transparent);stroke-width:1.15;
-  stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+/* Khung PHÒNG chức năng — nét duy nhất còn giữ ngoài ô kệ, vì phòng là "khu vực" */
+.pg-khung{fill:color-mix(in srgb,var(--ink) 2.5%,transparent);stroke:color-mix(in srgb,var(--ink) 14%,transparent);
+  stroke-width:1.2;stroke-dasharray:8 6;vector-effect:non-scaling-stroke}
 /* Vùng của từng KHO: nền tô rất nhạt màu định danh kho + biển tên vùng — thay cho việc tách sơ
    đồ thành nhiều khối như bên Hasaki (ở đây mặt bằng chỉ có một bản vẽ duy nhất) */
 .pg-zone{stroke:none}
@@ -1205,7 +1211,9 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
    quanh TÂM Ô (mặc định transform-origin của SVG là gốc toạ độ -> ô sẽ bay đi chỗ khác khi hover). */
 .pg-o{cursor:pointer;transform-box:fill-box;transform-origin:center;
   transition:transform .16s var(--ez-apple),filter .2s ease,opacity .2s ease}
-.pg-o rect.bg{stroke:color-mix(in srgb,var(--ink) 18%,transparent);stroke-width:.9;vector-effect:non-scaling-stroke}
+/* Viền ô là KÊNH NHẬN DẠNG THỨ HAI (luật relief): ở 4 theme tối, ô màu trầm và mặt nền tối chỉ
+   cách nhau 2,3–3,5:1 — chính cái viền 30% --ink này giữ cho ô vẫn tách khỏi nền. */
+.pg-o rect.bg{stroke:color-mix(in srgb,var(--ink) 30%,transparent);stroke-width:.9;vector-effect:non-scaling-stroke}
 /* Lớp vát: trắng rất nhạt ở mép trên, tối nhẹ ở mép dưới — ô đọc thành viên gạch có khối, không
    phải mảng màu dán phẳng. CỐ TÌNH trong suốt ở khoảng giữa (nơi đặt số) để KHÔNG đụng vào tương
    phản chữ/nền mà bộ validator màu đã kiểm. */
@@ -2675,7 +2683,14 @@ function plgCum(cells){
   var bands=[];
   cells.forEach(function(c){
     var hit=null;
-    for(var i=0;i<bands.length;i++){ var b=bands[i]; if(c.y<b.y1 && (c.y+c.h)>b.y0){ hit=b; break; } }
+    for(var i=0;i<bands.length;i++){
+      var b=bands[i];
+      /* Phải chồng lấn ĐÁNG KỂ (>40% chiều cao bên thấp hơn) mới coi là cùng băng. Chỉ cần chạm
+         nhau 1-2 đơn vị là gộp thì ô 14 của dãy 513 (cao 78, chớm mép hàng ô cao 31) kéo cả băng
+         cao gấp 3 -> nền vùng thành một mảng lớn trùm cả khoảng trống. */
+      var ov=Math.min(c.y+c.h,b.y1)-Math.max(c.y,b.y0);
+      if(ov>0.4*Math.min(c.h,b.y1-b.y0)){ hit=b; break; }
+    }
     if(!hit){ hit={y0:c.y,y1:c.y+c.h,o:[]}; bands.push(hit); }
     hit.y0=Math.min(hit.y0,c.y); hit.y1=Math.max(hit.y1,c.y+c.h); hit.o.push(c);
   });
@@ -2743,12 +2758,7 @@ function plgSvg(g,mode,theoDay){
     '<stop offset=".58" stop-color="#000" stop-opacity="0"/>'+
     '<stop offset="1" stop-color="#000" stop-opacity=".13"/></linearGradient></defs>');
   /* Sàn kho + lưới toạ độ mờ: bản vẽ có "thân" và đọc ra là mặt bằng kỹ thuật, không phải nền phẳng */
-  var FX=14, FY=14, FW=g.W-28, FH=g.H-28, B=90;
-  out.push('<rect class="pg-floor" x="'+FX+'" y="'+FY+'" width="'+FW+'" height="'+FH+'" rx="16"/>');
-  var luoi=[];
-  for(var gx=FX+B; gx<FX+FW; gx+=B) luoi.push('M'+gx+' '+FY+'V'+(FY+FH));
-  for(var gy=FY+B; gy<FY+FH; gy+=B) luoi.push('M'+FX+' '+gy+'H'+(FX+FW));
-  out.push('<path class="pg-grid" d="'+luoi.join('')+'"/>');
+  out.push('<rect class="pg-floor" x="14" y="14" width="'+(g.W-28)+'" height="'+(g.H-28)+'" rx="16"/>');
   /* ===== PHÂN VÙNG THEO KHO ===================================================================
      Mặt bằng này do 2 kho dùng chung (MTG cột 01–09 · GARMENT cột 10–15, dãy 513 toàn GARMENT).
      Bên Hasaki mỗi khu vực là một khối sơ đồ riêng có tiêu đề; ở đây chỉ có MỘT bản vẽ nên phân
@@ -2764,21 +2774,40 @@ function plgSvg(g,mode,theoDay){
       /* Nền vùng: CHỈ tô loang, KHÔNG viền. 2 kho trải thành ~22 cụm, viền mỗi cụm là 22 đường
          kẻ chồng lên khung kệ vốn đã có nét — hình rối ngay. Tô loang thì ranh giới kho vẫn đọc
          được mà bản vẽ giữ được sự sạch sẽ. */
+      /* Trọng tâm mọi ô của kho → chọn cụm GẦN TRỌNG TÂM NHẤT để gắn biển tên. Chọn "cụm lớn
+         nhất" thì nhãn hay rơi ra rìa vùng (cụm rộng nhất thường nằm ở mép), đọc lệch ý. */
+      var gx=0, gy=0;
+      oCua.forEach(function(c){ gx+=c.x+c.w/2; gy+=c.y+c.h/2; });
+      gx/=oCua.length; gy/=oCua.length;
       var mau='var(--s'+(K.slot[w]||8)+')', lon=null;
       plgCum(oCua).forEach(function(b){
-        var dt=(b.x1-b.x0)*(b.y1-b.y0); if(!lon||dt>lon.dt) lon={b:b,dt:dt};
+        var kc=Math.hypot((b.x0+b.x1)/2-gx,(b.y0+b.y1)/2-gy); if(!lon||kc<lon.kc) lon={b:b,kc:kc};
         out.push('<rect class="pg-zone" style="fill:color-mix(in srgb,'+mau+' 11%,transparent)"'+
           ' x="'+(b.x0-12).toFixed(1)+'" y="'+(b.y0-12).toFixed(1)+
           '" width="'+(b.x1-b.x0+24).toFixed(1)+'" height="'+(b.y1-b.y0+24).toFixed(1)+'" rx="15"/>');
       });
-      /* Biển tên đặt BÊN PHẢI cụm lớn nhất (lối đi — chỗ trống thật), lùi lên trên nếu chạm mép
-         phải bản vẽ. Đặt phía trên cụm như bản trước thì rơi trúng hàng kệ kế bên. */
+      /* Biển tên xin chỗ quanh cụm đó theo thứ tự phải → trái → trên → dưới, và CHỈ nhận chỗ nào
+         không chạm ô kệ nào (kể cả ô của kho kia). Đặt cứng bên phải thì có lúc rơi trúng ô nét
+         đứt của dãy bên cạnh — nhãn che mất một vị trí trên sơ đồ. */
       if(lon){
-        var b=lon.b, lb=plgTenNgan(w), bw=lb.length*13+28, tx=b.x1+22+bw/2, ty=(b.y0+b.y1)/2;
-        if(tx+bw/2>g.W-24){ tx=(b.x0+b.x1)/2; ty=b.y0-30; }
-        bienVung.push('<g class="pg-zonelb"><rect x="'+(tx-bw/2).toFixed(1)+'" y="'+(ty-16).toFixed(1)+'" width="'+bw.toFixed(1)+
-          '" height="32" rx="16" style="fill:color-mix(in srgb,'+mau+' 90%,var(--surface))"/>'+
-          '<text x="'+tx.toFixed(1)+'" y="'+ty.toFixed(1)+'" font-size="20">'+esc(lb)+'</text></g>');
+        var b=lon.b, lb=plgTenNgan(w), bw=lb.length*13+28, bh=32;
+        var ung=[[b.x1+22+bw/2,(b.y0+b.y1)/2],[b.x0-22-bw/2,(b.y0+b.y1)/2],
+                 [(b.x0+b.x1)/2,b.y0-24-bh/2],[(b.x0+b.x1)/2,b.y1+24+bh/2]];
+        var cho=null;
+        for(var u=0;u<ung.length && !cho;u++){
+          var tx0=ung[u][0]-bw/2, ty0=ung[u][1]-bh/2, tx1=tx0+bw, ty1=ty0+bh;
+          if(tx0<20 || tx1>g.W-20 || ty0<20 || ty1>g.H-20) continue;
+          var va=false;
+          for(var q=0;q<g.o.length && !va;q++){
+            var c2=g.o[q];
+            if(tx0<c2.x+c2.w+6 && tx1>c2.x-6 && ty0<c2.y+c2.h+6 && ty1>c2.y-6) va=true;
+          }
+          if(!va) cho=ung[u];
+        }
+        if(!cho) cho=ung[0];
+        bienVung.push('<g class="pg-zonelb"><rect x="'+(cho[0]-bw/2).toFixed(1)+'" y="'+(cho[1]-bh/2).toFixed(1)+'" width="'+bw.toFixed(1)+
+          '" height="'+bh+'" rx="'+(bh/2)+'" style="fill:color-mix(in srgb,'+mau+' 90%,var(--surface))"/>'+
+          '<text x="'+cho[0].toFixed(1)+'" y="'+cho[1].toFixed(1)+'" font-size="20">'+esc(lb)+'</text></g>');
       }
     });
   }
@@ -2792,10 +2821,10 @@ function plgSvg(g,mode,theoDay){
     });
     out.push('</g>');
   }
-  out.push('<g class="pg-wall">');
-  g.nen.forEach(function(a){ out.push('<path d="M'+a[0]+' '+a[1]+'L'+a[2]+' '+a[3]+'"/>'); });
-  out.push('</g>');
-  /* Phòng chức năng: biển tên ĐẶT GIỮA ĐÚNG Ô KẺ của phòng và tự co chữ cho lọt.
+  /* KHÔNG vẽ 1.275 đoạn nét bản vẽ (tường bao, khung kệ, cửa, cột): chúng không phải mã vị trí
+     cũng không phải khu vực, mà lại chạy sát viền từng ô nên hình bị nhân đôi nét, trông rối.
+     Hình học vẫn giữ nguyên trong PLG_GEO — vẫn dùng để dò khung phòng ở plgPhong. */
+  /* Phòng chức năng: KHUNG PHÒNG (khu vực → được giữ) + biển tên đặt giữa, chữ tự co cho lọt.
      Mốc nhãn trong bản vẽ nằm lệch về mép trái phòng (Khu PO: mốc x=2263 mà phòng là 2231→2439),
      nên bản trước lấy mốc làm tâm chữ -> chữ thò ra ngoài tường. Nay dò 4 bức tường quanh mốc để
      lấy đúng khung phòng rồi mới căn giữa. */
@@ -2811,6 +2840,10 @@ function plgSvg(g,mode,theoDay){
     var lh=fs*1.24, y0=cy-(d.length-1)*fs*0.62;
     var bw=Math.min(oW-10,dai*fs*0.55+28), bh=Math.min(oH-8,d.length*lh+8);
     var tr=k.doc?' transform="rotate(-90 '+cx.toFixed(1)+' '+cy.toFixed(1)+')"':'';
+    /* Khung phòng vẽ theo ĐÚNG ô kẻ dò được — đây là "khu vực" nên giữ lại, khác với đám nét
+       tường/khung kệ đã ẩn. Nền loang nhẹ + nét đứt để không tranh chấp với ô kệ. */
+    out.push('<rect class="pg-khung" x="'+p.x0.toFixed(1)+'" y="'+p.y0.toFixed(1)+
+      '" width="'+(p.x1-p.x0).toFixed(1)+'" height="'+(p.y1-p.y0).toFixed(1)+'" rx="12"/>');
     out.push('<g class="pg-room"'+tr+'>'+
       '<rect x="'+(cx-bw/2).toFixed(1)+'" y="'+(cy-bh/2).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="9"/>'+
       '<text class="pg-khu" x="'+cx.toFixed(1)+'" y="'+y0.toFixed(1)+'" font-size="'+fs.toFixed(1)+'">'+
