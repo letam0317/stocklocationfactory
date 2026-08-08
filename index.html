@@ -1170,23 +1170,29 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 /* Khung sơ đồ: MỘT màu nền duy nhất. Trước đây còn thêm một hộp "sàn kho" (.pg-floor) vẽ trong
    SVG, tạo ra hai mảng nền lồng nhau đậm/nhạt khác tông — đã bỏ hẳn, giờ chỉ còn nền của khung
    này. position:relative để hộp chú giải neo được vào góc trên bên phải của sơ đồ. */
-.pg-wrap{position:relative;border:1px solid var(--line);border-radius:12px;background:var(--surface2);
-  padding:14px 16px;overflow:hidden;box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ink) 4%,transparent)}
+.pg-wrap{position:relative;container-type:inline-size;container-name:pgwrap;
+  border:1px solid var(--line);border-radius:12px;background:var(--surface2);
+  padding:14px 16px 14px 8px;overflow:hidden;box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ink) 4%,transparent)}
 .pg-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 /* HỘP CHÚ GIẢI neo góc trên bên phải của sơ đồ. Đặt bằng HTML chứ không vẽ vào SVG: chữ giữ đúng
    cỡ ở mọi mức co của bản vẽ (vẽ trong SVG thì chữ co theo, xuống ~8px là không đọc nổi). */
-.pg-legbox{position:absolute;top:12px;right:14px;z-index:2;display:flex;flex-direction:column;gap:6px;
-  background:color-mix(in srgb,var(--surface) 88%,transparent);border:1px solid var(--line);
-  border-radius:10px;padding:9px 12px;box-shadow:var(--shadow);backdrop-filter:blur(6px)}
-.pg-legbox .lb-t{font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3)}
-.pg-legbox button,.pg-legbox span.tinh{display:flex;align-items:center;gap:8px;white-space:nowrap;
-  border:0;background:transparent;padding:0;font-size:11.5px;font-weight:600;color:var(--ink);text-align:left}
+/* Hộp chú giải: bó sát nội dung, không phải một tấm bảng to. Bề rộng do dòng dài nhất
+   ("WH - MATERIAL - GARMENT") quyết định nên chỉ còn cách siết cỡ chữ, giãn dòng và đệm. */
+.pg-legbox{position:absolute;top:10px;right:12px;z-index:2;display:flex;flex-direction:column;gap:4px;
+  background:color-mix(in srgb,var(--surface) 90%,transparent);border:1px solid var(--line);
+  border-radius:9px;padding:7px 10px;box-shadow:var(--shadow);backdrop-filter:blur(6px)}
+.pg-legbox .lb-t{font-size:8.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);
+  margin-top:1px}
+.pg-legbox .lb-t:first-child{margin-top:0}
+.pg-legbox button,.pg-legbox span.tinh{display:flex;align-items:center;gap:7px;white-space:nowrap;
+  border:0;background:transparent;padding:0;font-size:10.5px;font-weight:600;color:var(--ink);text-align:left;
+  line-height:1.35}
 .pg-legbox button{cursor:pointer}
 .pg-legbox button.off{opacity:.4}
 .pg-legbox button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
 /* MỌI ký hiệu cùng bề rộng 20px để cột chữ thẳng hàng — ô màu, ô nét đứt và viên thuốc "dãy kệ"
    vốn khác hình dạng, để tự do thì mỗi dòng chữ bắt đầu ở một chỗ. */
-.pg-legbox i{width:20px;height:12px;border-radius:4px;flex:none;border:1px solid color-mix(in srgb,var(--ink) 30%,transparent)}
+.pg-legbox i{width:17px;height:10px;border-radius:3px;flex:none;border:1px solid color-mix(in srgb,var(--ink) 30%,transparent)}
 .pg-legbox i.dash{background:transparent;border:1px dashed color-mix(in srgb,var(--ink3) 65%,transparent)}
 .pg-legbox i.vs-da{background:linear-gradient(180deg,#059669,#046c4e)}
 .pg-legbox i.vs-chua{background:linear-gradient(180deg,#dc2626,#991b1b)}
@@ -1196,15 +1202,24 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 /* Mẫu VẠCH KHO: vẽ đúng dải mép trái như trên ô thật (ô xám + vạch màu bên trái) */
 .pg-legbox i.vach{background:color-mix(in srgb,var(--ink) 9%,transparent);
   border:1px solid color-mix(in srgb,var(--ink) 22%,transparent);position:relative;overflow:hidden}
-.pg-legbox i.vach::before{content:"";position:absolute;left:1px;top:1px;bottom:1px;width:4px;border-radius:2px;background:var(--vc)}
+.pg-legbox i.vach::before{content:"";position:absolute;left:1px;top:1px;bottom:1px;width:3.5px;border-radius:2px;background:var(--vc)}
 .pg-legbox i.chip{border-radius:999px;background:var(--surface);
-  border:1px solid color-mix(in srgb,var(--ink) 40%,transparent)}
-.pg-legbox .n{margin-left:auto;padding-left:10px;font-variant-numeric:tabular-nums;color:var(--ink3);font-weight:600}
-@media(max-width:900px){ .pg-legbox{position:static;margin:0 0 10px;align-items:flex-start} }
+  border:1.2px solid color-mix(in srgb,var(--ink) 40%,transparent)}
+.pg-legbox .n{margin-left:auto;padding-left:8px;font-variant-numeric:tabular-nums;color:var(--ink3);font-weight:600}
+/* Khi khung sơ đồ hẹp hơn bề rộng tối thiểu của bản vẽ (760px + đệm) thì bản vẽ bắt đầu cuộn
+   ngang, và hộp chú giải neo tuyệt đối sẽ nằm ĐÈ LÊN ô kệ — đo được 14 ô bị che ở khung ~1180px.
+   Dùng container query trên chính .pg-wrap (không phải @media theo bề rộng cửa sổ) vì thủ phạm là
+   bề rộng CÒN LẠI của cột sơ đồ: mở thanh bên cũng làm cột hẹp đi y như thu nhỏ cửa sổ. */
+@container pgwrap (max-width: 792px){
+  .pg-legbox{position:static;margin:0 0 10px;align-self:flex-start;width:max-content;backdrop-filter:none}
+}
+@media(max-width:900px){ .pg-legbox{position:static;margin:0 0 10px;align-self:flex-start;width:max-content} }
 /* VỪA MÀN HÌNH: bề rộng bản vẽ = min(chỗ còn lại, chiều cao cho phép × tỷ lệ khổ) — cả sơ đồ
    lọt 1 khung nhìn, không phải cuộn dọc mới thấy hết dãy như bản cũ. --pg-ar do JS gắn từ
    viewBox (W/H) nên đổi bản vẽ không phải sửa CSS. */
-.pg-fit{width:min(100%,calc((100vh - 330px) * var(--pg-ar,1.466)));min-width:760px;margin:0 auto}
+/* margin-right:auto (không canh giữa nữa): sơ đồ DÍNH MÉP TRÁI của khung, đúng yêu cầu đưa cả bố
+   cục ra sát lề. Trước canh giữa nên còn thừa ~9px mỗi bên. */
+.pg-fit{width:min(100%,calc((100vh - 330px) * var(--pg-ar,1.466)));min-width:760px;margin:0 auto 0 0}
 /* shape-rendering:geometricPrecision — KHOÁ chế độ khử răng cưa, không để trình duyệt tự chọn
    crispEdges (snap nét vào lưới pixel) tuỳ mức zoom. Đo tại DPR2 thì ảnh không đổi (Chromium vốn
    đang dùng chế độ này), nên đây chỉ là chốt hành vi cho các trình duyệt/mức zoom khác — KHÔNG
@@ -2837,7 +2852,7 @@ function plgVeMap(g,T){
     '<section class="panel">'+
     '<h2>Sơ đồ khu vực <span class="pg-chip">'+esc(PLG.area?plgTenNgan(PLG.area):'Tất cả')+' &middot; '+nf(tong)+' ô</span></h2>'+
     '<div class="pg-maprow"><span class="pg-maphdr">Kho nguyên liệu (F0-KHO) — '+dsDay.length+' dãy kệ</span></div>'+
-    '<div class="pg-wrap">'+legend+'<div class="pg-scroll"><div class="pg-fit" style="--pg-ar:'+(g.W/g.H).toFixed(4)+'">'+
+    '<div class="pg-wrap">'+legend+'<div class="pg-scroll"><div class="pg-fit" style="--pg-ar:'+((g.W-90)/g.H).toFixed(4)+'">'+
       plgSvg(g,mode,theoDay)+'</div></div></div>'+
     '<p class="pg-hint" style="margin:9px 2px 0">Bấm một ô để xem chi tiết vị trí, bấm nhãn dãy để soi riêng dãy đó &middot; '+
       'sơ đồ bê nguyên hình học bản vẽ <code>MTG_zigzag</code> (đúng tỷ lệ, nét kẻ, khoảng cách thật) — cách đọc màu: '+
@@ -2983,7 +2998,12 @@ function plgPhong(g,k){
    hai thứ phụ trợ: khung phòng (căn lại mép phải cho thẳng nhau) + nhãn dãy (dồn về một cột). */
 function plgSvg(g,mode,theoDay){
   var GAP=3.2;   // khe hở giữa 2 ô cạnh nhau: ô đọc thành từng viên gạch chứ không thành 1 khối liền
-  var out=['<svg class="pg-svg" viewBox="0 0 '+g.W+' '+g.H+'" role="img" aria-label="Sơ đồ mặt bằng kho nguyên liệu">'];
+  /* CẮT LỀ TRÁI CỦA KHỔ VẼ: khổ gốc bắt đầu ở x=0 nhưng vật thể trái nhất là chip nhãn dãy (x=120),
+     nên 90 đơn vị đầu là khoảng trắng thuần. Bắt đầu viewBox từ đó -> cả sơ đồ (nhãn + ô) dịch ra
+     mép trái mà KHÔNG đụng một toạ độ nào của bản vẽ. Cùng với padding-left của khung và việc bỏ
+     canh giữa, khe trái rút đúng một nửa (39,4px -> ~20px). */
+  var CAT=90;
+  var out=['<svg class="pg-svg" viewBox="'+CAT+' 0 '+(g.W-CAT)+' '+g.H+'" role="img" aria-label="Sơ đồ mặt bằng kho nguyên liệu">'];
   /* Lớp vát dùng CHUNG cho mọi ô (khai báo 1 lần): trắng nhạt ở mép trên, tối nhẹ ở mép dưới,
      TRONG SUỐT ở khoảng giữa nơi đặt số — không đụng vào tương phản chữ/nền đã kiểm bằng validator. */
   /* 8 slot phân loại + 3 trạng thái vệ sinh, mỗi cái một chuyển sắc dọc 600 -> 800 cùng hue */
@@ -3096,7 +3116,9 @@ function plgSvg(g,mode,theoDay){
      Cỡ chữ 24 → 28 và chip cao 36 → 42 (+17%), nét viền và chữ đậm hơn cho nổi trên nền sơ đồ. */
   var H=42, FS=28, GIAN=H+8;
   var daiNhat=0; g.day.forEach(function(d){ daiNhat=Math.max(daiNhat,d.d.length); });
-  var W_CHIP=Math.round(FS*0.66*daiNhat)+26, X_CHIP=34;
+  /* X_CHIP 34 -> 120: khe từ mép phải chip tới ô 01 của dãy 501 rút đúng một nửa (172 -> 86 đơn
+     vị, tức 68,3px -> 34,2px ở tỷ lệ hiển thị thật). Đường dẫn ngắn lại, nhãn bám sát hàng kệ. */
+  var W_CHIP=Math.round(FS*0.66*daiNhat)+26, X_CHIP=120;
   /* Đầu dãy = mép trái ô đầu tiên của dãy đó, lấy thẳng từ hình học (không qua bộ lọc khu vực,
      để dãy bị lọc mờ vẫn có đường dẫn đúng chỗ) */
   var dauDay={};
