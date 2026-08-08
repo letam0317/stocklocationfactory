@@ -170,7 +170,7 @@ h1.brand-title{margin:0;min-width:0}
   background:var(--surface);border-top:1px solid var(--border);border-left:1px solid var(--border);border-right:1px solid var(--border);
   border-radius:10px 10px 0 0;box-shadow:0 -4px 6px -1px rgba(0,0,0,0.1);font-size:12.5px;margin-top:16px}
 /* chống đè nội dung: khối content cộng đệm đáy để dòng cuối không bị footer che khi cuộn kịch */
-#viewStock,#viewKK,#viewAbn{padding-bottom:60px}
+#viewStock,#viewKK,#viewAbn,#viewPlg{padding-bottom:60px}
 /* Pop-up đang mở: footbar (z100) tụt xuống DƯỚI lớp modal (z99) — không thì thanh này đè lên đáy
    modal trên điện thoại, hớt tap của các nút vùng đáy (Lưu / Áp dụng của sheet bộ lọc) */
 body:has(.modal.show) .footbar{z-index:98}
@@ -992,57 +992,145 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 [data-theme="hasaki"],[data-theme="latte"],[data-theme="solar"]{
   --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4; --s6:#008300; --s7:#4a3aa7; --s8:#e34948;
 }
-.pg-top{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:2px 0 12px}
-/* Bộ chuyển chế độ: khuôn .kktab viên thuốc sẵn có của dự án */
-.pg-seg{display:flex;gap:4px}
-.pg-seg button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 15px;
+/* --- BỐ CỤC TAB — CÙNG KHUÔN với tab Planogram của Audit Hasaki (chỉ khác cái sơ đồ) --------
+   thanh chips → hàng trên 2 cột (TRÁI sơ đồ ăn hết bề rộng còn lại · PHẢI 380px chỉ số, giãn
+   cao bằng cột trái) → panel danh sách nằm DƯỚI cả hai. Hẹp <1150px thì xếp dọc.
+   Cột phải CHỐT CỨNG 380px (không minmax co theo nội dung): bề rộng cột sơ đồ bất biến từ khung
+   hình đầu nên bản vẽ không bị "đá ngang" khi số liệu về sau. */
+.pg-whbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:2px 0 10px}
+/* align-items:start — cột phải cao theo đúng ruột của nó. Bên Hasaki cột phải giãn cao bằng cột
+   trái vì có chips neo đáy; ở đây ruột ngắn hơn nhiều, giãn ra chỉ để lại một khoảng trắng lớn. */
+.pg-main{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:12px;align-items:start}
+.pg-main > div{min-width:0;display:flex;flex-direction:column}
+.pg-main > div > .panel{flex:1;box-sizing:border-box;margin-bottom:0}
+#plgSide > .panel{display:flex;flex-direction:column}
+@media(max-width:1150px){.pg-main{grid-template-columns:minmax(0,1fr)}.pg-main > div > .panel{flex:0 0 auto}}
+.pg-chip{background:color-mix(in srgb,var(--brand2) 14%,transparent);color:var(--brand2);
+  border-radius:999px;padding:3px 11px;font-weight:650;font-size:11.5px;white-space:nowrap}
+.pg-hint{font-size:11.5px;color:var(--ink3);line-height:1.55;font-weight:400}
+/* Bộ chuyển chế độ: segmented dính liền — cùng họ viên thuốc của dự án */
+.pg-seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--surface)}
+.pg-seg button{border:0;background:transparent;padding:7px 15px;
   font-size:12.5px;font-weight:600;color:var(--ink2);cursor:pointer;
-  transition:background .18s ease,border-color .18s ease,color .18s ease}
-.pg-seg button:hover{border-color:var(--brand2)}
-.pg-seg button.on{background:var(--brand2);border-color:var(--brand2);color:var(--accent-text)}
-.pg-seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.pg-alert{display:flex;gap:10px;align-items:flex-start;border:1px solid color-mix(in srgb,var(--bad) 40%,var(--line));
-  background:color-mix(in srgb,var(--bad) 8%,transparent);border-radius:10px;padding:10px 13px;margin-bottom:12px;font-size:12.5px;line-height:1.55}
+  transition:background .18s ease,color .18s ease}
+.pg-seg button:hover{background:color-mix(in srgb,var(--brand2) 8%,transparent);color:var(--ink)}
+.pg-seg button.on{background:var(--brand2);color:var(--accent-text)}
+.pg-seg button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.pg-seg.sm button{padding:5px 12px;font-size:11.5px}
+/* Dải chỉ số CỘT PHẢI xếp DỌC (cột chỉ 380px: 5 thẻ nằm ngang thì nhãn vỡ 3 dòng) — số to bên
+   trái, nhãn + phụ đề bên phải. Bấm thẻ = ẩn/hiện nhóm đó trên sơ đồ (cùng tác dụng với chú giải). */
+.pg-tiles{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;margin:2px 0 10px}
+.pg-tile{--cc:var(--brand2);display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;
+  align-items:center;column-gap:12px;text-align:left;width:100%;
+  background:color-mix(in srgb,var(--cc) 8%,var(--surface));border:1px solid color-mix(in srgb,var(--cc) 22%,var(--line));
+  border-radius:10px;padding:9px 12px;cursor:pointer;
+  transition:transform .16s var(--ez-apple),box-shadow .25s ease,opacity .2s ease}
+.pg-tile:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.pg-tile:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.pg-tile.off{opacity:.42}
+.pg-tile .k{grid-column:1;grid-row:1/span 2;min-width:46px;text-align:center;font-size:21px;font-weight:780;
+  line-height:1;font-variant-numeric:tabular-nums;color:var(--cc)}
+.pg-tile.tot{--cc:var(--ink3)}
+.pg-tile.tot .k{color:var(--ink)}
+.pg-tile .l{grid-column:2;grid-row:1;font-size:11.5px;font-weight:650;line-height:1.25;color:var(--ink)}
+.pg-tile .s{grid-column:2;grid-row:2;margin-top:2px;font-size:10.5px;line-height:1.3;color:var(--ink3)}
+/* Thanh tiến độ xếp chồng — tỷ lệ các nhóm trong tổng số ô */
+.pg-track{background:color-mix(in srgb,var(--ink3) 22%,transparent);border-radius:6px;height:8px;overflow:hidden}
+.pg-track.big{height:14px}
+.pg-fill{display:flex;height:100%;width:100%;border-radius:6px;overflow:hidden}
+.pg-fill i{display:block;height:100%;min-width:1px;transition:width .8s var(--ez-apple)}
+.pg-cov{margin:0;padding-top:14px}
+.pg-cov .ct{font-size:11px;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px}
+.pg-cov .cl{display:flex;align-items:baseline;gap:8px;font-size:11.5px;color:var(--ink2);margin-bottom:5px}
+.pg-cov .cl b{color:var(--ink);font-variant-numeric:tabular-nums}
+.pg-cov .cl .sp{flex:1}
+/* Panel danh sách (dưới cùng): 1 hàng = 1 dãy kệ / 1 nhóm, thanh xếp chồng + số ô */
+.pg-chart{display:flex;flex-direction:column;gap:1px;max-height:430px;overflow-y:auto;padding-right:6px}
+.pg-row{display:grid;grid-template-columns:250px 1fr 108px;align-items:center;gap:10px;padding:5px 7px;
+  border-radius:8px;cursor:pointer;transition:background .16s ease}
+.pg-row:hover{background:var(--hover)}
+.pg-row.on{background:color-mix(in srgb,var(--brand2) 13%,transparent)}
+.pg-row:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.pg-rl{font-size:11.5px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:7px;min-width:0}
+.pg-rl i{width:9px;height:9px;border-radius:3px;flex:none}
+.pg-rl i.dash{background:transparent;border:1px dashed color-mix(in srgb,var(--ink3) 65%,transparent)}
+.pg-rl .nm{font-weight:650;white-space:nowrap;flex:none}
+.pg-rl .sub{color:var(--ink3);font-weight:500;font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pg-rv{text-align:right;font-variant-numeric:tabular-nums;font-size:12px;line-height:1.15}
+.pg-rv b{font-size:13px;color:var(--ink)}
+.pg-rv small{display:block;color:var(--ink3);font-size:10px;font-weight:500}
+@media(max-width:640px){
+  .pg-row{grid-template-columns:1fr 88px;grid-template-areas:'l l' 't v';row-gap:5px;padding:7px 6px}
+  .pg-rl{grid-area:l} .pg-row .pg-track{grid-area:t} .pg-rv{grid-area:v}
+}
+/* Dải cảnh báo MỎNG nằm trong panel sơ đồ (khuôn alert-bar của tab Planogram Hasaki) —
+   không chiếm chiều cao của bản vẽ như khối cảnh báo cũ */
+.pg-alert{display:flex;gap:9px;align-items:flex-start;border:1px solid color-mix(in srgb,var(--bad) 35%,transparent);
+  background:color-mix(in srgb,var(--bad) 8%,var(--surface));border-radius:8px;padding:7px 12px;margin:0 0 9px;
+  font-size:12px;line-height:1.5;color:var(--ink2)}
 .pg-alert b{color:var(--bad)}
-.pg-note{font-size:11.5px;color:var(--ink3);margin:8px 2px 0;line-height:1.55}
-.pg-legend{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:10px 2px 8px}
-.pg-legend button{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);
-  border-radius:999px;padding:5px 12px;font-size:11.5px;font-weight:600;color:var(--ink2);cursor:pointer;
-  transition:border-color .18s ease,opacity .18s ease}
+.pg-alert .ic{color:var(--bad);flex:none}
+.pg-note{font-size:11.5px;color:var(--ink3);margin:9px 2px 0;line-height:1.55}
+/* Chú giải nằm NGAY TRONG tiêu đề panel sơ đồ: gom 1 hàng, tràn thì cuộn ngang (không bung dòng
+   làm panel cao lên). Vẫn là NÚT bấm được — bấm để ẩn/hiện nhóm trên sơ đồ. */
+.pg-legend{display:inline-flex;gap:5px;align-items:center;flex:1;min-width:0;flex-wrap:nowrap;
+  overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.pg-legend::-webkit-scrollbar{display:none}
+.pg-legend button{display:inline-flex;align-items:center;gap:6px;flex:none;white-space:nowrap;
+  border:1px solid var(--line);background:var(--surface);
+  border-radius:999px;padding:4px 11px;font-size:11px;font-weight:600;color:var(--ink2);cursor:pointer;
+  transition:border-color .18s ease,opacity .18s ease,background .18s ease}
 .pg-legend button:hover{border-color:var(--brand2);color:var(--ink)}
 .pg-legend button.off{opacity:.38}
 .pg-legend button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.pg-legend i{width:11px;height:11px;border-radius:3px;flex:none}
+.pg-legend i{width:10px;height:10px;border-radius:3px;flex:none}
 .pg-legend i.dash{background:transparent;border:1px dashed color-mix(in srgb,var(--ink3) 65%,transparent)}
 .pg-legend .n{font-variant-numeric:tabular-nums;color:var(--ink3)}
-.pg-hdr{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin:14px 2px 6px}
-.pg-hdr .t{font-size:12px;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.05em}
-.pg-hdr .h{font-size:11.5px;color:var(--ink3)}
 /* Khung sơ đồ: nền phẳng hơi lõm để bản vẽ nổi lên, bo góc như các card khác của dự án */
-.pg-wrap{border:1px solid var(--line);border-radius:14px;background:var(--surface);
-  padding:14px 16px;overflow:hidden;box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ink) 4%,transparent)}
+.pg-wrap{border:1px solid var(--line);border-radius:12px;background:var(--surface2);
+  padding:10px 12px;overflow:hidden;box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ink) 4%,transparent)}
 .pg-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
-.pg-svg{display:block;width:100%;height:auto;min-width:820px;font-family:inherit}
+/* VỪA MÀN HÌNH: bề rộng bản vẽ = min(chỗ còn lại, chiều cao cho phép × tỷ lệ khổ) — cả sơ đồ
+   lọt 1 khung nhìn, không phải cuộn dọc mới thấy hết dãy như bản cũ. --pg-ar do JS gắn từ
+   viewBox (W/H) nên đổi bản vẽ không phải sửa CSS. */
+.pg-fit{width:min(100%,calc((100vh - 330px) * var(--pg-ar,1.466)));min-width:760px;margin:0 auto}
+.pg-svg{display:block;width:100%;height:auto;font-family:inherit}
 /* Lớp NỀN = bản vẽ gốc, cố tình LÙI LẠI: dữ liệu (ô đã tô) phải là thứ nổi nhất trên hình.
    vector-effect giữ nét mảnh đều ở mọi mức phóng, không dày lên khi SVG bị co. */
+.pg-floor{fill:color-mix(in srgb,var(--ink) 3%,transparent);stroke:none}
 .pg-wall{fill:none;stroke:color-mix(in srgb,var(--ink) 20%,transparent);stroke-width:1.1;
   stroke-linecap:round;vector-effect:non-scaling-stroke}
-/* Nhãn dãy: chip gọn chỉ còn "501" thay cho "F0-KHO-501-" dài loằng ngoằng của bản in */
-.pg-dchip rect{fill:color-mix(in srgb,var(--ink) 7%,transparent);stroke:color-mix(in srgb,var(--ink) 14%,transparent);stroke-width:1;vector-effect:non-scaling-stroke}
+/* Nền mềm sau mỗi DÃY kệ: gom các ô cùng dãy thành một khối đọc được, giúp mắt bám theo hàng */
+.pg-bed{fill:color-mix(in srgb,var(--ink) 5%,transparent);stroke:color-mix(in srgb,var(--ink) 9%,transparent);
+  stroke-width:1;vector-effect:non-scaling-stroke;transition:fill .2s ease}
+.pg-bed.hi{fill:color-mix(in srgb,var(--brand2) 15%,transparent);stroke:color-mix(in srgb,var(--brand2) 45%,transparent)}
+/* Nhãn dãy: chip gọn chỉ còn "501" thay cho "F0-KHO-501-" dài loằng ngoằng của bản in.
+   Bấm chip = soi cả dãy đó (cùng tác dụng với 1 hàng ở panel danh sách bên dưới). */
+.pg-dchip{cursor:pointer}
+.pg-dchip rect{fill:color-mix(in srgb,var(--ink) 7%,transparent);stroke:color-mix(in srgb,var(--ink) 14%,transparent);stroke-width:1;vector-effect:non-scaling-stroke;transition:fill .18s ease,stroke .18s ease}
 .pg-dchip text{fill:var(--ink2);font-weight:750;text-anchor:middle;dominant-baseline:central}
+.pg-dchip:hover rect{fill:color-mix(in srgb,var(--brand2) 16%,transparent);stroke:var(--brand2)}
+.pg-dchip:hover text{fill:var(--brand2)}
+.pg-dchip.on rect{fill:var(--brand2);stroke:var(--brand2)}
+.pg-dchip.on text{fill:var(--accent-text)}
+.pg-dchip:focus{outline:none}
+.pg-dchip:focus-visible rect{stroke:var(--accent);stroke-width:2.4}
 /* Nhãn khu chức năng (Khu PO / Phòng kiểm soát kho) */
 .pg-khu{fill:var(--ink3);font-weight:700;text-anchor:middle;dominant-baseline:central;letter-spacing:.04em}
 /* 1 ô kệ = <g> chứa rect nền + số cột. transform-box:fill-box cho phép phóng quanh TÂM Ô
    (mặc định transform-origin của SVG là gốc toạ độ -> ô sẽ bay đi chỗ khác khi hover). */
 .pg-o{cursor:pointer;transform-box:fill-box;transform-origin:center;
   transition:transform .16s var(--ez-apple),filter .2s ease,opacity .2s ease}
-.pg-o rect{stroke:color-mix(in srgb,var(--ink) 26%,transparent);stroke-width:.9;vector-effect:non-scaling-stroke}
-.pg-o text{font-weight:700;text-anchor:middle;dominant-baseline:central;pointer-events:none;user-select:none}
+.pg-o rect{stroke:color-mix(in srgb,var(--ink) 22%,transparent);stroke-width:.9;vector-effect:non-scaling-stroke}
+.pg-o text{font-weight:700;text-anchor:middle;dominant-baseline:central;pointer-events:none;user-select:none;
+  paint-order:stroke}
 .pg-o:hover{transform:scale(1.16);filter:drop-shadow(0 4px 10px rgba(16,24,40,.35))}
 .pg-o:hover rect{stroke:var(--ink);stroke-width:1.8}
 .pg-o:focus{outline:none}
 .pg-o:focus-visible rect{stroke:var(--accent);stroke-width:2.8}
 .pg-o.dim{opacity:.16}
+/* Đang soi 1 dãy: ô của dãy đó viền đậm hơn để nổi khỏi phần bị mờ */
+.pg-o.hi rect{stroke:var(--ink);stroke-width:2}
 /* Ô "không có dữ liệu": nét đứt, không tô nền — ngoài phạm vi đánh giá, KHÔNG đọc thành "chưa làm" */
 .pg-o.trong rect{fill:transparent;stroke-dasharray:4 3;stroke:color-mix(in srgb,var(--ink3) 62%,transparent)}
 .pg-o.trong text{fill:var(--ink3)}
@@ -1145,12 +1233,15 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
      Sơ đồ dựng theo BẢN VẼ MTG_zigzag.pdf (14 dãy · 161 ô), KHÔNG dựng từ dữ liệu — vị trí bị
      ngừng phát yêu cầu phải còn nhìn thấy trên sơ đồ thì mới phát hiện được. -->
 <div id="viewPlg" hidden>
-  <p class="sub"><span class="muted">Sơ đồ dựng từ chính hình học bản vẽ <code>MTG_zigzag</code> — mỗi ô là 1 <b>ô kệ</b> (<code>F0-KHO-&lt;dãy&gt;-&lt;cột&gt;</code>, gộp mọi tầng). <b>Theo kho</b> tô theo kho đang giữ tồn ở vị trí đó &middot; <b>Theo vệ sinh</b> tô theo planogram WMS (tab <code>VESINH-KHO-DANHMUC</code>).</span></p>
-  <div id="plgAlert"></div>
-  <div class="pg-top" id="plgTop"></div>
-  <div class="kksum" id="plgSum"></div>
-  <div class="pg-legend" id="plgLegend"></div>
-  <div id="plgContent"></div>
+  <!-- Bố cục Y HỆT tab Planogram của Audit Hasaki: thanh chips → 2 cột (sơ đồ | chỉ số) →
+       panel danh sách. Khác duy nhất là RUỘT cột trái: bên Hasaki là lưới quầy kệ A1/A8,
+       bên này là bản vẽ mặt bằng kho nguyên liệu (SVG dựng từ MTG_zigzag). -->
+  <div class="pg-whbar" id="plgTop"></div>
+  <div class="pg-main">
+    <div id="plgMap"></div>
+    <div id="plgSide"></div>
+  </div>
+  <div id="plgList"></div>
   <div id="plgState" class="state"><div class="spin"></div>Đang tải sơ đồ mặt bằng…</div>
 </div>
 
@@ -2107,7 +2198,8 @@ var PLG_ST={
   chua:  {c:'#dc2626',cls:'st-chua',  lb:'Chưa vệ sinh'},
   da:    {c:'#059669',cls:'st-da',    lb:'Đã vệ sinh'}
 };
-var PLG={loadedOnce:false,by:{},ok:false,geo:null,tat:{},mode:'kho',kho:null,khoRaw:0,ngoai:[]};
+var PLG={loadedOnce:false,by:{},ok:false,geo:null,tat:{},mode:'kho',kho:null,khoRaw:0,ngoai:[],
+         list:'day',hiDay:''};
 
 function plgCellVal(c){ return (c&&c.v!=null)?String(c.f!=null?c.f:c.v):''; }
 /* PLG_GEO đóng thành CHUỖI cho gọn (26KB thay vì 108KB JSON lồng) — tách 1 lần rồi nhớ lại. */
@@ -2169,8 +2261,19 @@ function plgNhom(o){
   var s=plgState(PLG.by[o.loc]);
   return {k:s,cls:PLG_ST[s].cls,lb:PLG_ST[s].lb};
 }
-function plgSetMode(m){ if(PLG.mode===m) return; PLG.mode=m; PLG.tat={}; plgRender(); }
+function plgSetMode(m){ if(PLG.mode===m) return; PLG.mode=m; PLG.tat={}; PLG.hiDay=''; plgRender(); }
 function plgToggle(k){ PLG.tat[k]=!PLG.tat[k]; plgRender(); }
+function plgSetList(m){ if(PLG.list===m) return; PLG.list=m; plgRender(); }
+/* Soi 1 dãy kệ: bấm lần 2 (hoặc bấm dãy đang soi ở chỗ khác) là bỏ soi */
+function plgSoiDay(d){ PLG.hiDay=(PLG.hiDay===d)?'':d; plgRender(); }
+/* Màu của 1 nhóm — dùng chung cho chú giải, thẻ chỉ số, thanh xếp chồng và hàng danh sách:
+   chế độ 'kho' đi theo slot phân loại --s1..--s8, chế độ 'vệ sinh' dùng bộ status hex cố định. */
+function plgMau(k,cls){
+  if(PLG.mode==='vesinh') return (PLG_ST[k]&&PLG_ST[k].c)||'';
+  return cls==='trong'?'':'var(--s'+(String(cls).replace('w','')||1)+')';
+}
+function plgPct(a,b){ return b?Math.round(a/b*1000)/10:0; }
+function plgPctTxt(a,b){ return String(plgPct(a,b)).replace('.',','); }
 
 function plgLoad(){
   var st=document.getElementById('plgState');
@@ -2203,76 +2306,177 @@ function plgLoad(){
   }
 }
 
+/* Phụ đề của từng trạng thái vệ sinh ở thẻ chỉ số — nói ra VIỆC PHẢI LÀM, không lặp lại nhãn */
+var PLG_SUB={
+  da:    'ô có lịch và đã có yêu cầu được vệ sinh',
+  chua:  'lịch đã duyệt nhưng chưa ai vệ sinh',
+  nduyet:'đã khai báo lịch mà chưa DUYỆT — WMS không phát yêu cầu',
+  nolich:'chưa khai báo lịch trên planogram — mọi con số phía sau đều vô nghĩa'
+};
+function plgTenNgan(s){ return String(s).replace(/^WH\s*-\s*MATERIAL\s*-\s*/i,''); }
+
 function plgRender(){
   var g=plgGeo(), mode=PLG.mode;
   if(mode==='kho') plgKho();
-  /* Đếm theo nhóm + giữ THỨ TỰ nhóm ổn định cho chú giải */
-  var dem={}, thu=[];
-  g.o.forEach(function(o){ var n=plgNhom(o); if(dem[n.k]==null){dem[n.k]={n:0,cls:n.cls,lb:n.lb}; thu.push(n.k);} dem[n.k].n++; });
+  /* Đếm theo nhóm + theo DÃY trong cùng một lượt quét (161 ô nên rẻ), giữ THỨ TỰ nhóm ổn định */
+  var dem={}, thu=[], theoDay={}, dsDay=[];
+  g.o.forEach(function(o){
+    var n=plgNhom(o);
+    if(dem[n.k]==null){ dem[n.k]={n:0,cls:n.cls,lb:n.lb}; thu.push(n.k); }
+    dem[n.k].n++;
+    var d=theoDay[o.d]; if(!d){ d=theoDay[o.d]={n:0,k:{},o:[]}; dsDay.push(o.d); }
+    d.n++; d.k[n.k]=(d.k[n.k]||0)+1; d.o.push(o);
+  });
   if(mode==='kho'){
     thu=plgKho().ds.filter(function(w){ return dem[w]; }).concat(dem._none?['_none']:[]);
   } else thu=['da','chua','nduyet','nolich'].filter(function(k){ return dem[k]; });
   var tong=g.o.length;
+  if(PLG.hiDay && !theoDay[PLG.hiDay]) PLG.hiDay='';
 
-  /* --- dải cảnh báo + ghi chú --- */
-  var al=document.getElementById('plgAlert');
-  if(mode==='vesinh'){
-    var nolich=(dem.nolich&&dem.nolich.n)||0, nduyet=(dem.nduyet&&dem.nduyet.n)||0;
-    if(nolich===tong){
-      al.innerHTML='<div class="pg-alert"><span>&#9888;</span><div><b>Chưa vị trí nào của kho nguyên liệu được khai báo lịch vệ sinh trên planogram.</b> '+
-        'Đã dò cả 2 kho chứa mã <code>F0-KHO</code> — 1339 <i>WH-MATERIAL-GARMENT</i> và 1177 <i>WH-MATERIAL-MTG</i>: 0 lịch gốc, 0 yêu cầu. '+
-        'Planogram hiện mới bật cho SHOP (kho 863 &middot; 1147 &middot; 1266). Sơ đồ vẫn là mặt bằng thật và sẽ tự lên màu ngay khi lịch được '+
-        '<b>khai báo và DUYỆT</b> — không cần sửa dashboard.</div></div>';
-    } else if(nduyet>0){
-      al.innerHTML='<div class="pg-alert"><span>&#9888;</span><div><b>'+nduyet+' ô có lịch nhưng chưa được duyệt.</b> '+
-        'Lịch chưa Approved thì WMS không sinh yêu cầu vệ sinh — ô vẫn im lặng dù đã khai báo.</div></div>';
-    } else al.innerHTML='';
-  } else al.innerHTML='';
+  plgVeTop(mode,tong,dsDay.length);
+  plgVeSide(mode,tong,dem,thu);
+  plgVeMap(g,mode,tong,dem,thu,theoDay,dsDay);
+  plgVeList(mode,tong,dem,thu,theoDay,dsDay);
+}
 
-  /* --- bộ chuyển chế độ --- */
+/* --- Thanh chips trên cùng: chế độ tô màu + phạm vi + nút bỏ soi (khuôn whbar của Hasaki) --- */
+function plgVeTop(mode,tong,soDay){
   document.getElementById('plgTop').innerHTML=
     '<div class="pg-seg">'+
       '<button type="button" class="'+(mode==='kho'?'on':'')+'" onclick="plgSetMode(\'kho\')" aria-pressed="'+(mode==='kho')+'">Theo kho (tồn thực tế)</button>'+
       '<button type="button" class="'+(mode==='vesinh'?'on':'')+'" onclick="plgSetMode(\'vesinh\')" aria-pressed="'+(mode==='vesinh')+'">Theo vệ sinh (planogram)</button>'+
-    '</div>';
+    '</div>'+
+    '<span class="pg-chip">Kho nguyên liệu F0-KHO &middot; '+soDay+' dãy &middot; '+tong+' ô</span>'+
+    (PLG.hiDay?'<div class="pg-seg sm"><button type="button" class="on" onclick="plgSoiDay(\'\')" title="Bỏ soi, hiện lại toàn bộ sơ đồ">Đang soi dãy '+esc(PLG.hiDay)+' &times;</button></div>':'')+
+    '<span style="flex:1"></span>'+
+    '<span class="pg-hint">Mỗi ô là 1 <b>ô kệ</b> (<code>F0-KHO-&lt;dãy&gt;-&lt;cột&gt;</code>, gộp mọi tầng) — bấm ô để xem chi tiết</span>';
+}
 
-  /* --- dải chỉ số --- */
-  var sum;
+/* --- CỘT PHẢI: thẻ chỉ số xếp dọc + thanh xếp chồng + độ phủ (khuôn panel "Vệ sinh" của Hasaki) --- */
+function plgVeSide(mode,tong,dem,thu){
+  var t=[];
+  t.push('<button type="button" class="pg-tile tot" onclick="plgSoiDay(\'\')" title="Tổng số ô kệ trên bản vẽ mặt bằng">'+
+    '<span class="k">'+nf(tong)+'</span><span class="l">Tổng ô mặt bằng</span>'+
+    '<span class="s">bản vẽ MTG_zigzag — bê nguyên hình học, không dựng từ dữ liệu</span></button>');
+  thu.forEach(function(k){
+    var d=dem[k], c=plgMau(k,d.cls)||'var(--ink3)';
+    var sub=mode==='kho'
+      ? (k==='_none'?'vị trí không có dòng tồn nào theo mã vị trí'
+                    :plgPctTxt(d.n,tong)+'% ô mặt bằng &middot; nguồn: tồn theo mã vị trí')
+      : (PLG_SUB[k]||'');
+    t.push('<button type="button" class="pg-tile'+(PLG.tat[k]?' off':'')+'" style="--cc:'+c+'"'+
+      ' data-k="'+esc(k)+'" onclick="plgToggle(this.getAttribute(\'data-k\'))" aria-pressed="'+(PLG.tat[k]?'false':'true')+'"'+
+      ' title="Bấm để ẩn/hiện nhóm này trên sơ đồ">'+
+      '<span class="k">'+nf(d.n)+'</span><span class="l">'+esc(d.lb)+'</span><span class="s">'+sub+'</span></button>');
+  });
+  var bar='<div class="pg-track big"><span class="pg-fill">'+thu.map(function(k){
+    var d=dem[k], c=plgMau(k,d.cls)||'color-mix(in srgb,var(--ink3) 32%,transparent)';
+    return '<i style="width:'+plgPct(d.n,tong)+'%;background:'+c+'" title="'+esc(d.lb)+': '+d.n+' ô"></i>';
+  }).join('')+'</span></div>';
+
+  /* Độ phủ: trả lời "bao nhiêu phần mặt bằng thực sự nằm trong tầm quan sát" của từng chế độ */
+  var cov;
   if(mode==='kho'){
     var coTon=tong-((dem._none&&dem._none.n)||0);
-    sum=[['Tổng ô mặt bằng',tong,'c-mut'],['Ô có tồn',coTon,'c-pos'],['Ô trống',tong-coTon,'c-mut']]
-      .concat(plgKho().ds.slice(0,3).map(function(w){ return [w.replace('WH - MATERIAL - ','')+' (ô)',(dem[w]&&dem[w].n)||0,'c-ok']; }));
+    cov='<div class="ct">Độ phủ tồn theo vị trí</div>'+
+      '<div class="cl">Ô có tồn<span class="sp"></span><b>'+nf(coTon)+'/'+nf(tong)+'</b> ('+plgPctTxt(coTon,tong)+'%)</div>'+
+      '<div class="cl">Ô trống<span class="sp"></span><b>'+nf(tong-coTon)+'</b></div>'+
+      '<div class="cl">Kho đang chiếm mặt bằng<span class="sp"></span><b>'+nf(plgKho().ds.length)+'</b></div>'+
+      (PLG.ngoai.length?'<div class="pg-alert" style="margin:9px 0 0"><span class="ic">&#9888;</span><div><b>'+PLG.ngoai.length+' mã vị trí có tồn nhưng không có trên bản vẽ</b><br>'+
+        esc(PLG.ngoai.join(' · '))+' — hoặc bản vẽ thiếu, hoặc mã đã bị đặt sai.</div></div>':'');
   } else {
-    sum=[['Tổng ô mặt bằng',tong,'c-mut'],['Đã vệ sinh',(dem.da&&dem.da.n)||0,'c-ok'],
-      ['Chưa vệ sinh',(dem.chua&&dem.chua.n)||0,'c-neg'],['Lịch chưa duyệt',(dem.nduyet&&dem.nduyet.n)||0,'c-pos'],
-      ['Chưa khai báo lịch',(dem.nolich&&dem.nolich.n)||0,'c-mut']];
+    var coLich=tong-((dem.nolich&&dem.nolich.n)||0), duyet=coLich-((dem.nduyet&&dem.nduyet.n)||0);
+    cov='<div class="ct">Độ phủ lịch vệ sinh</div>'+
+      '<div class="cl">Vị trí đã khai báo lịch<span class="sp"></span><b>'+nf(coLich)+'/'+nf(tong)+'</b> ('+plgPctTxt(coLich,tong)+'%)</div>'+
+      '<div class="cl">Trong đó lịch đã DUYỆT<span class="sp"></span><b>'+nf(duyet)+'</b></div>'+
+      '<div class="cl">Nguồn<span class="sp"></span><b>'+esc(PLG_TAB)+'</b></div>';
   }
-  document.getElementById('plgSum').innerHTML=sum.map(function(s){
-    return '<div class="sm '+s[2]+'"><div class="k">'+nf(s[1])+'</div><div class="l">'+esc(s[0])+'</div></div>';
-  }).join('');
+  document.getElementById('plgSide').innerHTML=
+    '<section class="panel">'+
+    '<h2>'+(mode==='kho'?'Kho đang giữ tồn':'Trạng thái vệ sinh')+
+      ' <span class="pg-chip">'+(mode==='kho'?'tồn thực tế':'planogram WMS')+'</span></h2>'+
+    '<div class="pg-tiles">'+t.join('')+'</div>'+bar+
+    '<div class="pg-cov">'+cov+'</div>'+
+    '</section>';
+}
 
-  /* --- chú giải bấm được (cross-filter) --- */
-  document.getElementById('plgLegend').innerHTML=thu.map(function(k){
-    var d=dem[k];
-    return '<button type="button" class="'+(PLG.tat[k]?'off':'')+'" onclick="plgToggle(\''+esc(k).replace(/'/g,'')+'\')"'+
-      ' aria-pressed="'+(PLG.tat[k]?'false':'true')+'" title="Bấm để ẩn/hiện nhóm này trên sơ đồ">'+
-      '<i class="'+(d.cls==='trong'?'dash':'')+'"'+(d.cls==='trong'?'':' style="background:var(--s'+(d.cls.replace('w','')||1)+')"')+'></i>'+
-      esc(d.lb)+' <span class="n">'+d.n+'</span></button>';
-  }).join('');
-  /* Chú giải chế độ vệ sinh dùng bộ status (hex cố định) nên phải ghi màu trực tiếp, không qua --sN */
+/* --- CỘT TRÁI: panel sơ đồ (tiêu đề + chú giải cùng hàng, dải cảnh báo, bản vẽ) --- */
+function plgVeMap(g,mode,tong,dem,thu,theoDay,dsDay){
+  /* dải cảnh báo mỏng — nằm TRONG panel sơ đồ, đúng chỗ của bannerAlert bên Hasaki */
+  var al='';
   if(mode==='vesinh'){
-    document.getElementById('plgLegend').innerHTML=thu.map(function(k){
-      var d=dem[k], m=PLG_ST[k];
-      return '<button type="button" class="'+(PLG.tat[k]?'off':'')+'" onclick="plgToggle(\''+k+'\')"'+
-        ' aria-pressed="'+(PLG.tat[k]?'false':'true')+'" title="Bấm để ẩn/hiện nhóm này trên sơ đồ">'+
-        '<i class="'+(m.c?'':'dash')+'"'+(m.c?' style="background:'+m.c+'"':'')+'></i>'+
-        esc(d.lb)+' <span class="n">'+d.n+'</span></button>';
-    }).join('');
+    var nolich=(dem.nolich&&dem.nolich.n)||0, nduyet=(dem.nduyet&&dem.nduyet.n)||0;
+    if(nolich===tong){
+      al='<div class="pg-alert"><span class="ic">&#9888;</span><div><b>Chưa vị trí nào của kho nguyên liệu được khai báo lịch vệ sinh trên planogram.</b> '+
+        'Đã dò cả 2 kho chứa mã <code>F0-KHO</code> — 1339 <i>WH-MATERIAL-GARMENT</i> và 1177 <i>WH-MATERIAL-MTG</i>: 0 lịch gốc, 0 yêu cầu. '+
+        'Planogram hiện mới bật cho SHOP (kho 863 &middot; 1147 &middot; 1266). Sơ đồ vẫn là mặt bằng thật và sẽ tự lên màu ngay khi lịch được '+
+        '<b>khai báo và DUYỆT</b> — không cần sửa dashboard.</div></div>';
+    } else if(nduyet>0){
+      al='<div class="pg-alert"><span class="ic">&#9888;</span><div><b>'+nduyet+' ô có lịch nhưng chưa được duyệt.</b> '+
+        'Lịch chưa Approved thì WMS không sinh yêu cầu vệ sinh — ô vẫn im lặng dù đã khai báo.</div></div>';
+    }
   }
+  /* chú giải bấm được (cross-filter) — chung một hàng với tiêu đề panel */
+  var legend='<span class="pg-legend">'+thu.map(function(k){
+    var d=dem[k], c=plgMau(k,d.cls);
+    return '<button type="button" class="'+(PLG.tat[k]?'off':'')+'" data-k="'+esc(k)+'"'+
+      ' onclick="plgToggle(this.getAttribute(\'data-k\'))" aria-pressed="'+(PLG.tat[k]?'false':'true')+'"'+
+      ' title="Bấm để ẩn/hiện nhóm này trên sơ đồ">'+
+      '<i class="'+(c?'':'dash')+'"'+(c?' style="background:'+c+'"':'')+'></i>'+
+      esc(plgTenNgan(d.lb))+' <span class="n">'+d.n+'</span></button>';
+  }).join('')+'</span>';
 
-  /* --- SVG: nền bản vẽ → khu chức năng → ô kệ → chip tên dãy --- */
+  document.getElementById('plgMap').innerHTML=
+    '<section class="panel">'+
+    '<h2>Sơ đồ mặt bằng <span class="pg-chip">'+dsDay.length+' dãy &middot; '+tong+' ô</span>'+legend+'</h2>'+
+    al+
+    '<div class="pg-wrap"><div class="pg-scroll"><div class="pg-fit" style="--pg-ar:'+(g.W/g.H).toFixed(4)+'">'+
+      plgSvg(g,mode,theoDay)+'</div></div></div>'+
+    '<p class="pg-hint" style="margin:9px 2px 0">Vẽ đúng tỷ lệ, nét kẻ và khoảng cách của bản vẽ <code>MTG_zigzag</code> &middot; '+
+      (mode==='kho'?'tô theo <b>kho</b> đang giữ tồn ở vị trí đó (nguồn: tồn theo mã vị trí của tab Trạng thái lưu trữ)'
+                   :'tô theo <b>trạng thái vệ sinh</b> từ planogram WMS (tab <code>'+esc(PLG_TAB)+'</code>)')+
+      ' &middot; bấm nhãn dãy để soi riêng dãy đó.</p>'+
+    '</section>';
+}
+
+/* Gom ô của 1 dãy thành các CỤM liền nhau (cùng băng ngang + khe ngang nhỏ) để vẽ nền mềm phía
+   sau. Dãy 501/513 vòng qua góc kho nên một hộp bao duy nhất sẽ trùm cả lối đi — phải tách cụm. */
+function plgCum(cells){
+  var bands=[];
+  cells.forEach(function(c){
+    var hit=null;
+    for(var i=0;i<bands.length;i++){ var b=bands[i]; if(c.y<b.y1 && (c.y+c.h)>b.y0){ hit=b; break; } }
+    if(!hit){ hit={y0:c.y,y1:c.y+c.h,o:[]}; bands.push(hit); }
+    hit.y0=Math.min(hit.y0,c.y); hit.y1=Math.max(hit.y1,c.y+c.h); hit.o.push(c);
+  });
+  var cum=[];
+  bands.forEach(function(b){
+    b.o.sort(function(a,c){ return a.x-c.x; });
+    var cur=null;
+    b.o.forEach(function(c){
+      if(cur && c.x-cur.x1<=220){ cur.x1=Math.max(cur.x1,c.x+c.w); cur.y0=Math.min(cur.y0,c.y); cur.y1=Math.max(cur.y1,c.y+c.h); }
+      else { cur={x0:c.x,x1:c.x+c.w,y0:c.y,y1:c.y+c.h}; cum.push(cur); }
+    });
+  });
+  return cum;
+}
+
+/* --- SVG: sàn → nền bản vẽ → nền dãy → khu chức năng → ô kệ → chip tên dãy --- */
+function plgSvg(g,mode,theoDay){
   var GAP=2.2;   // khe hở giữa 2 ô cạnh nhau: ô đọc thành từng viên gạch chứ không thành 1 khối liền
   var out=['<svg class="pg-svg" viewBox="0 0 '+g.W+' '+g.H+'" role="img" aria-label="Sơ đồ mặt bằng kho nguyên liệu">'];
+  /* Sàn kho: nền mềm cho cả khổ bản vẽ — bản vẽ có "thân" thay vì lơ lửng giữa panel */
+  out.push('<rect class="pg-floor" x="14" y="14" width="'+(g.W-28)+'" height="'+(g.H-28)+'" rx="18"/>');
+  /* Nền mềm CHỈ vẽ cho dãy đang soi: bản vẽ đã có tường + khung kệ, tô nền cho cả 14 dãy chỉ làm
+     đục hình (dãy vòng qua góc kho thì hộp bao còn trùm cả lối đi). */
+  if(PLG.hiDay && theoDay[PLG.hiDay]){
+    out.push('<g>');
+    plgCum(theoDay[PLG.hiDay].o).forEach(function(b){
+      out.push('<rect class="pg-bed hi" x="'+(b.x0-8).toFixed(1)+'" y="'+(b.y0-8).toFixed(1)+
+        '" width="'+(b.x1-b.x0+16).toFixed(1)+'" height="'+(b.y1-b.y0+16).toFixed(1)+'" rx="12"/>');
+    });
+    out.push('</g>');
+  }
   out.push('<g class="pg-wall">');
   g.nen.forEach(function(a){ out.push('<path d="M'+a[0]+' '+a[1]+'L'+a[2]+' '+a[3]+'"/>'); });
   out.push('</g><g class="pg-khu">');
@@ -2292,31 +2496,78 @@ function plgRender(){
     var x=c.x+GAP/2, y=c.y+GAP/2, ww=Math.max(4,c.w-GAP), hh=Math.max(4,c.h-GAP);
     /* Chữ co theo cả CAO và RỘNG: cặp kệ 2 mặt chỉ cao 26 đơn vị, ô 14/15 của dãy 513 chỉ rộng 31 */
     var fs=Math.max(11,Math.min(24,hh*0.62,ww*0.42));
-    out.push('<g class="pg-o '+n.cls+(PLG.tat[n.k]?' dim':'')+'" tabindex="0" role="button"'+
+    /* Đang soi 1 dãy: ô ngoài dãy đó mờ hẳn đi (dùng lại đúng lớp .dim của chú giải) */
+    var mo=PLG.tat[n.k]||(PLG.hiDay&&c.d!==PLG.hiDay), hi=PLG.hiDay&&c.d===PLG.hiDay;
+    out.push('<g class="pg-o '+n.cls+(mo?' dim':'')+(hi?' hi':'')+'" tabindex="0" role="button"'+
       ' data-l="'+c.loc+'" onclick="plgOpen(this.getAttribute(\'data-l\'))"'+
       ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();plgOpen(this.getAttribute(\'data-l\'))}">'+
       '<title>'+esc(tip)+'</title>'+
-      '<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+ww.toFixed(1)+'" height="'+hh.toFixed(1)+'" rx="3"/>'+
+      '<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+ww.toFixed(1)+'" height="'+hh.toFixed(1)+'" rx="4"/>'+
       '<text x="'+(x+ww/2).toFixed(1)+'" y="'+(y+hh/2).toFixed(1)+'" font-size="'+fs.toFixed(1)+'">'+c.c+'</text>'+
       '</g>');
   });
-  out.push('</g><g class="pg-dchip">');
+  out.push('</g><g>');
   g.day.forEach(function(d){
     var w=d.d.length>3?86:64, h=40, x=d.lx-w-16, y=d.ly-h/2;
-    out.push('<g><rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+w+'" height="'+h+'" rx="10"/>'+
+    var soO=(theoDay[d.d]&&theoDay[d.d].n)||0;
+    out.push('<g class="pg-dchip'+(PLG.hiDay===d.d?' on':'')+'" tabindex="0" role="button" data-d="'+esc(d.d)+'"'+
+      ' onclick="plgSoiDay(this.getAttribute(\'data-d\'))"'+
+      ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();plgSoiDay(this.getAttribute(\'data-d\'))}">'+
+      '<title>'+esc('Dãy '+d.d+' — '+soO+' ô kệ\nBấm để soi riêng dãy này')+'</title>'+
+      '<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+w+'" height="'+h+'" rx="10"/>'+
       '<text x="'+(x+w/2).toFixed(1)+'" y="'+d.ly+'" font-size="26">'+esc(d.d)+'</text></g>');
   });
   out.push('</g></svg>');
+  return out.join('');
+}
 
-  var phu=mode==='kho'
-    ? 'tô theo KHO đang giữ tồn ở vị trí đó (nguồn: tồn theo mã vị trí của tab Trạng thái lưu trữ)'
-    : 'tô theo TRẠNG THÁI VỆ SINH từ planogram WMS';
-  document.getElementById('plgContent').innerHTML=
-    '<div class="pg-hdr"><span class="t">Kho nguyên liệu — 14 dãy kệ &middot; '+tong+' ô</span>'+
-    '<span class="h">vẽ theo bản vẽ MTG_zigzag: đúng tỷ lệ, nét kẻ và khoảng cách thật &middot; '+phu+'</span></div>'+
-    '<div class="pg-wrap"><div class="pg-scroll">'+out.join('')+'</div></div>'+
-    (PLG.ngoai.length?'<div class="pg-note">⚠ '+PLG.ngoai.length+' mã vị trí có tồn nhưng KHÔNG có trên bản vẽ: '+
-      esc(PLG.ngoai.join(' · '))+' — hoặc bản vẽ thiếu, hoặc mã đã bị đặt sai.</div>':'');
+/* --- PANEL DƯỚI: phân bố ô kệ theo dãy / theo nhóm (khuôn panel danh sách của Hasaki) --- */
+function plgVeList(mode,tong,dem,thu,theoDay,dsDay){
+  var rows;
+  if(PLG.list==='day'){
+    rows=dsDay.map(function(d){
+      var t=theoDay[d], on=PLG.hiDay===d;
+      var sub=thu.filter(function(k){ return t.k[k]; })
+        .map(function(k){ return t.k[k]+' '+(k==='_none'?'ô trống':mode==='kho'?plgTenNgan(dem[k].lb):dem[k].lb.toLowerCase()); }).join(' · ');
+      var fill=thu.map(function(k){
+        if(!t.k[k]) return '';
+        var c=plgMau(k,dem[k].cls)||'color-mix(in srgb,var(--ink3) 32%,transparent)';
+        return '<i style="width:'+plgPct(t.k[k],t.n)+'%;background:'+c+'" title="'+esc(dem[k].lb)+': '+t.k[k]+' ô"></i>';
+      }).join('');
+      return '<div class="pg-row'+(on?' on':'')+'" role="button" tabindex="0" data-d="'+esc(d)+'"'+
+        ' onclick="plgSoiDay(this.getAttribute(\'data-d\'))"'+
+        ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();plgSoiDay(this.getAttribute(\'data-d\'))}"'+
+        ' title="Bấm để soi riêng dãy '+esc(d)+' trên sơ đồ">'+
+        '<span class="pg-rl"><b class="nm">Dãy '+esc(d)+'</b> <span class="sub">'+esc(sub)+'</span></span>'+
+        '<span class="pg-track"><span class="pg-fill">'+fill+'</span></span>'+
+        '<span class="pg-rv"><b>'+nf(t.n)+'</b><small>ô kệ</small></span></div>';
+    }).join('');
+  } else {
+    rows=thu.map(function(k){
+      var d=dem[k], c=plgMau(k,d.cls);
+      var soDay=dsDay.filter(function(x){ return theoDay[x].k[k]; }).length;
+      return '<div class="pg-row'+(PLG.tat[k]?' on':'')+'" role="button" tabindex="0" data-k="'+esc(k)+'"'+
+        ' onclick="plgToggle(this.getAttribute(\'data-k\'))"'+
+        ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();plgToggle(this.getAttribute(\'data-k\'))}"'+
+        ' title="Bấm để ẩn/hiện nhóm này trên sơ đồ">'+
+        '<span class="pg-rl"><i class="'+(c?'':'dash')+'"'+(c?' style="background:'+c+'"':'')+'></i>'+esc(d.lb)+
+          ' <span class="sub">'+soDay+' dãy có ô thuộc nhóm này</span></span>'+
+        '<span class="pg-track"><span class="pg-fill"><i style="width:'+plgPct(d.n,tong)+'%;background:'+
+          (c||'color-mix(in srgb,var(--ink3) 32%,transparent)')+'"></i></span></span>'+
+        '<span class="pg-rv"><b>'+nf(d.n)+'</b><small>'+plgPctTxt(d.n,tong)+'% mặt bằng</small></span></div>';
+    }).join('');
+  }
+  document.getElementById('plgList').innerHTML=
+    '<section class="panel" style="margin-top:12px">'+
+    '<h2>Phân bố ô kệ'+
+      '<div class="pg-seg sm">'+
+        '<button type="button" class="'+(PLG.list==='day'?'on':'')+'" onclick="plgSetList(\'day\')" aria-pressed="'+(PLG.list==='day')+'">Theo dãy kệ</button>'+
+        '<button type="button" class="'+(PLG.list==='nhom'?'on':'')+'" onclick="plgSetList(\'nhom\')" aria-pressed="'+(PLG.list==='nhom')+'">Theo '+(mode==='kho'?'kho':'trạng thái')+'</button>'+
+      '</div>'+
+      '<span style="flex:1"></span>'+
+      '<span class="pg-hint">'+(PLG.list==='day'?'Bấm 1 hàng để soi riêng dãy đó trên sơ đồ':'Bấm 1 hàng để ẩn/hiện nhóm đó trên sơ đồ')+'</span></h2>'+
+    '<div class="pg-chart">'+rows+'</div>'+
+    '</section>';
 }
 
 function plgOpen(loc){
