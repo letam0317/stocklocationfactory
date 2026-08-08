@@ -1188,11 +1188,15 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
    vốn khác hình dạng, để tự do thì mỗi dòng chữ bắt đầu ở một chỗ. */
 .pg-legbox i{width:20px;height:12px;border-radius:4px;flex:none;border:1px solid color-mix(in srgb,var(--ink) 30%,transparent)}
 .pg-legbox i.dash{background:transparent;border:1px dashed color-mix(in srgb,var(--ink3) 65%,transparent)}
-.pg-legbox i.ring{background:transparent}
-.pg-legbox i.ring.vs-nolich{border:1.5px dashed color-mix(in srgb,var(--ink) 42%,transparent)}
-.pg-legbox i.ring.vs-da{border:2px solid #34d399}
-.pg-legbox i.ring.vs-chua{border:2px solid #f87171}
-.pg-legbox i.ring.vs-nduyet{border:2px solid #fbbf24}
+.pg-legbox i.vs-da{background:linear-gradient(180deg,#059669,#046c4e)}
+.pg-legbox i.vs-chua{background:linear-gradient(180deg,#dc2626,#991b1b)}
+.pg-legbox i.vs-nduyet{background:linear-gradient(180deg,#d97706,#92400e)}
+.pg-legbox i.vs-nolich{background:color-mix(in srgb,var(--ink) 9%,transparent);
+  border:1.5px dashed color-mix(in srgb,var(--ink) 34%,transparent)}
+/* Mẫu VẠCH KHO: vẽ đúng dải mép trái như trên ô thật (ô xám + vạch màu bên trái) */
+.pg-legbox i.vach{background:color-mix(in srgb,var(--ink) 9%,transparent);
+  border:1px solid color-mix(in srgb,var(--ink) 22%,transparent);position:relative;overflow:hidden}
+.pg-legbox i.vach::before{content:"";position:absolute;left:1px;top:1px;bottom:1px;width:4px;border-radius:2px;background:var(--vc)}
 .pg-legbox i.chip{border-radius:999px;background:var(--surface);
   border:1px solid color-mix(in srgb,var(--ink) 40%,transparent)}
 .pg-legbox .n{margin-left:auto;padding-left:10px;font-variant-numeric:tabular-nums;color:var(--ink3);font-weight:600}
@@ -1276,8 +1280,6 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 /* Đang soi 1 dãy: ô của dãy đó viền đậm hơn để nổi khỏi phần bị mờ */
 .pg-o.hi rect.bg{stroke:var(--ink);stroke-width:2}
 /* Ô "không có dữ liệu": nét đứt, không tô nền — ngoài phạm vi đánh giá, KHÔNG đọc thành "chưa làm" */
-.pg-o.trong rect.bg{fill:transparent;stroke-dasharray:4 3;stroke:color-mix(in srgb,var(--ink3) 62%,transparent);stroke-width:1}
-.pg-o.trong text{fill:var(--ink3)}
 /* ===== KIỂU TÔ Ô: ĐẶC, CHUYỂN SẮC DỌC CÙNG HUE ===============================================
    Đã THỬ kiểu "nền dịu + chữ cùng màu" (khuôn badge) và ĐO RA KHÔNG DÙNG ĐƯỢC cho bản đồ này:
    chữ/nền chỉ 4,0-4,6:1 ở theme sáng và 2,3-2,9:1 ở 4 theme tối, tệ hơn nữa là ô/nền khung chỉ
@@ -1289,17 +1291,25 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
    Chuyển sắc khai báo 1 lần trong <defs> theo từng slot, stop-color đọc thẳng biến --sN/--sNd nên
    vẫn ăn theo theme. */
 .pg-o rect.bg{stroke:color-mix(in srgb,var(--ink) 30%,transparent);stroke-width:.9;vector-effect:non-scaling-stroke}
-.pg-o text{fill:#fff}
-/* VIỀN Ô = TRẠNG THÁI VỆ SINH (kênh thứ hai, độc lập với nền). Nhờ vậy một sơ đồ nói được cả hai
-   việc: ô này của kho nào, và lịch vệ sinh của nó đang ở đâu — không phải bấm qua lại 2 chế độ. */
-/* Nét đứt "chưa khai báo lịch" phải nằm TRÊN nền ô đã tô đậm -> dùng trắng mờ, không dùng --ink
-   (ở theme sáng --ink là mực đen, vẽ trên ô xanh/đỏ đậm gần như không thấy). */
-.pg-o.vs-nolich rect.bg{stroke:rgba(255,255,255,.55);stroke-dasharray:5 3.5;stroke-width:1.5}
-/* Ô KHÔNG CÓ TỒN không có nền để tựa vào -> giữ nét đứt xám trên nền sơ đồ (đặt SAU để thắng) */
-.pg-o.trong.vs-nolich rect.bg{stroke:color-mix(in srgb,var(--ink3) 62%,transparent);stroke-width:1;stroke-dasharray:4 3}
-.pg-o.vs-da rect.bg{stroke:#34d399;stroke-width:2.2}
-.pg-o.vs-chua rect.bg{stroke:#f87171;stroke-width:2.2}
-.pg-o.vs-nduyet rect.bg{stroke:#fbbf24;stroke-width:2.2}
+/* ===== HAI KÊNH TÁCH BẠCH ====================================================================
+   NỀN Ô  = TRẠNG THÁI VỆ SINH (đây là việc chính của tab Planogram, nên nó chiếm kênh mạnh nhất)
+   VẠCH MÉP TRÁI = KHO giữ tồn. Dùng VỊ TRÍ + màu nhỏ thay vì tô cả ô: hai thông tin không tranh
+   nhau mảng màu, và đây đúng là thủ pháp Audit Hasaki đang dùng (.hp-mapcell.dalam::after — vạch
+   xanh mép trái đánh dấu "đã báo cáo" chồng lên nền màu trạng thái).
+   Đã thử tô nền theo kho + viền theo vệ sinh: nền thắng thị giác nên bản đồ đọc ra "kho" trước,
+   trong khi tab này là tab VỆ SINH — sai thứ tự ưu tiên. */
+.pg-o.vs-da rect.bg{fill:url(#pgGda)}
+.pg-o.vs-chua rect.bg{fill:url(#pgGchua)}
+.pg-o.vs-nduyet rect.bg{fill:url(#pgGnd)}
+.pg-o.vs-da text,.pg-o.vs-chua text,.pg-o.vs-nduyet text{fill:#fff}
+/* "Chưa khai báo lịch": KHÔNG để trong suốt — ô vẫn phải đọc ra là một vật thể trên mặt bằng.
+   Nền xám rất nhạt + nét đứt = "ngoài phạm vi đánh giá", không đọc thành "chưa làm". */
+.pg-o.vs-nolich rect.bg{fill:color-mix(in srgb,var(--ink) 9%,transparent);
+  stroke:color-mix(in srgb,var(--ink) 34%,transparent);stroke-dasharray:5 3.5;stroke-width:1.3}
+.pg-o.vs-nolich text{fill:var(--ink2)}
+/* VẠCH KHO: dải mỏng bám mép trái ô, thụt vào 2 đơn vị mỗi đầu để không chìa ra ngoài góc bo */
+.pg-vach{stroke:none}
+.pg-o.trong .pg-vach{display:none}   /* ô không có tồn thì không thuộc kho nào -> không có vạch */
 /* Pop-up ô: bảng khoá-giá trị, khuôn .mtbl của dự án */
 .pg-kv{width:100%;border-collapse:collapse;font-size:13px}
 .pg-kv td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
@@ -2802,19 +2812,19 @@ function plgVeMap(g,T){
   /* HỘP CHÚ GIẢI neo ở GÓC TRÊN BÊN PHẢI của sơ đồ. Dùng TÊN KHO ĐẦY ĐỦ (WH - MATERIAL - MTG…)
      chứ không rút gọn, vì đây là chỗ duy nhất còn giải nghĩa màu sau khi bỏ biển tên trên bản vẽ.
      Các mục nhóm vẫn bấm được để ẩn/hiện nhóm; mục "Dãy kệ" chỉ để đối chiếu nên không phải nút. */
-  var legend='<div class="pg-legbox"><div class="lb-t">Kho giữ tồn (nền ô)</div>'+thu.map(function(k){
-    var d=dem[k], nen=plgNenMau(k,d.cls);
+  var legend='<div class="pg-legbox"><div class="lb-t">Trạng thái vệ sinh (nền ô)</div>'+
+    ['da','chua','nduyet','nolich'].map(function(k){
+      return '<span class="tinh"><i class="vs-'+k+'"></i>'+esc(PLG_ST[k].lb)+
+        ' <span class="n">'+nf(vs[k])+'</span></span>';
+    }).join('')+
+    '<div class="lb-t" style="margin-top:3px">Kho giữ tồn (vạch mép trái ô)</div>'+thu.map(function(k){
+    var d=dem[k], mau=(k==='_none')?'':plgMauKho(k);
     return '<button type="button" class="'+(PLG.tat[k]?'off':'')+'" data-k="'+esc(k)+'"'+
       ' onclick="plgToggle(this.getAttribute(\'data-k\'))" aria-pressed="'+(PLG.tat[k]?'false':'true')+'"'+
       ' title="Bấm để ẩn/hiện nhóm này trên sơ đồ">'+
-      '<i class="'+(nen?'':'dash')+'"'+(nen?' style="background:'+nen+'"':'')+'></i>'+
+      (mau?'<i class="vach" style="--vc:'+mau+'"></i>':'<i class="dash"></i>')+
       esc(d.lb)+' <span class="n">'+d.n+'</span></button>';
   }).join('')+
-    '<div class="lb-t" style="margin-top:3px">Trạng thái vệ sinh (viền ô)</div>'+
-    ['da','chua','nduyet','nolich'].map(function(k){
-      return '<span class="tinh"><i class="ring vs-'+k+'"></i>'+esc(PLG_ST[k].lb)+
-        ' <span class="n">'+nf(vs[k])+'</span></span>';
-    }).join('')+
     '<span class="tinh" title="Viên thuốc bên trái mỗi hàng kệ là nhãn dãy — bấm để soi riêng dãy đó">'+
     '<i class="chip"></i>Dãy kệ <span class="n">'+dsDay.length+'</span></span>'+
     '</div>';
@@ -2831,9 +2841,10 @@ function plgVeMap(g,T){
       plgSvg(g,mode,theoDay)+'</div></div></div>'+
     '<p class="pg-hint" style="margin:9px 2px 0">Bấm một ô để xem chi tiết vị trí, bấm nhãn dãy để soi riêng dãy đó &middot; '+
       'sơ đồ bê nguyên hình học bản vẽ <code>MTG_zigzag</code> (đúng tỷ lệ, nét kẻ, khoảng cách thật) — cách đọc màu: '+
-      '<b>nền ô = kho</b> đang giữ tồn ở đó (nguồn: tồn theo mã vị trí của tab Trạng thái lưu trữ, dùng chung bảng màu với các tab khác), '+
-      '<b>viền ô = trạng thái vệ sinh</b> — nét đứt là chưa khai báo lịch, xanh đã vệ sinh, đỏ chưa vệ sinh, hổ phách lịch chưa duyệt '+
-      '(nguồn: planogram WMS, tab <code>'+esc(PLG_TAB)+'</code>).</p>'+
+      '<b>nền ô = trạng thái vệ sinh</b> (xanh đã vệ sinh · đỏ chưa vệ sinh · hổ phách lịch chưa duyệt · '+
+      'xám nét đứt là chưa khai báo lịch — nguồn: planogram WMS, tab <code>'+esc(PLG_TAB)+'</code>), '+
+      '<b>vạch màu mép trái = kho</b> đang giữ tồn ở ô đó, dùng chung bảng màu với các tab khác '+
+      '(nguồn: tồn theo mã vị trí của tab Trạng thái lưu trữ).</p>'+
     '</section>';
 }
 
@@ -2978,11 +2989,11 @@ function plgSvg(g,mode,theoDay){
   /* 8 slot phân loại + 3 trạng thái vệ sinh, mỗi cái một chuyển sắc dọc 600 -> 800 cùng hue */
   /* Chuyển sắc dựng ĐỘNG theo WH_COLOR của từng kho — không hardcode, kho nào đổi màu ở tab
      Trạng thái lưu trữ thì ô kệ đổi theo. */
+  /* Chuyển sắc cho 3 trạng thái có nền (chưa khai báo lịch dùng nền xám phẳng, khai ở CSS) */
   var grad='';
-  plgKho().ds.forEach(function(w,gi){
-    var bc=plgBacKho(w);
-    grad+='<linearGradient id="pgW'+gi+'" x1="0" y1="0" x2="0" y2="1">'+
-      '<stop offset="0" stop-color="'+bc[0]+'"/><stop offset="1" stop-color="'+bc[1]+'"/></linearGradient>';
+  [['da','#059669','#046c4e'],['chua','#dc2626','#991b1b'],['nd','#d97706','#92400e']].forEach(function(m){
+    grad+='<linearGradient id="pgG'+m[0]+'" x1="0" y1="0" x2="0" y2="1">'+
+      '<stop offset="0" stop-color="'+m[1]+'"/><stop offset="1" stop-color="'+m[2]+'"/></linearGradient>';
   });
   out.push('<defs>'+grad+'<linearGradient id="pgSheen" x1="0" y1="0" x2="0" y2="1">'+
     '<stop offset="0" stop-color="#fff" stop-opacity=".12"/>'+
@@ -3052,15 +3063,20 @@ function plgSvg(g,mode,theoDay){
     /* Mờ ô ngoài tầm nhìn hiện tại — 3 nguồn: KHU VỰC đang lọc, nhóm bị tắt ở chú giải, dãy đang
        soi. Vẫn VẼ chứ không xoá: sơ đồ là mặt bằng thật, ô biến mất là mất luôn manh mối. */
     var mo=!plgTrongPhamVi(c)||PLG.tat[n.k]||(PLG.hiDay&&c.d!==PLG.hiDay), hi=PLG.hiDay&&c.d===PLG.hiDay;
-    var vs=' vs-'+plgState(r);                       // viền = trạng thái vệ sinh
-    var iKho=plgKho().ds.indexOf(plgKhoCua(c.loc));  // nền = gradient của kho giữ tồn
-    var to=iKho>=0?' fill="url(#pgW'+iKho+')"':'';
+    var vs=' vs-'+plgState(r);          // NỀN ô = trạng thái vệ sinh
+    var kho=plgKhoCua(c.loc);           // VẠCH mép trái = kho giữ tồn
     var hop=' x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+ww.toFixed(1)+'" height="'+hh.toFixed(1)+'" rx="'+rx+'"';
+    /* Vạch rộng ~1/9 bề ngang ô, chặn trong khoảng 3,5-6 đơn vị: ô hẹp nhất (31 đơn vị) vẫn còn
+       chỗ cho số, ô rộng nhất không biến vạch thành mảng màu thứ hai. */
+    var vw=Math.max(3.5,Math.min(6,ww*0.11));
+    var vach=kho?'<rect class="pg-vach" x="'+(x+1.6).toFixed(1)+'" y="'+(y+1.6).toFixed(1)+
+      '" width="'+vw.toFixed(1)+'" height="'+(hh-3.2).toFixed(1)+'" rx="'+Math.min(2,vw/2).toFixed(1)+
+      '" fill="'+plgMauKho(kho)+'"/>':'';
     out.push('<g class="pg-o '+n.cls+vs+(mo?' dim':'')+(hi?' hi':'')+'" tabindex="0" role="button"'+
       ' data-l="'+c.loc+'" onclick="plgOpen(this.getAttribute(\'data-l\'))"'+
       ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();plgOpen(this.getAttribute(\'data-l\'))}">'+
       '<title>'+esc(tip)+'</title>'+
-      '<rect class="bg"'+hop+to+'/>'+
+      '<rect class="bg"'+hop+'/>'+vach+
       /* ô nét đứt (không có dữ liệu) thì KHÔNG vát: nó cố ý phẳng, rỗng, để đọc ra "ngoài phạm vi" */
       (n.cls==='trong'?'':'<rect class="sheen"'+hop+' fill="url(#pgSheen)"/>')+
       '<text x="'+(x+ww/2).toFixed(1)+'" y="'+(y+hh/2).toFixed(1)+'" font-size="'+fs.toFixed(1)+'">'+c.c+'</text>'+
@@ -4764,8 +4780,11 @@ var ABN_COLS={
 var ABN={loadedOnce:false,ok:false,hasPtype:false,all:[],rows:[],wh:'',company:''};
 /* Công ty suy từ hậu tố tên kho: …- MTG => Mastige, …- GARMENT => Garment (còn lại: Khác) */
 function abnCompanyOf(wh){ var s=String(wh||'').toUpperCase(); if(/GARMENT/.test(s)) return 'Garment'; if(/\bMTG\b|MASTIGE/.test(s)) return 'Mastige'; return 'Khác'; }
-/* Rút gọn nhãn chip kho: bỏ hậu tố công ty (đã chọn ở tầng trên) cho đỡ dài */
-function abnWhShort(w){ return String(w).replace(/\s*[-–]\s*(MTG|MASTIGE|GARMENT)\s*$/i,'').trim()||String(w); }
+/* TÊN KHO ĐỂ NGUYÊN, KHÔNG rút gọn (08/08/2026). Bản cũ cắt hậu tố công ty với lý do "đã chọn ở
+   tầng trên", nhưng chip đọc ra thành "WH - MATERIAL" / "WH - SEMI PRODUCT" — trùng tên giữa hai
+   công ty và lệch hẳn với mọi chỗ khác trong dự án (tab Trạng thái lưu trữ, Kiểm kê, Planogram,
+   pop-up, tooltip) vốn đều in đủ "WH - MATERIAL - GARMENT". Giữ hàm để không vỡ tham chiếu. */
+function abnWhShort(w){ return String(w); }
 var ABN_MODAL={base:[]};
 function abnColor(w){ return kkColor(w); }              // dùng chung bảng màu kho với tab Kiểm kê
 function abnType(k){ for(var i=0;i<ABN_TYPES.length;i++) if(ABN_TYPES[i].k===k) return ABN_TYPES[i]; return null; }
