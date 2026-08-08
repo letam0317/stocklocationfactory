@@ -1035,7 +1035,7 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 .pg-tile .l{grid-column:2;grid-row:1;font-size:11.5px;font-weight:650;line-height:1.25;color:var(--ink)}
 .pg-tile .s{grid-column:2;grid-row:2;margin-top:2px;font-size:10.5px;line-height:1.3;color:var(--ink3)}
 /* Thanh tiến độ xếp chồng — tỷ lệ các nhóm trong tổng số ô */
-.pg-track{background:color-mix(in srgb,var(--ink3) 22%,transparent);border-radius:6px;height:8px;overflow:hidden}
+.pg-track{display:block;background:color-mix(in srgb,var(--ink3) 22%,transparent);border-radius:6px;height:8px;overflow:hidden}
 .pg-track.big{height:14px}
 .pg-fill{display:flex;height:100%;width:100%;border-radius:6px;overflow:hidden}
 .pg-fill i{display:block;height:100%;min-width:1px;transition:width .8s var(--ez-apple)}
@@ -1090,8 +1090,20 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 .pg-tbl .num{text-align:right;font-variant-numeric:tabular-nums}
 .pg-tbl .mut{color:var(--ink3)}
 .pg-tbl .empty{text-align:center;color:var(--ink3);padding:26px;white-space:normal}
-.pg-tbl .bar{min-width:150px}
-.pg-tbl .bar .pg-track{height:8px}
+.pg-tbl .bar{min-width:230px}
+.pg-tbl .bar .pg-track{height:7px;margin-bottom:5px}
+/* Thông tin 1 DÃY KỆ: huy hiệu mã dãy + thành phần dạng chấm màu — thay cho chuỗi chữ trần
+   "9 MTG · 5 GARMENT · 1 ô trống" vừa dài vừa không nối được với màu trên sơ đồ. */
+.pg-dbadge{display:inline-flex;align-items:center;gap:6px;padding:3px 11px;border-radius:999px;
+  background:color-mix(in srgb,var(--ink) 6%,transparent);border:1px solid color-mix(in srgb,var(--ink) 12%,transparent);
+  font-weight:700;font-size:12px;font-variant-numeric:tabular-nums;color:var(--ink)}
+.pg-tbl tr.on .pg-dbadge{background:var(--brand2);border-color:var(--brand2);color:var(--accent-text)}
+.pg-dbadge .u{font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
+.pg-tbl tr.on .pg-dbadge .u{color:color-mix(in srgb,var(--accent-text) 72%,transparent)}
+.pg-parts{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:10.5px;color:var(--ink3);line-height:1.3}
+.pg-parts span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.pg-parts b{color:var(--ink2);font-variant-numeric:tabular-nums;font-weight:700}
+.pg-tbl td.z{color:color-mix(in srgb,var(--ink3) 55%,transparent)}
 /* Pop-up "Tra cứu dãy kệ": danh sách trái + chi tiết phải, khuôn hp-nk-grid */
 .pg-nk{display:grid;grid-template-columns:250px 1fr;gap:0;flex:1;min-height:0}
 .pg-nkl{border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
@@ -1141,58 +1153,75 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 .pg-legend .n{font-variant-numeric:tabular-nums;color:var(--ink3)}
 /* Khung sơ đồ: nền phẳng hơi lõm để bản vẽ nổi lên, bo góc như các card khác của dự án */
 .pg-wrap{border:1px solid var(--line);border-radius:12px;background:var(--surface2);
-  padding:10px 12px;overflow:hidden;box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ink) 4%,transparent)}
+  padding:14px 16px;overflow:hidden;box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ink) 4%,transparent)}
 .pg-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 /* VỪA MÀN HÌNH: bề rộng bản vẽ = min(chỗ còn lại, chiều cao cho phép × tỷ lệ khổ) — cả sơ đồ
    lọt 1 khung nhìn, không phải cuộn dọc mới thấy hết dãy như bản cũ. --pg-ar do JS gắn từ
    viewBox (W/H) nên đổi bản vẽ không phải sửa CSS. */
 .pg-fit{width:min(100%,calc((100vh - 330px) * var(--pg-ar,1.466)));min-width:760px;margin:0 auto}
 .pg-svg{display:block;width:100%;height:auto;font-family:inherit}
-/* Lớp NỀN = bản vẽ gốc, cố tình LÙI LẠI: dữ liệu (ô đã tô) phải là thứ nổi nhất trên hình.
+/* ===== LỚP NỀN — đọc như một bản vẽ mặt bằng, không phải mảng ô màu ==========================
+   Thứ tự lùi dần: sàn (nền + lưới toạ độ mờ) → tường → phòng chức năng → ô kệ (dữ liệu, nổi nhất).
    vector-effect giữ nét mảnh đều ở mọi mức phóng, không dày lên khi SVG bị co. */
-.pg-floor{fill:color-mix(in srgb,var(--ink) 3%,transparent);stroke:none}
-.pg-wall{fill:none;stroke:color-mix(in srgb,var(--ink) 20%,transparent);stroke-width:1.1;
-  stroke-linecap:round;vector-effect:non-scaling-stroke}
+.pg-floor{fill:color-mix(in srgb,var(--ink) 3%,transparent);
+  stroke:color-mix(in srgb,var(--ink) 9%,transparent);stroke-width:1;vector-effect:non-scaling-stroke}
+/* Lưới toạ độ mờ trong lòng nhà xưởng — thứ cho hình cảm giác "bản vẽ kỹ thuật" thay vì nền phẳng */
+.pg-grid{fill:none;stroke:color-mix(in srgb,var(--ink) 5%,transparent);stroke-width:1;vector-effect:non-scaling-stroke}
+.pg-wall{fill:none;stroke:color-mix(in srgb,var(--ink) 26%,transparent);stroke-width:1.15;
+  stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
 /* Nền mềm sau mỗi DÃY kệ: gom các ô cùng dãy thành một khối đọc được, giúp mắt bám theo hàng */
 .pg-bed{fill:color-mix(in srgb,var(--ink) 5%,transparent);stroke:color-mix(in srgb,var(--ink) 9%,transparent);
   stroke-width:1;vector-effect:non-scaling-stroke;transition:fill .2s ease}
 .pg-bed.hi{fill:color-mix(in srgb,var(--brand2) 15%,transparent);stroke:color-mix(in srgb,var(--brand2) 45%,transparent)}
 /* Nhãn dãy: chip gọn chỉ còn "501" thay cho "F0-KHO-501-" dài loằng ngoằng của bản in.
+   CHIỀU CAO CHIP CO THEO KHOẢNG CÁCH tới nhãn kề (JS tính): cặp 511/512 và 509/510 chỉ cách nhau
+   26 đơn vị — chip cao cố định 40 làm hai nhãn chồng lên nhau, đó là chỗ trông thô nhất của bản cũ.
    Bấm chip = soi cả dãy đó (cùng tác dụng với 1 hàng ở panel danh sách bên dưới). */
 .pg-dchip{cursor:pointer}
-.pg-dchip rect{fill:color-mix(in srgb,var(--ink) 7%,transparent);stroke:color-mix(in srgb,var(--ink) 14%,transparent);stroke-width:1;vector-effect:non-scaling-stroke;transition:fill .18s ease,stroke .18s ease}
-.pg-dchip text{fill:var(--ink2);font-weight:750;text-anchor:middle;dominant-baseline:central}
-.pg-dchip:hover rect{fill:color-mix(in srgb,var(--brand2) 16%,transparent);stroke:var(--brand2)}
+.pg-dchip rect{fill:var(--surface);stroke:color-mix(in srgb,var(--ink) 16%,transparent);stroke-width:1;
+  vector-effect:non-scaling-stroke;transition:fill .18s ease,stroke .18s ease}
+.pg-dchip text{fill:var(--ink2);font-weight:700;text-anchor:middle;dominant-baseline:central;letter-spacing:.02em}
+/* Gạch nối chip → đầu dãy: buộc nhãn vào đúng hàng kệ của nó, thay vì thả trôi bên lề */
+.pg-dlink{stroke:color-mix(in srgb,var(--ink) 18%,transparent);stroke-width:1;vector-effect:non-scaling-stroke}
+.pg-dchip:hover rect{fill:color-mix(in srgb,var(--brand2) 14%,transparent);stroke:var(--brand2)}
 .pg-dchip:hover text{fill:var(--brand2)}
 .pg-dchip.on rect{fill:var(--brand2);stroke:var(--brand2)}
 .pg-dchip.on text{fill:var(--accent-text)}
 .pg-dchip:focus{outline:none}
 .pg-dchip:focus-visible rect{stroke:var(--accent);stroke-width:2.4}
-/* Nhãn khu chức năng (Khu PO / Phòng kiểm soát kho) */
-.pg-khu{fill:var(--ink3);font-weight:700;text-anchor:middle;dominant-baseline:central;letter-spacing:.04em}
-/* 1 ô kệ = <g> chứa rect nền + số cột. transform-box:fill-box cho phép phóng quanh TÂM Ô
-   (mặc định transform-origin của SVG là gốc toạ độ -> ô sẽ bay đi chỗ khác khi hover). */
+/* Phòng chức năng (Khu PO / Phòng kiểm soát kho): biển tên nhẹ, nét đứt — đọc ra là "phòng",
+   không lẫn với ô kệ (vốn là nét liền, có tô nền) */
+.pg-room rect{fill:color-mix(in srgb,var(--ink) 4%,transparent);stroke:color-mix(in srgb,var(--ink) 12%,transparent);
+  stroke-width:1;stroke-dasharray:6 5;vector-effect:non-scaling-stroke}
+.pg-room{pointer-events:none}
+.pg-khu{fill:var(--ink3);font-weight:700;text-anchor:middle;dominant-baseline:central;letter-spacing:.06em}
+/* 1 ô kệ = <g> chứa rect nền + lớp vát sáng-tối + số cột. transform-box:fill-box cho phép phóng
+   quanh TÂM Ô (mặc định transform-origin của SVG là gốc toạ độ -> ô sẽ bay đi chỗ khác khi hover). */
 .pg-o{cursor:pointer;transform-box:fill-box;transform-origin:center;
   transition:transform .16s var(--ez-apple),filter .2s ease,opacity .2s ease}
-.pg-o rect{stroke:color-mix(in srgb,var(--ink) 22%,transparent);stroke-width:.9;vector-effect:non-scaling-stroke}
+.pg-o rect.bg{stroke:color-mix(in srgb,var(--ink) 18%,transparent);stroke-width:.9;vector-effect:non-scaling-stroke}
+/* Lớp vát: trắng rất nhạt ở mép trên, tối nhẹ ở mép dưới — ô đọc thành viên gạch có khối, không
+   phải mảng màu dán phẳng. CỐ TÌNH trong suốt ở khoảng giữa (nơi đặt số) để KHÔNG đụng vào tương
+   phản chữ/nền mà bộ validator màu đã kiểm. */
+.pg-o rect.sheen{stroke:none;pointer-events:none}
 .pg-o text{font-weight:700;text-anchor:middle;dominant-baseline:central;pointer-events:none;user-select:none;
-  paint-order:stroke}
+  paint-order:stroke;letter-spacing:.01em}
 .pg-o:hover{transform:scale(1.16);filter:drop-shadow(0 4px 10px rgba(16,24,40,.35))}
-.pg-o:hover rect{stroke:var(--ink);stroke-width:1.8}
+.pg-o:hover rect.bg{stroke:var(--ink);stroke-width:1.8}
 .pg-o:focus{outline:none}
-.pg-o:focus-visible rect{stroke:var(--accent);stroke-width:2.8}
-.pg-o.dim{opacity:.16}
+.pg-o:focus-visible rect.bg{stroke:var(--accent);stroke-width:2.8}
+.pg-o.dim{opacity:.18}
 /* Đang soi 1 dãy: ô của dãy đó viền đậm hơn để nổi khỏi phần bị mờ */
-.pg-o.hi rect{stroke:var(--ink);stroke-width:2}
+.pg-o.hi rect.bg{stroke:var(--ink);stroke-width:2}
 /* Ô "không có dữ liệu": nét đứt, không tô nền — ngoài phạm vi đánh giá, KHÔNG đọc thành "chưa làm" */
-.pg-o.trong rect{fill:transparent;stroke-dasharray:4 3;stroke:color-mix(in srgb,var(--ink3) 62%,transparent)}
+.pg-o.trong rect.bg{fill:transparent;stroke-dasharray:4 3;stroke:color-mix(in srgb,var(--ink3) 62%,transparent)}
 .pg-o.trong text{fill:var(--ink3)}
-.pg-o.w1 rect{fill:var(--s1)} .pg-o.w2 rect{fill:var(--s2)} .pg-o.w3 rect{fill:var(--s3)}
-.pg-o.w4 rect{fill:var(--s4)} .pg-o.w5 rect{fill:var(--s5)} .pg-o.w6 rect{fill:var(--s6)}
-.pg-o.w7 rect{fill:var(--s7)} .pg-o.w8 rect{fill:var(--s8)}
+.pg-o.w1 rect.bg{fill:var(--s1)} .pg-o.w2 rect.bg{fill:var(--s2)} .pg-o.w3 rect.bg{fill:var(--s3)}
+.pg-o.w4 rect.bg{fill:var(--s4)} .pg-o.w5 rect.bg{fill:var(--s5)} .pg-o.w6 rect.bg{fill:var(--s6)}
+.pg-o.w7 rect.bg{fill:var(--s7)} .pg-o.w8 rect.bg{fill:var(--s8)}
 .pg-o.w1 text,.pg-o.w2 text,.pg-o.w3 text,.pg-o.w6 text,.pg-o.w7 text,.pg-o.w8 text{fill:#fff}
 .pg-o.w4 text,.pg-o.w5 text{fill:#2a1a00}
-.pg-o.st-da rect{fill:#059669} .pg-o.st-chua rect{fill:#dc2626} .pg-o.st-nduyet rect{fill:#f59e0b}
+.pg-o.st-da rect.bg{fill:#059669} .pg-o.st-chua rect.bg{fill:#dc2626} .pg-o.st-nduyet rect.bg{fill:#f59e0b}
 .pg-o.st-da text,.pg-o.st-chua text{fill:#fff}
 .pg-o.st-nduyet text{fill:#422006}
 /* Pop-up ô: bảng khoá-giá trị, khuôn .mtbl của dự án */
@@ -2604,12 +2633,26 @@ function plgCum(cells){
   return cum;
 }
 
-/* --- SVG: sàn → nền bản vẽ → nền dãy → khu chức năng → ô kệ → chip tên dãy --- */
+/* --- SVG: sàn + lưới → nền dãy đang soi → tường → phòng chức năng → ô kệ → nhãn dãy ------------
+   MỌI TOẠ ĐỘ GIỮ NGUYÊN 100% theo PLG_GEO (bê từ bản vẽ MTG_zigzag) — phần dưới đây chỉ đổi CÁCH
+   VẼ: thêm lưới toạ độ mờ, vát sáng-tối cho ô, biển tên phòng, nhãn dãy co theo chỗ trống. */
 function plgSvg(g,mode,theoDay){
-  var GAP=2.2;   // khe hở giữa 2 ô cạnh nhau: ô đọc thành từng viên gạch chứ không thành 1 khối liền
+  var GAP=3.2;   // khe hở giữa 2 ô cạnh nhau: ô đọc thành từng viên gạch chứ không thành 1 khối liền
   var out=['<svg class="pg-svg" viewBox="0 0 '+g.W+' '+g.H+'" role="img" aria-label="Sơ đồ mặt bằng kho nguyên liệu">'];
-  /* Sàn kho: nền mềm cho cả khổ bản vẽ — bản vẽ có "thân" thay vì lơ lửng giữa panel */
-  out.push('<rect class="pg-floor" x="14" y="14" width="'+(g.W-28)+'" height="'+(g.H-28)+'" rx="18"/>');
+  /* Lớp vát dùng CHUNG cho mọi ô (khai báo 1 lần): trắng nhạt ở mép trên, tối nhẹ ở mép dưới,
+     TRONG SUỐT ở khoảng giữa nơi đặt số — không đụng vào tương phản chữ/nền đã kiểm bằng validator. */
+  out.push('<defs><linearGradient id="pgSheen" x1="0" y1="0" x2="0" y2="1">'+
+    '<stop offset="0" stop-color="#fff" stop-opacity=".17"/>'+
+    '<stop offset=".42" stop-color="#fff" stop-opacity="0"/>'+
+    '<stop offset=".58" stop-color="#000" stop-opacity="0"/>'+
+    '<stop offset="1" stop-color="#000" stop-opacity=".13"/></linearGradient></defs>');
+  /* Sàn kho + lưới toạ độ mờ: bản vẽ có "thân" và đọc ra là mặt bằng kỹ thuật, không phải nền phẳng */
+  var FX=14, FY=14, FW=g.W-28, FH=g.H-28, B=90;
+  out.push('<rect class="pg-floor" x="'+FX+'" y="'+FY+'" width="'+FW+'" height="'+FH+'" rx="16"/>');
+  var luoi=[];
+  for(var gx=FX+B; gx<FX+FW; gx+=B) luoi.push('M'+gx+' '+FY+'V'+(FY+FH));
+  for(var gy=FY+B; gy<FY+FH; gy+=B) luoi.push('M'+FX+' '+gy+'H'+(FX+FW));
+  out.push('<path class="pg-grid" d="'+luoi.join('')+'"/>');
   /* Nền mềm CHỈ vẽ cho dãy đang soi: bản vẽ đã có tường + khung kệ, tô nền cho cả 14 dãy chỉ làm
      đục hình (dãy vòng qua góc kho thì hộp bao còn trùm cả lối đi). */
   if(PLG.hiDay && theoDay[PLG.hiDay]){
@@ -2622,16 +2665,23 @@ function plgSvg(g,mode,theoDay){
   }
   out.push('<g class="pg-wall">');
   g.nen.forEach(function(a){ out.push('<path d="M'+a[0]+' '+a[1]+'L'+a[2]+' '+a[3]+'"/>'); });
-  out.push('</g><g class="pg-khu">');
+  out.push('</g>');
+  /* Phòng chức năng: biển tên nét đứt bọc lấy chữ — đọc ra "đây là phòng", không lẫn với ô kệ */
   g.khu.forEach(function(k){
     /* Tách theo " · " thành nhiều dòng: "Khu PO · Đồng kiểm" ở cỡ 1 dòng rộng ~250 đơn vị mà hộp
        của nó chỉ 208 -> tràn ra ngoài tường. Nhãn dọc (phòng hẹp cao) thì giữ 1 dòng. */
     var d=k.doc?[k.lb]:k.lb.split(' · ');
-    var fs=24, y0=k.y-(d.length-1)*fs*0.62;
-    out.push('<text x="'+k.x+'" y="'+y0.toFixed(1)+'" font-size="'+fs+'"'+(k.doc?' transform="rotate(-90 '+k.x+' '+k.y+')"':'')+'>'+
-      d.map(function(t,i){ return '<tspan x="'+k.x+'"'+(i?' dy="'+(fs*1.24).toFixed(1)+'"':'')+'>'+esc(t)+'</tspan>'; }).join('')+'</text>');
+    var fs=24, lh=fs*1.24, y0=k.y-(d.length-1)*fs*0.62;
+    var dai=0; d.forEach(function(t){ dai=Math.max(dai,t.length); });
+    var bw=dai*fs*0.55+30, bh=d.length*lh+8;
+    var tr=k.doc?' transform="rotate(-90 '+k.x+' '+k.y+')"':'';
+    out.push('<g class="pg-room"'+tr+'>'+
+      '<rect x="'+(k.x-bw/2).toFixed(1)+'" y="'+(k.y-bh/2).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="10"/>'+
+      '<text class="pg-khu" x="'+k.x+'" y="'+y0.toFixed(1)+'" font-size="'+fs+'">'+
+      d.map(function(t,i){ return '<tspan x="'+k.x+'"'+(i?' dy="'+lh.toFixed(1)+'"':'')+'>'+esc(t)+'</tspan>'; }).join('')+
+      '</text></g>');
   });
-  out.push('</g><g>');
+  out.push('<g>');
   g.o.forEach(function(c){
     var n=plgNhom(c), r=PLG.by[c.loc], w=plgKhoCua(c.loc);
     var tip=c.loc+'\n'+(w?'Kho: '+w:'Không có tồn ở vị trí này')+'\nVệ sinh: '+PLG_ST[plgState(r)].lb+
@@ -2639,27 +2689,42 @@ function plgSvg(g,mode,theoDay){
     var x=c.x+GAP/2, y=c.y+GAP/2, ww=Math.max(4,c.w-GAP), hh=Math.max(4,c.h-GAP);
     /* Chữ co theo cả CAO và RỘNG: cặp kệ 2 mặt chỉ cao 26 đơn vị, ô 14/15 của dãy 513 chỉ rộng 31 */
     var fs=Math.max(11,Math.min(24,hh*0.62,ww*0.42));
+    var rx=Math.min(5,hh*0.22).toFixed(1);
     /* Mờ ô ngoài tầm nhìn hiện tại — 3 nguồn: KHU VỰC đang lọc, nhóm bị tắt ở chú giải, dãy đang
        soi. Vẫn VẼ chứ không xoá: sơ đồ là mặt bằng thật, ô biến mất là mất luôn manh mối. */
     var mo=!plgTrongPhamVi(c)||PLG.tat[n.k]||(PLG.hiDay&&c.d!==PLG.hiDay), hi=PLG.hiDay&&c.d===PLG.hiDay;
+    var hop=' x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+ww.toFixed(1)+'" height="'+hh.toFixed(1)+'" rx="'+rx+'"';
     out.push('<g class="pg-o '+n.cls+(mo?' dim':'')+(hi?' hi':'')+'" tabindex="0" role="button"'+
       ' data-l="'+c.loc+'" onclick="plgOpen(this.getAttribute(\'data-l\'))"'+
       ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();plgOpen(this.getAttribute(\'data-l\'))}">'+
       '<title>'+esc(tip)+'</title>'+
-      '<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+ww.toFixed(1)+'" height="'+hh.toFixed(1)+'" rx="4"/>'+
+      '<rect class="bg"'+hop+'/>'+
+      /* ô nét đứt (không có dữ liệu) thì KHÔNG vát: nó cố ý phẳng, rỗng, để đọc ra "ngoài phạm vi" */
+      (n.cls==='trong'?'':'<rect class="sheen"'+hop+' fill="url(#pgSheen)"/>')+
       '<text x="'+(x+ww/2).toFixed(1)+'" y="'+(y+hh/2).toFixed(1)+'" font-size="'+fs.toFixed(1)+'">'+c.c+'</text>'+
       '</g>');
   });
   out.push('</g><g>');
+  /* NHÃN DÃY — chip co theo khoảng cách tới nhãn kề: cặp 511/512 và 509/510 chỉ cách nhau 26 đơn
+     vị, chip cao cố định 40 làm hai nhãn CHỒNG LÊN NHAU (chỗ trông thô nhất của bản cũ). Bề rộng
+     cũng bám theo độ dài chữ ("507A" 4 ký tự) và mọi chip căn PHẢI về cùng một mép, có gạch nối
+     sang đầu dãy — thành một cột nhãn thẳng hàng thay vì mấy hộp xám thả trôi. */
+  var lys=g.day.map(function(d){ return d.ly; });
   g.day.forEach(function(d){
-    var w=d.d.length>3?86:64, h=40, x=d.lx-w-16, y=d.ly-h/2;
+    var ke=1e9;
+    lys.forEach(function(y){ if(y!==d.ly) ke=Math.min(ke,Math.abs(y-d.ly)); });
+    var h=Math.max(19,Math.min(38,ke-6));
+    var fs=Math.max(12,Math.min(23,h*0.62));
+    var w=Math.round(fs*0.68*d.d.length)+20;
+    var x=d.lx-w-15, y=d.ly-h/2;
     var soO=(theoDay[d.d]&&theoDay[d.d].n)||0;
     out.push('<g class="pg-dchip'+(PLG.hiDay===d.d?' on':'')+'" tabindex="0" role="button" data-d="'+esc(d.d)+'"'+
       ' onclick="plgSoiDay(this.getAttribute(\'data-d\'))"'+
       ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();plgSoiDay(this.getAttribute(\'data-d\'))}">'+
       '<title>'+esc('Dãy '+d.d+' — '+soO+' ô kệ\nBấm để soi riêng dãy này')+'</title>'+
-      '<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+w+'" height="'+h+'" rx="10"/>'+
-      '<text x="'+(x+w/2).toFixed(1)+'" y="'+d.ly+'" font-size="26">'+esc(d.d)+'</text></g>');
+      '<line class="pg-dlink" x1="'+(x+w).toFixed(1)+'" y1="'+d.ly+'" x2="'+d.lx+'" y2="'+d.ly+'"/>'+
+      '<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+w+'" height="'+h.toFixed(1)+'" rx="'+(h/2).toFixed(1)+'"/>'+
+      '<text x="'+(x+w/2).toFixed(1)+'" y="'+d.ly+'" font-size="'+fs.toFixed(1)+'">'+esc(d.d)+'</text></g>');
   });
   out.push('</g></svg>');
   return out.join('');
@@ -2746,24 +2811,26 @@ function plgDongVt(o){
 
 /* --- Chế độ 'day': bảng 14 dãy kệ, mỗi dòng 1 thanh xếp chồng; bấm dòng = soi dãy trên sơ đồ --- */
 function plgHtmlDay(mode,dem,thu,theoDay,dsDay){
+  var so=function(v){ return '<td class="num'+(v?'':' z')+'">'+(v?nf(v):'—')+'</td>'; };
   var body=dsDay.map(function(d){
-    var t=theoDay[d];
-    var fill=thu.map(function(k){
-      if(!t.k[k]) return '';
+    var t=theoDay[d], co=thu.filter(function(k){ return t.k[k]; });
+    /* Thanh xếp chồng + chú giải chấm màu NGAY DƯỚI nó: đọc được thành phần dãy mà không phải
+       dò ngược lên chú giải của sơ đồ, và bỏ hẳn cột chữ trần lặp lại đúng mấy con số đó. */
+    var fill=co.map(function(k){
       var c=plgMau(k,dem[k].cls)||'color-mix(in srgb,var(--ink3) 32%,transparent)';
       return '<i style="width:'+plgPct(t.k[k],t.n)+'%;background:'+c+'" title="'+esc(dem[k].lb)+': '+t.k[k]+' ô"></i>';
     }).join('');
-    var thanhPhan=thu.filter(function(k){ return t.k[k]; })
-      .map(function(k){ return t.k[k]+' '+(k==='_none'?'trống':mode==='kho'?plgTenNgan(dem[k].lb):dem[k].lb.toLowerCase()); }).join(' · ');
+    var parts=co.map(function(k){
+      var c=plgMau(k,dem[k].cls);
+      return '<span title="'+esc(dem[k].lb)+'"><span class="pg-dot'+(c?'':' dash')+'"'+(c?' style="background:'+c+'"':'')+'></span>'+
+        '<b>'+t.k[k]+'</b> '+esc(k==='_none'?'trống':mode==='kho'?plgTenNgan(dem[k].lb):dem[k].lb.toLowerCase())+'</span>';
+    }).join('');
     return '<tr class="'+(PLG.hiDay===d?'on':'')+'" data-d="'+esc(d)+'" onclick="plgSoiDay(this.getAttribute(\'data-d\'))">'+
-      '<td><b>Dãy '+esc(d)+'</b></td>'+
+      '<td><span class="pg-dbadge"><span class="u">Dãy</span>'+esc(d)+'</span></td>'+
       '<td class="num">'+nf(t.n)+'</td>'+
-      '<td class="bar"><span class="pg-track"><span class="pg-fill">'+fill+'</span></span></td>'+
-      '<td class="mut">'+esc(thanhPhan)+'</td>'+
-      '<td class="num">'+nf(t.vs.da)+'</td>'+
-      '<td class="num">'+nf(t.vs.chua)+'</td>'+
-      '<td class="num">'+nf(t.vs.nduyet)+'</td>'+
-      '<td class="num">'+nf(t.vs.nolich)+'</td></tr>';
+      '<td class="bar"><span class="pg-track"><span class="pg-fill">'+fill+'</span></span>'+
+        '<span class="pg-parts">'+parts+'</span></td>'+
+      so(t.vs.da)+so(t.vs.chua)+so(t.vs.nduyet)+so(t.vs.nolich)+'</tr>';
   }).join('');
   return '<div class="pg-whbar">'+
       '<span class="pg-hint" style="font-weight:650">Bấm 1 dãy để soi riêng dãy đó trên sơ đồ</span>'+
@@ -2771,9 +2838,12 @@ function plgHtmlDay(mode,dem,thu,theoDay,dsDay){
       '<span style="flex:1"></span>'+
       '<button type="button" class="pg-whtab" onclick="plgOpenTra()">Mở tra cứu dãy kệ</button>'+
     '</div>'+
+    /* Chốt bề rộng cột: để tự động thì 4 cột số bị đẩy tản ra tận mép phải, đọc số phải rê mắt
+       ngang cả màn hình. Cột Thành phần là cột duy nhất co giãn. */
     '<div class="pg-tblwrap"><table class="pg-tbl" style="min-width:760px"><thead><tr>'+
-    '<th>Dãy kệ</th><th class="num">Số ô</th><th>Thành phần</th><th>Chi tiết</th>'+
-    '<th class="num">Đã VS</th><th class="num">Chưa VS</th><th class="num">Lịch chưa duyệt</th><th class="num">Chưa khai báo</th>'+
+    '<th style="width:130px">Dãy kệ</th><th class="num" style="width:74px">Số ô</th><th>Thành phần</th>'+
+    '<th class="num" style="width:104px">Đã VS</th><th class="num" style="width:104px">Chưa VS</th>'+
+    '<th class="num" style="width:126px">Lịch chưa duyệt</th><th class="num" style="width:126px">Chưa khai báo</th>'+
     '</tr></thead><tbody>'+body+'</tbody></table></div>'+
     '<p class="pg-hint" style="margin:10px 0 0">'+nf(dsDay.length)+' dãy kệ'+(PLG.area?' có tồn của '+esc(plgTenNgan(PLG.area)):'')+
       ' &middot; cột Thành phần tô theo chế độ đang chọn ở thanh trên.</p>';
@@ -2843,7 +2913,7 @@ function plgVeTra(){
   var loc=ds.filter(function(t){ return !q || ('dãy '+t.d).toLowerCase().indexOf(q)>=0 || t.d.toLowerCase().indexOf(q)>=0; });
   if(loc.length && !loc.some(function(t){ return t.d===PLG.traDay; })) PLG.traDay=loc[0].d;
   document.getElementById('plgTraList').innerHTML=loc.length?loc.map(function(t){
-    var kho=Object.keys(t.kho).sort().map(function(w){ return plgTenNgan(w)+' '+t.kho[w]; }).join(' · ')||'không có tồn';
+    var kho=Object.keys(t.kho).sort().map(function(w){ return t.kho[w]+' '+plgTenNgan(w); }).join(' · ')||'không có tồn';
     return '<div class="pg-nkitem'+(PLG.traDay===t.d?' on':'')+'" data-d="'+esc(t.d)+'" onclick="plgTraChon(this.getAttribute(\'data-d\'))">'+
       '<span class="nm">Dãy '+esc(t.d)+'<small>'+esc(kho)+'</small></span><span class="c">'+nf(t.n)+' ô</span></div>';
   }).join(''):'<div class="pg-hint" style="padding:12px 10px">Không có dãy nào khớp.</div>';
