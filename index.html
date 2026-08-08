@@ -1039,30 +1039,83 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 .pg-track.big{height:14px}
 .pg-fill{display:flex;height:100%;width:100%;border-radius:6px;overflow:hidden}
 .pg-fill i{display:block;height:100%;min-width:1px;transition:width .8s var(--ez-apple)}
-.pg-cov{margin:0;padding-top:14px}
-.pg-cov .ct{font-size:11px;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px}
-.pg-cov .cl{display:flex;align-items:baseline;gap:8px;font-size:11.5px;color:var(--ink2);margin-bottom:5px}
-.pg-cov .cl b{color:var(--ink);font-variant-numeric:tabular-nums}
-.pg-cov .cl .sp{flex:1}
-/* Panel danh sách (dưới cùng): 1 hàng = 1 dãy kệ / 1 nhóm, thanh xếp chồng + số ô */
-.pg-chart{display:flex;flex-direction:column;gap:1px;max-height:430px;overflow-y:auto;padding-right:6px}
-.pg-row{display:grid;grid-template-columns:250px 1fr 108px;align-items:center;gap:10px;padding:5px 7px;
-  border-radius:8px;cursor:pointer;transition:background .16s ease}
-.pg-row:hover{background:var(--hover)}
-.pg-row.on{background:color-mix(in srgb,var(--brand2) 13%,transparent)}
-.pg-row:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
-.pg-rl{font-size:11.5px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:7px;min-width:0}
-.pg-rl i{width:9px;height:9px;border-radius:3px;flex:none}
-.pg-rl i.dash{background:transparent;border:1px dashed color-mix(in srgb,var(--ink3) 65%,transparent)}
-.pg-rl .nm{font-weight:650;white-space:nowrap;flex:none}
-.pg-rl .sub{color:var(--ink3);font-weight:500;font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pg-rv{text-align:right;font-variant-numeric:tabular-nums;font-size:12px;line-height:1.15}
-.pg-rv b{font-size:13px;color:var(--ink)}
-.pg-rv small{display:block;color:var(--ink3);font-size:10px;font-weight:500}
-@media(max-width:640px){
-  .pg-row{grid-template-columns:1fr 88px;grid-template-areas:'l l' 't v';row-gap:5px;padding:7px 6px}
-  .pg-rl{grid-area:l} .pg-row .pg-track{grid-area:t} .pg-rv{grid-area:v}
-}
+/* Chips lọc (Khu vực / Trạng thái) — khuôn hp-whtab của tab Planogram Hasaki */
+.pg-whtab{border:1px solid var(--line);background:var(--surface);color:var(--ink2);border-radius:999px;
+  padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;min-height:32px;
+  display:inline-flex;align-items:center;gap:7px;transition:background .16s ease,border-color .16s ease,color .16s ease}
+.pg-whtab:hover{background:color-mix(in srgb,var(--brand2) 8%,transparent);color:var(--ink)}
+.pg-whtab.active{background:var(--brand2);color:var(--accent-text);border-color:var(--brand2)}
+.pg-whtab.active .pg-hint{color:color-mix(in srgb,var(--accent-text) 78%,transparent)}
+.pg-whtab b{font-variant-numeric:tabular-nums}
+.pg-whtab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.pg-dot{display:inline-block;width:9px;height:9px;border-radius:50%;flex:none;vertical-align:middle}
+.pg-dot.dash{background:transparent;border:1px dashed color-mix(in srgb,var(--ink3) 65%,transparent)}
+/* Tiêu đề khối bên trong sơ đồ (Hasaki: "Quầy kệ (F0-A1)" / "Bàn đóng gói…") */
+.pg-maphdr{font-size:12px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em;margin:10px 2px 6px}
+/* Dải cảnh báo mỏng trong panel — 3 biến thể err / warn / ok, y như hp-alertbar */
+.pg-alertbar{display:flex;align-items:flex-start;gap:8px;margin:0 0 9px;padding:6px 12px;border-radius:7px;
+  font-size:12px;font-weight:600;line-height:1.5;cursor:pointer;transition:background .16s ease;
+  background:color-mix(in srgb,var(--bad) 9%,var(--surface));border:1px solid color-mix(in srgb,var(--bad) 35%,transparent);color:var(--ink2)}
+.pg-alertbar:hover{background:color-mix(in srgb,var(--bad) 15%,var(--surface))}
+.pg-alertbar .ic{flex:none;color:var(--bad)}
+.pg-alertbar b{color:var(--bad);font-variant-numeric:tabular-nums}
+.pg-alertbar.warn{background:color-mix(in srgb,var(--warn) 10%,var(--surface));border-color:color-mix(in srgb,var(--warn) 38%,transparent)}
+.pg-alertbar.warn:hover{background:color-mix(in srgb,var(--warn) 17%,var(--surface))}
+.pg-alertbar.warn .ic,.pg-alertbar.warn b{color:var(--warn)}
+.pg-alertbar.ok{background:color-mix(in srgb,var(--good) 9%,var(--surface));border-color:color-mix(in srgb,var(--good) 32%,transparent);cursor:default}
+.pg-alertbar.ok .ic,.pg-alertbar.ok b{color:var(--good)}
+.pg-alertbar.plain{cursor:default;font-weight:500}
+/* Khối "Độ phủ" ở chân panel Vệ sinh — tiêu đề + 1 thanh cho mỗi khu vực + dải kết luận */
+.pg-cov{margin:12px 0 0}
+.pg-covhd{display:flex;align-items:center;gap:8px;margin:0 0 6px;font-size:10.5px;font-weight:700;
+  color:var(--ink3);text-transform:uppercase;letter-spacing:.05em}
+.pg-covhd b{margin-left:auto;font-size:11.5px;text-transform:none;letter-spacing:0;font-variant-numeric:tabular-nums;color:var(--ink)}
+.pg-covrow{display:grid;grid-template-columns:minmax(0,1fr) 72px auto;align-items:center;gap:8px;padding:2px 0;
+  font-size:11.5px;color:var(--ink2)}
+.pg-covrow .nm{display:flex;align-items:center;gap:6px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pg-covrow .pg-track{height:6px}
+.pg-covrow .v{font-variant-numeric:tabular-nums;font-weight:700;text-align:right}
+/* Panel "Danh sách theo dõi": chips lọc + ô tìm + bảng cuộn (khuôn hp-cctbl) */
+.pg-search{width:100%;max-width:340px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;
+  font-size:12.5px;background:var(--surface);color:var(--ink);min-height:36px;margin:2px 0 10px}
+.pg-search:focus{outline:0;border-color:var(--brand2)}
+.pg-tblwrap{overflow:auto;-webkit-overflow-scrolling:touch;max-height:520px;border:1px solid var(--line);border-radius:12px}
+.pg-tbl{width:100%;border-collapse:collapse;font-size:12.5px;color:var(--ink);min-width:820px}
+.pg-tbl thead th{position:sticky;top:0;background:var(--brand2);color:var(--accent-text);padding:9px 11px;
+  text-align:left;font-weight:600;font-size:11px;z-index:1;white-space:nowrap}
+.pg-tbl td{padding:8px 11px;border-bottom:1px solid var(--line);white-space:nowrap}
+.pg-tbl tbody tr{cursor:pointer}
+.pg-tbl tbody tr:hover td{background:var(--hover)}
+.pg-tbl tbody tr.on td{background:color-mix(in srgb,var(--brand2) 12%,transparent)}
+.pg-tbl .num{text-align:right;font-variant-numeric:tabular-nums}
+.pg-tbl .mut{color:var(--ink3)}
+.pg-tbl .empty{text-align:center;color:var(--ink3);padding:26px;white-space:normal}
+.pg-tbl .bar{min-width:150px}
+.pg-tbl .bar .pg-track{height:8px}
+/* Pop-up "Tra cứu dãy kệ": danh sách trái + chi tiết phải, khuôn hp-nk-grid */
+.pg-nk{display:grid;grid-template-columns:250px 1fr;gap:0;flex:1;min-height:0}
+.pg-nkl{border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.pg-nkl input{margin:12px 14px 8px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;
+  font-size:12.5px;background:var(--surface);color:var(--ink);min-height:38px}
+.pg-nkl input:focus{outline:0;border-color:var(--brand2)}
+.pg-nklist{overflow-y:auto;overscroll-behavior:contain;padding:0 8px 12px;flex:1;min-height:0}
+.pg-nkitem{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;border-radius:9px;
+  cursor:pointer;transition:background .16s ease}
+.pg-nkitem:hover{background:color-mix(in srgb,var(--brand2) 8%,transparent)}
+.pg-nkitem.on{background:var(--brand2);color:var(--accent-text)}
+.pg-nkitem .nm{font-size:12.5px;font-weight:600;line-height:1.25;overflow:hidden;text-overflow:ellipsis}
+.pg-nkitem .nm small{display:block;font-weight:500;font-size:10.5px;color:var(--ink3)}
+.pg-nkitem.on .nm small{color:color-mix(in srgb,var(--accent-text) 72%,transparent)}
+.pg-nkitem .c{font-size:10.5px;color:var(--ink3);text-align:right;flex:none;font-variant-numeric:tabular-nums}
+.pg-nkitem.on .c{color:color-mix(in srgb,var(--accent-text) 75%,transparent)}
+.pg-nkr{overflow-y:auto;overscroll-behavior:contain;padding:14px 18px 18px;min-height:0}
+@media(max-width:720px){ .pg-nk{grid-template-columns:1fr;grid-template-rows:auto 1fr} .pg-nkl{border-right:0;border-bottom:1px solid var(--line)} }
+/* Chân tab: nguồn + số liệu + nút làm mới (khuôn hp-srcfoot) */
+.pg-srcfoot{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);text-align:center}
+.pg-srcbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;margin:0 0 6px;font-size:12px}
+.pg-srcfoot button{background:var(--brand2);color:var(--accent-text);border:0;border-radius:9px;padding:7px 15px;
+  font-size:12.5px;font-weight:650;cursor:pointer;min-height:34px;transition:transform .16s var(--ez-apple),box-shadow .25s ease}
+.pg-srcfoot button:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
 /* Dải cảnh báo MỎNG nằm trong panel sơ đồ (khuôn alert-bar của tab Planogram Hasaki) —
    không chiếm chiều cao của bản vẽ như khối cảnh báo cũ */
 .pg-alert{display:flex;gap:9px;align-items:flex-start;border:1px solid color-mix(in srgb,var(--bad) 35%,transparent);
@@ -1243,6 +1296,28 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
   </div>
   <div id="plgList"></div>
   <div id="plgState" class="state"><div class="spin"></div>Đang tải sơ đồ mặt bằng…</div>
+  <div class="pg-srcfoot" id="plgFoot"></div>
+</div>
+
+<!-- Pop-up "Toàn bộ vị trí": bảng đầy đủ 161 ô kệ (tương ứng pop-up cùng tên của Audit Hasaki) -->
+<div id="plgallmodal" class="modal" onclick="if(event.target===this)closePlgAll()">
+  <div class="modalbox" style="width:min(1080px,96vw)">
+    <div class="modalhd"><div><div class="mt" id="plgallTitle"></div><div class="mtsub" id="plgallSub"></div></div><button class="mclose" onclick="closePlgAll()">&times;</button></div>
+    <div class="modalbody" id="plgallBody"></div>
+  </div>
+</div>
+
+<!-- Pop-up "Tra cứu dãy kệ": chọn 1 dãy bên trái, xem từng ô của dãy bên phải -->
+<div id="plgtramodal" class="modal" onclick="if(event.target===this)closePlgTra()">
+  <div class="modalbox" style="width:min(920px,96vw);height:min(640px,90vh);display:flex;flex-direction:column">
+    <div class="modalhd"><div><div class="mt">Tra cứu dãy kệ</div>
+      <div class="mtsub">Chọn 1 dãy để xem từng ô kệ của dãy đó — kho đang giữ tồn và trạng thái vệ sinh</div></div>
+      <button class="mclose" onclick="closePlgTra()">&times;</button></div>
+    <div class="pg-nk">
+      <div class="pg-nkl"><input id="plgTraQ" autocomplete="off" placeholder="Tìm dãy… (501, 507A…)" oninput="plgTraTim(this.value)"><div class="pg-nklist" id="plgTraList"></div></div>
+      <div class="pg-nkr" id="plgTraRight"></div>
+    </div>
+  </div>
 </div>
 
 <!-- Pop-up chi tiết 1 ô kệ (lazy DOM: chỉ đổ nội dung khi bấm ô) -->
@@ -1936,8 +2011,14 @@ document.addEventListener('keydown',function(e){
   if(pm && pm.classList.contains('show')){ closePcModal(); return; }
   var plm=document.getElementById('plmodal');
   if(plm && plm.classList.contains('show')){ closePlModal(); return; }
-  var pgm=document.getElementById('plgmodal');   // pop-up ô sơ đồ Planogram (không có pop-up con)
+  /* 3 pop-up của tab Planogram — đóng theo thứ tự "cái nào nổi trên cùng thì đóng trước":
+     chi tiết ô mở được TỪ trong 2 pop-up kia nên nó phải đứng đầu hàng. */
+  var pgm=document.getElementById('plgmodal');
   if(pgm && pgm.classList.contains('show')){ closePlgModal(); return; }
+  var pga=document.getElementById('plgallmodal');
+  if(pga && pga.classList.contains('show')){ closePlgAll(); return; }
+  var pgt=document.getElementById('plgtramodal');
+  if(pgt && pgt.classList.contains('show')){ closePlgTra(); return; }
   var m=document.getElementById('catMenu');
   if(m && m.classList.contains('show')){ closeCat(); return; }
   var cm=document.getElementById('catmodal');
@@ -2198,8 +2279,10 @@ var PLG_ST={
   chua:  {c:'#dc2626',cls:'st-chua',  lb:'Chưa vệ sinh'},
   da:    {c:'#059669',cls:'st-da',    lb:'Đã vệ sinh'}
 };
+/* PLG.area = KHU VỰC đang lọc (tên kho, '' = tất cả) — lọc XUYÊN SUỐT cả 3 khối như S.area bên
+   Hasaki: sơ đồ mờ ô ngoài phạm vi, panel Vệ sinh + Danh sách theo dõi chỉ đếm trong phạm vi. */
 var PLG={loadedOnce:false,by:{},ok:false,geo:null,tat:{},mode:'kho',kho:null,khoRaw:0,ngoai:[],
-         list:'day',hiDay:''};
+         area:'',list:'vt',hiDay:'',q:'',st:'',traDay:'',traQ:''};
 
 function plgCellVal(c){ return (c&&c.v!=null)?String(c.f!=null?c.f:c.v):''; }
 /* PLG_GEO đóng thành CHUỖI cho gọn (26KB thay vì 108KB JSON lồng) — tách 1 lần rồi nhớ lại. */
@@ -2261,9 +2344,25 @@ function plgNhom(o){
   var s=plgState(PLG.by[o.loc]);
   return {k:s,cls:PLG_ST[s].cls,lb:PLG_ST[s].lb};
 }
-function plgSetMode(m){ if(PLG.mode===m) return; PLG.mode=m; PLG.tat={}; PLG.hiDay=''; plgRender(); }
+function plgSetMode(m){ if(PLG.mode===m) return; PLG.mode=m; PLG.tat={}; plgRender(); }
 function plgToggle(k){ PLG.tat[k]=!PLG.tat[k]; plgRender(); }
 function plgSetList(m){ if(PLG.list===m) return; PLG.list=m; plgRender(); }
+/* Bấm lại chip khu vực đang bật = bỏ lọc (đúng nết setArea của Hasaki) */
+function plgSetArea(a){ if(PLG.area===a) a=''; PLG.area=a; PLG.hiDay=''; plgRender(); }
+function plgSetSt(k){ if(PLG.st===k) k=''; PLG.st=k; plgRender(); }
+var _plgQdeb;
+/* Tìm nhanh: CHỈ vẽ lại panel danh sách (sơ đồ SVG không đổi theo từ khoá) và trả lại con trỏ vào
+   ô tìm — vẽ lại cả tab mỗi phím gõ vừa phí vừa làm mất focus giữa chừng. */
+function plgSearch(v){
+  PLG.q=v; clearTimeout(_plgQdeb);
+  _plgQdeb=setTimeout(function(){
+    var cu=document.getElementById('plgList').querySelector('.pg-search');
+    var pos=cu?cu.selectionStart:null;
+    plgVeList();
+    var moi=document.getElementById('plgList').querySelector('.pg-search');
+    if(moi){ moi.focus(); if(pos!=null) try{ moi.setSelectionRange(pos,pos); }catch(e){} }
+  },130);
+}
 /* Soi 1 dãy kệ: bấm lần 2 (hoặc bấm dãy đang soi ở chỗ khác) là bỏ soi */
 function plgSoiDay(d){ PLG.hiDay=(PLG.hiDay===d)?'':d; plgRender(); }
 /* Màu của 1 nhóm — dùng chung cho chú giải, thẻ chỉ số, thanh xếp chồng và hàng danh sách:
@@ -2272,8 +2371,13 @@ function plgMau(k,cls){
   if(PLG.mode==='vesinh') return (PLG_ST[k]&&PLG_ST[k].c)||'';
   return cls==='trong'?'':'var(--s'+(String(cls).replace('w','')||1)+')';
 }
+/* Màu định danh 1 KHO (dùng cho chip khu vực + hàng độ phủ) — theo slot cố định của kho đó */
+function plgMauKho(w){ var s=plgKho().slot[w]; return s?'var(--s'+s+')':'var(--ink3)'; }
 function plgPct(a,b){ return b?Math.round(a/b*1000)/10:0; }
 function plgPctTxt(a,b){ return String(plgPct(a,b)).replace('.',','); }
+/* ---- PHẠM VI: ô nằm trong khu vực đang lọc hay không (khu vực = KHO giữ tồn ở ô đó) ---- */
+function plgTrongPhamVi(o){ return !PLG.area || plgKhoCua(o.loc)===PLG.area; }
+function plgOTrongPhamVi(){ return plgGeo().o.filter(plgTrongPhamVi); }
 
 function plgLoad(){
   var st=document.getElementById('plgState');
@@ -2315,108 +2419,67 @@ var PLG_SUB={
 };
 function plgTenNgan(s){ return String(s).replace(/^WH\s*-\s*MATERIAL\s*-\s*/i,''); }
 
-function plgRender(){
-  var g=plgGeo(), mode=PLG.mode;
-  if(mode==='kho') plgKho();
-  /* Đếm theo nhóm + theo DÃY trong cùng một lượt quét (161 ô nên rẻ), giữ THỨ TỰ nhóm ổn định */
-  var dem={}, thu=[], theoDay={}, dsDay=[];
-  g.o.forEach(function(o){
-    var n=plgNhom(o);
+/* Gom mọi con số của tab trong MỘT lượt quét (161 ô nên rẻ) — cả 4 khối đọc từ đây nên không có
+   chỗ nào tự đếm lại theo luật riêng rồi lệch nhau. */
+function plgTinh(){
+  plgKho();   // chế độ nào cũng cần: KHU VỰC của tab này chính là kho giữ tồn ở ô đó
+  /* Khu vực đang lọc biến mất (dữ liệu tồn đổi) thì bỏ lọc, không để màn hình rỗng câm lặng */
+  if(PLG.area && plgKho().ds.indexOf(PLG.area)<0) PLG.area='';
+  var mode=PLG.mode, os=plgOTrongPhamVi();
+  var dem={}, thu=[], vs={da:0,chua:0,nduyet:0,nolich:0}, theoDay={}, dsDay=[];
+  os.forEach(function(o){
+    var n=plgNhom(o), s=plgState(PLG.by[o.loc]);
     if(dem[n.k]==null){ dem[n.k]={n:0,cls:n.cls,lb:n.lb}; thu.push(n.k); }
-    dem[n.k].n++;
-    var d=theoDay[o.d]; if(!d){ d=theoDay[o.d]={n:0,k:{},o:[]}; dsDay.push(o.d); }
-    d.n++; d.k[n.k]=(d.k[n.k]||0)+1; d.o.push(o);
+    dem[n.k].n++; vs[s]++;
+    var d=theoDay[o.d]; if(!d){ d=theoDay[o.d]={n:0,k:{},vs:{da:0,chua:0,nduyet:0,nolich:0},o:[]}; dsDay.push(o.d); }
+    d.n++; d.k[n.k]=(d.k[n.k]||0)+1; d.vs[s]++; d.o.push(o);
   });
   if(mode==='kho'){
     thu=plgKho().ds.filter(function(w){ return dem[w]; }).concat(dem._none?['_none']:[]);
   } else thu=['da','chua','nduyet','nolich'].filter(function(k){ return dem[k]; });
-  var tong=g.o.length;
   if(PLG.hiDay && !theoDay[PLG.hiDay]) PLG.hiDay='';
-
-  plgVeTop(mode,tong,dsDay.length);
-  plgVeSide(mode,tong,dem,thu);
-  plgVeMap(g,mode,tong,dem,thu,theoDay,dsDay);
-  plgVeList(mode,tong,dem,thu,theoDay,dsDay);
+  return {mode:mode,os:os,tong:os.length,dem:dem,thu:thu,vs:vs,theoDay:theoDay,dsDay:dsDay};
+}
+function plgRender(){
+  var t=plgTinh();
+  plgVeTop(t);
+  plgVeMap(plgGeo(),t);
+  plgVeSide(t);
+  plgVeList(t);
+  plgVeFoot(t);
 }
 
-/* --- Thanh chips trên cùng: chế độ tô màu + phạm vi + nút bỏ soi (khuôn whbar của Hasaki) --- */
-function plgVeTop(mode,tong,soDay){
-  document.getElementById('plgTop').innerHTML=
-    '<div class="pg-seg">'+
-      '<button type="button" class="'+(mode==='kho'?'on':'')+'" onclick="plgSetMode(\'kho\')" aria-pressed="'+(mode==='kho')+'">Theo kho (tồn thực tế)</button>'+
-      '<button type="button" class="'+(mode==='vesinh'?'on':'')+'" onclick="plgSetMode(\'vesinh\')" aria-pressed="'+(mode==='vesinh')+'">Theo vệ sinh (planogram)</button>'+
-    '</div>'+
-    '<span class="pg-chip">Kho nguyên liệu F0-KHO &middot; '+soDay+' dãy &middot; '+tong+' ô</span>'+
-    (PLG.hiDay?'<div class="pg-seg sm"><button type="button" class="on" onclick="plgSoiDay(\'\')" title="Bỏ soi, hiện lại toàn bộ sơ đồ">Đang soi dãy '+esc(PLG.hiDay)+' &times;</button></div>':'')+
+/* === THANH ĐIỀU KHIỂN DUY NHẤT (whbar) — Khu vực · Chế độ tô màu · Tra cứu · Toàn bộ vị trí ===
+   Cùng vai trò và cùng thứ tự với thanh của tab Planogram Hasaki: chips phạm vi bên trái, hai nút
+   tra cứu đẩy sang phải. Khác một chỗ duy nhất do bản chất dữ liệu: bên Hasaki chọn NGÀY (yêu cầu
+   vệ sinh phát theo ngày), kho nguyên liệu chưa có lịch nên chỗ đó là CHẾ ĐỘ TÔ MÀU sơ đồ. */
+function plgVeTop(T){
+  var tong=T.tong, soDay=T.dsDay.length;
+  var K=plgKho(), dem=K.dem;
+  var chips='<span class="pg-hint" style="font-weight:650">Khu vực:</span>'+
+    '<button type="button" class="pg-whtab'+(PLG.area?'':' active')+'" onclick="plgSetArea(\'\')">Tất cả</button>'+
+    K.ds.map(function(w){
+      return '<button type="button" class="pg-whtab'+(PLG.area===w?' active':'')+'" data-a="'+esc(w)+'"'+
+        ' title="'+esc(w+' — '+nf(dem[w])+' dòng tồn theo mã vị trí')+'"'+
+        ' onclick="plgSetArea(this.getAttribute(\'data-a\'))"><span class="pg-dot" style="background:'+plgMauKho(w)+'"></span>'+
+        esc(plgTenNgan(w))+'</button>';
+    }).join('');
+  var seg='<span style="width:8px"></span><span class="pg-hint" style="font-weight:650">Tô màu:</span>'+
+    '<div class="pg-seg sm">'+
+      '<button type="button" class="'+(PLG.mode==='kho'?'on':'')+'" onclick="plgSetMode(\'kho\')" aria-pressed="'+(PLG.mode==='kho')+'">Theo kho</button>'+
+      '<button type="button" class="'+(PLG.mode==='vesinh'?'on':'')+'" onclick="plgSetMode(\'vesinh\')" aria-pressed="'+(PLG.mode==='vesinh')+'">Theo vệ sinh</button>'+
+    '</div>';
+  document.getElementById('plgTop').innerHTML=chips+seg+
     '<span style="flex:1"></span>'+
-    '<span class="pg-hint">Mỗi ô là 1 <b>ô kệ</b> (<code>F0-KHO-&lt;dãy&gt;-&lt;cột&gt;</code>, gộp mọi tầng) — bấm ô để xem chi tiết</span>';
+    '<button type="button" class="pg-whtab" onclick="plgOpenTra()" title="Xem từng dãy kệ: ô nào thuộc kho nào, trạng thái vệ sinh ra sao">Tra cứu dãy kệ &middot; '+nf(soDay)+'</button>'+
+    '<button type="button" class="pg-whtab" onclick="plgOpenAll()" title="Bảng đầy đủ mọi ô kệ trên mặt bằng">Toàn bộ vị trí &middot; '+nf(tong)+'</button>';
 }
 
-/* --- CỘT PHẢI: thẻ chỉ số xếp dọc + thanh xếp chồng + độ phủ (khuôn panel "Vệ sinh" của Hasaki) --- */
-function plgVeSide(mode,tong,dem,thu){
-  var t=[];
-  t.push('<button type="button" class="pg-tile tot" onclick="plgSoiDay(\'\')" title="Tổng số ô kệ trên bản vẽ mặt bằng">'+
-    '<span class="k">'+nf(tong)+'</span><span class="l">Tổng ô mặt bằng</span>'+
-    '<span class="s">bản vẽ MTG_zigzag — bê nguyên hình học, không dựng từ dữ liệu</span></button>');
-  thu.forEach(function(k){
-    var d=dem[k], c=plgMau(k,d.cls)||'var(--ink3)';
-    var sub=mode==='kho'
-      ? (k==='_none'?'vị trí không có dòng tồn nào theo mã vị trí'
-                    :plgPctTxt(d.n,tong)+'% ô mặt bằng &middot; nguồn: tồn theo mã vị trí')
-      : (PLG_SUB[k]||'');
-    t.push('<button type="button" class="pg-tile'+(PLG.tat[k]?' off':'')+'" style="--cc:'+c+'"'+
-      ' data-k="'+esc(k)+'" onclick="plgToggle(this.getAttribute(\'data-k\'))" aria-pressed="'+(PLG.tat[k]?'false':'true')+'"'+
-      ' title="Bấm để ẩn/hiện nhóm này trên sơ đồ">'+
-      '<span class="k">'+nf(d.n)+'</span><span class="l">'+esc(d.lb)+'</span><span class="s">'+sub+'</span></button>');
-  });
-  var bar='<div class="pg-track big"><span class="pg-fill">'+thu.map(function(k){
-    var d=dem[k], c=plgMau(k,d.cls)||'color-mix(in srgb,var(--ink3) 32%,transparent)';
-    return '<i style="width:'+plgPct(d.n,tong)+'%;background:'+c+'" title="'+esc(d.lb)+': '+d.n+' ô"></i>';
-  }).join('')+'</span></div>';
-
-  /* Độ phủ: trả lời "bao nhiêu phần mặt bằng thực sự nằm trong tầm quan sát" của từng chế độ */
-  var cov;
-  if(mode==='kho'){
-    var coTon=tong-((dem._none&&dem._none.n)||0);
-    cov='<div class="ct">Độ phủ tồn theo vị trí</div>'+
-      '<div class="cl">Ô có tồn<span class="sp"></span><b>'+nf(coTon)+'/'+nf(tong)+'</b> ('+plgPctTxt(coTon,tong)+'%)</div>'+
-      '<div class="cl">Ô trống<span class="sp"></span><b>'+nf(tong-coTon)+'</b></div>'+
-      '<div class="cl">Kho đang chiếm mặt bằng<span class="sp"></span><b>'+nf(plgKho().ds.length)+'</b></div>'+
-      (PLG.ngoai.length?'<div class="pg-alert" style="margin:9px 0 0"><span class="ic">&#9888;</span><div><b>'+PLG.ngoai.length+' mã vị trí có tồn nhưng không có trên bản vẽ</b><br>'+
-        esc(PLG.ngoai.join(' · '))+' — hoặc bản vẽ thiếu, hoặc mã đã bị đặt sai.</div></div>':'');
-  } else {
-    var coLich=tong-((dem.nolich&&dem.nolich.n)||0), duyet=coLich-((dem.nduyet&&dem.nduyet.n)||0);
-    cov='<div class="ct">Độ phủ lịch vệ sinh</div>'+
-      '<div class="cl">Vị trí đã khai báo lịch<span class="sp"></span><b>'+nf(coLich)+'/'+nf(tong)+'</b> ('+plgPctTxt(coLich,tong)+'%)</div>'+
-      '<div class="cl">Trong đó lịch đã DUYỆT<span class="sp"></span><b>'+nf(duyet)+'</b></div>'+
-      '<div class="cl">Nguồn<span class="sp"></span><b>'+esc(PLG_TAB)+'</b></div>';
-  }
-  document.getElementById('plgSide').innerHTML=
-    '<section class="panel">'+
-    '<h2>'+(mode==='kho'?'Kho đang giữ tồn':'Trạng thái vệ sinh')+
-      ' <span class="pg-chip">'+(mode==='kho'?'tồn thực tế':'planogram WMS')+'</span></h2>'+
-    '<div class="pg-tiles">'+t.join('')+'</div>'+bar+
-    '<div class="pg-cov">'+cov+'</div>'+
-    '</section>';
-}
-
-/* --- CỘT TRÁI: panel sơ đồ (tiêu đề + chú giải cùng hàng, dải cảnh báo, bản vẽ) --- */
-function plgVeMap(g,mode,tong,dem,thu,theoDay,dsDay){
-  /* dải cảnh báo mỏng — nằm TRONG panel sơ đồ, đúng chỗ của bannerAlert bên Hasaki */
-  var al='';
-  if(mode==='vesinh'){
-    var nolich=(dem.nolich&&dem.nolich.n)||0, nduyet=(dem.nduyet&&dem.nduyet.n)||0;
-    if(nolich===tong){
-      al='<div class="pg-alert"><span class="ic">&#9888;</span><div><b>Chưa vị trí nào của kho nguyên liệu được khai báo lịch vệ sinh trên planogram.</b> '+
-        'Đã dò cả 2 kho chứa mã <code>F0-KHO</code> — 1339 <i>WH-MATERIAL-GARMENT</i> và 1177 <i>WH-MATERIAL-MTG</i>: 0 lịch gốc, 0 yêu cầu. '+
-        'Planogram hiện mới bật cho SHOP (kho 863 &middot; 1147 &middot; 1266). Sơ đồ vẫn là mặt bằng thật và sẽ tự lên màu ngay khi lịch được '+
-        '<b>khai báo và DUYỆT</b> — không cần sửa dashboard.</div></div>';
-    } else if(nduyet>0){
-      al='<div class="pg-alert"><span class="ic">&#9888;</span><div><b>'+nduyet+' ô có lịch nhưng chưa được duyệt.</b> '+
-        'Lịch chưa Approved thì WMS không sinh yêu cầu vệ sinh — ô vẫn im lặng dù đã khai báo.</div></div>';
-    }
-  }
-  /* chú giải bấm được (cross-filter) — chung một hàng với tiêu đề panel */
+/* === CỘT TRÁI — panel "Sơ đồ khu vực" ======================================================
+   Thứ tự khối y như Hasaki: tiêu đề + chip phạm vi + chú giải một hàng → dải cảnh báo → tiêu đề
+   khối sơ đồ → bản vẽ → dòng hướng dẫn đọc màu. */
+function plgVeMap(g,T){
+  var mode=T.mode, tong=T.tong, dem=T.dem, thu=T.thu, theoDay=T.theoDay, dsDay=T.dsDay, vs=T.vs;
   var legend='<span class="pg-legend">'+thu.map(function(k){
     var d=dem[k], c=plgMau(k,d.cls);
     return '<button type="button" class="'+(PLG.tat[k]?'off':'')+'" data-k="'+esc(k)+'"'+
@@ -2426,16 +2489,96 @@ function plgVeMap(g,mode,tong,dem,thu,theoDay,dsDay){
       esc(plgTenNgan(d.lb))+' <span class="n">'+d.n+'</span></button>';
   }).join('')+'</span>';
 
+  /* Dải cảnh báo: nêu ĐÚNG một việc phải làm, bấm được để mở danh sách vị trí liên quan */
+  var al='';
+  if(vs.nolich===tong && tong){
+    al='<div class="pg-alertbar" onclick="plgOpenAll(\'nolich\')" title="Bấm xem danh sách vị trí chưa khai báo lịch">'+
+      '<span class="ic">&#9888;</span><span><b>'+nf(tong)+'</b> vị trí chưa được khai báo lịch vệ sinh trên planogram — '+
+      'đã dò cả 2 kho chứa mã <code>F0-KHO</code> (1339 GARMENT · 1177 MTG): 0 lịch gốc, 0 yêu cầu. Bấm xem danh sách</span></div>';
+  } else if(vs.nduyet>0){
+    al='<div class="pg-alertbar warn" onclick="plgOpenAll(\'nduyet\')" title="Bấm xem danh sách vị trí có lịch chưa duyệt">'+
+      '<span class="ic">&#9888;</span><span><b>'+nf(vs.nduyet)+'</b> ô có lịch nhưng chưa được DUYỆT — lịch chưa Approved thì WMS không sinh yêu cầu. Bấm xem</span></div>';
+  } else if(vs.chua>0){
+    al='<div class="pg-alertbar" onclick="plgOpenAll(\'chua\')" title="Bấm xem danh sách vị trí chưa vệ sinh">'+
+      '<span class="ic">&#9888;</span><span><b>'+nf(vs.chua)+'</b> vị trí có lịch đã duyệt mà chưa ai vệ sinh — bấm để xử lý</span></div>';
+  }
+
   document.getElementById('plgMap').innerHTML=
     '<section class="panel">'+
-    '<h2>Sơ đồ mặt bằng <span class="pg-chip">'+dsDay.length+' dãy &middot; '+tong+' ô</span>'+legend+'</h2>'+
+    '<h2>Sơ đồ khu vực <span class="pg-chip">'+esc(PLG.area?plgTenNgan(PLG.area):'Tất cả')+' &middot; '+nf(tong)+' ô</span>'+legend+'</h2>'+
     al+
+    '<div class="pg-maphdr">Kho nguyên liệu (F0-KHO) — '+dsDay.length+' dãy kệ</div>'+
     '<div class="pg-wrap"><div class="pg-scroll"><div class="pg-fit" style="--pg-ar:'+(g.W/g.H).toFixed(4)+'">'+
       plgSvg(g,mode,theoDay)+'</div></div></div>'+
-    '<p class="pg-hint" style="margin:9px 2px 0">Vẽ đúng tỷ lệ, nét kẻ và khoảng cách của bản vẽ <code>MTG_zigzag</code> &middot; '+
-      (mode==='kho'?'tô theo <b>kho</b> đang giữ tồn ở vị trí đó (nguồn: tồn theo mã vị trí của tab Trạng thái lưu trữ)'
-                   :'tô theo <b>trạng thái vệ sinh</b> từ planogram WMS (tab <code>'+esc(PLG_TAB)+'</code>)')+
-      ' &middot; bấm nhãn dãy để soi riêng dãy đó.</p>'+
+    '<p class="pg-hint" style="margin:9px 2px 0">Bấm một ô để xem chi tiết vị trí, bấm nhãn dãy để soi riêng dãy đó &middot; '+
+      'sơ đồ bê nguyên hình học bản vẽ <code>MTG_zigzag</code> (đúng tỷ lệ, nét kẻ, khoảng cách thật) — cách đọc màu: '+
+      (mode==='kho'?'<b>mỗi màu là một kho</b> đang giữ tồn ở ô đó, <b>nét đứt = ô không có tồn</b> (nguồn: tồn theo mã vị trí của tab Trạng thái lưu trữ)'
+                   :'<b>xanh = đã vệ sinh</b>, <b>đỏ = có lịch đã duyệt mà chưa vệ sinh</b>, <b>hổ phách = lịch chưa duyệt</b>, '+
+                    '<b>nét đứt = chưa khai báo lịch</b> (nguồn: planogram WMS, tab <code>'+esc(PLG_TAB)+'</code>)')+
+      '.</p>'+
+    '</section>';
+}
+
+/* === CỘT PHẢI — panel "Vệ sinh" ============================================================
+   Cố định là VỆ SINH (không đổi theo chế độ tô màu), đúng vai trò panel phải của Hasaki:
+   thẻ chỉ số xếp dọc → thanh tiến độ → khối Độ phủ (mỗi khu vực 1 thanh) → dải kết luận. */
+function plgVeSide(T){
+  var tong=T.tong, vs=T.vs;
+  var K=plgKho();
+  var nhom=[['da','Đã vệ sinh'],['chua','Chưa vệ sinh'],['nduyet','Lịch chưa duyệt'],['nolich','Chưa khai báo lịch']];
+  var tiles='<button type="button" class="pg-tile tot" onclick="plgOpenAll(\'\')" title="Xem bảng đầy đủ mọi vị trí">'+
+    '<span class="k">'+nf(tong)+'</span><span class="l">Tổng vị trí trên mặt bằng</span>'+
+    '<span class="s">'+esc(PLG.area?plgTenNgan(PLG.area):'cả 2 kho nguyên liệu')+' &middot; bản vẽ MTG_zigzag</span></button>'+
+    nhom.map(function(m){
+      var k=m[0], c=PLG_ST[k].c||'var(--ink3)';
+      return '<button type="button" class="pg-tile" style="--cc:'+c+'" data-k="'+k+'" onclick="plgOpenAll(this.getAttribute(\'data-k\'))"'+
+        ' title="'+esc(m[1]+' — '+PLG_SUB[k])+'">'+
+        '<span class="k">'+nf(vs[k])+'</span><span class="l">'+esc(m[1])+'</span>'+
+        '<span class="s">'+(vs[k]?plgPctTxt(vs[k],tong)+'% &middot; ':'')+PLG_SUB[k]+'</span></button>';
+    }).join('');
+  var bar='<div class="pg-track big"><span class="pg-fill">'+nhom.map(function(m){
+    var k=m[0], c=PLG_ST[k].c||'color-mix(in srgb,var(--ink3) 32%,transparent)';
+    return vs[k]?'<i style="width:'+plgPct(vs[k],tong)+'%;background:'+c+'" title="'+esc(m[1])+': '+nf(vs[k])+' ô"></i>':'';
+  }).join('')+'</span></div>';
+
+  /* ĐỘ PHỦ LỊCH VỆ SINH — mỗi KHU VỰC một thanh (vị trí có lịch / tổng vị trí của khu vực đó).
+     Danh mục lấy theo MẶT BẰNG THẬT (bản vẽ), không lấy từ chính dữ liệu lịch — có vậy vị trí bị
+     bỏ quên mới lộ ra. Đây đúng là luật của khối Độ phủ bên Hasaki. */
+  var g=plgGeo(), khu={};
+  g.o.forEach(function(o){
+    var w=plgKhoCua(o.loc)||'(không có tồn)';
+    if(PLG.area && w!==PLG.area) return;
+    var t=khu[w]||(khu[w]={co:0,tot:0});
+    t.tot++; if(plgState(PLG.by[o.loc])!=='nolich') t.co++;
+  });
+  var dsKhu=K.ds.filter(function(w){ return khu[w]; }).concat(khu['(không có tồn)']?['(không có tồn)']:[]);
+  var coTong=0, totTong=0;
+  dsKhu.forEach(function(w){ coTong+=khu[w].co; totTong+=khu[w].tot; });
+  var du=totTong && coTong>=totTong;
+  var covRows=dsKhu.map(function(w){
+    var t=khu[w], p=plgPct(t.co,t.tot), duKhu=t.co>=t.tot, mau=duKhu?'var(--good)':'var(--warn)';
+    return '<div class="pg-covrow" title="'+esc(w+': '+t.co+'/'+t.tot+' vị trí đã khai báo lịch vệ sinh'+(duKhu?' — đủ':' — thiếu '+(t.tot-t.co)))+'">'+
+      '<span class="nm"><span class="pg-dot" style="background:'+(w==='(không có tồn)'?'var(--ink3)':plgMauKho(w))+'"></span>'+esc(plgTenNgan(w))+'</span>'+
+      '<div class="pg-track"><span class="pg-fill" style="width:'+p+'%"><i style="width:100%;background:'+mau+'"></i></span></div>'+
+      '<span class="v" style="color:'+mau+'">'+nf(t.co)+'/'+nf(t.tot)+'</span></div>';
+  }).join('');
+  var banner=du
+    ? '<div class="pg-alertbar ok"><span class="ic">&#10003;</span><span>Đủ lịch vệ sinh cho <b>'+nf(totTong)+'</b> vị trí trên mặt bằng</span></div>'
+    : '<div class="pg-alertbar warn" onclick="plgOpenAll(\'nolich\')" title="Bấm xem danh sách vị trí chưa được khai báo lịch vệ sinh">'+
+      '<span class="ic">&#9888;</span><span><b>'+nf(totTong-coTong)+'</b> vị trí chưa có lịch vệ sinh trên planogram — bấm xem</span></div>';
+
+  document.getElementById('plgSide').innerHTML=
+    '<section class="panel">'+
+    '<h2>Vệ sinh <span class="pg-chip">planogram WMS</span><span style="flex:1"></span>'+
+      '<a class="pg-hint" style="font-weight:600;color:var(--brand2);text-decoration:none" href="'+SHEET_URL+'" target="_blank" rel="noopener">Mở Google Sheet ↗</a></h2>'+
+    '<div class="pg-tiles">'+tiles+'</div>'+bar+
+    '<div class="pg-cov">'+
+      '<div class="pg-covhd" title="Danh mục vị trí lấy theo MẶT BẰNG THẬT (bản vẽ MTG_zigzag), không lấy từ chính dữ liệu lịch — có vậy vị trí bị bỏ quên mới lộ ra.">Độ phủ lịch vệ sinh'+
+        '<b style="color:'+(du?'var(--good)':'var(--warn)')+'">'+nf(coTong)+'/'+nf(totTong)+' vị trí</b></div>'+
+      covRows+banner+
+      (PLG.ngoai.length?'<div class="pg-alertbar warn plain" style="margin-top:8px"><span class="ic">&#9888;</span><span><b>'+PLG.ngoai.length+
+        '</b> mã vị trí có tồn nhưng KHÔNG có trên bản vẽ: '+esc(PLG.ngoai.join(' · '))+' — hoặc bản vẽ thiếu, hoặc mã đã bị đặt sai.</span></div>':'')+
+    '</div>'+
     '</section>';
 }
 
@@ -2496,8 +2639,9 @@ function plgSvg(g,mode,theoDay){
     var x=c.x+GAP/2, y=c.y+GAP/2, ww=Math.max(4,c.w-GAP), hh=Math.max(4,c.h-GAP);
     /* Chữ co theo cả CAO và RỘNG: cặp kệ 2 mặt chỉ cao 26 đơn vị, ô 14/15 của dãy 513 chỉ rộng 31 */
     var fs=Math.max(11,Math.min(24,hh*0.62,ww*0.42));
-    /* Đang soi 1 dãy: ô ngoài dãy đó mờ hẳn đi (dùng lại đúng lớp .dim của chú giải) */
-    var mo=PLG.tat[n.k]||(PLG.hiDay&&c.d!==PLG.hiDay), hi=PLG.hiDay&&c.d===PLG.hiDay;
+    /* Mờ ô ngoài tầm nhìn hiện tại — 3 nguồn: KHU VỰC đang lọc, nhóm bị tắt ở chú giải, dãy đang
+       soi. Vẫn VẼ chứ không xoá: sơ đồ là mặt bằng thật, ô biến mất là mất luôn manh mối. */
+    var mo=!plgTrongPhamVi(c)||PLG.tat[n.k]||(PLG.hiDay&&c.d!==PLG.hiDay), hi=PLG.hiDay&&c.d===PLG.hiDay;
     out.push('<g class="pg-o '+n.cls+(mo?' dim':'')+(hi?' hi':'')+'" tabindex="0" role="button"'+
       ' data-l="'+c.loc+'" onclick="plgOpen(this.getAttribute(\'data-l\'))"'+
       ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();plgOpen(this.getAttribute(\'data-l\'))}">'+
@@ -2521,53 +2665,213 @@ function plgSvg(g,mode,theoDay){
   return out.join('');
 }
 
-/* --- PANEL DƯỚI: phân bố ô kệ theo dãy / theo nhóm (khuôn panel danh sách của Hasaki) --- */
-function plgVeList(mode,tong,dem,thu,theoDay,dsDay){
-  var rows;
-  if(PLG.list==='day'){
-    rows=dsDay.map(function(d){
-      var t=theoDay[d], on=PLG.hiDay===d;
-      var sub=thu.filter(function(k){ return t.k[k]; })
-        .map(function(k){ return t.k[k]+' '+(k==='_none'?'ô trống':mode==='kho'?plgTenNgan(dem[k].lb):dem[k].lb.toLowerCase()); }).join(' · ');
-      var fill=thu.map(function(k){
-        if(!t.k[k]) return '';
-        var c=plgMau(k,dem[k].cls)||'color-mix(in srgb,var(--ink3) 32%,transparent)';
-        return '<i style="width:'+plgPct(t.k[k],t.n)+'%;background:'+c+'" title="'+esc(dem[k].lb)+': '+t.k[k]+' ô"></i>';
-      }).join('');
-      return '<div class="pg-row'+(on?' on':'')+'" role="button" tabindex="0" data-d="'+esc(d)+'"'+
-        ' onclick="plgSoiDay(this.getAttribute(\'data-d\'))"'+
-        ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();plgSoiDay(this.getAttribute(\'data-d\'))}"'+
-        ' title="Bấm để soi riêng dãy '+esc(d)+' trên sơ đồ">'+
-        '<span class="pg-rl"><b class="nm">Dãy '+esc(d)+'</b> <span class="sub">'+esc(sub)+'</span></span>'+
-        '<span class="pg-track"><span class="pg-fill">'+fill+'</span></span>'+
-        '<span class="pg-rv"><b>'+nf(t.n)+'</b><small>ô kệ</small></span></div>';
-    }).join('');
-  } else {
-    rows=thu.map(function(k){
-      var d=dem[k], c=plgMau(k,d.cls);
-      var soDay=dsDay.filter(function(x){ return theoDay[x].k[k]; }).length;
-      return '<div class="pg-row'+(PLG.tat[k]?' on':'')+'" role="button" tabindex="0" data-k="'+esc(k)+'"'+
-        ' onclick="plgToggle(this.getAttribute(\'data-k\'))"'+
-        ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();plgToggle(this.getAttribute(\'data-k\'))}"'+
-        ' title="Bấm để ẩn/hiện nhóm này trên sơ đồ">'+
-        '<span class="pg-rl"><i class="'+(c?'':'dash')+'"'+(c?' style="background:'+c+'"':'')+'></i>'+esc(d.lb)+
-          ' <span class="sub">'+soDay+' dãy có ô thuộc nhóm này</span></span>'+
-        '<span class="pg-track"><span class="pg-fill"><i style="width:'+plgPct(d.n,tong)+'%;background:'+
-          (c||'color-mix(in srgb,var(--ink3) 32%,transparent)')+'"></i></span></span>'+
-        '<span class="pg-rv"><b>'+nf(d.n)+'</b><small>'+plgPctTxt(d.n,tong)+'% mặt bằng</small></span></div>';
-    }).join('');
-  }
-  document.getElementById('plgList').innerHTML=
+/* === PANEL DƯỚI — "Danh sách theo dõi" =====================================================
+   Cùng khuôn với panel cùng tên của Hasaki: bộ chuyển 2 chế độ ở tiêu đề → chips lọc → ô tìm
+   nhanh → bảng cuộn (đầu bảng dính) → dòng tổng kết. Hai chế độ của kho nguyên liệu:
+     'vt'  — TỪNG VỊ TRÍ (161 ô kệ): trả lời "ô này thuộc kho nào, có lịch chưa, ai vệ sinh"
+     'day' — TỪNG DÃY KỆ (14 dãy):   trả lời "dãy nào còn hổng lịch, dãy nào của kho nào" */
+function plgVeList(T){
+  T=T||plgTinh();
+  var mode=T.mode, tong=T.tong, dem=T.dem, thu=T.thu, theoDay=T.theoDay, dsDay=T.dsDay;
+  var box=document.getElementById('plgList'); if(!box) return;
+  var modes='<div class="pg-seg sm">'+
+    '<button type="button" class="'+(PLG.list==='vt'?'on':'')+'" onclick="plgSetList(\'vt\')">Từng vị trí <b>'+nf(tong)+'</b></button>'+
+    '<button type="button" class="'+(PLG.list==='day'?'on':'')+'" onclick="plgSetList(\'day\')">Từng dãy kệ <b>'+nf(dsDay.length)+'</b></button>'+
+    '</div>';
+  box.innerHTML=
     '<section class="panel" style="margin-top:12px">'+
-    '<h2>Phân bố ô kệ'+
-      '<div class="pg-seg sm">'+
-        '<button type="button" class="'+(PLG.list==='day'?'on':'')+'" onclick="plgSetList(\'day\')" aria-pressed="'+(PLG.list==='day')+'">Theo dãy kệ</button>'+
-        '<button type="button" class="'+(PLG.list==='nhom'?'on':'')+'" onclick="plgSetList(\'nhom\')" aria-pressed="'+(PLG.list==='nhom')+'">Theo '+(mode==='kho'?'kho':'trạng thái')+'</button>'+
-      '</div>'+
-      '<span style="flex:1"></span>'+
-      '<span class="pg-hint">'+(PLG.list==='day'?'Bấm 1 hàng để soi riêng dãy đó trên sơ đồ':'Bấm 1 hàng để ẩn/hiện nhóm đó trên sơ đồ')+'</span></h2>'+
-    '<div class="pg-chart">'+rows+'</div>'+
+    '<h2>Danh sách theo dõi<span style="flex:1"></span>'+modes+'</h2>'+
+    (PLG.list==='day'?plgHtmlDay(mode,dem,thu,theoDay,dsDay):plgHtmlVt(tong))+
     '</section>';
+}
+
+/* --- Chế độ 'vt': bảng từng ô kệ + chips lọc theo TRẠNG THÁI VỆ SINH + ô tìm nhanh --- */
+function plgHtmlVt(tong){
+  var os=plgOTrongPhamVi();
+  var cnt={da:0,chua:0,nduyet:0,nolich:0};
+  os.forEach(function(o){ cnt[plgState(PLG.by[o.loc])]++; });
+  var q=String(PLG.q||'').trim().toLowerCase();
+  var rows=os.filter(function(o){
+    if(PLG.st && plgState(PLG.by[o.loc])!==PLG.st) return false;
+    if(PLG.hiDay && o.d!==PLG.hiDay) return false;
+    if(q){
+      var r=PLG.by[o.loc]||{};
+      var hay=(o.loc+' '+o.d+' '+o.c+' '+plgKhoCua(o.loc)+' '+PLG_ST[plgState(r)].lb+' '+
+               (r.schId||'')+' '+(r.ycGan||'')+' '+(r.vsGan||'')+' '+(r.nguoi||'')).toLowerCase();
+      if(hay.indexOf(q)<0) return false;
+    }
+    return true;
+  });
+  var chips='<span class="pg-hint" style="font-weight:650">Trạng thái:</span>'+
+    '<button type="button" class="pg-whtab'+(PLG.st?'':' active')+'" onclick="plgSetSt(\'\')">Tất cả &middot; '+nf(os.length)+'</button>'+
+    ['da','chua','nduyet','nolich'].map(function(k){
+      var m=PLG_ST[k];
+      return '<button type="button" class="pg-whtab'+(PLG.st===k?' active':'')+'" data-k="'+k+'"'+
+        ' onclick="plgSetSt(this.getAttribute(\'data-k\'))" title="'+esc(PLG_SUB[k])+'">'+
+        '<span class="pg-dot'+(m.c?'':' dash')+'"'+(m.c?' style="background:'+m.c+'"':'')+'></span>'+
+        esc(m.lb)+' <b>'+nf(cnt[k])+'</b></button>';
+    }).join('')+
+    (PLG.hiDay?'<button type="button" class="pg-whtab active" onclick="plgSoiDay(\'\')" title="Bỏ soi dãy, xem lại toàn bộ">Đang soi dãy '+esc(PLG.hiDay)+' &times;</button>':'');
+
+  var CAP=300;
+  var body=rows.length?rows.slice(0,CAP).map(function(o){ return plgDongVt(o); }).join('')
+    :'<tr><td colspan="8" class="empty">Không có vị trí nào khớp bộ lọc.</td></tr>';
+  var capNote=rows.length>CAP?'<tr><td colspan="8" class="empty">Hiển thị '+nf(CAP)+' / '+nf(rows.length)+' dòng — dùng bộ lọc để thu hẹp.</td></tr>':'';
+
+  return '<div class="pg-whbar">'+chips+'</div>'+
+    '<input class="pg-search" placeholder="Tìm vị trí / dãy / kho / người vệ sinh…" value="'+esc(PLG.q||'')+'" oninput="plgSearch(this.value)">'+
+    '<div class="pg-tblwrap"><table class="pg-tbl"><thead><tr>'+
+    '<th>Vị trí</th><th>Dãy</th><th>Cột</th><th>Kho giữ tồn</th><th>Trạng thái vệ sinh</th>'+
+    '<th>Lịch gốc</th><th>Yêu cầu gần nhất</th><th>Vệ sinh gần nhất</th>'+
+    '</tr></thead><tbody>'+body+capNote+'</tbody></table></div>'+
+    '<p class="pg-hint" style="margin:10px 0 0">Đang hiển thị '+nf(Math.min(rows.length,CAP))+' / '+nf(os.length)+
+      ' vị trí'+(PLG.area?' của '+esc(plgTenNgan(PLG.area)):'')+' &middot; bấm 1 dòng để mở chi tiết vị trí đó.</p>';
+}
+/* 1 dòng bảng vị trí — dùng lại cho cả pop-up "Toàn bộ vị trí" */
+function plgDongVt(o){
+  var r=PLG.by[o.loc]||null, s=plgState(r), m=PLG_ST[s], w=plgKhoCua(o.loc);
+  var badge='<span class="pg-badge" style="background:color-mix(in srgb,'+(m.c||'var(--ink3)')+' 16%,transparent);color:'+
+    (m.c||'var(--ink2)')+'">'+esc(m.lb)+'</span>';
+  return '<tr data-l="'+esc(o.loc)+'" onclick="plgOpen(this.getAttribute(\'data-l\'))">'+
+    '<td><b>'+esc(o.loc)+'</b></td>'+
+    '<td>'+esc(o.d)+'</td>'+
+    '<td class="num">'+esc(o.c)+'</td>'+
+    '<td>'+(w?'<span class="pg-dot" style="background:'+plgMauKho(w)+';margin-right:6px"></span>'+esc(plgTenNgan(w))
+             :'<span class="mut">không có tồn</span>')+'</td>'+
+    '<td>'+badge+'</td>'+
+    '<td class="mut">'+(r&&r.schId?'#'+esc(r.schId)+(r.ttLich?' · '+esc(r.ttLich):''):'—')+'</td>'+
+    '<td class="mut">'+(r&&r.ycGan?esc(r.ycGan)+(r.ttYC?' · '+esc(r.ttYC):''):'—')+'</td>'+
+    '<td class="mut">'+(r&&r.vsGan?esc(r.vsGan)+(r.nguoi?' — '+esc(r.nguoi):''):'—')+'</td></tr>';
+}
+
+/* --- Chế độ 'day': bảng 14 dãy kệ, mỗi dòng 1 thanh xếp chồng; bấm dòng = soi dãy trên sơ đồ --- */
+function plgHtmlDay(mode,dem,thu,theoDay,dsDay){
+  var body=dsDay.map(function(d){
+    var t=theoDay[d];
+    var fill=thu.map(function(k){
+      if(!t.k[k]) return '';
+      var c=plgMau(k,dem[k].cls)||'color-mix(in srgb,var(--ink3) 32%,transparent)';
+      return '<i style="width:'+plgPct(t.k[k],t.n)+'%;background:'+c+'" title="'+esc(dem[k].lb)+': '+t.k[k]+' ô"></i>';
+    }).join('');
+    var thanhPhan=thu.filter(function(k){ return t.k[k]; })
+      .map(function(k){ return t.k[k]+' '+(k==='_none'?'trống':mode==='kho'?plgTenNgan(dem[k].lb):dem[k].lb.toLowerCase()); }).join(' · ');
+    return '<tr class="'+(PLG.hiDay===d?'on':'')+'" data-d="'+esc(d)+'" onclick="plgSoiDay(this.getAttribute(\'data-d\'))">'+
+      '<td><b>Dãy '+esc(d)+'</b></td>'+
+      '<td class="num">'+nf(t.n)+'</td>'+
+      '<td class="bar"><span class="pg-track"><span class="pg-fill">'+fill+'</span></span></td>'+
+      '<td class="mut">'+esc(thanhPhan)+'</td>'+
+      '<td class="num">'+nf(t.vs.da)+'</td>'+
+      '<td class="num">'+nf(t.vs.chua)+'</td>'+
+      '<td class="num">'+nf(t.vs.nduyet)+'</td>'+
+      '<td class="num">'+nf(t.vs.nolich)+'</td></tr>';
+  }).join('');
+  return '<div class="pg-whbar">'+
+      '<span class="pg-hint" style="font-weight:650">Bấm 1 dãy để soi riêng dãy đó trên sơ đồ</span>'+
+      (PLG.hiDay?'<button type="button" class="pg-whtab active" onclick="plgSoiDay(\'\')">Đang soi dãy '+esc(PLG.hiDay)+' &times;</button>':'')+
+      '<span style="flex:1"></span>'+
+      '<button type="button" class="pg-whtab" onclick="plgOpenTra()">Mở tra cứu dãy kệ</button>'+
+    '</div>'+
+    '<div class="pg-tblwrap"><table class="pg-tbl" style="min-width:760px"><thead><tr>'+
+    '<th>Dãy kệ</th><th class="num">Số ô</th><th>Thành phần</th><th>Chi tiết</th>'+
+    '<th class="num">Đã VS</th><th class="num">Chưa VS</th><th class="num">Lịch chưa duyệt</th><th class="num">Chưa khai báo</th>'+
+    '</tr></thead><tbody>'+body+'</tbody></table></div>'+
+    '<p class="pg-hint" style="margin:10px 0 0">'+nf(dsDay.length)+' dãy kệ'+(PLG.area?' có tồn của '+esc(plgTenNgan(PLG.area)):'')+
+      ' &middot; cột Thành phần tô theo chế độ đang chọn ở thanh trên.</p>';
+}
+
+/* --- Chân tab: nguồn + số liệu + nút làm mới (khuôn srcfoot của Hasaki) --- */
+function plgVeFoot(T){
+  var tong=(T&&T.tong)||0;
+  var el=document.getElementById('plgFoot'); if(!el) return;
+  el.innerHTML=
+    '<div class="pg-srcbar">'+
+      '<span class="pg-chip">Kho nguyên liệu — F0-KHO &middot; WH-MATERIAL-MTG &amp; GARMENT</span>'+
+      '<a href="'+SHEET_URL+'" target="_blank" rel="noopener" style="color:var(--brand2);font-weight:600;text-decoration:none">Mở Google Sheet</a>'+
+      '<span class="pg-hint">'+nf(tong)+' vị trí'+(TAB_SYNC.plg?' &middot; cập nhật '+esc(fmtTime(TAB_SYNC.plg)):'')+'</span>'+
+      '<button type="button" onclick="plgLamMoi(this)" title="Đọc lại tab '+esc(PLG_TAB)+' từ Google Sheet">Làm mới</button>'+
+    '</div>'+
+    '<p class="pg-hint" style="margin:0">Nguồn: <b>planogram WMS</b> — bộ <code>sync-vesinh-factory.mjs</code> ghi tab <code>'+esc(PLG_TAB)+'</code> theo cụm 8h40; '+
+      'sơ đồ dựng sẵn từ bản vẽ <code>MTG_zigzag</code> nên vị trí bị ngừng phát yêu cầu vẫn hiện trên hình.</p>';
+}
+function plgLamMoi(btn){
+  if(btn){ btn.disabled=true; btn.textContent='Đang tải…'; }
+  plgLoad();
+  setTimeout(function(){ if(btn){ btn.disabled=false; btn.textContent='Làm mới'; } },1200);
+}
+
+/* === POP-UP "Toàn bộ vị trí" — bảng đầy đủ, mở kèm bộ lọc trạng thái nếu được truyền vào === */
+function plgOpenAll(st){
+  var os=plgOTrongPhamVi();
+  if(st!=null) PLG.st=st;
+  var loc=PLG.st?os.filter(function(o){ return plgState(PLG.by[o.loc])===PLG.st; }):os;
+  document.getElementById('plgallTitle').textContent='Toàn bộ vị trí'+(PLG.st?' — '+PLG_ST[PLG.st].lb:'');
+  document.getElementById('plgallSub').textContent=
+    nf(loc.length)+'/'+nf(os.length)+' ô kệ'+(PLG.area?' · '+plgTenNgan(PLG.area):' · cả 2 kho')+
+    ' — danh mục lấy theo mặt bằng thật (bản vẽ MTG_zigzag), không lấy từ dữ liệu lịch';
+  document.getElementById('plgallBody').innerHTML=
+    '<div class="pg-tblwrap" style="max-height:60vh"><table class="pg-tbl"><thead><tr>'+
+    '<th>Vị trí</th><th>Dãy</th><th>Cột</th><th>Kho giữ tồn</th><th>Trạng thái vệ sinh</th>'+
+    '<th>Lịch gốc</th><th>Yêu cầu gần nhất</th><th>Vệ sinh gần nhất</th>'+
+    '</tr></thead><tbody>'+(loc.length?loc.map(plgDongVt).join('')
+      :'<tr><td colspan="8" class="empty">Không có vị trí nào.</td></tr>')+'</tbody></table></div>';
+  plgMoModal('plgallmodal');
+  plgRender();   // panel dưới bám theo cùng bộ lọc trạng thái vừa chọn
+}
+function closePlgAll(){ plgDongModal('plgallmodal'); }
+
+/* === POP-UP "Tra cứu dãy kệ" — chọn dãy bên trái, xem từng ô của dãy bên phải === */
+function plgOpenTra(){
+  if(!PLG.traDay){ var ds=plgTraDs(); PLG.traDay=ds.length?ds[0].d:''; }
+  plgVeTra();
+  plgMoModal('plgtramodal');
+}
+function closePlgTra(){ plgDongModal('plgtramodal'); }
+function plgTraTim(v){ PLG.traQ=v; plgVeTra(); }
+function plgTraChon(d){ PLG.traDay=d; plgVeTra(); }
+/* Danh sách dãy (trong phạm vi khu vực đang lọc) + số liệu tóm tắt của từng dãy */
+function plgTraDs(){
+  var m={}, ds=[];
+  plgOTrongPhamVi().forEach(function(o){
+    var t=m[o.d]; if(!t){ t=m[o.d]={d:o.d,n:0,o:[],kho:{},vs:{da:0,chua:0,nduyet:0,nolich:0}}; ds.push(t); }
+    t.n++; t.o.push(o); t.vs[plgState(PLG.by[o.loc])]++;
+    var w=plgKhoCua(o.loc); if(w) t.kho[w]=(t.kho[w]||0)+1;
+  });
+  return ds;
+}
+function plgVeTra(){
+  var ds=plgTraDs(), q=String(PLG.traQ||'').trim().toLowerCase();
+  var loc=ds.filter(function(t){ return !q || ('dãy '+t.d).toLowerCase().indexOf(q)>=0 || t.d.toLowerCase().indexOf(q)>=0; });
+  if(loc.length && !loc.some(function(t){ return t.d===PLG.traDay; })) PLG.traDay=loc[0].d;
+  document.getElementById('plgTraList').innerHTML=loc.length?loc.map(function(t){
+    var kho=Object.keys(t.kho).sort().map(function(w){ return plgTenNgan(w)+' '+t.kho[w]; }).join(' · ')||'không có tồn';
+    return '<div class="pg-nkitem'+(PLG.traDay===t.d?' on':'')+'" data-d="'+esc(t.d)+'" onclick="plgTraChon(this.getAttribute(\'data-d\'))">'+
+      '<span class="nm">Dãy '+esc(t.d)+'<small>'+esc(kho)+'</small></span><span class="c">'+nf(t.n)+' ô</span></div>';
+  }).join(''):'<div class="pg-hint" style="padding:12px 10px">Không có dãy nào khớp.</div>';
+
+  var t=null; for(var i=0;i<ds.length;i++) if(ds[i].d===PLG.traDay) t=ds[i];
+  var box=document.getElementById('plgTraRight');
+  if(!t){ box.innerHTML='<div class="pg-hint">Chọn một dãy ở danh sách bên trái.</div>'; return; }
+  var covRows=['da','chua','nduyet','nolich'].filter(function(k){ return t.vs[k]; }).map(function(k){
+    var m=PLG_ST[k];
+    return '<div class="pg-covrow"><span class="nm"><span class="pg-dot'+(m.c?'':' dash')+'"'+(m.c?' style="background:'+m.c+'"':'')+'></span>'+esc(m.lb)+'</span>'+
+      '<div class="pg-track"><span class="pg-fill" style="width:'+plgPct(t.vs[k],t.n)+'%"><i style="width:100%;background:'+(m.c||'var(--ink3)')+'"></i></span></div>'+
+      '<span class="v">'+nf(t.vs[k])+'/'+nf(t.n)+'</span></div>';
+  }).join('');
+  box.innerHTML=
+    '<h2 style="margin:0 0 8px;font-size:15px;font-weight:700">Dãy '+esc(t.d)+' <span class="pg-chip">'+nf(t.n)+' ô kệ</span></h2>'+
+    '<div class="pg-cov" style="margin:0 0 12px">'+covRows+'</div>'+
+    '<div class="pg-tblwrap" style="max-height:none"><table class="pg-tbl" style="min-width:0"><thead><tr>'+
+    '<th>Ô</th><th>Kho giữ tồn</th><th>Trạng thái vệ sinh</th><th>Vệ sinh gần nhất</th></tr></thead><tbody>'+
+    t.o.map(function(o){
+      var r=PLG.by[o.loc]||null, s=plgState(r), m=PLG_ST[s], w=plgKhoCua(o.loc);
+      return '<tr data-l="'+esc(o.loc)+'" onclick="closePlgTra();plgOpen(this.getAttribute(\'data-l\'))">'+
+        '<td><b>'+esc(o.c)+'</b> <span class="mut">'+esc(o.loc)+'</span></td>'+
+        '<td>'+(w?esc(plgTenNgan(w)):'<span class="mut">không có tồn</span>')+'</td>'+
+        '<td><span class="pg-badge" style="background:color-mix(in srgb,'+(m.c||'var(--ink3)')+' 16%,transparent);color:'+(m.c||'var(--ink2)')+'">'+esc(m.lb)+'</span></td>'+
+        '<td class="mut">'+(r&&r.vsGan?esc(r.vsGan)+(r.nguoi?' — '+esc(r.nguoi):''):'—')+'</td></tr>';
+    }).join('')+'</tbody></table></div>'+
+    '<p class="pg-hint" style="margin:10px 0 0"><button type="button" class="pg-whtab" data-d="'+esc(t.d)+
+      '" onclick="closePlgTra();plgSoiDay(this.getAttribute(\'data-d\'))">Soi dãy này trên sơ đồ</button></p>';
 }
 
 function plgOpen(loc){
@@ -2588,9 +2892,23 @@ function plgOpen(loc){
     if(r.ghi) kv.push(['Ghi chú',esc(r.ghi)]);
   } else kv.push(['Ghi chú','Ô có trên bản vẽ nhưng chưa có dòng nào trong tab '+esc(PLG_TAB)+' — chạy lại bộ sync.']);
   document.getElementById('plgmBody').innerHTML=kv.map(function(x){ return '<tr><td>'+x[0]+'</td><td>'+x[1]+'</td></tr>'; }).join('');
-  document.getElementById('plgmodal').classList.add('show');
+  plgMoModal('plgmodal');
 }
-function closePlgModal(){ document.getElementById('plgmodal').classList.remove('show'); }
+function closePlgModal(){ plgDongModal('plgmodal'); }
+
+/* .modal của dự án mặc định display:none — chỉ bật class .show là pop-up KHÔNG hiện. Mọi pop-up
+   khác đều mở bằng cặp display:flex + rAF(.show) (để kịp chạy animation sheetIn) và đóng bằng
+   remove(.show) rồi mới display:none sau 240ms. Gói thành 2 hàm dùng chung cho cả 3 pop-up. */
+function plgMoModal(id){
+  var m=document.getElementById(id); if(!m) return;
+  m.style.display='flex';
+  requestAnimationFrame(function(){ m.classList.add('show'); });
+}
+function plgDongModal(id){
+  var m=document.getElementById(id); if(!m) return;
+  m.classList.remove('show');
+  setTimeout(function(){ m.style.display='none'; },240);
+}
 
 /* ===== Tab Kiểm kê (Physical Count) — port nguyên logic từ QC, đọc tab kiemke-sku / kiemke-location ===== */
 var KK={loadedOnce:false,data:{sku:[],loc:[]},loaded:0,tab:'sku',wh:'',st:'',range:'all',q:'',refDay:0};
