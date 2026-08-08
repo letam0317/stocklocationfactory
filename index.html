@@ -1013,7 +1013,10 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 .pg-whbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:2px 0 10px}
 /* align-items:start — cột phải cao theo đúng ruột của nó. Bên Hasaki cột phải giãn cao bằng cột
    trái vì có chips neo đáy; ở đây ruột ngắn hơn nhiều, giãn ra chỉ để lại một khoảng trắng lớn. */
-.pg-main{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:12px;align-items:start}
+/* Cột phải 380 -> 344px: trả 36px cho cột sơ đồ. Bề rộng cột chính là thứ chặn kích thước bản vẽ
+   (trần chiều cao không còn là ràng buộc sau khi cắt khổ), nên mỗi px lấy lại đều thành ô to hơn.
+   344px vẫn đủ cho thẻ chỉ số xếp dọc — nhãn dài nhất "Chưa khai báo lịch" không vỡ dòng. */
+.pg-main{display:grid;grid-template-columns:minmax(0,1fr) 344px;gap:12px;align-items:start}
 .pg-main > div{min-width:0;display:flex;flex-direction:column}
 .pg-main > div > .panel{flex:1;box-sizing:border-box;margin-bottom:0}
 #plgSide > .panel{display:flex;flex-direction:column}
@@ -1175,6 +1178,8 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 /* Khung sơ đồ: MỘT màu nền duy nhất. Trước đây còn thêm một hộp "sàn kho" (.pg-floor) vẽ trong
    SVG, tạo ra hai mảng nền lồng nhau đậm/nhạt khác tông — đã bỏ hẳn, giờ chỉ còn nền của khung
    này. position:relative để hộp chú giải neo được vào góc trên bên phải của sơ đồ. */
+/* Nền khung đổi surface2 -> surface: ô "chưa khai báo lịch" nhuộm trên surface nên nổi rõ khỏi
+   nền khung. Trước cả hai đều dựa trên surface2 nên ô gần như chìm, sơ đồ nhìn mờ nhạt. */
 .pg-wrap{position:relative;container-type:inline-size;container-name:pgwrap;
   border:1px solid var(--line);border-radius:12px;background:var(--surface2);
   padding:14px 16px 14px 8px;overflow:hidden;box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ink) 4%,transparent)}
@@ -1340,9 +1345,11 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
    Nền xám rất nhạt + nét đứt = "ngoài phạm vi đánh giá", không đọc thành "chưa làm". */
 /* "Chưa khai báo lịch": nhuộm nhạt bằng chính hex xám xanh #64748b của Hasaki (không dùng --ink
    nữa) nên ô giữ đúng sắc ở cả 7 theme; chữ dùng --ink đậm nhất cho tương phản cao nhất. */
-.pg-o.vs-nolich rect.bg{fill:color-mix(in srgb,#64748b 16%,var(--surface2));
-  stroke:color-mix(in srgb,#64748b 70%,transparent);stroke-dasharray:5 3.5;stroke-width:1.4}
-.pg-o.vs-nolich text{fill:var(--pg-so);stroke:color-mix(in srgb,var(--surface2) 82%,transparent)}
+/* Nét đứt DÀY ở cỡ nhỏ trông lởm chởm — với ô chỉ ~11px cao thì 5 gạch/ô là quá nhiều. Rút còn
+   nét mảnh, gạch ngắn: vẫn giữ đúng quy ước "ngoài phạm vi đánh giá" mà hình sạch hẳn. */
+.pg-o.vs-nolich rect.bg{fill:color-mix(in srgb,#64748b 18%,var(--surface));
+  stroke:color-mix(in srgb,#64748b 78%,transparent);stroke-dasharray:2.6 2;stroke-width:1}
+.pg-o.vs-nolich text{fill:var(--pg-so);stroke:color-mix(in srgb,var(--surface) 82%,transparent)}
 /* VIỀN KHI HOVER — đặt SAU mọi luật trạng thái và nhân đôi class (.pg-o.pg-o) cho đủ độ ưu tiên:
    luật .pg-o.vs-nolich rect.bg ở trên cùng hạng specificity, khai báo sau nên vốn thắng.
    Nét ĐỨT xám nhạt -> nét LIỀN mực đậm, dày hơn. */
@@ -2853,6 +2860,8 @@ function plgVeTop(T){
 /* === CỘT TRÁI — panel "Sơ đồ khu vực" ======================================================
    Thứ tự khối y như Hasaki: tiêu đề + chip phạm vi + chú giải một hàng → dải cảnh báo → tiêu đề
    khối sơ đồ → bản vẽ → dòng hướng dẫn đọc màu. */
+/* Tỷ lệ khổ SAU KHI CẮT — .pg-fit dùng để tính bề rộng theo trần chiều cao khung nhìn */
+function plgTyLeKho(g){ var h=plgHopVe(g), LE=16; return (h.x1-h.x0+LE*2)/(h.y1-h.y0+LE*2); }
 function plgVeMap(g,T){
   var mode=T.mode, tong=T.tong, dem=T.dem, thu=T.thu, theoDay=T.theoDay, dsDay=T.dsDay, vs=T.vs;
   /* HỘP CHÚ GIẢI neo ở GÓC TRÊN BÊN PHẢI của sơ đồ. Dùng TÊN KHO ĐẦY ĐỦ (WH - MATERIAL - MTG…)
@@ -2883,7 +2892,7 @@ function plgVeMap(g,T){
     '<section class="panel">'+
     '<h2>Sơ đồ khu vực <span class="pg-chip">'+esc(PLG.area?plgTenNgan(PLG.area):'Tất cả')+' &middot; '+nf(tong)+' ô</span></h2>'+
     '<div class="pg-maprow"><span class="pg-maphdr">Kho nguyên liệu (F0-KHO) — '+dsDay.length+' dãy kệ</span></div>'+
-    '<div class="pg-wrap">'+legend+'<div class="pg-scroll"><div class="pg-fit" style="--pg-ar:'+((g.W-90)/g.H).toFixed(4)+'">'+
+    '<div class="pg-wrap">'+legend+'<div class="pg-scroll"><div class="pg-fit" style="--pg-ar:'+plgTyLeKho(g).toFixed(4)+'">'+
       plgSvg(g,mode,theoDay)+'</div></div></div>'+
     '<p class="pg-hint" style="margin:9px 2px 0">Bấm một ô để xem chi tiết vị trí, bấm nhãn dãy để soi riêng dãy đó &middot; '+
       'sơ đồ bê nguyên hình học bản vẽ <code>MTG_zigzag</code> (đúng tỷ lệ, nét kẻ, khoảng cách thật) — cách đọc màu: '+
@@ -3024,17 +3033,32 @@ function plgPhong(g,k){
   return {x0:X[0],x1:X[1],y0:Y[0],y1:Y[1]};
 }
 
+/* HỘP BAO của mọi thứ được vẽ: ô kệ + 2 phòng chức năng + cột nhãn dãy (x bắt đầu từ X_CHIP).
+   Dùng để cắt khổ vẽ sát nội dung, nhờ đó sơ đồ hiển thị to hơn mà hình học không đổi. */
+var PLG_XCHIP=120;   // mép trái cột nhãn dãy — vật thể trái nhất của sơ đồ
+function plgHopVe(g){
+  var x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  g.o.forEach(function(c){ x0=Math.min(x0,c.x); y0=Math.min(y0,c.y); x1=Math.max(x1,c.x+c.w); y1=Math.max(y1,c.y+c.h); });
+  var mp=0; g.khu.forEach(function(k){ var p=plgPhong(g,k); mp=Math.max(mp,p.x1);
+    x0=Math.min(x0,p.x0); y0=Math.min(y0,p.y0); x1=Math.max(x1,p.x1); y1=Math.max(y1,p.y1); });
+  x0=Math.min(x0,PLG_XCHIP);   // cột nhãn dãy là vật thể trái nhất; đường dẫn chạy SANG PHẢI từ đó
+  return {x0:x0,y0:y0,x1:x1,y1:y1};
+}
+
 /* --- SVG: nền dãy đang soi → phòng chức năng → ô kệ → nhãn dãy --------------------------------
    TOẠ ĐỘ Ô KỆ GIỮ NGUYÊN 100% theo PLG_GEO (bê từ bản vẽ MTG_zigzag). Phần đổi chỉ là CÁCH VẼ và
    hai thứ phụ trợ: khung phòng (căn lại mép phải cho thẳng nhau) + nhãn dãy (dồn về một cột). */
 function plgSvg(g,mode,theoDay){
-  var GAP=3.2;   // khe hở giữa 2 ô cạnh nhau: ô đọc thành từng viên gạch chứ không thành 1 khối liền
-  /* CẮT LỀ TRÁI CỦA KHỔ VẼ: khổ gốc bắt đầu ở x=0 nhưng vật thể trái nhất là chip nhãn dãy (x=120),
-     nên 90 đơn vị đầu là khoảng trắng thuần. Bắt đầu viewBox từ đó -> cả sơ đồ (nhãn + ô) dịch ra
-     mép trái mà KHÔNG đụng một toạ độ nào của bản vẽ. Cùng với padding-left của khung và việc bỏ
-     canh giữa, khe trái rút đúng một nửa (39,4px -> ~20px). */
-  var CAT=90;
-  var out=['<svg class="pg-svg" viewBox="'+CAT+' 0 '+(g.W-CAT)+' '+g.H+'" role="img" aria-label="Sơ đồ mặt bằng kho nguyên liệu">'];
+  var GAP=2.4;   // khe hở giữa 2 ô: 3,2 -> 2,4 để ô to thêm, vẫn tách bạch thành từng viên gạch
+  /* CẮT KHỔ VẼ SÁT NỘI DUNG CẢ 4 PHÍA. Khổ gốc 2495x1702 là khổ giấy của bản in, quanh hình còn
+     khoảng trắng thuần: trái tới x=120 (chip nhãn dãy), phải hết ở x=2439 (phòng kiểm soát kho),
+     trên từ y=93, dưới hết ở y=1637. Cắt đi thì SƠ ĐỒ TO LÊN đúng phần khoảng trắng bỏ được, mà
+     KHÔNG đụng một toạ độ nào của bản vẽ — chỉ đổi khung nhìn.
+     Tính từ chính hình học nên thêm/bớt dãy sau này không phải sửa số. */
+  var LE=16, hop0=plgHopVe(g);
+  var VX=hop0.x0-LE, VY=hop0.y0-LE, VW=hop0.x1-hop0.x0+LE*2, VH=hop0.y1-hop0.y0+LE*2;
+  var out=['<svg class="pg-svg" viewBox="'+VX.toFixed(1)+' '+VY.toFixed(1)+' '+VW.toFixed(1)+' '+VH.toFixed(1)+
+    '" role="img" aria-label="Sơ đồ mặt bằng kho nguyên liệu">'];
   /* Lớp vát dùng CHUNG cho mọi ô (khai báo 1 lần): trắng nhạt ở mép trên, tối nhẹ ở mép dưới,
      TRONG SUỐT ở khoảng giữa nơi đặt số — không đụng vào tương phản chữ/nền đã kiểm bằng validator. */
   /* 8 slot phân loại + 3 trạng thái vệ sinh, mỗi cái một chuyển sắc dọc 600 -> 800 cùng hue */
@@ -3122,7 +3146,7 @@ function plgSvg(g,mode,theoDay){
     var hop=' x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+ww.toFixed(1)+'" height="'+hh.toFixed(1)+'" rx="'+rx+'"';
     /* Vạch rộng ~1/9 bề ngang ô, chặn trong khoảng 3,5-6 đơn vị: ô hẹp nhất (31 đơn vị) vẫn còn
        chỗ cho số, ô rộng nhất không biến vạch thành mảng màu thứ hai. */
-    var vw=Math.max(4.5,Math.min(8,ww*0.14));
+    var vw=Math.max(4,Math.min(7,ww*0.12));
     var vach=kho?'<rect class="pg-vach" x="'+(x+1.6).toFixed(1)+'" y="'+(y+1.6).toFixed(1)+
       '" width="'+vw.toFixed(1)+'" height="'+(hh-3.2).toFixed(1)+'" rx="'+Math.min(2,vw/2).toFixed(1)+
       '" fill="'+plgMauKho(kho)+'"/>':'';
@@ -3132,7 +3156,9 @@ function plgSvg(g,mode,theoDay){
       '<title>'+esc(tip)+'</title>'+
       '<rect class="bg"'+hop+'/>'+vach+
       /* ô nét đứt (không có dữ liệu) thì KHÔNG vát: nó cố ý phẳng, rỗng, để đọc ra "ngoài phạm vi" */
-      (n.cls==='trong'?'':'<rect class="sheen"'+hop+' fill="url(#pgSheen)"/>')+
+      /* Lớp vát chỉ cho ô có nền màu; ô "chưa khai báo lịch" để phẳng — ở cỡ nhỏ lớp vát trên nền
+         xám chỉ làm ô trông mờ chứ không tạo được khối. */
+      (plgState(r)==='nolich'?'':'<rect class="sheen"'+hop+' fill="url(#pgSheen)"/>')+
       '<text x="'+(x+ww/2).toFixed(1)+'" y="'+(y+hh/2).toFixed(1)+'" font-size="'+fs.toFixed(1)+'">'+c.c+'</text>'+
       '</g>');
   });
@@ -3152,7 +3178,7 @@ function plgSvg(g,mode,theoDay){
   var daiNhat=0; g.day.forEach(function(d){ daiNhat=Math.max(daiNhat,d.d.length); });
   /* X_CHIP 34 -> 120: khe từ mép phải chip tới ô 01 của dãy 501 rút đúng một nửa (172 -> 86 đơn
      vị, tức 68,3px -> 34,2px ở tỷ lệ hiển thị thật). Đường dẫn ngắn lại, nhãn bám sát hàng kệ. */
-  var W_CHIP=Math.round(FS*0.66*daiNhat)+26, X_CHIP=120;
+  var W_CHIP=Math.round(FS*0.66*daiNhat)+26, X_CHIP=PLG_XCHIP;
   /* Đầu dãy = mép trái ô đầu tiên của dãy đó, lấy thẳng từ hình học (không qua bộ lọc khu vực,
      để dãy bị lọc mờ vẫn có đường dẫn đúng chỗ) */
   var dauDay={};
