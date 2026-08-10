@@ -995,11 +995,31 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
      (#059669 · #dc2626 · #f59e0b) để 2 vai màu không bao giờ đọc nhầm sang nhau.
 
    Nét vẽ dùng color-mix trên --ink nên ăn cả 7 theme; hardcode #111 là mất hình ở theme tối. */
-/* --pg-so = MỰC CHỮ SỐ trong ô kệ. Nhóm theme tối dùng thẳng --ink (vốn đã sáng, tương phản
-   7,3-9,6 trên nền ô). Nhóm theme sáng phải làm đậm thêm: Solar có --ink #586e75 rất nhạt, để
-   nguyên thì chữ/nền chỉ 3,7:1 — hạ xuống 78% ink là lên 5,25:1. Đo trên cả 7 theme. */
-:root{ --pg-so:var(--ink) }
-[data-theme="hasaki"],[data-theme="latte"],[data-theme="solar"]{ --pg-so:color-mix(in srgb,var(--ink) 78%,#000) }
+/* ===== BỘ MÀU Ô KỆ (10/08/2026) — "TỜ GIẤY TRẮNG" THAY CHO MẢNG XÁM ĐỤC =====================
+   Bản cũ tô ô "chưa khai báo lịch" bằng color-mix(#64748b 18%, --surface): đo thật ở theme Hasaki
+   ra #E3E6EA — đúng thứ xám xanh đục mà nhìn vào thấy "phèn", lại chỉ hơn nền khung (#E7EFE9)
+   một chút nên 161 ô chìm thành một mảng xám liền.
+   Nay ô là MỘT TỜ GIẤY TRẮNG đặt trên nền kem/nền tối: nền trắng thuần, viền hairline xám cao cấp,
+   chữ số mực gray-800. Tương phản ô/nền khung nhảy từ 1,05:1 lên 1,26:1 (theme sáng) và chữ/nền
+   từ 5,2:1 lên 14,7:1 — không còn phải bù bằng viền chữ dày.
+   KHÔNG dùng backdrop-filter: trong SVG nó không lọc được nền khung (chỉ có một mảng màu phẳng
+   phía sau, làm mờ cũng ra đúng màu đó) — hiệu ứng "kính mờ" ở đây chính là --pg-o-nen-kinh, tức
+   trắng 88% cho ánh nền kem hắt qua rất nhẹ. Đổi --pg-o-nen sang biến này nếu muốn kiểu kính.
+   4 theme TỐI hạ trắng thuần xuống #f4f6fa: vẫn đọc ra "giấy trắng" nhưng 161 mảng trắng nguyên
+   chất trên nền #1f2335 thì chói mắt. */
+:root{
+  --pg-o-nen:#ffffff;                       /* nền ô kệ — trắng thuần */
+  --pg-o-nen-kinh:rgba(255,255,255,.88);    /* biến thể kính mờ (chưa dùng, đổi 1 dòng là sang) */
+  --pg-o-vien:#d1d5db;                      /* viền hairline — gray-300 */
+  --pg-o-so:#1f2937;                        /* mực chữ số — gray-800 */
+  --pg-o-halo:rgba(255,255,255,.9);         /* viền chữ (paint-order:stroke) — tiệp nền giấy */
+}
+[data-theme="tokyo"],[data-theme="dracula"],[data-theme="nord"],[data-theme="mocha"]{
+  --pg-o-nen:#f4f6fa; --pg-o-nen-kinh:rgba(244,246,250,.9); --pg-o-vien:#c3cad6;
+}
+/* --pg-so = mực chữ số, GIỮ TÊN CŨ để mọi luật đang tham chiếu không phải sửa; nay ô luôn nền
+   giấy trắng ở cả 7 theme nên một mực gray-800 là đủ, không còn cần tách sáng/tối. */
+:root{ --pg-so:var(--pg-o-so) }
 :root{
   --s1:#2563eb; --s2:#c2410c; --s3:#0d9488; --s4:#ca8a04; --s5:#db2777; --s6:#4d7c0f; --s7:#7c3aed; --s8:#0e7490;
   /* tông ĐẬM của cùng hue (bậc 800 của thang) — chân ô chuyển sắc xuống màu này */
@@ -1202,17 +1222,21 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 .pg-legbox button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
 /* MỌI ký hiệu cùng bề rộng 20px để cột chữ thẳng hàng — ô màu, ô nét đứt và viên thuốc "dãy kệ"
    vốn khác hình dạng, để tự do thì mỗi dòng chữ bắt đầu ở một chỗ. */
-.pg-legbox i{width:17px;height:10px;border-radius:3px;flex:none;border:1px solid color-mix(in srgb,var(--ink) 30%,transparent)}
-.pg-legbox i.dash{background:transparent;border:1px dashed color-mix(in srgb,var(--ink3) 65%,transparent)}
+.pg-legbox i{width:17px;height:10px;border-radius:4px;flex:none;border:1px solid var(--pg-o-vien)}
+/* "Không có tồn" = ô KHÔNG có thanh accent. Ký hiệu phải là đúng cái ô ấy (giấy trắng, viền
+   hairline, mép trái trống), không phải một khung nét đứt — ô thật đã bỏ nét đứt từ 10/08/2026. */
+.pg-legbox i.dash{background:var(--pg-o-nen);border:1px solid var(--pg-o-vien)}
 .pg-legbox i.vs-da{background:linear-gradient(180deg,#047857,#04543d)}
 .pg-legbox i.vs-chua{background:linear-gradient(180deg,#dc2626,#991b1b)}
 .pg-legbox i.vs-nduyet{background:linear-gradient(180deg,#f59e0b,#b45309)}
-.pg-legbox i.vs-nolich{background:color-mix(in srgb,#64748b 22%,var(--surface2));
-  border:1.5px dashed color-mix(in srgb,#64748b 70%,transparent)}
-/* Mẫu VẠCH KHO: vẽ đúng dải mép trái như trên ô thật (ô xám + vạch màu bên trái) */
-.pg-legbox i.vach{background:color-mix(in srgb,var(--ink) 9%,transparent);
-  border:1px solid color-mix(in srgb,var(--ink) 22%,transparent);position:relative;overflow:hidden}
-.pg-legbox i.vach::before{content:"";position:absolute;left:1px;top:1px;bottom:1px;width:3.5px;border-radius:2px;background:var(--vc)}
+/* Ký hiệu phải vẽ ĐÚNG hình ô thật, nếu không hộp chú giải nói một đằng sơ đồ một nẻo. Ô thật đã
+   bỏ nền xám + nét đứt (xem .pg-o.vs-nolich) nên ký hiệu cũng thành tờ giấy trắng viền hairline. */
+.pg-legbox i.vs-nolich{background:var(--pg-o-nen);border:1px solid var(--pg-o-vien)}
+/* Mẫu VẠCH KHO: ô giấy trắng + thanh accent ÔM SÁT MÉP TRÁI, bo 2 góc trái — y hệt ô thật */
+.pg-legbox i.vach{background:var(--pg-o-nen);border:1px solid var(--pg-o-vien);
+  position:relative;overflow:hidden}
+.pg-legbox i.vach::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3.5px;
+  border-radius:2px 0 0 2px;background:var(--vc)}
 .pg-legbox i.chip{border-radius:999px;background:var(--surface);
   border:1.2px solid color-mix(in srgb,var(--ink) 40%,transparent)}
 .pg-legbox .n{margin-left:auto;padding-left:8px;font-variant-numeric:tabular-nums;color:var(--ink3);font-weight:600}
@@ -1308,14 +1332,19 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 /* Chữ số trong ô: 800 + VIỀN CHỮ mảnh cùng tông nền (paint-order:stroke vẽ viền TRƯỚC rồi mới
    đè ruột chữ lên). Nhờ viền này số đọc được trên mọi nền của cả 7 theme — kể cả khi nền ô là
    màu trạng thái đậm hay là ô xám nhạt của theme sáng. */
+/* CĂN GIỮA TUYỆT ĐỐI trong SVG = text-anchor:middle (ngang) + dominant-baseline:central (dọc),
+   toạ độ đặt đúng tâm ô (x+w/2, y+h/2). Đây là cặp tương đương của display:flex + align-items +
+   justify-content:center bên CSS — SVG <text> không phải hộp flex nên không dùng bộ kia được. */
 .pg-o text{font-weight:800;text-anchor:middle;dominant-baseline:central;pointer-events:none;user-select:none;
   paint-order:stroke;stroke-width:2.2;stroke-linejoin:round;letter-spacing:.01em}
 .pg-o:hover rect.sheen{opacity:.4}
 .pg-o:focus{outline:none}
 .pg-o:focus-visible rect.bg{stroke:var(--accent);stroke-width:2.8}
 .pg-o.dim{opacity:.18}
-/* Đang soi 1 dãy: ô của dãy đó viền đậm hơn để nổi khỏi phần bị mờ */
-.pg-o.hi rect.bg{stroke:var(--ink);stroke-width:2}
+/* Đang soi 1 dãy: ô của dãy đó viền đậm hơn để nổi khỏi phần bị mờ.
+   Mực CỐ ĐỊNH #111827 chứ không var(--ink): ô nay là giấy trắng ở CẢ 7 theme, mà --ink ở 4 theme
+   tối là màu sáng (#c0caf5…) — để nguyên thì viền nhấn biến mất trên nền ô trắng. */
+.pg-o.hi rect.bg{stroke:#111827;stroke-width:2}
 /* Ô "không có dữ liệu": nét đứt, không tô nền — ngoài phạm vi đánh giá, KHÔNG đọc thành "chưa làm" */
 /* ===== KIỂU TÔ Ô: ĐẶC, CHUYỂN SẮC DỌC CÙNG HUE ===============================================
    Đã THỬ kiểu "nền dịu + chữ cùng màu" (khuôn badge) và ĐO RA KHÔNG DÙNG ĐƯỢC cho bản đồ này:
@@ -1327,7 +1356,10 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
      chữ trắng / đỉnh chuyển sắc — MTG 5,17:1 · GARMENT 5,18:1   (chân chuyển sắc còn cao hơn: 8-9:1)
    Chuyển sắc khai báo 1 lần trong <defs> theo từng slot, stop-color đọc thẳng biến --sN/--sNd nên
    vẫn ăn theo theme. */
-.pg-o rect.bg{stroke:color-mix(in srgb,var(--ink) 30%,transparent);stroke-width:.9;vector-effect:non-scaling-stroke}
+/* VIỀN CHUNG cho MỌI ô (cả ô nền màu lẫn ô giấy trắng): hairline 1px xám cao cấp thay cho nét
+   color-mix(--ink 30%) cũ — ở theme sáng nét cũ là gạch mực đậm viền quanh từng ô, 161 ô thành
+   một lưới đen nặng. vector-effect giữ đúng 1px ở mọi mức phóng của bản vẽ. */
+.pg-o rect.bg{stroke:var(--pg-o-vien);stroke-width:1;vector-effect:non-scaling-stroke}
 /* ===== HAI KÊNH TÁCH BẠCH ====================================================================
    NỀN Ô  = TRẠNG THÁI VỆ SINH (đây là việc chính của tab Planogram, nên nó chiếm kênh mạnh nhất)
    VẠCH MÉP TRÁI = KHO giữ tồn. Dùng VỊ TRÍ + màu nhỏ thay vì tô cả ô: hai thông tin không tranh
@@ -1342,21 +1374,28 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 /* Nền hổ phách sáng -> mực đậm, đúng luật .hp-mapcell.inkdark của Hasaki */
 .pg-o.vs-nduyet text{fill:#3b2100;stroke:rgba(255,255,255,.5)}
 /* "Chưa khai báo lịch": KHÔNG để trong suốt — ô vẫn phải đọc ra là một vật thể trên mặt bằng.
-   Nền xám rất nhạt + nét đứt = "ngoài phạm vi đánh giá", không đọc thành "chưa làm". */
-/* "Chưa khai báo lịch": nhuộm nhạt bằng chính hex xám xanh #64748b của Hasaki (không dùng --ink
-   nữa) nên ô giữ đúng sắc ở cả 7 theme; chữ dùng --ink đậm nhất cho tương phản cao nhất. */
-/* Nét đứt DÀY ở cỡ nhỏ trông lởm chởm — với ô chỉ ~11px cao thì 5 gạch/ô là quá nhiều. Rút còn
-   nét mảnh, gạch ngắn: vẫn giữ đúng quy ước "ngoài phạm vi đánh giá" mà hình sạch hẳn. */
-.pg-o.vs-nolich rect.bg{fill:color-mix(in srgb,#64748b 18%,var(--surface));
-  stroke:color-mix(in srgb,#64748b 78%,transparent);stroke-dasharray:2.6 2;stroke-width:1}
-.pg-o.vs-nolich text{fill:var(--pg-so);stroke:color-mix(in srgb,var(--surface) 82%,transparent)}
+   10/08/2026 — BỎ HẲN NỀN XÁM ĐỤC + NÉT ĐỨT. Ô nay là tờ giấy trắng, viền hairline liền mạch:
+   đây là trạng thái của 161/161 ô ở kho nguyên liệu (planogram WMS chưa bật cho kho 1339/1177),
+   nên nó quyết định toàn bộ cảm giác của sơ đồ — mảng xám chiếm trọn mặt bằng là chỗ trông "phèn"
+   nhất của bản cũ.
+   Nét đứt cũ mang nghĩa "ngoài phạm vi đánh giá"; nghĩa đó KHÔNG mất: ô giấy trắng vẫn tách bạch
+   với 3 trạng thái có nền màu (xanh/đỏ/hổ phách đặc), và ký hiệu trong hộp chú giải đổi theo đúng
+   hình ô thật nên vẫn tra ra ngay. */
+.pg-o.vs-nolich rect.bg{fill:var(--pg-o-nen);stroke:var(--pg-o-vien);stroke-dasharray:none;stroke-width:1}
+.pg-o.vs-nolich text{fill:var(--pg-o-so);stroke:var(--pg-o-halo)}
 /* VIỀN KHI HOVER — đặt SAU mọi luật trạng thái và nhân đôi class (.pg-o.pg-o) cho đủ độ ưu tiên:
    luật .pg-o.vs-nolich rect.bg ở trên cùng hạng specificity, khai báo sau nên vốn thắng.
-   Nét ĐỨT xám nhạt -> nét LIỀN mực đậm, dày hơn. */
-.pg-o.pg-o:hover rect.bg{stroke:var(--ink);stroke-width:2.6;stroke-dasharray:none}
-/* VẠCH KHO: dải mỏng bám mép trái ô, thụt vào 2 đơn vị mỗi đầu để không chìa ra ngoài góc bo */
-/* Vạch kho: thêm viền mảnh cùng tông mực để dải màu không chìm vào nền ô ở theme sáng lẫn tối */
-.pg-vach{stroke:color-mix(in srgb,var(--ink) 22%,transparent);stroke-width:.6;vector-effect:non-scaling-stroke}
+   Hairline xám -> nét mực đậm, dày hơn. Cũng dùng #111827 cố định, lý do như .pg-o.hi ở trên. */
+.pg-o.pg-o:hover rect.bg{stroke:#111827;stroke-width:2.6;stroke-dasharray:none}
+/* ===== VẠCH KHO — THANH ĐÁNH DẤU PHÂN LOẠI ===================================================
+   10/08/2026: từ "viên thuốc màu THẢ NỔI bên trong ô" (thụt 1,6 đơn vị mỗi phía, bo tròn 4 góc)
+   thành THANH ACCENT ÔM MÉP TRÁI: dán sát mép, cao hết ô, chỉ bo 2 góc TRÁI đúng bán kính góc ô
+   (kiểu border-radius: r 0 0 r) nên nó nằm gọn trong góc bo chứ không chìa ra.
+   Hình được vẽ bằng <path> chứ không phải <rect>: SVG rect chỉ có rx/ry chung cho cả 4 góc, không
+   bo lẻ được 2 góc trái. Đo thật: bề rộng 3,1px -> 3,5-4,0px, đúng khoảng 3-4px yêu cầu.
+   BỎ nét viền quanh vạch: nay vạch đè lên chính viền hairline của ô (đọc ra "viền trái đổi màu
+   theo kho"), thêm một nét mực nữa quanh dải 4px chỉ làm màu bị đục. */
+.pg-vach{stroke:none}
 .pg-o.trong .pg-vach{display:none}   /* ô không có tồn thì không thuộc kho nào -> không có vạch */
 /* Pop-up ô: bảng khoá-giá trị, khuôn .mtbl của dự án */
 .pg-kv{width:100%;border-collapse:collapse;font-size:13px}
@@ -2734,6 +2773,19 @@ function plgToi(h,p){
    tô nguyên bản: đỉnh chuyển sắc làm tối 28% (chữ trắng ~5:1), chân 55% (~9:1). Vẫn đúng hue của
    kho nên đối chiếu với chấm màu ở các tab khác vẫn ra ngay. */
 function plgBacKho(w){ var c=plgMauKho(w); return [plgToi(c,0.28), plgToi(c,0.55)]; }
+/* ---- HÌNH HỌC 1 Ô KỆ — nguồn DUY NHẤT cho cả vòng vẽ ô lẫn vòng dựng <clipPath> ---------------
+   Hai chỗ đó phải ra cùng một con số tới từng phần mười đơn vị: lệch một chút là thanh accent bị
+   cắt hụt hoặc thò ra khỏi góc bo. Tách thành hàm để không còn hai bản công thức chạy song song.
+     rx  — BO GÓC Ô. Trần 9,1 đơn vị = đúng 4px trên màn hình (bản vẽ co ở tỷ lệ 0,44 px/đơn vị,
+           đo thật chứ không ước lượng), nằm trong khoảng 4-6px của ô kệ hiện đại. Vẫn kẹp theo
+           hh*0,22 vì cặp kệ 2 mặt chỉ cao 23,8 đơn vị (10,5px) — bo 4px thì ô hoá viên thuốc.
+     vw  — BỀ RỘNG THANH ACCENT, kẹp trong 6,8-9 đơn vị = 3,0-4,0px, đúng khoảng 3-4px yêu cầu
+           (ô rộng nhất lấy cận trên, ô hẹp nhất lấy cận dưới để số vẫn còn chỗ). */
+function plgOHinh(c,GAP){
+  var ww=Math.max(4,c.w-GAP), hh=Math.max(4,c.h-GAP);
+  return {x:c.x+GAP/2, y:c.y+GAP/2, w:ww, h:hh,
+    rx:Math.min(9.1,hh*0.22), vw:Math.max(6.8,Math.min(9,ww*0.10))};
+}
 function plgPct(a,b){ return b?Math.round(a/b*1000)/10:0; }
 function plgPctTxt(a,b){ return String(plgPct(a,b)).replace('.',','); }
 /* ---- PHẠM VI: ô nằm trong khu vực đang lọc hay không (khu vực = KHO giữ tồn ở ô đó) ---- */
@@ -3070,7 +3122,24 @@ function plgSvg(g,mode,theoDay){
     grad+='<linearGradient id="pgG'+m[0]+'" x1="0" y1="0" x2="0" y2="1">'+
       '<stop offset="0" stop-color="'+m[1]+'"/><stop offset="1" stop-color="'+m[2]+'"/></linearGradient>';
   });
-  out.push('<defs>'+grad+'<linearGradient id="pgSheen" x1="0" y1="0" x2="0" y2="1">'+
+  /* ===== CLIP CHO THANH ACCENT MÉP TRÁI =========================================================
+     Thanh accent phải BỊ CẮT THEO GÓC BO CỦA Ô — đúng cơ chế "border-radius + overflow:hidden"
+     của một thẻ card bên CSS (chính là thứ .pg-legbox i.vach đang làm cho ký hiệu chú giải).
+     Không làm được bằng cách tự bo 2 góc trái của thanh: thanh chỉ rộng 3-4px mà góc ô bo 4px,
+     nên cung bo ăn hết bề ngang thanh và nó biến thành hình chiếc lá thon hai đầu — đã dựng thử,
+     soi ở mức phóng 5x thấy rõ. Cắt bằng clipPath thì thanh giữ đúng dáng chữ nhật, chỉ hai góc
+     ngoài cùng bên trái men theo đường cong của ô, khớp đồng tâm với viền hairline.
+     KHAI THEO KÍCH THƯỚC, KHÔNG THEO Ô: 161 ô chỉ có vài cỡ khác nhau nên gom lại còn dăm ba
+     clipPath, mỗi ô chỉ tham chiếu id + tự dịch chỗ bằng transform. */
+  var clipDs='', clipId={}, clipN=0;
+  g.o.forEach(function(c){
+    var h=plgOHinh(c,GAP), k=h.w.toFixed(1)+'_'+h.h.toFixed(1)+'_'+h.rx.toFixed(1);
+    if(clipId[k]) return;
+    clipId[k]='pgC'+(clipN++);
+    clipDs+='<clipPath id="'+clipId[k]+'"><rect x="0" y="0" width="'+h.w.toFixed(1)+
+      '" height="'+h.h.toFixed(1)+'" rx="'+h.rx.toFixed(1)+'"/></clipPath>';
+  });
+  out.push('<defs>'+grad+clipDs+'<linearGradient id="pgSheen" x1="0" y1="0" x2="0" y2="1">'+
     '<stop offset="0" stop-color="#fff" stop-opacity=".12"/>'+
     '<stop offset=".42" stop-color="#fff" stop-opacity="0"/>'+
     '<stop offset=".58" stop-color="#000" stop-opacity="0"/>'+
@@ -3131,25 +3200,25 @@ function plgSvg(g,mode,theoDay){
     var n=plgNhom(c), r=PLG.by[c.loc], w=plgKhoCua(c.loc);
     var tip=c.loc+'\n'+(w?'Kho: '+w:'Không có tồn ở vị trí này')+'\nVệ sinh: '+PLG_ST[plgState(r)].lb+
       (r&&r.vsGan?'\nVệ sinh gần nhất: '+r.vsGan+(r.nguoi?' — '+r.nguoi:''):'');
-    var x=c.x+GAP/2, y=c.y+GAP/2, ww=Math.max(4,c.w-GAP), hh=Math.max(4,c.h-GAP);
+    var H=plgOHinh(c,GAP), x=H.x, y=H.y, ww=H.w, hh=H.h, rx=H.rx;
     /* CỠ SỐ — bản 08/08/2026 nâng lên vì ở tỷ lệ hiển thị thật (~0,39) cỡ cũ chỉ còn 4,3-9,4px,
        gần như không đọc được. Hệ số theo chiều cao 0,62 -> 0,78 (chiều cao mới là ràng buộc thật
        ở các cặp kệ 2 mặt cao 26 đơn vị), theo bề rộng 0,42 -> 0,46, trần 24 -> 30, sàn 11 -> 14.
        Kết quả: hàng kệ thấp nhất 5,5px -> 7,0px, hàng kệ thường 9,4px -> 11,8px. */
     var fs=Math.max(14,Math.min(30,hh*0.78,ww*0.46));
-    var rx=Math.min(5,hh*0.22).toFixed(1);
     /* Mờ ô ngoài tầm nhìn hiện tại — 3 nguồn: KHU VỰC đang lọc, nhóm bị tắt ở chú giải, dãy đang
        soi. Vẫn VẼ chứ không xoá: sơ đồ là mặt bằng thật, ô biến mất là mất luôn manh mối. */
     var mo=!plgTrongPhamVi(c)||PLG.tat[n.k]||(PLG.hiDay&&c.d!==PLG.hiDay), hi=PLG.hiDay&&c.d===PLG.hiDay;
     var vs=' vs-'+plgState(r);          // NỀN ô = trạng thái vệ sinh
     var kho=plgKhoCua(c.loc);           // VẠCH mép trái = kho giữ tồn
-    var hop=' x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+ww.toFixed(1)+'" height="'+hh.toFixed(1)+'" rx="'+rx+'"';
-    /* Vạch rộng ~1/9 bề ngang ô, chặn trong khoảng 3,5-6 đơn vị: ô hẹp nhất (31 đơn vị) vẫn còn
-       chỗ cho số, ô rộng nhất không biến vạch thành mảng màu thứ hai. */
-    var vw=Math.max(4,Math.min(7,ww*0.12));
-    var vach=kho?'<rect class="pg-vach" x="'+(x+1.6).toFixed(1)+'" y="'+(y+1.6).toFixed(1)+
-      '" width="'+vw.toFixed(1)+'" height="'+(hh-3.2).toFixed(1)+'" rx="'+Math.min(2,vw/2).toFixed(1)+
-      '" fill="'+plgMauKho(kho)+'"/>':'';
+    var hop=' x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+ww.toFixed(1)+'" height="'+hh.toFixed(1)+'" rx="'+rx.toFixed(1)+'"';
+    /* THANH ACCENT PHÂN LOẠI (kho giữ tồn): chữ nhật DÁN SÁT mép trái, cao hết ô, cắt theo góc bo
+       của ô bằng clipPath dựng ở <defs>. Đọc ra "viền trái của thẻ đổi màu theo kho" thay vì viên
+       thuốc bo tròn thả nổi bên trong ô như bản cũ. */
+    var ck=ww.toFixed(1)+'_'+hh.toFixed(1)+'_'+rx.toFixed(1);
+    var vach=kho?'<g clip-path="url(#'+clipId[ck]+')" transform="translate('+x.toFixed(1)+' '+y.toFixed(1)+')">'+
+      '<rect class="pg-vach" x="0" y="0" width="'+H.vw.toFixed(1)+'" height="'+hh.toFixed(1)+
+      '" fill="'+plgMauKho(kho)+'"/></g>':'';
     out.push('<g class="pg-o '+n.cls+vs+(mo?' dim':'')+(hi?' hi':'')+'" tabindex="0" role="button"'+
       ' data-l="'+c.loc+'" onclick="plgOpen(this.getAttribute(\'data-l\'))"'+
       ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();plgOpen(this.getAttribute(\'data-l\'))}">'+
