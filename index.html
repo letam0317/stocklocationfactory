@@ -1225,7 +1225,11 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
   border:0;background:transparent;padding:0;font-size:10.5px;font-weight:600;color:var(--ink);text-align:left;
   line-height:1.35}
 .pg-legbox button{cursor:pointer}
-.pg-legbox button.off{opacity:.4}
+/* .on = nhóm ĐANG SOI, .off = các nhóm còn lại khi có một nhóm đang soi. Không có nhóm nào được
+   soi thì mọi nút ở trạng thái thường (không nút nào .off) — nếu không, hộp chú giải sẽ trông như
+   đang lọc sẵn cái gì đó ngay lúc mới mở. */
+.pg-legbox button.on{color:var(--ink);font-weight:800}
+.pg-legbox button.off{opacity:.38}
 .pg-legbox button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
 /* MỌI ký hiệu cùng bề rộng 20px để cột chữ thẳng hàng — ô màu, ô nét đứt và viên thuốc "dãy kệ"
    vốn khác hình dạng, để tự do thì mỗi dòng chữ bắt đầu ở một chỗ. */
@@ -2623,7 +2627,12 @@ function plgDsNgay(){
   for(var i=0;i<7;i++){ var d=new Date(t); d.setDate(t.getDate()-i); a.push(d); }
   return a;
 }
-var PLG={loadedOnce:false,by:{},ok:false,geo:null,tat:{},mode:'kho',kho:null,khoRaw:0,ngoai:[],
+/* PLG.soiKho = KHO ĐANG SOI ở hộp chú giải ('' = xem tất cả). Trước đây chỗ này là PLG.tat — một
+   TẬP các nhóm bị TẮT, nên bấm "WH - MATERIAL - MTG" lại làm mờ đúng MTG và Garment hoá ra sáng
+   lên: ngược hẳn với điều người dùng chờ đợi ("bấm cái nào thì cái đó sáng"). Nay đổi thành SOI
+   MỘT NHÓM, cùng nết với plgSoiDay: bấm nhóm nào -> nhóm đó giữ nguyên, phần còn lại mờ đi; bấm
+   lại chính nó -> bỏ soi. */
+var PLG={loadedOnce:false,by:{},ok:false,geo:null,soiKho:'',mode:'kho',kho:null,khoRaw:0,ngoai:[],
          area:'',ngay:'45',list:'vt',hiDay:'',q:'',st:'',traDay:'',traQ:''};
 /* PLG.mode giữ cứng 'kho': nền ô luôn tô theo kho, trạng thái vệ sinh đi bằng viền (xem plgSvg) */
 
@@ -2720,7 +2729,9 @@ function plgNhom(o){
   var s=plgState(PLG.by[o.loc]);
   return {k:s,cls:PLG_ST[s].cls,lb:PLG_ST[s].lb};
 }
-function plgToggle(k){ PLG.tat[k]=!PLG.tat[k]; plgRender(); }
+/* Bấm 1 nhóm kho ở hộp chú giải = SOI riêng nhóm đó; bấm lại chính nó = bỏ soi (giống plgSoiDay
+   và nết setArea của Hasaki). Bấm sang nhóm khác thì CHUYỂN thẳng sang nhóm đó, không cộng dồn. */
+function plgSoiKho(k){ PLG.soiKho=(PLG.soiKho===k)?'':k; plgRender(); }
 function plgSetList(m){ if(PLG.list===m) return; PLG.list=m; plgRender(); }
 /* Bấm lại chip khu vực đang bật = bỏ lọc (đúng nết setArea của Hasaki) */
 function plgSetArea(a){ if(PLG.area===a) a=''; PLG.area=a; PLG.hiDay=''; plgRender(); }
@@ -2925,17 +2936,17 @@ function plgVeMap(g,T){
   var mode=T.mode, tong=T.tong, dem=T.dem, thu=T.thu, theoDay=T.theoDay, dsDay=T.dsDay, vs=T.vs;
   /* HỘP CHÚ GIẢI neo ở GÓC TRÊN BÊN PHẢI của sơ đồ. Dùng TÊN KHO ĐẦY ĐỦ (WH - MATERIAL - MTG…)
      chứ không rút gọn, vì đây là chỗ duy nhất còn giải nghĩa màu sau khi bỏ biển tên trên bản vẽ.
-     Các mục nhóm vẫn bấm được để ẩn/hiện nhóm; mục "Dãy kệ" chỉ để đối chiếu nên không phải nút. */
+     Các mục nhóm bấm được để SOI RIÊNG nhóm đó; mục "Dãy kệ" chỉ để đối chiếu nên không phải nút. */
   var legend='<div class="pg-legbox"><div class="lb-t">Trạng thái vệ sinh (nền ô)</div>'+
     ['da','chua','nduyet','nolich'].map(function(k){
       return '<span class="tinh"><i class="vs-'+k+'"></i>'+esc(PLG_ST[k].lb)+
         ' <span class="n">'+nf(vs[k])+'</span></span>';
     }).join('')+
     '<div class="lb-t" style="margin-top:3px">Kho giữ tồn (vạch mép trái ô)</div>'+thu.map(function(k){
-    var d=dem[k], mau=(k==='_none')?'':plgMauKho(k);
-    return '<button type="button" class="'+(PLG.tat[k]?'off':'')+'" data-k="'+esc(k)+'"'+
-      ' onclick="plgToggle(this.getAttribute(\'data-k\'))" aria-pressed="'+(PLG.tat[k]?'false':'true')+'"'+
-      ' title="Bấm để ẩn/hiện nhóm này trên sơ đồ">'+
+    var d=dem[k], mau=(k==='_none')?'':plgMauKho(k), soi=(PLG.soiKho===k);
+    return '<button type="button" class="'+(soi?'on':(PLG.soiKho?'off':''))+'" data-k="'+esc(k)+'"'+
+      ' onclick="plgSoiKho(this.getAttribute(\'data-k\'))" aria-pressed="'+(soi?'true':'false')+'"'+
+      ' title="'+(soi?'Đang soi nhóm này — bấm lần nữa để xem lại tất cả':'Bấm để soi riêng nhóm này trên sơ đồ')+'">'+
       (mau?'<i class="vach" style="--vc:'+mau+'"></i>':'<i class="dash"></i>')+
       esc(d.lb)+' <span class="n">'+d.n+'</span></button>';
   }).join('')+
@@ -3215,7 +3226,7 @@ function plgSvg(g,mode,theoDay){
     var fs=Math.max(14,Math.min(30,hh*0.78,ww*0.46));
     /* Mờ ô ngoài tầm nhìn hiện tại — 3 nguồn: KHU VỰC đang lọc, nhóm bị tắt ở chú giải, dãy đang
        soi. Vẫn VẼ chứ không xoá: sơ đồ là mặt bằng thật, ô biến mất là mất luôn manh mối. */
-    var mo=!plgTrongPhamVi(c)||PLG.tat[n.k]||(PLG.hiDay&&c.d!==PLG.hiDay), hi=PLG.hiDay&&c.d===PLG.hiDay;
+    var mo=!plgTrongPhamVi(c)||(PLG.soiKho&&n.k!==PLG.soiKho)||(PLG.hiDay&&c.d!==PLG.hiDay), hi=PLG.hiDay&&c.d===PLG.hiDay;
     var vs=' vs-'+plgState(r);          // NỀN ô = trạng thái vệ sinh
     var kho=plgKhoCua(c.loc);           // VẠCH mép trái = kho giữ tồn
     var hop=' x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+ww.toFixed(1)+'" height="'+hh.toFixed(1)+'" rx="'+rx.toFixed(1)+'"';
