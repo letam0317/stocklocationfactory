@@ -995,30 +995,37 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
      (#059669 · #dc2626 · #f59e0b) để 2 vai màu không bao giờ đọc nhầm sang nhau.
 
    Nét vẽ dùng color-mix trên --ink nên ăn cả 7 theme; hardcode #111 là mất hình ở theme tối. */
-/* ===== BỘ MÀU Ô KỆ (10/08/2026) — "TỜ GIẤY TRẮNG" THAY CHO MẢNG XÁM ĐỤC =====================
-   Bản cũ tô ô "chưa khai báo lịch" bằng color-mix(#64748b 18%, --surface): đo thật ở theme Hasaki
-   ra #E3E6EA — đúng thứ xám xanh đục mà nhìn vào thấy "phèn", lại chỉ hơn nền khung (#E7EFE9)
-   một chút nên 161 ô chìm thành một mảng xám liền.
-   Nay ô là MỘT TỜ GIẤY TRẮNG đặt trên nền kem/nền tối: nền trắng thuần, viền hairline xám cao cấp,
-   chữ số mực gray-800. Tương phản ô/nền khung nhảy từ 1,05:1 lên 1,26:1 (theme sáng) và chữ/nền
-   từ 5,2:1 lên 14,7:1 — không còn phải bù bằng viền chữ dày.
-   KHÔNG dùng backdrop-filter: trong SVG nó không lọc được nền khung (chỉ có một mảng màu phẳng
-   phía sau, làm mờ cũng ra đúng màu đó) — hiệu ứng "kính mờ" ở đây chính là --pg-o-nen-kinh, tức
-   trắng 88% cho ánh nền kem hắt qua rất nhẹ. Đổi --pg-o-nen sang biến này nếu muốn kiểu kính.
-   4 theme TỐI hạ trắng thuần xuống #f4f6fa: vẫn đọc ra "giấy trắng" nhưng 161 mảng trắng nguyên
-   chất trên nền #1f2335 thì chói mắt. */
+/* ===== BỘ MÀU Ô KỆ — NỀN LÀ TÍN HIỆU, KHÔNG PHẢI TRANG TRÍ ==================================
+   LUẬT (10/08/2026, bản 2): MÀU NỀN CHỈ DÀNH CHO Ô CÓ DỮ LIỆU VỆ SINH.
+     · Ô THƯỜNG (không có yêu cầu/lịch vệ sinh)  -> nền TRONG SUỐT, chỉ còn khung nét đứt + số.
+     · Ô CÓ TRẠNG THÁI (đã / chưa / lịch chưa duyệt) -> mới được tô nền đặc (chuyển sắc theo hue).
+   Nhờ vậy nhìn vào sơ đồ là thấy NGAY chỗ có việc: mảng màu = có dữ liệu, khung rỗng = chưa khai
+   báo. Hai bản trước đều sai ở chỗ này — bản gốc tô xám đục #E3E6EA cho ô thường, bản 10/08 sáng
+   tô trắng thuần: cả hai đều biến "không có tin gì" thành một mảng màu to nhất bản đồ (161/161 ô
+   ở kho nguyên liệu đang là ô thường), át hết mấy ô thật sự có trạng thái.
+
+   VÌ SAO KHÔNG DÙNG fill:none MÀ DÙNG MÀN 3% — ĐÂY LÀ BẪY, ĐỪNG "TỐI ƯU" LẠI:
+   mặc định pointer-events của SVG là visiblePainted, tức chỉ bắt chuột ở phần CÓ TÔ. Để fill:none
+   thì ruột ô hết bắt chuột, mà chữ số lại đang pointer-events:none -> bấm giữa ô không mở được
+   pop-up, hover cũng chết, chỉ còn đúng đường viền 1px là bấm được. Màn 3% giữ ô "có tô" nên mọi
+   tương tác còn nguyên, trong khi mắt vẫn đọc ra là trong suốt (chênh lệch dưới ngưỡng nhận biết).
+
+   Màn 3% TRẮNG dùng chung cho cả 7 theme: trên nền tối nó là lớp nâng rất nhẹ đúng kiểu dark UI,
+   trên nền kem/mint nó gần như không nhìn thấy — cả hai đều ra "tiệp nền". Chỉ VIỀN và CHỮ mới
+   phải tách sáng/tối, vì hai thứ đó buộc phải tương phản NGƯỢC với nền. */
 :root{
-  --pg-o-nen:#ffffff;                       /* nền ô kệ — trắng thuần */
-  --pg-o-nen-kinh:rgba(255,255,255,.88);    /* biến thể kính mờ (chưa dùng, đổi 1 dòng là sang) */
-  --pg-o-vien:#d1d5db;                      /* viền hairline — gray-300 */
-  --pg-o-so:#1f2937;                        /* mực chữ số — gray-800 */
-  --pg-o-halo:rgba(255,255,255,.9);         /* viền chữ (paint-order:stroke) — tiệp nền giấy */
+  --pg-o-nen:rgba(255,255,255,.03);   /* màn nền ô thường — xem chú thích pointer-events ở trên */
+  --pg-o-vien:rgba(17,24,39,.22);     /* khung nét đứt ô thường (theme sáng) */
+  --pg-o-vien-net:rgba(17,24,39,.18); /* viền liền của ô ĐÃ có nền màu */
+  --pg-o-so:#1f2937;                  /* mực chữ số trên nền sáng — gray-800, 11,3:1 */
+  --pg-o-halo:rgba(255,255,255,.55);  /* viền chữ (paint-order:stroke) — tiệp nền khung */
 }
 [data-theme="tokyo"],[data-theme="dracula"],[data-theme="nord"],[data-theme="mocha"]{
-  --pg-o-nen:#f4f6fa; --pg-o-nen-kinh:rgba(244,246,250,.9); --pg-o-vien:#c3cad6;
+  --pg-o-vien:rgba(255,255,255,.2); --pg-o-vien-net:rgba(255,255,255,.16);
+  --pg-o-so:#e5e7eb;                 /* gray-200 trên nền #242833 — 12,1:1 */
+  --pg-o-halo:rgba(17,24,39,.5);
 }
-/* --pg-so = mực chữ số, GIỮ TÊN CŨ để mọi luật đang tham chiếu không phải sửa; nay ô luôn nền
-   giấy trắng ở cả 7 theme nên một mực gray-800 là đủ, không còn cần tách sáng/tối. */
+/* --pg-so = mực chữ số, GIỮ TÊN CŨ để mọi luật đang tham chiếu không phải sửa */
 :root{ --pg-so:var(--pg-o-so) }
 :root{
   --s1:#2563eb; --s2:#c2410c; --s3:#0d9488; --s4:#ca8a04; --s5:#db2777; --s6:#4d7c0f; --s7:#7c3aed; --s8:#0e7490;
@@ -1222,18 +1229,18 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 .pg-legbox button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
 /* MỌI ký hiệu cùng bề rộng 20px để cột chữ thẳng hàng — ô màu, ô nét đứt và viên thuốc "dãy kệ"
    vốn khác hình dạng, để tự do thì mỗi dòng chữ bắt đầu ở một chỗ. */
-.pg-legbox i{width:17px;height:10px;border-radius:4px;flex:none;border:1px solid var(--pg-o-vien)}
-/* "Không có tồn" = ô KHÔNG có thanh accent. Ký hiệu phải là đúng cái ô ấy (giấy trắng, viền
-   hairline, mép trái trống), không phải một khung nét đứt — ô thật đã bỏ nét đứt từ 10/08/2026. */
-.pg-legbox i.dash{background:var(--pg-o-nen);border:1px solid var(--pg-o-vien)}
+.pg-legbox i{width:17px;height:10px;border-radius:4px;flex:none;border:1px solid var(--pg-o-vien-net)}
+/* "Không có tồn" = ô KHÔNG có thanh accent. Ký hiệu là đúng cái ô ấy: nền trong suốt, khung nét
+   đứt, mép trái trống. */
+.pg-legbox i.dash{background:var(--pg-o-nen);border:1px dashed var(--pg-o-vien)}
 .pg-legbox i.vs-da{background:linear-gradient(180deg,#047857,#04543d)}
 .pg-legbox i.vs-chua{background:linear-gradient(180deg,#dc2626,#991b1b)}
 .pg-legbox i.vs-nduyet{background:linear-gradient(180deg,#f59e0b,#b45309)}
-/* Ký hiệu phải vẽ ĐÚNG hình ô thật, nếu không hộp chú giải nói một đằng sơ đồ một nẻo. Ô thật đã
-   bỏ nền xám + nét đứt (xem .pg-o.vs-nolich) nên ký hiệu cũng thành tờ giấy trắng viền hairline. */
-.pg-legbox i.vs-nolich{background:var(--pg-o-nen);border:1px solid var(--pg-o-vien)}
-/* Mẫu VẠCH KHO: ô giấy trắng + thanh accent ÔM SÁT MÉP TRÁI, bo 2 góc trái — y hệt ô thật */
-.pg-legbox i.vach{background:var(--pg-o-nen);border:1px solid var(--pg-o-vien);
+/* Ký hiệu phải vẽ ĐÚNG hình ô thật, nếu không hộp chú giải nói một đằng sơ đồ một nẻo. Ô thường
+   là nền trong suốt + khung nét đứt (xem .pg-o.vs-nolich) nên ký hiệu cũng vậy. */
+.pg-legbox i.vs-nolich{background:var(--pg-o-nen);border:1px dashed var(--pg-o-vien)}
+/* Mẫu VẠCH KHO: ô trong suốt + thanh accent ÔM SÁT MÉP TRÁI, bo 2 góc trái — y hệt ô thật */
+.pg-legbox i.vach{background:var(--pg-o-nen);border:1px dashed var(--pg-o-vien);
   position:relative;overflow:hidden}
 .pg-legbox i.vach::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3.5px;
   border-radius:2px 0 0 2px;background:var(--vc)}
@@ -1340,11 +1347,13 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 .pg-o:hover rect.sheen{opacity:.4}
 .pg-o:focus{outline:none}
 .pg-o:focus-visible rect.bg{stroke:var(--accent);stroke-width:2.8}
-.pg-o.dim{opacity:.18}
-/* Đang soi 1 dãy: ô của dãy đó viền đậm hơn để nổi khỏi phần bị mờ.
-   Mực CỐ ĐỊNH #111827 chứ không var(--ink): ô nay là giấy trắng ở CẢ 7 theme, mà --ink ở 4 theme
-   tối là màu sáng (#c0caf5…) — để nguyên thì viền nhấn biến mất trên nền ô trắng. */
-.pg-o.hi rect.bg{stroke:#111827;stroke-width:2}
+/* Mờ ô ngoài phạm vi đang lọc. .18 -> .32: ô thường nay chỉ còn KHUNG + SỐ (không còn mảng nền
+   để mờ đi), ở 18% thì khung tắt hẳn và mặt bằng mất luôn hình dãy kệ. 32% vẫn tụt hẳn xuống sau
+   phần đang soi mà bố cục kho còn đọc được. */
+.pg-o.dim{opacity:.32}
+/* Đang soi 1 dãy: ô của dãy đó viền đậm hơn để nổi khỏi phần bị mờ (mực theo theme, xem chú
+   thích ở luật hover). */
+.pg-o.hi rect.bg{stroke:var(--ink);stroke-width:2}
 /* Ô "không có dữ liệu": nét đứt, không tô nền — ngoài phạm vi đánh giá, KHÔNG đọc thành "chưa làm" */
 /* ===== KIỂU TÔ Ô: ĐẶC, CHUYỂN SẮC DỌC CÙNG HUE ===============================================
    Đã THỬ kiểu "nền dịu + chữ cùng màu" (khuôn badge) và ĐO RA KHÔNG DÙNG ĐƯỢC cho bản đồ này:
@@ -1356,10 +1365,9 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
      chữ trắng / đỉnh chuyển sắc — MTG 5,17:1 · GARMENT 5,18:1   (chân chuyển sắc còn cao hơn: 8-9:1)
    Chuyển sắc khai báo 1 lần trong <defs> theo từng slot, stop-color đọc thẳng biến --sN/--sNd nên
    vẫn ăn theo theme. */
-/* VIỀN CHUNG cho MỌI ô (cả ô nền màu lẫn ô giấy trắng): hairline 1px xám cao cấp thay cho nét
-   color-mix(--ink 30%) cũ — ở theme sáng nét cũ là gạch mực đậm viền quanh từng ô, 161 ô thành
-   một lưới đen nặng. vector-effect giữ đúng 1px ở mọi mức phóng của bản vẽ. */
-.pg-o rect.bg{stroke:var(--pg-o-vien);stroke-width:1;vector-effect:non-scaling-stroke}
+/* VIỀN CHUNG: hairline 1px LIỀN cho ô đã có nền màu (ô thường ghi đè thành nét đứt ở dưới).
+   vector-effect giữ đúng 1px ở mọi mức phóng của bản vẽ. */
+.pg-o rect.bg{stroke:var(--pg-o-vien-net);stroke-width:1;vector-effect:non-scaling-stroke}
 /* ===== HAI KÊNH TÁCH BẠCH ====================================================================
    NỀN Ô  = TRẠNG THÁI VỆ SINH (đây là việc chính của tab Planogram, nên nó chiếm kênh mạnh nhất)
    VẠCH MÉP TRÁI = KHO giữ tồn. Dùng VỊ TRÍ + màu nhỏ thay vì tô cả ô: hai thông tin không tranh
@@ -1373,20 +1381,19 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 .pg-o.vs-da text,.pg-o.vs-chua text{fill:#fff;stroke:rgba(0,0,0,.42)}
 /* Nền hổ phách sáng -> mực đậm, đúng luật .hp-mapcell.inkdark của Hasaki */
 .pg-o.vs-nduyet text{fill:#3b2100;stroke:rgba(255,255,255,.5)}
-/* "Chưa khai báo lịch": KHÔNG để trong suốt — ô vẫn phải đọc ra là một vật thể trên mặt bằng.
-   10/08/2026 — BỎ HẲN NỀN XÁM ĐỤC + NÉT ĐỨT. Ô nay là tờ giấy trắng, viền hairline liền mạch:
-   đây là trạng thái của 161/161 ô ở kho nguyên liệu (planogram WMS chưa bật cho kho 1339/1177),
-   nên nó quyết định toàn bộ cảm giác của sơ đồ — mảng xám chiếm trọn mặt bằng là chỗ trông "phèn"
-   nhất của bản cũ.
-   Nét đứt cũ mang nghĩa "ngoài phạm vi đánh giá"; nghĩa đó KHÔNG mất: ô giấy trắng vẫn tách bạch
-   với 3 trạng thái có nền màu (xanh/đỏ/hổ phách đặc), và ký hiệu trong hộp chú giải đổi theo đúng
-   hình ô thật nên vẫn tra ra ngay. */
-.pg-o.vs-nolich rect.bg{fill:var(--pg-o-nen);stroke:var(--pg-o-vien);stroke-dasharray:none;stroke-width:1}
+/* ===== Ô THƯỜNG (không có yêu cầu/lịch vệ sinh) — TRẠNG THÁI NỀN CỦA CẢ SƠ ĐỒ =================
+   Đây là mặc định, không phải một trạng thái "hạng ba": ô KHÔNG được tô nền, chỉ còn khung nét
+   đứt + số. Nét đứt là quy ước sẵn có của dự án cho "ngoài phạm vi đánh giá" — nó nói "chưa khai
+   báo lịch", không đọc thành "chưa làm".
+   Gạch 2,6/2 (không phải 5/3,5 như bản gốc): ô thấp nhất chỉ cao 10,5px, gạch dài thành lởm chởm. */
+.pg-o.vs-nolich rect.bg{fill:var(--pg-o-nen);stroke:var(--pg-o-vien);stroke-dasharray:2.6 2;stroke-width:1}
 .pg-o.vs-nolich text{fill:var(--pg-o-so);stroke:var(--pg-o-halo)}
 /* VIỀN KHI HOVER — đặt SAU mọi luật trạng thái và nhân đôi class (.pg-o.pg-o) cho đủ độ ưu tiên:
    luật .pg-o.vs-nolich rect.bg ở trên cùng hạng specificity, khai báo sau nên vốn thắng.
-   Hairline xám -> nét mực đậm, dày hơn. Cũng dùng #111827 cố định, lý do như .pg-o.hi ở trên. */
-.pg-o.pg-o:hover rect.bg{stroke:#111827;stroke-width:2.6;stroke-dasharray:none}
+   Nét ĐỨT mờ -> nét LIỀN mực đậm, dày hơn. var(--ink) chứ không hex cố định: ô thường nay trong
+   suốt nên nền sau nó là nền khung, mà nền khung đổi theo theme — mực cố định sẽ mất hút ở một
+   trong hai nhóm theme. */
+.pg-o.pg-o:hover rect.bg{stroke:var(--ink);stroke-width:2.6;stroke-dasharray:none}
 /* ===== VẠCH KHO — THANH ĐÁNH DẤU PHÂN LOẠI ===================================================
    10/08/2026: từ "viên thuốc màu THẢ NỔI bên trong ô" (thụt 1,6 đơn vị mỗi phía, bo tròn 4 góc)
    thành THANH ACCENT ÔM MÉP TRÁI: dán sát mép, cao hết ô, chỉ bo 2 góc TRÁI đúng bán kính góc ô
