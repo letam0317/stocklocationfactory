@@ -1015,11 +1015,16 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
    phải tách sáng/tối, vì hai thứ đó buộc phải tương phản NGƯỢC với nền. */
 /* 14/08/2026 — ĐỒNG BỘ TÔNG Ô VỚI AUDIT HASAKI. Bên đó ô "không có yêu cầu" là
    `.hp-mapcell.trong{background:transparent;border:1px dashed color-mix(in srgb,var(--muted) 55%,
-   transparent);color:var(--muted)}` — khung VÀ số đều là mực MỜ theo theme. Bản cũ ở đây dùng mực
-   gray-800 cố định cho số (11,3:1) nên 161/161 ô của kho nguyên liệu hiện ra như một bảng số đậm,
-   nhìn cạnh Audit Hasaki là thấy khác hẳn tông dù cùng nghĩa "chưa khai báo lịch".
-   Dùng --ink3 (= --muted của bộ theme dùng chung) nên một khai báo ăn cả 7 theme, không phải tách
-   nhóm sáng/tối như bản cũ. Riêng HALO (viền chữ) vẫn phải lật theo nền: nó là nền giả sau chữ. */
+   transparent);color:var(--muted)}` — khung VÀ số đều là mực MỜ theo theme.
+   TÁCH ĐÔI hai thứ đó ở đây (bản sửa cùng ngày, sau phản hồi "số ô kệ hơi mờ"):
+     KHUNG nét đứt  -> giữ tông mờ --ink3 55% như Hasaki: nó chỉ là tín hiệu "ngoài phạm vi".
+     SỐ CỘT         -> KHÔNG mờ theo, mà bám --ink (mực chữ chính của theme).
+   Lý do không copy nguyên mực muted của Hasaki: ô bên đó cao 24px với chữ 11px nằm trên nền panel,
+   còn ô ở đây co theo bản vẽ — hàng kệ 2 mặt (509–512) chỉ cao 26 đơn vị ⇒ chữ chỉ còn ~8px. Cùng
+   một tông mờ, ở 11px thì đọc được mà ở 8px thì thành vệt xám. Số cột là KÊNH NHẬN DẠNG THỨ HAI của
+   luật relief (không được chỉ dựa vào màu), nên nó buộc phải rõ ở mọi theme.
+   Đo --ink trên --surface của cả 7 theme: 6,0–13,9:1 — vượt AA (4,5) ở tất cả, không cần tách nhóm
+   sáng/tối và không hardcode hex như bản trước (#1f2937 / #e5e7eb). */
 :root{
   --pg-o-nen:rgba(255,255,255,.03);   /* màn nền ô thường — xem chú thích pointer-events ở trên */
   --pg-o-vien:color-mix(in srgb,var(--ink3) 55%,transparent);     /* khung nét đứt ô thường — đúng 55% của Hasaki */
@@ -1028,11 +1033,11 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
      tối) cần kênh nhận dạng thứ hai ngoài màu — 30% đủ tách ô khỏi nền mà mắt vẫn đọc ra "không
      viền" như bên Hasaki. */
   --pg-o-vien-net:color-mix(in srgb,var(--ink3) 30%,transparent);
-  --pg-o-so:var(--ink3);              /* mực chữ số ô thường — cùng tông muted với Hasaki */
-  --pg-o-halo:rgba(255,255,255,.55);  /* viền chữ (paint-order:stroke) — tiệp nền khung */
-}
-[data-theme="tokyo"],[data-theme="dracula"],[data-theme="nord"],[data-theme="mocha"]{
-  --pg-o-halo:rgba(17,24,39,.5);
+  --pg-o-so:var(--ink);               /* MỰC SỐ = mực chữ chính của theme (xem chú thích trên) */
+  /* HALO (viền chữ vẽ trước bằng paint-order:stroke) = chính NỀN mà chữ đang nằm trên, pha loãng.
+     Trước đây là 2 hex rgba cố định + phải tách nhóm theme tối; dựng từ --surface thì nó tự lật
+     sáng/tối theo theme, và luôn đúng nền thật của khung sơ đồ (khung nay ăn nền panel). */
+  --pg-o-halo:color-mix(in srgb,var(--surface) 72%,transparent);
 }
 /* --pg-so = mực chữ số, GIỮ TÊN CŨ để mọi luật đang tham chiếu không phải sửa */
 :root{ --pg-so:var(--pg-o-so) }
@@ -1360,8 +1365,12 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 /* CĂN GIỮA TUYỆT ĐỐI trong SVG = text-anchor:middle (ngang) + dominant-baseline:central (dọc),
    toạ độ đặt đúng tâm ô (x+w/2, y+h/2). Đây là cặp tương đương của display:flex + align-items +
    justify-content:center bên CSS — SVG <text> không phải hộp flex nên không dùng bộ kia được. */
+/* stroke-width KHÔNG khai ở đây nữa (14/08/2026): nó phải TỶ LỆ với cỡ chữ. Một bề dày cố định
+   2,2 đơn vị dùng cho cả chữ 34 và chữ 20 làm ruột số nhỏ bị bít — viền chữ nở vào cả LÒNG số
+   (bụng của 0/8/6) nên ở hàng kệ 2 mặt số đọc thành vệt tròn. Nay plgSvg gắn stroke-width theo
+   từng ô = 7% cỡ chữ; CSS chỉ giữ paint-order + linejoin. */
 .pg-o text{font-weight:800;text-anchor:middle;dominant-baseline:central;pointer-events:none;user-select:none;
-  paint-order:stroke;stroke-width:2.2;stroke-linejoin:round;letter-spacing:.01em}
+  paint-order:stroke;stroke-linejoin:round;letter-spacing:.01em}
 .pg-o:focus{outline:none}
 .pg-o:focus-visible rect.bg{stroke:var(--accent);stroke-width:2.8}
 /* Mờ ô ngoài phạm vi đang lọc. .18 -> .32: ô thường nay chỉ còn KHUNG + SỐ (không còn mảng nền
@@ -3373,8 +3382,19 @@ function plgSvg(g,mode,theoDay){
     /* CỠ SỐ — bản 08/08/2026 nâng lên vì ở tỷ lệ hiển thị thật (~0,39) cỡ cũ chỉ còn 4,3-9,4px,
        gần như không đọc được. Hệ số theo chiều cao 0,62 -> 0,78 (chiều cao mới là ràng buộc thật
        ở các cặp kệ 2 mặt cao 26 đơn vị), theo bề rộng 0,42 -> 0,46, trần 24 -> 30, sàn 11 -> 14.
-       Kết quả: hàng kệ thấp nhất 5,5px -> 7,0px, hàng kệ thường 9,4px -> 11,8px. */
-    var fs=Math.max(14,Math.min(30,hh*0.78,ww*0.46));
+       14/08/2026 (phản hồi "số ô kệ hơi mờ") nâng tiếp: chiều cao 0,78 -> 0,90 và trần 30 -> 34.
+       Chữ số KHÔNG có phần dưới dòng nên ràng buộc thật là CHIỀU CAO CHỮ IN (~0,7 cỡ chữ), chứ
+       không phải cả hộp dòng: ở ô thấp nhất (lòng 23,6 đơn vị) cỡ 21,2 cho chữ in 14,9 — vẫn còn
+       4,3 đơn vị hở mỗi mép. Kết quả: hàng kệ 2 mặt 7,0px -> 8,3px, hàng kệ thường 11,8px -> 13,4px.
+       stroke-width đi kèm theo TỶ LỆ (7% cỡ chữ) — bề dày cố định 2,2 làm bít lòng số ở ô nhỏ. */
+    /* Ô CAO HẸP (2 ô cuối dãy 513: 31 rộng × 78 cao) — quay chữ dọc thì ràng buộc đổi từ BỀ RỘNG
+       sang CHIỀU CAO, cỡ số nhảy 14,3 -> 27,9 đơn vị (5,6px -> 11px trên màn hình). Trước đây hai
+       ô này là chỗ duy nhất số gần như không đọc được. Chiều quay -90° giống biển tên phòng
+       (.pg-khu) để cả bản vẽ chỉ có một quy ước chữ dọc. */
+    var doc=hh>ww*1.6;
+    var fs=doc?Math.max(14,Math.min(34,ww*0.90,hh*0.46))
+              :Math.max(14,Math.min(34,hh*0.90,ww*0.46));
+    var tx=(x+ww/2), ty=(y+hh/2);
     /* Mờ ô ngoài tầm nhìn hiện tại — 3 nguồn: KHU VỰC đang lọc, nhóm bị tắt ở chú giải, dãy đang
        soi. Vẫn VẼ chứ không xoá: sơ đồ là mặt bằng thật, ô biến mất là mất luôn manh mối. */
     var mo=!plgTrongPhamVi(c)||(PLG.soiKho&&n.k!==PLG.soiKho)||(PLG.hiDay&&c.d!==PLG.hiDay), hi=PLG.hiDay&&c.d===PLG.hiDay;
@@ -3394,7 +3414,9 @@ function plgSvg(g,mode,theoDay){
       '<title>'+esc(tip)+'</title>'+
       '<rect class="bg"'+hop+'/>'+vach+
       /* Không còn lớp vát: mọi ô đều PHẲNG như .hp-mapcell của Audit Hasaki (xem CSS "KIỂU TÔ Ô") */
-      '<text x="'+(x+ww/2).toFixed(1)+'" y="'+(y+hh/2).toFixed(1)+'" font-size="'+fs.toFixed(1)+'">'+c.c+'</text>'+
+      '<text x="'+tx.toFixed(1)+'" y="'+ty.toFixed(1)+'" font-size="'+fs.toFixed(1)+
+        '" stroke-width="'+(fs*0.07).toFixed(2)+'"'+
+        (doc?' transform="rotate(-90 '+tx.toFixed(1)+' '+ty.toFixed(1)+')"':'')+'>'+c.c+'</text>'+
       '</g>');
   });
   out.push('</g><g>');
