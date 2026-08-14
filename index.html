@@ -1013,24 +1013,32 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
    Màn 3% TRẮNG dùng chung cho cả 7 theme: trên nền tối nó là lớp nâng rất nhẹ đúng kiểu dark UI,
    trên nền kem/mint nó gần như không nhìn thấy — cả hai đều ra "tiệp nền". Chỉ VIỀN và CHỮ mới
    phải tách sáng/tối, vì hai thứ đó buộc phải tương phản NGƯỢC với nền. */
+/* 14/08/2026 — ĐỒNG BỘ TÔNG Ô VỚI AUDIT HASAKI. Bên đó ô "không có yêu cầu" là
+   `.hp-mapcell.trong{background:transparent;border:1px dashed color-mix(in srgb,var(--muted) 55%,
+   transparent);color:var(--muted)}` — khung VÀ số đều là mực MỜ theo theme. Bản cũ ở đây dùng mực
+   gray-800 cố định cho số (11,3:1) nên 161/161 ô của kho nguyên liệu hiện ra như một bảng số đậm,
+   nhìn cạnh Audit Hasaki là thấy khác hẳn tông dù cùng nghĩa "chưa khai báo lịch".
+   Dùng --ink3 (= --muted của bộ theme dùng chung) nên một khai báo ăn cả 7 theme, không phải tách
+   nhóm sáng/tối như bản cũ. Riêng HALO (viền chữ) vẫn phải lật theo nền: nó là nền giả sau chữ. */
 :root{
   --pg-o-nen:rgba(255,255,255,.03);   /* màn nền ô thường — xem chú thích pointer-events ở trên */
-  --pg-o-vien:rgba(17,24,39,.22);     /* khung nét đứt ô thường (theme sáng) */
-  --pg-o-vien-net:rgba(17,24,39,.18); /* viền liền của ô ĐÃ có nền màu */
-  --pg-o-so:#1f2937;                  /* mực chữ số trên nền sáng — gray-800, 11,3:1 */
+  --pg-o-vien:color-mix(in srgb,var(--ink3) 55%,transparent);     /* khung nét đứt ô thường — đúng 55% của Hasaki */
+  /* Viền liền của ô ĐÃ có nền màu: Hasaki để `border:1px solid transparent` (không viền). Ở đây
+     giữ một hairline RẤT mờ theo mực nền vì luật relief của tab này (ô/nền chỉ 2,2:1 ở 4 theme
+     tối) cần kênh nhận dạng thứ hai ngoài màu — 30% đủ tách ô khỏi nền mà mắt vẫn đọc ra "không
+     viền" như bên Hasaki. */
+  --pg-o-vien-net:color-mix(in srgb,var(--ink3) 30%,transparent);
+  --pg-o-so:var(--ink3);              /* mực chữ số ô thường — cùng tông muted với Hasaki */
   --pg-o-halo:rgba(255,255,255,.55);  /* viền chữ (paint-order:stroke) — tiệp nền khung */
 }
 [data-theme="tokyo"],[data-theme="dracula"],[data-theme="nord"],[data-theme="mocha"]{
-  --pg-o-vien:rgba(255,255,255,.2); --pg-o-vien-net:rgba(255,255,255,.16);
-  --pg-o-so:#e5e7eb;                 /* gray-200 trên nền #242833 — 12,1:1 */
   --pg-o-halo:rgba(17,24,39,.5);
 }
 /* --pg-so = mực chữ số, GIỮ TÊN CŨ để mọi luật đang tham chiếu không phải sửa */
 :root{ --pg-so:var(--pg-o-so) }
 :root{
   --s1:#2563eb; --s2:#c2410c; --s3:#0d9488; --s4:#ca8a04; --s5:#db2777; --s6:#4d7c0f; --s7:#7c3aed; --s8:#0e7490;
-  /* tông ĐẬM của cùng hue (bậc 800 của thang) — chân ô chuyển sắc xuống màu này */
-  --s1d:#1e40af; --s2d:#7c2d12; --s3d:#115e59; --s4d:#854d0e; --s5d:#9d174d; --s6d:#365314; --s7d:#5b21b6; --s8d:#155e75;
+  /* Bậc 800 (--sNd) đã gỡ 14/08/2026 cùng chuyển sắc ô kệ — không còn chỗ nào tô hai bậc màu. */
 }
 /* --- BỐ CỤC TAB — CÙNG KHUÔN với tab Planogram của Audit Hasaki (chỉ khác cái sơ đồ) --------
    thanh chips → hàng trên 2 cột (TRÁI sơ đồ ăn hết bề rộng còn lại · PHẢI 380px chỉ số, giãn
@@ -1205,11 +1213,16 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 /* Khung sơ đồ: MỘT màu nền duy nhất. Trước đây còn thêm một hộp "sàn kho" (.pg-floor) vẽ trong
    SVG, tạo ra hai mảng nền lồng nhau đậm/nhạt khác tông — đã bỏ hẳn, giờ chỉ còn nền của khung
    này. position:relative để hộp chú giải neo được vào góc trên bên phải của sơ đồ. */
-/* Nền khung đổi surface2 -> surface: ô "chưa khai báo lịch" nhuộm trên surface nên nổi rõ khỏi
-   nền khung. Trước cả hai đều dựa trên surface2 nên ô gần như chìm, sơ đồ nhìn mờ nhạt. */
+/* 14/08/2026 — NỀN SƠ ĐỒ LẤY ĐÚNG THEO AUDIT HASAKI: bên đó sơ đồ khu vực nằm THẲNG trên nền
+   panel (.hp-mapscroll không có nền, không viền, không bóng), nên mảng nền duy nhất người ta thấy
+   là nền panel. Ở đây khung sơ đồ vốn tô --surface2 + viền + bóng lõm, tức là một tấm nền THỨ HAI
+   sẫm hơn lồng trong panel --surface — đặt hai dashboard cạnh nhau là lệch tông ngay chỗ này
+   (đúng chỗ user chỉ ra). Bỏ hẳn nền/viền/bóng riêng: nền sơ đồ = nền panel, y như Hasaki.
+   Giữ position:relative + container-type: hộp chú giải neo tuyệt đối vào đây và container query
+   theo bề rộng CÒN LẠI của cột sơ đồ vẫn phải chạy. */
 .pg-wrap{position:relative;container-type:inline-size;container-name:pgwrap;
-  border:1px solid var(--line);border-radius:12px;background:var(--surface2);
-  padding:14px 16px 14px 8px;overflow:hidden;box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ink) 4%,transparent)}
+  border:0;border-radius:12px;background:transparent;
+  padding:14px 16px 14px 8px;overflow:hidden}
 .pg-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 /* HỘP CHÚ GIẢI neo góc trên bên phải của sơ đồ. Đặt bằng HTML chứ không vẽ vào SVG: chữ giữ đúng
    cỡ ở mọi mức co của bản vẽ (vẽ trong SVG thì chữ co theo, xuống ~8px là không đọc nổi). */
@@ -1237,9 +1250,11 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 /* "Không có tồn" = ô KHÔNG có thanh accent. Ký hiệu là đúng cái ô ấy: nền trong suốt, khung nét
    đứt, mép trái trống. */
 .pg-legbox i.dash{background:var(--pg-o-nen);border:1px dashed var(--pg-o-vien)}
-.pg-legbox i.vs-da{background:linear-gradient(180deg,#047857,#04543d)}
-.pg-legbox i.vs-chua{background:linear-gradient(180deg,#dc2626,#991b1b)}
-.pg-legbox i.vs-nduyet{background:linear-gradient(180deg,#f59e0b,#b45309)}
+/* Ký hiệu tô PHẲNG đúng hex CELLST của Hasaki — phải khớp tuyệt đối với ô thật trên sơ đồ, nếu
+   không hộp chú giải lại nói một đằng bản vẽ một nẻo (xem .pg-o.vs-* ở trên). */
+.pg-legbox i.vs-da{background:#059669}
+.pg-legbox i.vs-chua{background:#dc2626}
+.pg-legbox i.vs-nduyet{background:#f59e0b}
 /* Ký hiệu phải vẽ ĐÚNG hình ô thật, nếu không hộp chú giải nói một đằng sơ đồ một nẻo. Ô thường
    là nền trong suốt + khung nét đứt (xem .pg-o.vs-nolich) nên ký hiệu cũng vậy. */
 .pg-legbox i.vs-nolich{background:var(--pg-o-nen);border:1px dashed var(--pg-o-vien)}
@@ -1336,10 +1351,9 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
   transition:transform .25s var(--ez-apple)}
 .pg-o:hover{will-change:transform;transform:scale(1.08);filter:drop-shadow(0 3px 8px rgba(16,24,40,.42))}
 .pg-o:hover text{font-weight:900}
-/* Lớp vát: trắng rất nhạt ở mép trên, tối nhẹ ở mép dưới — ô đọc thành viên gạch có khối, không
-   phải mảng màu dán phẳng. CỐ TÌNH trong suốt ở khoảng giữa (nơi đặt số) để KHÔNG đụng vào tương
-   phản chữ/nền mà bộ validator màu đã kiểm. */
-.pg-o rect.sheen{stroke:none;pointer-events:none}
+/* LỚP VÁT ĐÃ GỠ 14/08/2026 — Audit Hasaki tô ô phẳng hoàn toàn, giữ lớp vát ở đây là còn lệch
+   một tầng sắc độ so với bên đó. Luật cũ (vát trắng mép trên, tối mép dưới, trong suốt ở khoảng
+   giữa nơi đặt số) xem lịch sử git nếu cần dựng lại. */
 /* Chữ số trong ô: 800 + VIỀN CHỮ mảnh cùng tông nền (paint-order:stroke vẽ viền TRƯỚC rồi mới
    đè ruột chữ lên). Nhờ viền này số đọc được trên mọi nền của cả 7 theme — kể cả khi nền ô là
    màu trạng thái đậm hay là ô xám nhạt của theme sáng. */
@@ -1348,7 +1362,6 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
    justify-content:center bên CSS — SVG <text> không phải hộp flex nên không dùng bộ kia được. */
 .pg-o text{font-weight:800;text-anchor:middle;dominant-baseline:central;pointer-events:none;user-select:none;
   paint-order:stroke;stroke-width:2.2;stroke-linejoin:round;letter-spacing:.01em}
-.pg-o:hover rect.sheen{opacity:.4}
 .pg-o:focus{outline:none}
 .pg-o:focus-visible rect.bg{stroke:var(--accent);stroke-width:2.8}
 /* Mờ ô ngoài phạm vi đang lọc. .18 -> .32: ô thường nay chỉ còn KHUNG + SỐ (không còn mảng nền
@@ -1359,16 +1372,15 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
    thích ở luật hover). */
 .pg-o.hi rect.bg{stroke:var(--ink);stroke-width:2}
 /* Ô "không có dữ liệu": nét đứt, không tô nền — ngoài phạm vi đánh giá, KHÔNG đọc thành "chưa làm" */
-/* ===== KIỂU TÔ Ô: ĐẶC, CHUYỂN SẮC DỌC CÙNG HUE ===============================================
+/* ===== KIỂU TÔ Ô: ĐẶC, PHẲNG — ĐÚNG BẢN CỦA AUDIT HASAKI (14/08/2026) =========================
    Đã THỬ kiểu "nền dịu + chữ cùng màu" (khuôn badge) và ĐO RA KHÔNG DÙNG ĐƯỢC cho bản đồ này:
    chữ/nền chỉ 4,0-4,6:1 ở theme sáng và 2,3-2,9:1 ở 4 theme tối, tệ hơn nữa là ô/nền khung chỉ
    1,1-1,3:1 nên ô chìm hẳn vào nền — với 157/161 ô có tồn thì mất luôn hình khối của dãy kệ.
-   Nay giữ TÔ ĐẶC (ô tách bạch, chữ trắng đạt AA) nhưng cho mỗi ô một CHUYỂN SẮC DỌC nhẹ từ tông
-   600 xuống tông 800 của chính hue đó. Ô có chiều sâu như vật thể thật thay vì mảng màu dán phẳng,
-   mà điểm SÁNG NHẤT của chuyển sắc vẫn là tông 600 nên tương phản chữ trắng không hề giảm:
-     chữ trắng / đỉnh chuyển sắc — MTG 5,17:1 · GARMENT 5,18:1   (chân chuyển sắc còn cao hơn: 8-9:1)
-   Chuyển sắc khai báo 1 lần trong <defs> theo từng slot, stop-color đọc thẳng biến --sN/--sNd nên
-   vẫn ăn theo theme. */
+   Bản 08/08 giữ TÔ ĐẶC nhưng thêm chuyển sắc dọc 600→800 + lớp vát cho ô có chiều sâu. Bỏ cả hai
+   ngày 14/08 vì đó chính là chỗ lệch tông với Audit Hasaki: bên đó `.hp-mapcell` là một mảng màu
+   phẳng, còn ở đây mắt đọc ra một sắc sẫm hơn (đỉnh #047857 so với #059669) và có ánh vát.
+   Tương phản KHÔNG giảm khi bỏ chuyển sắc — nay cả ô đúng bằng tông 600, tức đúng ĐỈNH sáng nhất
+   của chuyển sắc cũ (chữ trắng ~5,2:1, đã đo cho chính hex này ở bản trước). */
 /* VIỀN CHUNG: hairline 1px LIỀN cho ô đã có nền màu (ô thường ghi đè thành nét đứt ở dưới).
    vector-effect giữ đúng 1px ở mọi mức phóng của bản vẽ. */
 .pg-o rect.bg{stroke:var(--pg-o-vien-net);stroke-width:1;vector-effect:non-scaling-stroke}
@@ -1379,12 +1391,17 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
    xanh mép trái đánh dấu "đã báo cáo" chồng lên nền màu trạng thái).
    Đã thử tô nền theo kho + viền theo vệ sinh: nền thắng thị giác nên bản đồ đọc ra "kho" trước,
    trong khi tab này là tab VỆ SINH — sai thứ tự ưu tiên. */
-.pg-o.vs-da rect.bg{fill:url(#pgGda)}
-.pg-o.vs-chua rect.bg{fill:url(#pgGchua)}
-.pg-o.vs-nduyet rect.bg{fill:url(#pgGnd)}
+/* 14/08/2026 — TÔ PHẲNG ĐÚNG HEX CỦA AUDIT HASAKI (yêu cầu đồng bộ màu). Bên đó ô sơ đồ là một
+   mảng màu ĐẶC PHẲNG lấy thẳng từ CELLST (#059669 · #dc2626 · #f59e0b), không chuyển sắc, không
+   lớp vát. Bản cũ ở đây tô chuyển sắc 600→800 nên cùng một trạng thái mà hai dashboard ra hai
+   sắc độ khác nhau (ô "đã vệ sinh" bên này đỉnh #047857, sẫm hơn hẳn #059669 bên kia).
+   Ba <linearGradient> pgGda/pgGchua/pgGnd và lớp vát pgSheen đã gỡ khỏi plgSvg cùng lượt sửa. */
+.pg-o.vs-da rect.bg{fill:#059669}
+.pg-o.vs-chua rect.bg{fill:#dc2626}
+.pg-o.vs-nduyet rect.bg{fill:#f59e0b}
 .pg-o.vs-da text,.pg-o.vs-chua text{fill:#fff;stroke:rgba(0,0,0,.42)}
-/* Nền hổ phách sáng -> mực đậm, đúng luật .hp-mapcell.inkdark của Hasaki */
-.pg-o.vs-nduyet text{fill:#3b2100;stroke:rgba(255,255,255,.5)}
+/* Nền hổ phách sáng -> mực đậm, đúng luật .hp-mapcell.inkdark của Hasaki (#422006) */
+.pg-o.vs-nduyet text{fill:#422006;stroke:rgba(255,255,255,.5)}
 /* ===== Ô THƯỜNG (không có yêu cầu/lịch vệ sinh) — TRẠNG THÁI NỀN CỦA CẢ SƠ ĐỒ =================
    Đây là mặc định, không phải một trạng thái "hạng ba": ô KHÔNG được tô nền, chỉ còn khung nét
    đứt + số. Nét đứt là quy ước sẵn có của dự án cho "ngoài phạm vi đánh giá" — nó nói "chưa khai
@@ -1408,11 +1425,76 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
    theo kho"), thêm một nét mực nữa quanh dải 4px chỉ làm màu bị đục. */
 .pg-vach{stroke:none}
 .pg-o.trong .pg-vach{display:none}   /* ô không có tồn thì không thuộc kho nào -> không có vạch */
-/* Pop-up ô: bảng khoá-giá trị, khuôn .mtbl của dự án */
-.pg-kv{width:100%;border-collapse:collapse;font-size:13px}
-.pg-kv td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
-.pg-kv td:first-child{color:var(--ink2);white-space:nowrap;width:190px}
-.pg-kv tr:last-child td{border-bottom:0}
+/* ===== POP-UP CHI TIẾT 1 Ô — ĐỒNG BỘ VỚI POP-UP VỊ TRÍ CỦA AUDIT HASAKI (14/08/2026) ==========
+   Bên Hasaki pop-up đọc theo 3 tầng, mỗi tầng trả lời một câu hỏi khác nhau:
+     DẢI 7 NGÀY  — ô này 7 ngày qua ngày nào có yêu cầu, ngày nào đã vệ sinh (bấm để soi ngày khác)
+     HÀNG chi tiết — của ĐÚNG ngày đang chọn: trạng thái · ai báo cáo · ảnh báo cáo
+     2 THẺ song song — TRÁI "Phụ trách" (ai chịu trách nhiệm) · PHẢI "Báo cáo gần nhất" (ai thật
+       sự đã làm, cách đây bao lâu) ⇒ nhìn phát biết nên đi nhắc ai.
+   Bản cũ ở đây chỉ là bảng khoá-giá trị .pg-kv (đã gỡ): cùng một ô kệ mà hai dashboard trả lời hai
+   câu hỏi khác nhau — đúng chỗ user chỉ ra là "chưa đồng bộ".
+   Khuôn class bê nguyên .hp-vt* của hasaki-planogram.js, chỉ đổi biến màu sang token của trang này
+   (--ink/--ink2/--ink3/--line/--surface/--accent thay cho --text/--muted/--border/--accent) và
+   dùng lại combo animation popIn + focus ring sẵn có, không dựng control trần. */
+.pg-vtrow{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;padding:10px 0;
+  border-bottom:1px solid var(--line);font-size:12.5px;color:var(--ink)}
+.pg-vtrow:last-child{border-bottom:0}
+.pg-vtrow label{font-size:10.5px;font-weight:650;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;padding-top:2px}
+.pg-vtrow .pg-badge{white-space:normal}
+@media(max-width:560px){ .pg-vtrow{grid-template-columns:minmax(0,1fr);gap:4px} }
+/* Dải 7 ngày: mỗi ngày một ô tô ĐÚNG hệ màu của sơ đồ (cùng CELLST) — ngày không có yêu cầu là
+   nét đứt, y như ô "chưa khai báo lịch" trên bản vẽ. */
+.pg-vthistrow{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 14px}
+.pg-vthist{position:relative;min-width:52px;padding:5px 8px;border-radius:9px;text-align:center;
+  font-size:10.5px;font-weight:650;color:#fff;cursor:pointer;line-height:1.3;border:2px solid transparent;
+  transition:transform .16s var(--ez-apple)}
+.pg-vthist b{display:block;font-size:9px;opacity:.85}
+.pg-vthist.inkdark{color:#422006}
+.pg-vthist.trong{background:transparent;border:2px dashed color-mix(in srgb,var(--ink3) 50%,transparent);color:var(--ink3)}
+.pg-vthist.on{border-color:var(--ink);transform:scale(1.08);box-shadow:var(--shadow)}
+.pg-vthist:hover{transform:scale(1.08)}
+.pg-vthist:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.pg-vtthumbs{display:flex;flex-wrap:wrap;gap:6px}
+.pg-vtthumbs img{width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--line);
+  cursor:zoom-in;background:color-mix(in srgb,var(--ink3) 14%,transparent);transition:transform .16s var(--ez-apple)}
+.pg-vtthumbs img:hover{transform:scale(1.1)}
+.pg-vtduo{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 0}
+@media(max-width:560px){ .pg-vtduo{grid-template-columns:1fr} }
+.pg-vtcard{border:1px solid var(--line);border-radius:12px;padding:11px 12px;display:flex;flex-direction:column;gap:8px;
+  background:color-mix(in srgb,var(--ink3) 6%,var(--surface));animation:popIn .34s var(--ez-apple) both}
+.pg-vtcard.pt{border-color:color-mix(in srgb,var(--accent) 32%,transparent);
+  background:color-mix(in srgb,var(--accent) 7%,var(--surface))}
+.pg-vtcard.ref{animation-delay:.06s}
+.pg-vtcard .hd{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:10.5px;font-weight:700;
+  color:var(--ink3);text-transform:uppercase;letter-spacing:.04em}
+.pg-vtcard .who{display:flex;align-items:center;gap:9px;min-width:0}
+.pg-vtcard .who > div{min-width:0}
+.pg-vtcard .av{width:34px;height:34px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;
+  font-size:11.5px;font-weight:750;color:#fff;letter-spacing:.02em}
+.pg-vtcard .who b{display:block;font-size:13px;font-weight:700;line-height:1.3;color:var(--ink)}
+.pg-vtcard .who small{display:block;font-size:10.5px;font-weight:500;color:var(--ink3);line-height:1.4;word-break:break-all}
+.pg-vtcard .cc{display:flex;align-items:flex-start;gap:7px;padding-top:7px;border-top:1px dashed var(--line)}
+.pg-vtcard .cc .pg-dot{margin-top:4px}
+.pg-vtcard .cc b{display:block;font-size:12px;font-weight:700;line-height:1.35}
+.pg-vtcard .cc small{display:block;font-size:10.5px;color:var(--ink3);line-height:1.4;margin-top:1px}
+.pg-vtcard .ln{font-size:11.5px;line-height:1.45;color:var(--ink2)}
+.pg-vtcard .ln.mut{color:var(--ink3)}
+/* Hyperlink DUY NHẤT của pop-up: "Yêu cầu #… ↗" ở góc phải trên (khuôn .hp-ext của Hasaki) */
+.pg-ext{color:var(--brand2);text-decoration:none;font-weight:600;font-size:12px;white-space:nowrap}
+.pg-ext:hover{text-decoration:underline}
+.pg-ext:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+/* Lightbox ảnh báo cáo — mở TỪ pop-up chi tiết ô, dùng lại vỏ .modal/.modalbox của dự án */
+.modalbox.pg-lbbox{width:min(980px,96vw)}
+.pg-lb{position:relative;display:flex;align-items:center;justify-content:center;padding:0 14px 18px;min-height:0}
+.pg-lb img{max-width:100%;max-height:74vh;border-radius:12px;background:color-mix(in srgb,var(--ink3) 12%,transparent)}
+.pg-lbnav{position:absolute;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;
+  border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:22px;line-height:1;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);
+  transition:background .16s ease,transform .16s var(--ez-apple)}
+.pg-lbnav:hover{background:var(--hover);transform:translateY(-50%) scale(1.08)}
+.pg-lbnav:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.pg-lbnav.prev{left:18px}
+.pg-lbnav.next{right:18px}
 .pg-badge{display:inline-block;border-radius:999px;padding:3px 11px;font-size:11.5px;font-weight:700}
 @media(max-width:640px){ .pg-wrap{padding:10px} }
 
@@ -1634,15 +1716,33 @@ body.side-anim{overflow-x:clip}
   </div>
 </div>
 
-<!-- Pop-up chi tiết 1 ô kệ (lazy DOM: chỉ đổ nội dung khi bấm ô) -->
+<!-- Pop-up chi tiết 1 ô kệ (lazy DOM: chỉ đổ nội dung khi bấm ô) — CÙNG BỐ CỤC với pop-up vị trí
+     của Audit Hasaki: link "Yêu cầu #… ↗" ở góc phải trên, ruột là dải 7 ngày → hàng chi tiết →
+     2 thẻ Phụ trách / Báo cáo gần nhất (xem khối CSS .pg-vt*). -->
 <div id="plgmodal" class="modal" onclick="if(event.target===this)closePlgModal()">
   <div class="modalbox" style="width:min(680px,96vw)">
-    <div class="modalhd"><div><div class="mt" id="plgmTitle"></div><div class="mtsub" id="plgmSub"></div></div><button class="mclose" onclick="closePlgModal()">&times;</button></div>
-    <div class="modalbody"><table class="pg-kv"><tbody id="plgmBody"></tbody></table></div>
+    <div class="modalhd"><div><div class="mt" id="plgmTitle"></div><div class="mtsub" id="plgmSub"></div></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <a id="plgmPg" class="pg-ext" target="_blank" rel="noopener"></a>
+        <button class="mclose" onclick="closePlgModal()">&times;</button></div></div>
+    <div class="modalbody" id="plgmBody" style="padding:14px 22px 22px"></div>
   </div>
 </div>
 
-<footer>Dashboard đọc trực tiếp online từ Google Sheet “stocklocationfactory” (gviz API).<br>Trạng thái lưu trữ: SKU đếm distinct theo Kho × Category · Kiểm kê: tab kiemke-sku / kiemke-location (bấm mã phiếu để mở phiếu đó trên WMS ở tab mới; ✎ = phiếu có SL điều chỉnh lưu tab kiemke-adjust) · Pop-up Lệch âm/dương liệt kê thẳng UID group lệch (tab kiemke-uidgr; cột Action sửa tự do, lưu tab kiemke-uidgr-edit bằng email @hasaki.vn) · Planogram: sơ đồ mặt bằng kho nguyên liệu dựng theo bản vẽ MTG_zigzag (14 dãy · 161 ô), trạng thái vệ sinh đọc tab VESINH-KHO-DANHMUC do sync-vesinh-factory.mjs ghi · Nút “Tải lại dữ liệu” (trong menu Cài đặt) kéo trực tiếp từ WMS (tối đa 4 giờ/lần).</footer>
+<!-- Lightbox ảnh báo cáo vệ sinh — mở TỪ pop-up chi tiết ô, đóng trước nó khi bấm Escape -->
+<div id="plganhmodal" class="modal" onclick="if(event.target===this)closePlgAnh()">
+  <div class="modalbox pg-lbbox">
+    <div class="modalhd"><div><div class="mt" id="plgAnhTitle"></div><div class="mtsub" id="plgAnhSub"></div></div>
+      <button class="mclose" onclick="closePlgAnh()">&times;</button></div>
+    <div class="pg-lb">
+      <button type="button" class="pg-lbnav prev" onclick="plgAnhDi(-1)" aria-label="Ảnh trước">&lsaquo;</button>
+      <img id="plgAnhImg" alt="Ảnh báo cáo vệ sinh">
+      <button type="button" class="pg-lbnav next" onclick="plgAnhDi(1)" aria-label="Ảnh sau">&rsaquo;</button>
+    </div>
+  </div>
+</div>
+
+<footer>Dashboard đọc trực tiếp online từ Google Sheet “stocklocationfactory” (gviz API).<br>Trạng thái lưu trữ: SKU đếm distinct theo Kho × Category · Kiểm kê: tab kiemke-sku / kiemke-location (bấm mã phiếu để mở phiếu đó trên WMS ở tab mới; ✎ = phiếu có SL điều chỉnh lưu tab kiemke-adjust) · Pop-up Lệch âm/dương liệt kê thẳng UID group lệch (tab kiemke-uidgr; cột Action sửa tự do, lưu tab kiemke-uidgr-edit bằng email @hasaki.vn) · Planogram: sơ đồ mặt bằng kho nguyên liệu dựng theo bản vẽ MTG_zigzag (14 dãy · 161 ô), trạng thái vệ sinh đọc tab VESINH-KHO-DANHMUC do sync-vesinh-factory.mjs ghi, pop-up chi tiết 1 ô đọc thêm tab VESINH-KHO-YEUCAU (dải 7 ngày · người báo cáo · ảnh — cùng bố cục pop-up vị trí của Audit Hasaki) · Nút “Tải lại dữ liệu” (trong menu Cài đặt) kéo trực tiếp từ WMS (tối đa 4 giờ/lần).</footer>
 
 <div class="footbar">
   <span class="chip">Nguồn: stocklocationfactory</span>
@@ -2315,6 +2415,11 @@ function renderRows(){
   document.getElementById('msum').textContent=nf(cnt)+' dòng · tổng số lượng '+nf(qsum);
 }
 document.addEventListener('keydown',function(e){
+  /* Lightbox ảnh báo cáo: mũi tên trái/phải lật ảnh khi nó đang mở (nó là lớp trên cùng) */
+  var pgl=document.getElementById('plganhmodal');
+  if(pgl && pgl.classList.contains('show') && (e.key==='ArrowLeft'||e.key==='ArrowRight')){
+    e.preventDefault(); plgAnhDi(e.key==='ArrowRight'?1:-1); return;
+  }
   if(e.key!=='Escape') return;
   if(document.querySelector('#pcFilters .combo-menu.show')){ pcCloseCombos(); return; }   // menu combo modal tạo lệnh
   var pdp=document.getElementById('pcDatePop');   // lịch Plan date trong modal tạo lệnh — đóng trước modal
@@ -2327,8 +2432,9 @@ document.addEventListener('keydown',function(e){
   if(plm && plm.classList.contains('show')){ closePlModal(); return; }
   var pgn=document.getElementById('plgNgayMenu');   // menu chọn Ngày đóng trước mọi pop-up
   if(pgn && pgn.classList.contains('show')){ plgDongNgay(); return; }
-  /* 3 pop-up của tab Planogram — đóng theo thứ tự "cái nào nổi trên cùng thì đóng trước":
-     chi tiết ô mở được TỪ trong 2 pop-up kia nên nó phải đứng đầu hàng. */
+  /* 4 pop-up của tab Planogram — đóng theo thứ tự "cái nào nổi trên cùng thì đóng trước":
+     lightbox ảnh mở TỪ pop-up chi tiết ô, mà chi tiết ô lại mở được từ 2 pop-up kia. */
+  if(pgl && pgl.classList.contains('show')){ closePlgAnh(); return; }
   var pgm=document.getElementById('plgmodal');
   if(pgm && pgm.classList.contains('show')){ closePlgModal(); return; }
   var pga=document.getElementById('plgallmodal');
@@ -2591,6 +2697,16 @@ function showTab(t){
  * ============================================================================================ */
 var PLG_GEO={W:2495,H:1702,nen:"2481 14 2481 1688,14 14 2481 14,14 14 14 1688,14 1688 2481 1688,295 1637 852 1637,852 1637 2190 1637,2190 976 2190 1637,2190 976 2240 996,295 603 295 1637,295 525 295 1637,295 525 701 93,701 93 1835 93,1835 93 1835 525,1981 525 2190 716,1835 525 1981 525,2190 716 2218 679,1743 1578 1748 1578,1748 1578 1748 1630,1743 1630 1748 1630,1743 1578 1743 1630,1743 1552 1748 1552,1743 1552 1748 1630,1748 1552 1748 1630,1743 1552 1743 1630,1639 1552 1743 1552,1639 1552 1639 1630,1639 1630 1743 1630,1634 1578 1639 1578,1634 1578 1639 1630,1639 1578 1639 1630,1634 1630 1639 1630,1634 1578 1634 1630,1634 1552 1639 1552,1634 1552 1639 1630,1634 1552 1634 1630,1852 1578 1856 1578,1856 1578 1856 1630,1852 1630 1856 1630,1852 1578 1852 1630,1852 1552 1856 1552,1852 1552 1856 1630,1856 1552 1856 1630,1852 1552 1852 1630,1748 1552 1852 1552,1748 1630 1852 1630,1961 1578 1965 1578,1965 1578 1965 1630,1961 1630 1965 1630,1961 1578 1961 1630,1961 1552 1965 1552,1961 1552 1965 1630,1965 1552 1965 1630,1961 1552 1961 1630,1856 1552 1961 1552,1856 1630 1961 1630,2069 1578 2074 1578,2074 1578 2074 1630,2069 1630 2074 1630,2069 1578 2069 1630,2069 1552 2074 1552,2069 1552 2074 1630,2074 1552 2074 1630,2069 1552 2069 1630,1965 1552 2069 1552,1965 1630 2069 1630,2178 1578 2183 1578,2183 1578 2183 1630,2178 1630 2183 1630,2178 1578 2178 1630,2178 1552 2183 1552,2178 1552 2183 1630,2183 1552 2183 1630,2178 1552 2178 1630,2074 1552 2178 1552,2074 1630 2178 1630,1499 1552 1634 1552,1499 1552 1499 1630,1499 1630 1634 1630,1494 1552 1499 1552,1494 1552 1499 1630,1494 1630 1499 1630,1494 1552 1494 1630,1421 1552 1425 1552,1421 1552 1425 1604,1425 1552 1425 1604,1421 1604 1425 1604,1421 1552 1421 1604,1301 1552 1421 1552,1301 1552 1301 1604,1301 1604 1421 1604,1296 1552 1301 1552,1296 1552 1301 1604,1296 1604 1301 1604,1296 1552 1296 1604,1177 1552 1296 1552,1177 1552 1177 1604,1177 1604 1296 1604,1172 1552 1177 1552,1172 1552 1177 1604,1172 1604 1177 1604,1172 1552 1172 1604,1052 1552 1172 1552,1052 1552 1052 1604,1052 1604 1172 1604,1048 1552 1052 1552,1048 1552 1052 1604,1048 1604 1052 1604,1048 1552 1048 1604,928 1552 1048 1552,928 1552 928 1604,928 1604 1048 1604,923 1552 928 1552,923 1552 928 1604,923 1604 928 1604,923 1552 923 1604,803 1552 923 1552,803 1552 803 1604,803 1604 923 1604,799 1552 803 1552,799 1552 803 1604,799 1604 803 1604,799 1552 799 1604,679 1552 799 1552,679 1552 679 1604,679 1604 799 1604,674 1552 679 1552,674 1552 679 1604,674 1604 679 1604,674 1552 674 1604,555 1552 674 1552,555 1552 555 1604,555 1604 674 1604,550 1552 555 1552,550 1552 555 1604,550 1604 555 1604,550 1552 550 1604,430 1552 550 1552,430 1552 430 1604,430 1604 550 1604,426 1552 430 1552,426 1552 430 1604,426 1604 430 1604,426 1552 426 1604,306 1552 426 1552,306 1552 306 1604,306 1604 426 1604,301 1552 306 1552,301 1552 306 1604,301 1604 306 1604,301 1552 301 1604,298 1011 302 1011,298 1011 302 1063,302 1011 302 1063,298 1063 302 1063,298 1011 298 1063,1417 844 1422 844,1417 844 1422 896,1422 844 1422 896,1417 896 1422 896,1417 844 1417 896,1293 844 1297 844,1293 844 1297 896,1297 844 1297 896,1293 896 1297 896,1293 844 1293 896,1168 844 1173 844,1168 844 1173 896,1173 844 1173 896,1168 896 1173 896,1168 844 1168 896,1044 844 1049 844,1044 844 1049 896,1049 844 1049 896,1044 896 1049 896,1044 844 1044 896,920 844 924 844,920 844 924 896,924 844 924 896,920 896 924 896,920 844 920 896,795 844 800 844,795 844 800 896,800 844 800 896,795 896 800 896,795 844 795 896,671 844 676 844,671 844 676 896,676 844 676 896,671 896 676 896,671 844 671 896,547 844 551 844,547 844 551 896,551 844 551 896,547 896 551 896,547 844 547 896,422 844 427 844,422 844 427 896,427 844 427 896,422 896 427 896,422 844 422 896,302 818 422 818,302 818 302 896,302 896 422 896,422 818 422 896,298 844 302 844,298 844 302 896,302 844 302 896,298 896 302 896,298 844 298 896,1417 740 1422 740,1417 740 1422 792,1422 740 1422 792,1417 792 1422 792,1417 740 1417 792,1293 740 1297 740,1293 740 1297 792,1297 740 1297 792,1293 792 1297 792,1293 740 1293 792,1168 740 1173 740,1168 740 1173 792,1173 740 1173 792,1168 792 1173 792,1168 740 1168 792,1044 740 1049 740,1044 740 1049 792,1049 740 1049 792,1044 792 1049 792,1044 740 1044 792,920 740 924 740,920 740 924 792,924 740 924 792,920 792 924 792,920 740 920 792,795 740 800 740,795 740 800 792,800 740 800 792,795 792 800 792,795 740 795 792,671 740 676 740,671 740 676 792,676 740 676 792,671 792 676 792,671 740 671 792,547 740 551 740,547 740 551 792,551 740 551 792,547 792 551 792,547 740 547 792,422 740 427 740,422 740 427 792,427 740 427 792,422 792 427 792,422 740 422 792,302 740 422 740,302 740 302 818,422 740 422 818,298 740 302 740,298 740 302 792,302 740 302 792,298 792 302 792,298 740 298 792,1743 1396 1748 1396,1748 1396 1748 1448,1743 1448 1748 1448,1743 1396 1743 1448,1743 1370 1748 1370,1743 1370 1748 1448,1748 1370 1748 1448,1743 1370 1743 1448,1639 1370 1743 1370,1639 1370 1639 1448,1639 1448 1743 1448,1634 1396 1639 1396,1634 1396 1639 1448,1639 1396 1639 1448,1634 1448 1639 1448,1634 1396 1634 1448,1634 1370 1639 1370,1634 1370 1639 1448,1634 1370 1634 1448,1852 1396 1856 1396,1856 1396 1856 1448,1852 1448 1856 1448,1852 1396 1852 1448,1852 1370 1856 1370,1852 1370 1856 1448,1856 1370 1856 1448,1852 1370 1852 1448,1748 1370 1852 1370,1748 1448 1852 1448,1961 1396 1965 1396,1965 1396 1965 1448,1961 1448 1965 1448,1961 1396 1961 1448,1961 1370 1965 1370,1961 1370 1965 1448,1965 1370 1965 1448,1961 1370 1961 1448,1856 1370 1961 1370,1856 1448 1961 1448,2069 1396 2074 1396,2074 1396 2074 1448,2069 1448 2074 1448,2069 1396 2069 1448,2069 1370 2074 1370,2069 1370 2074 1448,2074 1370 2074 1448,2069 1370 2069 1448,1965 1370 2069 1370,1965 1448 2069 1448,2178 1396 2183 1396,2183 1396 2183 1448,2178 1448 2183 1448,2178 1396 2178 1448,2178 1370 2183 1370,2178 1370 2183 1448,2183 1370 2183 1448,2178 1370 2178 1448,2074 1370 2178 1370,2074 1448 2178 1448,1743 1297 1748 1297,1748 1297 1748 1349,1743 1349 1748 1349,1743 1297 1743 1349,1743 1271 1748 1271,1743 1271 1748 1349,1748 1271 1748 1349,1743 1271 1743 1349,1639 1271 1743 1271,1639 1271 1639 1349,1639 1349 1743 1349,1634 1297 1639 1297,1634 1297 1639 1349,1639 1297 1639 1349,1634 1349 1639 1349,1634 1297 1634 1349,1634 1271 1639 1271,1634 1271 1639 1349,1634 1271 1634 1349,1852 1297 1856 1297,1856 1297 1856 1349,1852 1349 1856 1349,1852 1297 1852 1349,1852 1271 1856 1271,1852 1271 1856 1349,1856 1271 1856 1349,1852 1271 1852 1349,1748 1271 1852 1271,1748 1349 1852 1349,1961 1297 1965 1297,1965 1297 1965 1349,1961 1349 1965 1349,1961 1297 1961 1349,1961 1271 1965 1271,1961 1271 1965 1349,1965 1271 1965 1349,1961 1271 1961 1349,1856 1271 1961 1271,1856 1349 1961 1349,2069 1297 2074 1297,2074 1297 2074 1349,2069 1349 2074 1349,2069 1297 2069 1349,2069 1271 2074 1271,2069 1271 2074 1349,2074 1271 2074 1349,2069 1271 2069 1349,1965 1271 2069 1271,1965 1349 2069 1349,2178 1297 2183 1297,2183 1297 2183 1349,2178 1349 2183 1349,2178 1297 2178 1349,2178 1271 2183 1271,2178 1271 2183 1349,2183 1271 2183 1349,2178 1271 2178 1349,2074 1271 2178 1271,2074 1349 2178 1349,1639 1110 1743 1110,1639 1110 1639 1167,1639 1167 1743 1167,1743 1110 1743 1167,1634 1110 1639 1110,1634 1110 1639 1167,1634 1167 1639 1167,1634 1110 1634 1167,1748 1110 1852 1110,1748 1110 1748 1167,1748 1167 1852 1167,1852 1110 1852 1167,1743 1110 1748 1110,1743 1110 1748 1167,1743 1167 1748 1167,1856 1110 1961 1110,1856 1110 1856 1167,1856 1167 1961 1167,1961 1110 1961 1167,1852 1110 1856 1110,1852 1110 1856 1167,1852 1167 1856 1167,1965 1110 2069 1110,1965 1110 1965 1167,1965 1167 2069 1167,2069 1110 2069 1167,1961 1110 1965 1110,1961 1110 1965 1167,1961 1167 1965 1167,2074 1110 2178 1110,2074 1110 2074 1167,2074 1167 2178 1167,2178 1110 2178 1167,2069 1110 2074 1110,2069 1110 2074 1167,2069 1167 2074 1167,1639 1015 1743 1015,1639 1015 1639 1072,1639 1072 1743 1072,1743 1015 1743 1072,1634 1015 1639 1015,1634 1015 1639 1072,1634 1072 1639 1072,1634 1015 1634 1072,1748 1015 1852 1015,1748 1015 1748 1072,1748 1072 1852 1072,1852 1015 1852 1072,1743 1015 1748 1015,1743 1015 1748 1072,1743 1072 1748 1072,1856 1015 1961 1015,1856 1015 1856 1072,1856 1072 1961 1072,1961 1015 1961 1072,1852 1015 1856 1015,1852 1015 1856 1072,1852 1072 1856 1072,1965 1015 2069 1015,1965 1015 1965 1072,1965 1072 2069 1072,2069 1015 2069 1072,1961 1015 1965 1015,1961 1015 1965 1072,1961 1072 1965 1072,2074 1015 2178 1015,2074 1015 2074 1072,2074 1072 2178 1072,2178 1015 2178 1072,2069 1015 2074 1015,2069 1015 2074 1072,2069 1072 2074 1072,1639 848 1743 848,1639 848 1639 906,1639 906 1743 906,1743 848 1743 906,1634 848 1639 848,1634 848 1639 906,1634 906 1639 906,1634 848 1634 906,1748 848 1852 848,1748 848 1748 906,1748 906 1852 906,1852 848 1852 906,1743 848 1748 848,1743 848 1748 906,1743 906 1748 906,1856 848 1961 848,1856 848 1856 906,1856 906 1961 906,1961 848 1961 906,1852 848 1856 848,1852 848 1856 906,1852 906 1856 906,1965 848 2069 848,1965 848 1965 906,1965 906 2069 906,2069 848 2069 906,1961 848 1965 848,1961 848 1965 906,1961 906 1965 906,2069 848 2074 848,2069 848 2074 906,2074 848 2074 906,2069 906 2074 906,1639 788 1743 788,1639 788 1639 846,1639 846 1743 846,1743 788 1743 846,1634 788 1639 788,1634 788 1639 846,1634 846 1639 846,1634 788 1634 846,1748 788 1852 788,1748 788 1748 846,1748 846 1852 846,1852 788 1852 846,1743 788 1748 788,1743 788 1748 846,1743 846 1748 846,1856 788 1961 788,1856 788 1856 846,1856 846 1961 846,1961 788 1961 846,1852 788 1856 788,1852 788 1856 846,1852 846 1856 846,1965 788 2069 788,1965 788 1965 846,1965 846 2069 846,2069 788 2069 846,1961 788 1965 788,1961 788 1965 846,1961 846 1965 846,2069 788 2074 788,2069 788 2074 846,2074 788 2074 846,2069 846 2074 846,701 93 706 93,701 93 706 125,706 93 706 125,701 125 706 125,701 93 701 125,706 125 784 125,784 93 784 125,706 93 784 93,784 93 788 93,784 93 788 125,788 93 788 125,784 125 788 125,788 125 866 125,866 93 866 125,788 93 866 93,866 93 871 93,866 93 871 125,871 93 871 125,866 125 871 125,871 125 949 125,949 93 949 125,871 93 949 93,949 93 954 93,949 93 954 125,954 93 954 125,949 125 954 125,954 125 1032 125,1032 93 1032 125,954 93 1032 93,1032 93 1037 93,1032 93 1037 125,1037 93 1037 125,1032 125 1037 125,1037 125 1115 125,1115 93 1115 125,1037 93 1115 93,1115 93 1119 93,1115 93 1119 125,1119 93 1119 125,1115 125 1119 125,1119 125 1197 125,1197 93 1197 125,1119 93 1197 93,1197 93 1202 93,1197 93 1202 125,1202 93 1202 125,1197 125 1202 125,1202 125 1280 125,1280 93 1280 125,1202 93 1280 93,1280 93 1285 93,1280 93 1285 125,1285 93 1285 125,1280 125 1285 125,1285 125 1363 125,1363 93 1363 125,1285 93 1363 93,1363 93 1368 93,1363 93 1368 125,1368 93 1368 125,1363 125 1368 125,1368 125 1446 125,1446 93 1446 125,1368 93 1446 93,1446 93 1450 93,1446 93 1450 125,1450 93 1450 125,1446 125 1450 125,595 463 600 463,595 463 600 494,600 463 600 494,595 494 600 494,595 463 595 494,600 494 678 494,678 463 678 494,600 463 678 463,678 463 683 463,678 463 683 494,683 463 683 494,678 494 683 494,683 494 761 494,761 463 761 494,683 463 761 463,761 463 765 463,761 463 765 494,765 463 765 494,761 494 765 494,765 494 843 494,843 463 843 494,765 463 843 463,843 463 848 463,843 463 848 494,848 463 848 494,843 494 848 494,848 494 926 494,926 463 926 494,848 463 926 463,926 463 931 463,926 463 931 494,931 463 931 494,926 494 931 494,430 463 434 463,430 463 434 494,434 463 434 494,430 494 434 494,430 463 430 494,434 494 512 494,512 463 512 494,434 463 512 463,512 463 517 463,512 463 517 494,517 463 517 494,512 494 517 494,517 494 595 494,517 463 595 463,1395 497 1415 517,1375 517 1395 497,1375 517 1395 537,1395 537 1415 517,1121 497 1141 517,1101 517 1121 497,1101 517 1121 537,1121 537 1141 517,866 497 887 517,846 517 866 497,846 517 866 537,866 537 887 517,573 497 593 517,553 517 573 497,553 517 573 537,573 537 593 517,348 497 368 517,327 517 348 497,327 517 348 537,348 537 368 517,2231 716 2439 716,2439 716 2439 924,2231 924 2439 924,2231 716 2231 924,2190 1637 2346 1637,2346 1169 2346 1637,2242 1169 2346 1169,2242 1169 2258 1135,743 203 748 203,743 203 748 255,748 203 748 255,743 255 748 255,743 203 743 255,639 203 743 203,639 203 639 255,639 255 743 255,634 203 639 203,634 203 639 255,634 255 639 255,634 203 634 255,1365 333 1370 333,1365 333 1370 385,1370 333 1370 385,1365 385 1370 385,1365 333 1365 385,1245 333 1365 333,1245 333 1245 385,1245 385 1365 385,1241 333 1245 333,1241 333 1245 385,1241 385 1245 385,1241 333 1241 385,1121 333 1241 333,1121 333 1121 385,1121 385 1241 385,1116 333 1121 333,1116 333 1121 385,1116 385 1121 385,1116 333 1116 385,997 333 1116 333,997 333 997 385,997 385 1116 385,992 333 997 333,992 333 997 385,992 385 997 385,992 333 992 385,872 333 992 333,872 333 872 385,872 385 992 385,868 333 872 333,868 333 872 385,868 385 872 385,868 333 868 385,427 818 547 818,427 818 427 896,427 896 547 896,547 818 547 896,427 740 547 740,427 740 427 818,547 740 547 818,551 818 671 818,551 818 551 896,551 896 671 896,671 818 671 896,551 740 671 740,551 740 551 818,671 740 671 818,676 818 795 818,676 818 676 896,676 896 795 896,795 818 795 896,676 740 795 740,676 740 676 818,795 740 795 818,800 818 920 818,800 818 800 896,800 896 920 896,920 818 920 896,800 740 920 740,800 740 800 818,920 740 920 818,924 818 1044 818,924 818 924 896,924 896 1044 896,1044 818 1044 896,924 740 1044 740,924 740 924 818,1044 740 1044 818,1049 818 1168 818,1049 818 1049 896,1049 896 1168 896,1168 818 1168 896,1049 740 1168 740,1049 740 1049 818,1168 740 1168 818,1173 818 1293 818,1173 818 1173 896,1173 896 1293 896,1293 818 1293 896,1173 740 1293 740,1173 740 1173 818,1293 740 1293 818,1297 818 1417 818,1297 818 1297 896,1297 896 1417 896,1417 818 1417 896,1297 740 1417 740,1297 740 1297 818,1417 740 1417 818,302 1281 302 1333,298 1281 302 1281,298 1281 302 1333,298 1333 302 1333,298 1281 298 1333,1191 542 1196 542,1191 542 1196 594,1196 542 1196 594,1191 594 1196 594,1191 542 1191 594,1071 542 1191 542,1071 542 1071 594,1071 594 1191 594,1067 542 1071 542,1067 542 1071 594,1067 594 1071 594,1067 542 1067 594,947 542 1067 542,947 542 947 594,947 594 1067 594,942 542 947 542,942 542 947 594,942 594 947 594,942 542 942 594,823 542 942 542,823 542 823 594,823 594 942 594,818 542 823 542,818 542 823 594,818 594 823 594,818 542 818 594,698 542 818 542,698 542 698 594,698 594 818 594,694 542 698 542,694 542 698 594,694 594 698 594,694 542 694 594,1450 125 1528 125,1528 93 1528 125,1450 93 1528 93,1528 93 1533 93,1528 93 1533 125,1533 93 1533 125,1528 125 1533 125,1533 125 1611 125,1611 93 1611 125,1533 93 1611 93,1611 93 1616 93,1611 93 1616 125,1616 93 1616 125,1611 125 1616 125,1616 125 1694 125,1694 93 1694 125,1616 93 1694 93,1694 93 1699 93,1694 93 1699 125,1699 93 1699 125,1694 125 1699 125,1699 125 1777 125,1777 93 1777 125,1699 93 1777 93,1777 93 1781 93,1777 93 1781 125,1781 93 1781 125,1777 125 1781 125,1802 283 1833 283,1802 283 1833 288,1833 283 1833 288,1802 288 1833 288,1802 283 1802 288,1833 205 1833 283,1802 205 1833 205,1802 205 1802 283,1802 200 1833 200,1802 200 1833 205,1833 200 1833 205,1802 200 1802 205,1833 122 1833 200,1802 122 1833 122,1802 122 1802 200,1802 117 1833 117,1802 117 1833 122,1833 117 1833 122,1802 117 1802 122,1417 1115 1422 1115,1417 1115 1422 1167,1422 1115 1422 1167,1417 1167 1422 1167,1417 1115 1417 1167,1293 1115 1297 1115,1293 1115 1297 1167,1297 1115 1297 1167,1293 1167 1297 1167,1293 1115 1293 1167,1168 1115 1173 1115,1168 1115 1173 1167,1173 1115 1173 1167,1168 1167 1173 1167,1168 1115 1168 1167,1044 1115 1049 1115,1044 1115 1049 1167,1049 1115 1049 1167,1044 1167 1049 1167,1044 1115 1044 1167,920 1115 924 1115,920 1115 924 1167,924 1115 924 1167,920 1167 924 1167,920 1115 920 1167,795 1115 800 1115,795 1115 800 1167,800 1115 800 1167,795 1167 800 1167,795 1115 795 1167,671 1115 676 1115,671 1115 676 1167,676 1115 676 1167,671 1167 676 1167,671 1115 671 1167,547 1115 551 1115,547 1115 551 1167,551 1115 551 1167,547 1167 551 1167,547 1115 547 1167,422 1115 427 1115,422 1115 427 1167,427 1115 427 1167,422 1167 427 1167,422 1115 422 1167,302 1089 422 1089,302 1089 302 1167,302 1167 422 1167,422 1089 422 1167,298 1115 302 1115,298 1115 302 1167,302 1115 302 1167,298 1167 302 1167,298 1115 298 1167,1417 1011 1422 1011,1417 1011 1422 1063,1422 1011 1422 1063,1417 1063 1422 1063,1417 1011 1417 1063,1293 1011 1297 1011,1293 1011 1297 1063,1297 1011 1297 1063,1293 1063 1297 1063,1293 1011 1293 1063,1168 1011 1173 1011,1168 1011 1173 1063,1173 1011 1173 1063,1168 1063 1173 1063,1168 1011 1168 1063,1044 1011 1049 1011,1044 1011 1049 1063,1049 1011 1049 1063,1044 1063 1049 1063,1044 1011 1044 1063,920 1011 924 1011,920 1011 924 1063,924 1011 924 1063,920 1063 924 1063,920 1011 920 1063,795 1011 800 1011,795 1011 800 1063,800 1011 800 1063,795 1063 800 1063,795 1011 795 1063,671 1011 676 1011,671 1011 676 1063,676 1011 676 1063,671 1063 676 1063,671 1011 671 1063,547 1011 551 1011,547 1011 551 1063,551 1011 551 1063,547 1063 551 1063,547 1011 547 1063,422 1011 427 1011,422 1011 427 1063,427 1011 427 1063,422 1063 427 1063,422 1011 422 1063,302 1011 422 1011,302 1011 302 1089,422 1011 422 1089,427 1089 547 1089,427 1089 427 1167,427 1167 547 1167,547 1089 547 1167,427 1011 547 1011,427 1011 427 1089,547 1011 547 1089,551 1089 671 1089,551 1089 551 1167,551 1167 671 1167,671 1089 671 1167,551 1011 671 1011,551 1011 551 1089,671 1011 671 1089,676 1089 795 1089,676 1089 676 1167,676 1167 795 1167,795 1089 795 1167,676 1011 795 1011,676 1011 676 1089,795 1011 795 1089,800 1089 920 1089,800 1089 800 1167,800 1167 920 1167,920 1089 920 1167,800 1011 920 1011,800 1011 800 1089,920 1011 920 1089,924 1089 1044 1089,924 1089 924 1167,924 1167 1044 1167,1044 1089 1044 1167,924 1011 1044 1011,924 1011 924 1089,1044 1011 1044 1089,1049 1089 1168 1089,1049 1089 1049 1167,1049 1167 1168 1167,1168 1089 1168 1167,1049 1011 1168 1011,1049 1011 1049 1089,1168 1011 1168 1089,1173 1089 1293 1089,1173 1089 1173 1167,1173 1167 1293 1167,1293 1089 1293 1167,1173 1011 1293 1011,1173 1011 1173 1089,1293 1011 1293 1089,1297 1089 1417 1089,1297 1089 1297 1167,1297 1167 1417 1167,1417 1089 1417 1167,1297 1011 1417 1011,1297 1011 1297 1089,1417 1011 1417 1089,1417 1385 1422 1385,1417 1385 1422 1437,1422 1385 1422 1437,1417 1437 1422 1437,1417 1385 1417 1437,1293 1385 1297 1385,1293 1385 1297 1437,1297 1385 1297 1437,1293 1437 1297 1437,1293 1385 1293 1437,1168 1385 1173 1385,1168 1385 1173 1437,1173 1385 1173 1437,1168 1437 1173 1437,1168 1385 1168 1437,1044 1385 1049 1385,1044 1385 1049 1437,1049 1385 1049 1437,1044 1437 1049 1437,1044 1385 1044 1437,920 1385 924 1385,920 1385 924 1437,924 1385 924 1437,920 1437 924 1437,920 1385 920 1437,795 1385 800 1385,795 1385 800 1437,800 1385 800 1437,795 1437 800 1437,795 1385 795 1437,671 1385 676 1385,671 1385 676 1437,676 1385 676 1437,671 1437 676 1437,671 1385 671 1437,547 1385 551 1385,547 1385 551 1437,551 1385 551 1437,547 1437 551 1437,547 1385 547 1437,422 1385 427 1385,422 1385 427 1437,427 1385 427 1437,422 1437 427 1437,422 1385 422 1437,302 1359 422 1359,302 1359 302 1437,302 1437 422 1437,422 1359 422 1437,298 1385 302 1385,298 1385 302 1437,302 1385 302 1437,298 1437 302 1437,298 1385 298 1437,1417 1281 1422 1281,1417 1281 1422 1333,1422 1281 1422 1333,1417 1333 1422 1333,1417 1281 1417 1333,1293 1281 1297 1281,1293 1281 1297 1333,1297 1281 1297 1333,1293 1333 1297 1333,1293 1281 1293 1333,1168 1281 1173 1281,1168 1281 1173 1333,1173 1281 1173 1333,1168 1333 1173 1333,1168 1281 1168 1333,1044 1281 1049 1281,1044 1281 1049 1333,1049 1281 1049 1333,1044 1333 1049 1333,1044 1281 1044 1333,920 1281 924 1281,920 1281 924 1333,924 1281 924 1333,920 1333 924 1333,920 1281 920 1333,795 1281 800 1281,795 1281 800 1333,800 1281 800 1333,795 1333 800 1333,795 1281 795 1333,671 1281 676 1281,671 1281 676 1333,676 1281 676 1333,671 1333 676 1333,671 1281 671 1333,547 1281 551 1281,547 1281 551 1333,551 1281 551 1333,547 1333 551 1333,547 1281 547 1333,422 1281 427 1281,422 1281 427 1333,427 1281 427 1333,422 1333 427 1333,422 1281 422 1333,302 1281 422 1281,302 1281 302 1359,422 1281 422 1359,427 1359 547 1359,427 1359 427 1437,427 1437 547 1437,547 1359 547 1437,427 1281 547 1281,427 1281 427 1359,547 1281 547 1359,551 1359 671 1359,551 1359 551 1437,551 1437 671 1437,671 1359 671 1437,551 1281 671 1281,551 1281 551 1359,671 1281 671 1359,676 1359 795 1359,676 1359 676 1437,676 1437 795 1437,795 1359 795 1437,676 1281 795 1281,676 1281 676 1359,795 1281 795 1359,800 1359 920 1359,800 1359 800 1437,800 1437 920 1437,920 1359 920 1437,800 1281 920 1281,800 1281 800 1359,920 1281 920 1359,924 1359 1044 1359,924 1359 924 1437,924 1437 1044 1437,1044 1359 1044 1437,924 1281 1044 1281,924 1281 924 1359,1044 1281 1044 1359,1049 1359 1168 1359,1049 1359 1049 1437,1049 1437 1168 1437,1168 1359 1168 1437,1049 1281 1168 1281,1049 1281 1049 1359,1168 1281 1168 1359,1173 1359 1293 1359,1173 1359 1173 1437,1173 1437 1293 1437,1293 1359 1293 1437,1173 1281 1293 1281,1173 1281 1173 1359,1293 1281 1293 1359,1297 1359 1417 1359,1297 1359 1297 1437,1297 1437 1417 1437,1417 1359 1417 1437,1297 1281 1417 1281,1297 1281 1297 1359,1417 1281 1417 1359,1614 333 1619 333,1614 333 1619 385,1619 333 1619 385,1614 385 1619 385,1614 333 1614 385,1494 333 1614 333,1494 333 1494 385,1494 385 1614 385,1489 333 1494 333,1489 333 1494 385,1489 385 1494 385,1489 333 1489 385,1370 333 1489 333,1370 385 1489 385,574 542 694 542,574 542 574 594,574 594 694 594,569 542 574 542,569 542 574 594,569 594 574 594,569 542 569 594,449 542 569 542,449 542 449 594,449 594 569 594,445 542 449 542,445 542 449 594,445 594 449 594,445 542 445 594,325 542 445 542,325 542 325 594,325 594 445 594,320 542 325 542,320 542 325 594,320 594 325 594,320 542 320 594,748 333 868 333,748 333 748 385,748 385 868 385,743 333 748 333,743 333 748 385,743 385 748 385,743 333 743 385,623 333 743 333,623 333 623 385,623 385 743 385,619 333 623 333,619 333 623 385,619 385 623 385,619 333 619 385,499 333 619 333,499 333 499 385,499 385 619 385,494 333 499 333,494 333 499 385,494 385 499 385,494 333 494 385,852 203 857 203,852 203 857 255,857 203 857 255,852 255 857 255,852 203 852 255,748 203 852 203,748 255 852 255,961 203 965 203,961 203 965 255,965 203 965 255,961 255 965 255,961 203 961 255,857 203 961 203,857 255 961 255,1069 203 1074 203,1069 203 1074 255,1074 203 1074 255,1069 255 1074 255,1069 203 1069 255,965 203 1069 203,965 255 1069 255,1178 203 1183 203,1178 203 1183 255,1183 203 1183 255,1178 255 1183 255,1178 203 1178 255,1074 203 1178 203,1074 255 1178 255,1287 203 1292 203,1287 203 1292 255,1292 203 1292 255,1287 255 1292 255,1287 203 1287 255,1183 203 1287 203,1183 255 1287 255,1396 203 1400 203,1396 203 1400 255,1400 203 1400 255,1396 255 1400 255,1396 203 1396 255,1292 203 1396 203,1292 255 1396 255,1505 203 1509 203,1505 203 1509 255,1509 203 1509 255,1505 255 1509 255,1505 203 1505 255,1400 203 1505 203,1400 255 1505 255,1613 203 1618 203,1613 203 1618 255,1618 203 1618 255,1613 255 1618 255,1613 203 1613 255,1509 203 1613 203,1509 255 1613 255",o:"501 01 306 1552 120 52,501 02 430 1552 120 52,501 03 555 1552 120 52,501 04 679 1552 120 52,501 05 803 1552 120 52,501 06 928 1552 120 52,501 07 1052 1552 120 52,501 08 1177 1552 120 52,501 09 1301 1552 120 52,501 10 1499 1552 135 78,501 11 1639 1552 104 78,501 12 1748 1552 104 78,501 13 1856 1552 104 78,501 14 1965 1552 104 78,501 15 2074 1552 104 78,502 01 302 1359 120 78,502 02 427 1359 120 78,502 03 551 1359 120 78,502 04 676 1359 120 78,502 05 800 1359 120 78,502 06 924 1359 120 78,502 07 1049 1359 120 78,502 08 1173 1359 120 78,502 09 1297 1359 120 78,502 10 1639 1370 104 78,502 11 1748 1370 104 78,502 12 1856 1370 104 78,502 13 1965 1370 104 78,502 14 2074 1370 104 78,503 01 302 1281 120 78,503 02 427 1281 120 78,503 03 551 1281 120 78,503 04 676 1281 120 78,503 05 800 1281 120 78,503 06 924 1281 120 78,503 07 1049 1281 120 78,503 08 1173 1281 120 78,503 09 1297 1281 120 78,503 10 1639 1271 104 78,503 11 1748 1271 104 78,503 12 1856 1271 104 78,503 13 1965 1271 104 78,503 14 2074 1271 104 78,504 01 302 1089 120 78,504 02 427 1089 120 78,504 03 551 1089 120 78,504 04 676 1089 120 78,504 05 800 1089 120 78,504 06 924 1089 120 78,504 07 1049 1089 120 78,504 08 1173 1089 120 78,504 09 1297 1089 120 78,504 10 1639 1110 104 57,504 11 1748 1110 104 57,504 12 1856 1110 104 57,504 13 1965 1110 104 57,504 14 2074 1110 104 57,505 01 302 1011 120 78,505 02 427 1011 120 78,505 03 551 1011 120 78,505 04 676 1011 120 78,505 05 800 1011 120 78,505 06 924 1011 120 78,505 07 1049 1011 120 78,505 08 1173 1011 120 78,505 09 1297 1011 120 78,505 10 1639 1015 104 57,505 11 1748 1015 104 57,505 12 1856 1015 104 57,505 13 1965 1015 104 57,505 14 2074 1015 104 57,506 01 302 818 120 78,506 02 427 818 120 78,506 03 551 818 120 78,506 04 676 818 120 78,506 05 800 818 120 78,506 06 924 818 120 78,506 07 1049 818 120 78,506 08 1173 818 120 78,506 09 1297 818 120 78,506 10 1639 848 104 57,506 11 1748 848 104 57,506 12 1856 848 104 57,506 13 1965 848 104 57,507 01 302 740 120 78,507 02 427 740 120 78,507 03 551 740 120 78,507 04 676 740 120 78,507 05 800 740 120 78,507 06 924 740 120 78,507 07 1049 740 120 78,507 08 1173 740 120 78,507 09 1297 740 120 78,507 10 1639 788 104 57,507 11 1748 788 104 57,507 12 1856 788 104 57,507 13 1965 788 104 57,507A 01 325 542 120 52,507A 02 449 542 120 52,507A 03 574 542 120 52,507A 04 698 542 120 52,507A 05 823 542 120 52,507A 06 947 542 120 52,507A 07 1071 542 120 52,508 01 434 463 78 31,508 02 517 463 78 31,508 03 600 463 78 31,508 04 683 463 78 31,508 05 765 463 78 31,508 06 848 463 78 31,509 01 499 359 120 26,509 02 623 359 120 26,509 03 748 359 120 26,509 04 872 359 120 26,509 05 997 359 120 26,509 06 1121 359 120 26,509 07 1245 359 120 26,509 08 1370 359 120 26,509 09 1494 359 120 26,510 01 499 333 120 26,510 02 623 333 120 26,510 03 748 333 120 26,510 04 872 333 120 26,510 05 997 333 120 26,510 06 1121 333 120 26,510 07 1245 333 120 26,510 08 1370 333 120 26,510 09 1494 333 120 26,511 01 639 229 104 26,511 02 748 229 104 26,511 03 857 229 104 26,511 04 965 229 104 26,511 05 1074 229 104 26,511 06 1183 229 104 26,511 07 1292 229 104 26,511 08 1400 229 104 26,511 09 1509 229 104 26,512 01 639 203 104 26,512 02 748 203 104 26,512 03 857 203 104 26,512 04 965 203 104 26,512 05 1074 203 104 26,512 06 1183 203 104 26,512 07 1292 203 104 26,512 08 1400 203 104 26,512 09 1509 203 104 26,513 01 706 93 78 31,513 02 788 93 78 31,513 03 871 93 78 31,513 04 954 93 78 31,513 05 1037 93 78 31,513 06 1119 93 78 31,513 07 1202 93 78 31,513 08 1285 93 78 31,513 09 1368 93 78 31,513 10 1450 93 78 31,513 11 1533 93 78 31,513 12 1616 93 78 31,513 13 1699 93 78 31,513 14 1802 122 31 78,513 15 1802 205 31 78",day:"501 306 1578,502 302 1398,503 302 1320,504 302 1128,505 302 1050,506 302 857,507 302 779,507A 325 568,508 434 479,509 499 372,510 499 346,511 639 242,512 639 216,513 706 109",khu:"Khu PO · Đồng kiểm|2263|827|0,Phòng kiểm soát kho|2227|1405|1"};
 var PLG_TAB='VESINH-KHO-DANHMUC';
+/* Tab YÊU CẦU theo từng ngày (sync-vesinh-factory.mjs ghi song song với DANHMUC) — nguồn cho dải
+   7 ngày + hàng "Người báo cáo / Ảnh báo cáo" của pop-up chi tiết ô, đúng vai VESINH-YEUCAU bên
+   Audit Hasaki. GAS CHẶN GHI TAB RỖNG nên chừng nào kho nguyên liệu chưa có yêu cầu nào thì tab
+   này CHƯA TỒN TẠI trên Sheet — plgLoadYC phải phân biệt được "tab chưa có" với "tab rỗng", xem
+   bẫy gviz ở đó. */
+var PLG_TAB_YC='VESINH-KHO-YEUCAU';
+/* Trang planogram WMS — mở đúng yêu cầu / đúng vị trí ở tab mới (khuôn PG_BASE của Hasaki) */
+var PLG_PG='https://planogram.hasaki.vn/asset-management/request-of-declaration';
+/* Cty/kho của 2 pháp nhân giữ mã F0-KHO — dùng dựng link "Tìm trên planogram" cho đúng kho */
+var PLG_WH={GARMENT:{cty:'1005',kho:'1339'},MTG:{cty:'1002',kho:'1177'}};
 /* Bộ màu trạng thái LẤY ĐÚNG CELLST của tab Planogram Audit Hasaki (#059669 done · #dc2626
    remind/chua · #f59e0b review · #64748b noshift) để hai dashboard đọc cùng một ngôn ngữ màu.
    Kho nguyên liệu chỉ có 4 trạng thái (chưa có dữ liệu AI xét duyệt ảnh và chấm công phụ trách
@@ -2633,7 +2749,10 @@ function plgDsNgay(){
    MỘT NHÓM, cùng nết với plgSoiDay: bấm nhóm nào -> nhóm đó giữ nguyên, phần còn lại mờ đi; bấm
    lại chính nó -> bỏ soi. */
 var PLG={loadedOnce:false,by:{},ok:false,geo:null,soiKho:'',mode:'kho',kho:null,khoRaw:0,ngoai:[],
-         area:'',ngay:'45',list:'vt',hiDay:'',q:'',st:'',traDay:'',traQ:''};
+         area:'',ngay:'45',list:'vt',hiDay:'',q:'',st:'',traDay:'',traQ:'',
+         /* yc = yêu cầu vệ sinh theo NGÀY (tab VESINH-KHO-YEUCAU) — chỉ pop-up chi tiết ô dùng.
+            dang = đang tải · ok = đã trả lời xong · co = tab CÓ THẬT trên Sheet (xem plgLoadYC) */
+         yc:{dang:false,ok:false,co:false,by:{}}};
 /* PLG.mode giữ cứng 'kho': nền ô luôn tô theo kho, trạng thái vệ sinh đi bằng viền (xem plgSvg) */
 
 function plgCellVal(c){ return (c&&c.v!=null)?String(c.f!=null?c.f:c.v):''; }
@@ -2760,19 +2879,9 @@ function plgMau(k,cls){
   if(PLG.mode==='vesinh') return (PLG_ST[k]&&PLG_ST[k].c)||'';
   return cls==='trong'?'':'var(--s'+(String(cls).replace('w','')||1)+')';
 }
-/* Nền cho Ô MẪU trong chú giải: dựng lại ĐÚNG chuyển sắc của ô thật trên sơ đồ (không thể tham
-   chiếu <linearGradient> của SVG từ HTML nên vẽ lại bằng linear-gradient của CSS). */
-function plgNenMau(k,cls){
-  if(PLG.mode==='vesinh'){
-    var m=PLG_ST[k]; if(!m||!m.c) return '';
-    var toi={da:'#046c4e',chua:'#991b1b',nduyet:'#92400e'}[k]||m.c;
-    return 'linear-gradient(180deg,'+m.c+','+toi+')';
-  }
-  if(cls==='trong') return '';
-  if(k && k.indexOf('WH')===0){ var bc=plgBacKho(k); return 'linear-gradient(180deg,'+bc[0]+','+bc[1]+')'; }
-  var i=String(cls).replace('w','')||1;
-  return 'linear-gradient(180deg,var(--s'+i+'),var(--s'+i+'d))';
-}
+/* plgNenMau ĐÃ GỠ 14/08/2026: nó dựng lại chuyển sắc của ô thật cho ký hiệu chú giải, mà ô thật
+   nay tô phẳng (hex CELLST khai thẳng ở .pg-legbox i.vs-*), nên hàm vừa không còn ai gọi vừa mô
+   tả sai thiết kế hiện hành. */
 /* Màu định danh 1 KHO — LẤY THẲNG WH_COLOR, đúng bảng màu mà tab Trạng thái lưu trữ gán cho từng
    kho và tab Kiểm kê / Tồn kho bất thường dùng lại (kkColor cũng đọc WH_COLOR trước). Nhờ vậy
    WH-MATERIAL-MTG ở đâu cũng là một màu. Rớt về thang --sN chỉ khi tab kia chưa tải xong. */
@@ -2780,17 +2889,9 @@ function plgMauKho(w){
   if(typeof WH_COLOR!=='undefined' && WH_COLOR[w]) return WH_COLOR[w];
   var s=plgKho().slot[w]; return s?'var(--s'+s+')':'var(--ink3)';
 }
-/* Làm tối một màu hex đi p phần — dựng chân chuyển sắc và bậc màu đủ tối cho chữ trắng */
-function plgToi(h,p){
-  h=String(h).trim(); if(h.charAt(0)!=='#'||h.length!==7) return h;
-  var r=parseInt(h.substr(1,2),16),g=parseInt(h.substr(3,2),16),b=parseInt(h.substr(5,2),16);
-  function x(v){ v=Math.max(0,Math.round(v*(1-p))); return (v<16?'0':'')+v.toString(16); }
-  return '#'+x(r)+x(g)+x(b);
-}
-/* Hai bậc màu của ô kệ. Màu gốc của dự án khá sáng (MTG #0ea5e9 chữ trắng chỉ 2,77:1) nên KHÔNG
-   tô nguyên bản: đỉnh chuyển sắc làm tối 28% (chữ trắng ~5:1), chân 55% (~9:1). Vẫn đúng hue của
-   kho nên đối chiếu với chấm màu ở các tab khác vẫn ra ngay. */
-function plgBacKho(w){ var c=plgMauKho(w); return [plgToi(c,0.28), plgToi(c,0.55)]; }
+/* plgToi + plgBacKho ĐÃ GỠ 14/08/2026 cùng chuyển sắc: hai hàm này chỉ để dựng hai bậc màu 600/800
+   của ô kệ, mà nền ô nay là hex CELLST phẳng còn vạch kho lấy thẳng plgMauKho (đúng bảng màu các
+   tab khác đang dùng). */
 /* ---- HÌNH HỌC 1 Ô KỆ — nguồn DUY NHẤT cho cả vòng vẽ ô lẫn vòng dựng <clipPath> ---------------
    Hai chỗ đó phải ra cùng một con số tới từng phần mười đơn vị: lệch một chút là thanh accent bị
    cắt hụt hoặc thò ra khỏi góc bo. Tách thành hàm để không còn hai bản công thức chạy song song.
@@ -2831,6 +2932,7 @@ function plgLoad(){
     plgRender();
     capNhatThongTin();   // footer chạy theo tab: lượt gọi lúc bấm tab còn chưa có dữ liệu để đếm ô
   });
+  plgLoadYC();   // song song, KHÔNG chặn sơ đồ: chỉ pop-up chi tiết ô cần tới nó
   /* Chế độ 'kho' ăn theo _raw của tab Trạng thái lưu trữ. Vào thẳng Planogram lúc tab kia chưa tải
      xong thì vẽ lại một nhát khi có dữ liệu, thay vì hiện sai "không có tồn" rồi đứng im. */
   if(!_raw.length){
@@ -2839,6 +2941,67 @@ function plgLoad(){
       else if(++n>60) clearInterval(t);
     },500);
   }
+}
+
+/* ---- KHOÁ Ô: 1 ô trên sơ đồ = F0-KHO-<dãy>-<cột>, gộp mọi tầng ------------------------------
+   Yêu cầu vệ sinh của WMS mang mã ĐẦY ĐỦ (…-<tầng>-<ngăn>) nên tra thẳng theo chuỗi là lạc hết
+   sang "không có yêu cầu" — đúng vai khoaO() của bộ Hasaki. */
+function plgKhoaO(loc){
+  var m=String(loc||'').toUpperCase().match(/^(F0-KHO-[0-9A-Z]+-\d{2})/);
+  return m?m[1]:String(loc||'').toUpperCase();
+}
+/* Ngày/giờ từ 1 ô Sheet: bộ sync ghi chuỗi "2026-08-13" / "2026-08-13 14:18", nhưng Sheets có thể
+   tự nhận thành ô ngày-giờ, lúc đó gviz trả "Date(2026,7,13,...)" (raw) hoặc "13/08/2026" (đã
+   định dạng). Nhận cả 3 dạng, trả về ISO / HH:MM, không đoán bừa. */
+function plgISOtu(v){
+  var s=String(v==null?'':v).trim(); if(!s) return '';
+  var m=s.match(/^Date\((\d+),(\d+),(\d+)/);            if(m) return m[1]+'-'+plg0(+m[2]+1)+'-'+plg0(+m[3]);
+  m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);                if(m) return m[1]+'-'+m[2]+'-'+m[3];
+  m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);          if(m) return m[3]+'-'+plg0(+m[2])+'-'+plg0(+m[1]);
+  return '';
+}
+function plgGioTu(v){
+  var s=String(v==null?'':v).trim(); if(!s) return '';
+  var m=s.match(/^Date\(\d+,\d+,\d+,(\d+),(\d+)/);      if(m) return plg0(+m[1])+':'+plg0(+m[2]);
+  m=s.match(/(\d{1,2}):(\d{2})/);                       if(m) return plg0(+m[1])+':'+m[2];
+  return '';
+}
+/* ---- Nạp tab YÊU CẦU theo ngày — nguồn của dải 7 ngày + hàng báo cáo trong pop-up chi tiết ô --
+   BẪY GVIZ (ghi lại cho khỏi cắn lại): hỏi một tab KHÔNG TỒN TẠI thì gviz không báo lỗi, nó trả
+   về TAB ĐẦU TIÊN của file với status "ok". Tab đầu của Sheet factory là dòng mốc đồng bộ WMS,
+   đọc kiểu cũ sẽ dựng ra "yêu cầu vệ sinh" bịa đặt từ một con epoch. Nên nhận dữ liệu CHỈ KHI
+   nhãn cột đúng của bộ sync (Request ID + Location); còn lại coi như "tab chưa tồn tại" — đúng
+   hiện trạng khi kho nguyên liệu chưa được bật planogram (GAS chặn ghi tab rỗng). */
+function plgLoadYC(){
+  PLG.yc.dang=true;
+  gvizP(PLG_TAB_YC,'&headers=1','gviz_plgyc').then(function(resp){
+    PLG.yc.dang=false; PLG.yc.by={}; PLG.yc.co=false;
+    PLG.yc.ok=!!(resp && resp.status!=='error');   // resp null = LỖI TẢI, khác hẳn "tab chưa có"
+    var cols=(resp&&resp.table&&resp.table.cols)||[];
+    var lb=cols.map(function(c){ return String((c&&c.label)||'').trim().toLowerCase(); });
+    var I=function(n){ return lb.indexOf(n); };
+    if(!PLG.yc.ok || I('request id')<0 || I('location')<0){ plgVtVeLai(); return; }
+    PLG.yc.co=true;
+    var iId=I('request id'), iNg=I('ngày'), iLoc=I('location'), iSt=I('status id'), iTt=I('trạng thái'),
+        iBy=I('executed by'), iAt=I('executed at'), iSch=I('schedule id'), iAnh=I('ảnh');
+    var rows=(resp.table&&resp.table.rows)||[];
+    for(var i=0;i<rows.length;i++){
+      var c=rows[i].c; if(!c) continue;
+      var loc=plgCellVal(c[iLoc]).trim().toUpperCase(); if(!loc) continue;
+      var at=iAt<0?'':plgCellVal(c[iAt]);
+      var r={ id:plgCellVal(c[iId]), loc:loc,
+              ngay:plgISOtu(iNg<0?'':plgCellVal(c[iNg]))||plgISOtu(at),
+              stId:Number(plgCellVal(c[iSt]))||0, tt:iTt<0?'':plgCellVal(c[iTt]),
+              nguoi:iBy<0?'':plgCellVal(c[iBy]), atGio:plgGioTu(at), atNgay:plgISOtu(at),
+              schId:iSch<0?'':plgCellVal(c[iSch]),
+              anh:(iAnh<0?'':plgCellVal(c[iAnh])).split('|').map(function(s){ return s.trim(); }).filter(Boolean) };
+      var k=plgKhoaO(loc); (PLG.yc.by[k]=PLG.yc.by[k]||[]).push(r);
+    }
+    Object.keys(PLG.yc.by).forEach(function(k){
+      PLG.yc.by[k].sort(function(a,b){ return String(b.ngay+' '+b.atGio).localeCompare(String(a.ngay+' '+a.atGio)); });
+    });
+    plgVtVeLai();
+  });
 }
 
 /* Phụ đề của từng trạng thái vệ sinh ở thẻ chỉ số — nói ra VIỆC PHẢI LÀM, không lặp lại nhãn */
@@ -3129,17 +3292,9 @@ function plgSvg(g,mode,theoDay){
   var VX=hop0.x0-LE, VY=hop0.y0-LE, VW=hop0.x1-hop0.x0+LE*2, VH=hop0.y1-hop0.y0+LE*2;
   var out=['<svg class="pg-svg" viewBox="'+VX.toFixed(1)+' '+VY.toFixed(1)+' '+VW.toFixed(1)+' '+VH.toFixed(1)+
     '" role="img" aria-label="Sơ đồ mặt bằng kho nguyên liệu">'];
-  /* Lớp vát dùng CHUNG cho mọi ô (khai báo 1 lần): trắng nhạt ở mép trên, tối nhẹ ở mép dưới,
-     TRONG SUỐT ở khoảng giữa nơi đặt số — không đụng vào tương phản chữ/nền đã kiểm bằng validator. */
-  /* 8 slot phân loại + 3 trạng thái vệ sinh, mỗi cái một chuyển sắc dọc 600 -> 800 cùng hue */
-  /* Chuyển sắc dựng ĐỘNG theo WH_COLOR của từng kho — không hardcode, kho nào đổi màu ở tab
-     Trạng thái lưu trữ thì ô kệ đổi theo. */
-  /* Chuyển sắc cho 3 trạng thái có nền (chưa khai báo lịch dùng nền xám phẳng, khai ở CSS) */
-  var grad='';
-  [['da','#047857','#04543d'],['chua','#dc2626','#991b1b'],['nd','#f59e0b','#b45309']].forEach(function(m){
-    grad+='<linearGradient id="pgG'+m[0]+'" x1="0" y1="0" x2="0" y2="1">'+
-      '<stop offset="0" stop-color="'+m[1]+'"/><stop offset="1" stop-color="'+m[2]+'"/></linearGradient>';
-  });
+  /* 14/08/2026 — KHÔNG CÒN <linearGradient> CHO Ô: nền ô nay tô PHẲNG đúng 3 hex CELLST của Audit
+     Hasaki, khai thẳng ở CSS (.pg-o.vs-*). Lớp vát pgSheen cũng gỡ cùng lượt. Lý do đầy đủ nằm ở
+     khối chú thích "KIỂU TÔ Ô" trong CSS. <defs> giờ chỉ còn clipPath của thanh accent kho. */
   /* ===== CLIP CHO THANH ACCENT MÉP TRÁI =========================================================
      Thanh accent phải BỊ CẮT THEO GÓC BO CỦA Ô — đúng cơ chế "border-radius + overflow:hidden"
      của một thẻ card bên CSS (chính là thứ .pg-legbox i.vach đang làm cho ký hiệu chú giải).
@@ -3157,11 +3312,7 @@ function plgSvg(g,mode,theoDay){
     clipDs+='<clipPath id="'+clipId[k]+'"><rect x="0" y="0" width="'+h.w.toFixed(1)+
       '" height="'+h.h.toFixed(1)+'" rx="'+h.rx.toFixed(1)+'"/></clipPath>';
   });
-  out.push('<defs>'+grad+clipDs+'<linearGradient id="pgSheen" x1="0" y1="0" x2="0" y2="1">'+
-    '<stop offset="0" stop-color="#fff" stop-opacity=".12"/>'+
-    '<stop offset=".42" stop-color="#fff" stop-opacity="0"/>'+
-    '<stop offset=".58" stop-color="#000" stop-opacity="0"/>'+
-    '<stop offset="1" stop-color="#000" stop-opacity=".13"/></linearGradient></defs>');
+  out.push('<defs>'+clipDs+'</defs>');
   /* KHÔNG vẽ lớp sàn, KHÔNG vẽ nền vùng kho: khối “Kho nguyên liệu” chỉ còn MỘT màu nền (của
      .pg-wrap) + ô kệ. Ranh giới 2 kho đọc bằng chính màu ô, tên kho nằm ở hộp chú giải góc trên
      bên phải sơ đồ. */
@@ -3242,10 +3393,7 @@ function plgSvg(g,mode,theoDay){
       ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();plgOpen(this.getAttribute(\'data-l\'))}">'+
       '<title>'+esc(tip)+'</title>'+
       '<rect class="bg"'+hop+'/>'+vach+
-      /* ô nét đứt (không có dữ liệu) thì KHÔNG vát: nó cố ý phẳng, rỗng, để đọc ra "ngoài phạm vi" */
-      /* Lớp vát chỉ cho ô có nền màu; ô "chưa khai báo lịch" để phẳng — ở cỡ nhỏ lớp vát trên nền
-         xám chỉ làm ô trông mờ chứ không tạo được khối. */
-      (plgState(r)==='nolich'?'':'<rect class="sheen"'+hop+' fill="url(#pgSheen)"/>')+
+      /* Không còn lớp vát: mọi ô đều PHẲNG như .hp-mapcell của Audit Hasaki (xem CSS "KIỂU TÔ Ô") */
       '<text x="'+(x+ww/2).toFixed(1)+'" y="'+(y+hh/2).toFixed(1)+'" font-size="'+fs.toFixed(1)+'">'+c.c+'</text>'+
       '</g>');
   });
@@ -3432,7 +3580,9 @@ function plgVeFoot(T){
       '<span class="pg-hint">'+nf(tong)+' vị trí'+(TAB_SYNC.plg?' &middot; cập nhật '+esc(fmtTime(TAB_SYNC.plg)):'')+'</span>'+
       '<button type="button" onclick="plgLamMoi(this)" title="Đọc lại tab '+esc(PLG_TAB)+' từ Google Sheet">Làm mới</button>'+
     '</div>'+
-    '<p class="pg-hint" style="margin:0">Nguồn: <b>planogram WMS</b> — bộ <code>sync-vesinh-factory.mjs</code> ghi tab <code>'+esc(PLG_TAB)+'</code> theo cụm 8h40; '+
+    '<p class="pg-hint" style="margin:0">Nguồn: <b>planogram WMS</b> — bộ <code>sync-vesinh-factory.mjs</code> ghi tab <code>'+esc(PLG_TAB)+'</code> theo cụm 8h40 '+
+      '(pop-up chi tiết ô đọc thêm <code>'+esc(PLG_TAB_YC)+'</code>'+
+      (PLG.yc.ok&&!PLG.yc.co?' — tab này CHƯA có trên Sheet vì kho nguyên liệu chưa phát yêu cầu vệ sinh nào':'')+'); '+
       'sơ đồ dựng sẵn từ bản vẽ <code>MTG_zigzag</code> nên vị trí bị ngừng phát yêu cầu vẫn hiện trên hình.</p>';
 }
 function plgLamMoi(btn){
@@ -3516,27 +3666,231 @@ function plgVeTra(){
       '" onclick="closePlgTra();plgSoiDay(this.getAttribute(\'data-d\'))">Soi dãy này trên sơ đồ</button></p>';
 }
 
+/* ===== POP-UP CHI TIẾT 1 Ô KỆ — ĐỒNG BỘ VỚI POP-UP VỊ TRÍ CỦA AUDIT HASAKI (14/08/2026) ========
+ * Bản cũ là bảng khoá-giá trị 6 dòng (Kho giữ tồn · Trạng thái vệ sinh · Có lịch · Yêu cầu 45
+ * ngày · Ghi chú): nó trả lời "ô này KHAI BÁO tới đâu", trong khi pop-up bên Audit Hasaki trả lời
+ * "ngày đó AI LÀM ô này, lúc mấy giờ, ảnh đâu, ai chịu trách nhiệm". Hai dashboard cùng một tab
+ * Planogram mà hỏi hai câu khác nhau — đúng chỗ user chỉ ra là "chưa đồng bộ".
+ * Nay dựng đúng 3 tầng của bên đó, đọc từ nguồn của kho nguyên liệu:
+ *   1) DẢI 7 NGÀY — tab VESINH-KHO-YEUCAU, mỗi ngày một kết luận độc lập, bấm để soi ngày khác
+ *   2) HÀNG chi tiết của ngày đang chọn (trạng thái · người báo cáo · ảnh, bấm ảnh mở lightbox)
+ *      + hiện trạng KHAI BÁO của ô lấy từ tab VESINH-KHO-DANHMUC (giữ nguyên mọi dữ kiện cũ)
+ *   3) HAI THẺ song song — "Phụ trách" · "Báo cáo gần nhất"
+ * KHÁC BÊN HASAKI ĐÚNG 2 CHỖ, cả 2 đều là khác về DỮ LIỆU CÓ THẬT chứ không phải về bố cục — bịa
+ * cho đủ mục thì pop-up cân đối mà nói sai:
+ *   · AI xét duyệt ảnh: sync-vesinh-ai.mjs chỉ chấm cho SHOP, kho nguyên liệu không có → không
+ *     dựng hàng đó, thay vì để một hàng "chưa chấm" treo vĩnh viễn.
+ *   · Bảng phân công + chấm công theo ngày: hai tab đó nằm ở Sheet 5S và là người của đội vệ sinh
+ *     SHOP, không phải người của kho nguyên liệu → thẻ "Phụ trách" chỉ SUY từ báo cáo gần nhất và
+ *     nói thẳng ra là suy diễn (đúng nết badge "Suy từ báo cáo gần nhất" của Hasaki). Khi đó phụ
+ *     trách và báo cáo gần nhất là CÙNG MỘT NGUỒN nên tuyệt đối không in "✓ đúng người trong bảng
+ *     phân công": đó là so một dữ kiện với chính nó rồi trình bày như bằng chứng.
+ */
+var PLGVT={loc:'',ngay:'',anh:[],anhNhan:''};
+var PLG_PAL=['#f59e0b','#8b5cf6','#ef4444','#10b981','#ec4899','#6366f1','#0891b2','#84cc16','#2563eb','#d97706'];
+var _plgNmC={}, _plgNmI=0;
+function plgMauNguoi(n){ if(!_plgNmC[n]) _plgNmC[n]=PLG_PAL[_plgNmI++%PLG_PAL.length]; return _plgNmC[n]; }
+/* Chữ đầu của tên cho avatar — 2 ký tự đầu của 2 từ CUỐI (tên người Việt), khuôn chuDau của Hasaki */
+function plgChuDau(s){
+  var w=String(s||'').trim().split(/\s+/).filter(Boolean);
+  if(!w.length) return '?';
+  if(w.length===1) return w[0].slice(0,2).toUpperCase();
+  return (w[w.length-2].charAt(0)+w[w.length-1].charAt(0)).toUpperCase();
+}
+function plgVNiso(iso){ var m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})/); return m?m[3]+'/'+m[2]:'—'; }
+function plgThuIso(iso){ var m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})/); return m?PLG_THU[new Date(+m[1],+m[2]-1,+m[3]).getDay()]:''; }
+function plgTuoiIso(iso){
+  var m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})/); if(!m) return null;
+  var t=new Date();
+  return Math.round((new Date(t.getFullYear(),t.getMonth(),t.getDate())-new Date(+m[1],+m[2]-1,+m[3]))/86400000);
+}
+/* Yêu cầu của 1 ô (mới → cũ) · yêu cầu ĐẠI DIỆN của 1 ngày: một ngày có thể có nhiều mã tầng/ngăn
+   cùng thuộc ô, ưu tiên bản ĐÃ vệ sinh (đúng repCua của Hasaki — không để 1 mã chưa làm che mất
+   mã đã làm). */
+function plgYcCua(loc){ return PLG.yc.by[plgKhoaO(loc)]||[]; }
+function plgYcDa(r){ return !!r && (r.stId===3||r.stId===4); }   // 3 Waiting For Approve · 4 Approved
+function plgYcNgay(ycs,d){
+  var co=null;
+  for(var i=0;i<ycs.length;i++){ if(ycs[i].ngay!==d) continue; if(plgYcDa(ycs[i])) return ycs[i]; if(!co) co=ycs[i]; }
+  return co;
+}
+function plgYcTrangThai(r){ return !r?'':(plgYcDa(r)?'da':'chua'); }
+function plgYcNguoiGan(ycs){ for(var i=0;i<ycs.length;i++) if(ycs[i].nguoi) return ycs[i]; return null; }
+/* Link planogram WMS: kho nguyên liệu nằm ở 2 pháp nhân nên phải chọn đúng cặp cty/kho của ô */
+function plgPgKho(loc){ return /GARMENT/i.test(plgKhoCua(plgKhoaO(loc))||'')?PLG_WH.GARMENT:PLG_WH.MTG; }
+function plgPgListUrl(iso,loc){
+  var m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})/), dt=m?new Date(+m[1],+m[2]-1,+m[3]):new Date();
+  var f=dt.getTime(), w=plgPgKho(loc);
+  return PLG_PG+'/list?company_ids='+w.cty+'&warehouse_ids='+w.kho+'&keyword_type=sku_or_barcode&page=1&size=100'+
+    '&from_date='+f+'&to_date='+(f+86399999)+'&location_description='+encodeURIComponent(loc);
+}
+function plgNgayLb(){
+  for(var i=0;i<PLG_NGAY.length;i++) if(PLG_NGAY[i].k===PLG.ngay) return PLG_NGAY[i].lb;
+  return PLG.ngay;
+}
+/* Mốc ngày của tab Sheet in ra tiếng Việt: "2026-08-14 14:18" -> "14/08/2026 14:18". Bộ sync ghi
+   ISO cho máy đọc, còn pop-up là chỗ người đọc — bên Hasaki mọi ngày đều in dd/mm. */
+function plgNgayGon(s){
+  var iso=plgISOtu(s); if(!iso) return String(s||'');
+  var g=plgGioTu(s);
+  return iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4)+(g?' '+g:'');
+}
+/* Badge trạng thái hệ thống của 1 yêu cầu — dịch đúng bộ nhãn stBadge bên Hasaki. Trả '' cho
+   trạng thái "New": nó đã đồng nghĩa với badge nhóm "Chưa vệ sinh", in thêm là lặp. */
+function plgStBadge(r){
+  var t=String((r&&r.tt)||''), lb='', c='#6b7280';
+  if(r.stId===1||/new/i.test(t)) return '';
+  else if(/waiting/i.test(t)||r.stId===3){ lb='Chờ duyệt'; c='#0891b2'; }
+  else if(/approved/i.test(t)||r.stId===4){ lb='Đã duyệt'; c='#059669'; }
+  else if(/reject/i.test(t)){ lb='Bị từ chối'; c='#ef4444'; }
+  else if(/cancel/i.test(t)){ lb='Huỷ'; c='#6b7280'; }
+  else lb=t.replace(/^\d+\s*/,'').trim();
+  if(!lb) return '';
+  return '<span class="pg-badge" title="'+esc(t)+'" style="background:color-mix(in srgb,'+c+' 15%,transparent);color:'+c+'">'+esc(lb)+'</span>';
+}
+
 function plgOpen(loc){
-  var key=String(loc).toUpperCase(), r=PLG.by[key], s=plgState(r), m=PLG_ST[s], p=key.split('-');
-  var w=plgKhoCua(key);
-  document.getElementById('plgmTitle').textContent=loc;
-  document.getElementById('plgmSub').textContent='Dãy '+(p[2]||'—')+' · cột '+(p[3]||'—')+' — kho nguyên liệu (F0-KHO)';
-  var badge='<span class="pg-badge" style="background:color-mix(in srgb,'+(m.c||'#9ca3af')+' 16%,transparent);color:'+(m.c||'var(--ink2)')+'">'+esc(m.lb)+'</span>';
-  var kv=[['Kho giữ tồn', w?('<b>'+esc(w)+'</b>'):'<span class="hint">Không có tồn ở vị trí này</span>'],
-          ['Trạng thái vệ sinh',badge]];
-  if(r){
-    kv.push(['Có lịch vệ sinh',esc(r.coLich||'—')]);
-    if(r.schId) kv.push(['Lịch gốc','#'+esc(r.schId)+(r.ttLich?' — '+esc(r.ttLich):'')]);
-    if(r.anh) kv.push(['Ảnh tiêu chuẩn',esc(r.anh)]);
-    kv.push(['Yêu cầu 45 ngày',esc(r.soYC||'0')+' — đã vệ sinh '+esc(r.daVS||'0')]);
-    if(r.ycGan) kv.push(['Yêu cầu gần nhất',esc(r.ycGan)+(r.ttYC?' — '+esc(r.ttYC):'')]);
-    if(r.vsGan) kv.push(['Vệ sinh gần nhất',esc(r.vsGan)+(r.nguoi?' — '+esc(r.nguoi):'')]);
-    if(r.ghi) kv.push(['Ghi chú',esc(r.ghi)]);
-  } else kv.push(['Ghi chú','Ô có trên bản vẽ nhưng chưa có dòng nào trong tab '+esc(PLG_TAB)+' — chạy lại bộ sync.']);
-  document.getElementById('plgmBody').innerHTML=kv.map(function(x){ return '<tr><td>'+x[0]+'</td><td>'+x[1]+'</td></tr>'; }).join('');
+  PLGVT.loc=plgKhoaO(loc);
+  PLGVT.ngay=plgISO(plgHomNay());
+  plgVtVe();
   plgMoModal('plgmodal');
 }
+function plgVtNgay(d){ PLGVT.ngay=d; plgVtVe(); }
 function closePlgModal(){ plgDongModal('plgmodal'); }
+/* Tab yêu cầu về SAU lúc pop-up đang mở thì vẽ lại — không để dải 7 ngày đứng im ở "đang đọc…" */
+function plgVtVeLai(){ var m=document.getElementById('plgmodal'); if(m&&m.classList.contains('show')) plgVtVe(); }
+
+function plgVtVe(){
+  var key=PLGVT.loc, d=PLGVT.ngay, o=PLG.by[key]||null, p=key.split('-');
+  var ycs=plgYcCua(key), r=plgYcNgay(ycs,d), s=plgState(o), m=PLG_ST[s], w=plgKhoCua(key);
+  document.getElementById('plgmTitle').textContent='Cột '+(p[3]||'—')+' · dãy '+(p[2]||'—')+' · '+key;
+  document.getElementById('plgmSub').textContent='Chi tiết vệ sinh — bấm ô ngày bên dưới để xem ngày khác';
+  /* Hyperlink DUY NHẤT của pop-up, góc phải trên: có yêu cầu thì mở thẳng yêu cầu đó trên
+     planogram, không thì mở danh sách lọc sẵn đúng vị trí + đúng ngày đang xem. */
+  var pg=document.getElementById('plgmPg');
+  if(r&&r.id){ pg.href=PLG_PG+'/details/'+encodeURIComponent(r.id); pg.textContent='Yêu cầu #'+esc(r.id)+' ↗'; }
+  else { pg.href=plgPgListUrl(d,key); pg.textContent='Tìm trên planogram ↗'; }
+
+  /* --- Tầng 1: dải 7 ngày (cũ → mới), tô đúng hệ màu của sơ đồ --- */
+  var hist=plgDsNgay().map(plgISO).sort().map(function(dd){
+    var rr=plgYcNgay(ycs,dd), st=plgYcTrangThai(rr), mm=st?PLG_ST[st]:null;
+    var tip=plgThuIso(dd)+' '+plgVNiso(dd)+' — '+(mm?mm.lb:'không có yêu cầu vệ sinh');
+    return '<span class="pg-vthist'+(dd===d?' on':'')+(mm?'':' trong')+'"'+(mm?' style="background:'+mm.c+'"':'')+
+      ' tabindex="0" role="button" title="'+esc(tip)+'" data-d="'+dd+'"'+
+      ' onclick="plgVtNgay(this.getAttribute(\'data-d\'))"'+
+      ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();plgVtNgay(this.getAttribute(\'data-d\'))}">'+
+      '<b>'+esc(plgThuIso(dd))+'</b>'+esc(plgVNiso(dd))+'</span>';
+  }).join('');
+
+  /* --- Tầng 2a: chi tiết của ĐÚNG ngày đang chọn --- */
+  var rows=[];
+  if(r){
+    var mm=PLG_ST[plgYcTrangThai(r)], sb=plgStBadge(r);
+    /* Badge hệ thống CHỈ thêm khi mang nghĩa KHÁC badge nhóm (Chờ duyệt / Đã duyệt / Bị từ chối…),
+       đúng luật themSt của Hasaki — "New" đã nằm gọn trong "Chưa vệ sinh" nên thêm là lặp. */
+    var them=sb?' '+sb:'';
+    rows.push(['Trạng thái','<span class="pg-badge" style="background:color-mix(in srgb,'+mm.c+' 15%,transparent);color:'+mm.c+'">'+esc(mm.lb)+'</span>'+them]);
+    rows.push(['Người báo cáo', r.nguoi
+      ? esc(r.nguoi)+(r.atGio?' <span class="pg-hint">lúc '+esc(r.atGio)+' '+esc(plgVNiso(r.atNgay||r.ngay))+'</span>':'')
+      : '<span class="pg-hint">— chưa có ai báo cáo trong ngày này</span>']);
+    rows.push(['Ảnh báo cáo ('+r.anh.length+')', r.anh.length
+      ? '<div class="pg-vtthumbs">'+r.anh.map(function(u,i){
+          return '<img loading="lazy" src="'+esc(u)+'" alt="Ảnh báo cáo '+(i+1)+'" data-i="'+i+'" onclick="plgAnhMo(+this.getAttribute(\'data-i\'))">';
+        }).join('')+'</div>'
+      : '<span class="pg-hint">'+(r.nguoi?'yêu cầu này không đính ảnh':'chưa có ảnh (chưa báo cáo)')+'</span>']);
+    PLGVT.anh=r.anh; PLGVT.anhNhan='Yêu cầu #'+r.id+' · '+key;
+  } else {
+    PLGVT.anh=[]; PLGVT.anhNhan='';
+    /* 4 lý do KHÁC NHAU dẫn tới "không có gì để xem" — nói rõ cái nào, vì việc phải làm khác hẳn:
+       đợi tải · sửa lỗi đọc Sheet · đi khai báo lịch trên planogram · chỉ là ngày đó không có lịch. */
+    rows.push(['Trạng thái','<span class="pg-hint">'+(
+      PLG.yc.dang ? 'đang đọc tab '+esc(PLG_TAB_YC)+'…'
+      : !PLG.yc.ok ? 'chưa đọc được tab '+esc(PLG_TAB_YC)+' — lỗi tải, thử nút Làm mới'
+      : !PLG.yc.co ? 'Kho nguyên liệu chưa có yêu cầu vệ sinh nào trên planogram nên tab '+esc(PLG_TAB_YC)+' chưa được tạo. Khai báo lịch và DUYỆT trên planogram là dải ngày phía trên tự có dữ liệu — không phải sửa dashboard.'
+      : 'Ngày '+esc(plgVNiso(d))+' vị trí này KHÔNG có yêu cầu vệ sinh trên planogram.')+'</span>']);
+  }
+
+  /* --- Tầng 2b: hiện trạng KHAI BÁO của ô (tab DANHMUC) — giữ đủ dữ kiện của bản cũ --- */
+  rows.push(['Kho giữ tồn', w?('<b>'+esc(w)+'</b>'):'<span class="pg-hint">Không có tồn ở vị trí này</span>']);
+  rows.push(['Trạng thái ô','<span class="pg-badge" style="background:color-mix(in srgb,'+(m.c||'#9ca3af')+' 16%,transparent);color:'+(m.c||'var(--ink2)')+'">'+esc(m.lb)+'</span>'+
+    ' <span class="pg-hint">tổng quan theo khoảng “'+esc(plgNgayLb())+'”</span>']);
+  if(o){
+    rows.push(['Có lịch vệ sinh', esc(o.coLich||'—')+
+      (o.schId?' <span class="pg-hint">lịch gốc #'+esc(o.schId)+(o.ttLich?' — '+esc(String(o.ttLich).replace(/^\d+\s*/,'')):'')+'</span>':'')]);
+    if(o.anh) rows.push(['Ảnh tiêu chuẩn',esc(o.anh)]);
+    rows.push(['Yêu cầu 45 ngày',esc(o.soYC||'0')+' — đã vệ sinh '+esc(o.daVS||'0')]);
+    if(o.ycGan) rows.push(['Yêu cầu gần nhất',esc(plgNgayGon(o.ycGan))+(o.ttYC?' — '+esc(String(o.ttYC).replace(/^\d+\s*/,'')):'')]);
+    if(o.ghi) rows.push(['Ghi chú',esc(o.ghi)]);
+  } else rows.push(['Ghi chú','Ô có trên bản vẽ nhưng chưa có dòng nào trong tab '+esc(PLG_TAB)+' — chạy lại bộ sync.']);
+
+  /* --- Tầng 3: 2 thẻ song song. Bằng chứng "ai thật sự làm" ưu tiên tab YÊU CẦU (có giờ + mã
+     yêu cầu), rớt về mốc "Vệ sinh gần nhất / Người vệ sinh" của tab DANHMUC (cửa sổ 45 ngày). --- */
+  var bcYc=plgYcNguoiGan(ycs), bcTen='', bcNgay='', bcGio='', bcNguon='';
+  if(bcYc){ bcTen=bcYc.nguoi; bcNgay=bcYc.atNgay||bcYc.ngay; bcGio=bcYc.atGio; bcNguon='yêu cầu #'+bcYc.id; }
+  else if(o&&o.nguoi){ bcTen=o.nguoi; bcNgay=plgISOtu(o.vsGan); bcGio=plgGioTu(o.vsGan); bcNguon='mốc gần nhất — tab '+PLG_TAB+' (45 ngày)'; }
+  var bcTuoi=bcNgay?plgTuoiIso(bcNgay):null;
+
+  var cardPt;
+  if(bcTen){
+    cardPt='<div class="pg-vtcard pt">'+
+      '<div class="hd">Phụ trách <span class="pg-badge" style="background:color-mix(in srgb,#d97706 14%,transparent);color:#d97706">Suy từ báo cáo gần nhất</span></div>'+
+      '<div class="who"><span class="av" style="background:'+plgMauNguoi(bcTen)+'">'+esc(plgChuDau(bcTen))+'</span>'+
+      '<div><b>'+esc(bcTen)+'</b><small>người vệ sinh ô này gần đây nhất</small></div></div>'+
+      '<div class="ln mut">kho nguyên liệu chưa có bảng phân công vệ sinh — đây là SUY DIỄN từ bằng chứng, không phải phân công chính thức</div>'+
+      (bcTuoi!=null&&bcTuoi>7?'<div class="ln" style="color:#d97706">⚠ bằng chứng đã '+bcTuoi+' ngày — chưa chắc còn phụ trách</div>':'')+
+      '</div>';
+  } else {
+    cardPt='<div class="pg-vtcard pt"><div class="hd">Phụ trách</div><div class="ln mut">'+
+      (PLG.yc.dang ? 'đang đọc dữ liệu yêu cầu…'
+       : s==='nolich' ? 'ô chưa khai báo lịch nên chưa từng phát yêu cầu — chưa có ai để quy trách nhiệm'
+       : 'chưa có báo cáo nào để suy ra người phụ trách (kho nguyên liệu chưa có bảng phân công)')+'</div></div>';
+  }
+
+  var cardBc='<div class="pg-vtcard ref"><div class="hd">Báo cáo gần nhất '+
+    '<span class="pg-hint" style="font-size:10.5px;text-transform:none;letter-spacing:0;font-weight:500">tham khảo</span></div>';
+  if(bcTen){
+    cardBc+='<div class="who"><span class="av" style="background:'+plgMauNguoi(bcTen)+'">'+esc(plgChuDau(bcTen))+'</span>'+
+      '<div><b>'+esc(bcTen)+'</b><small>'+esc(bcNguon)+'</small></div></div>'+
+      (bcNgay?'<div class="ln"><b>'+esc(plgThuIso(bcNgay))+' '+esc(plgVNiso(bcNgay))+'</b>'+
+        (bcGio?' lúc <b>'+esc(bcGio)+'</b>':'')+
+        (bcTuoi!=null?' <span class="pg-hint">· '+(bcTuoi>0?bcTuoi+' ngày trước':'hôm nay')+'</span>':'')+'</div>'
+       : '<div class="ln mut">không đọc được mốc thời gian của lượt vệ sinh này</div>')+
+      /* KHÔNG kết luận "đúng/sai người": không có bảng phân công nào để đối chiếu — xem chú thích đầu khối */
+      '<div class="ln mut">chưa có bảng phân công cho kho nguyên liệu để đối chiếu đúng/sai người</div>';
+  } else {
+    cardBc+='<div class="ln mut">'+
+      (PLG.yc.dang ? 'đang đọc tab '+esc(PLG_TAB_YC)+'…'
+       : s==='nolich' ? 'ô chưa khai báo lịch vệ sinh nên chưa từng phát yêu cầu — không có lượt nào để tham chiếu'
+       : 'chưa ai báo cáo vị trí này trong 45 ngày bộ sync quét')+'</div>';
+  }
+  cardBc+='</div>';
+
+  document.getElementById('plgmBody').innerHTML=
+    '<div class="pg-vthistrow">'+hist+'</div>'+
+    rows.map(function(x){ return '<div class="pg-vtrow"><label>'+x[0]+'</label><div>'+x[1]+'</div></div>'; }).join('')+
+    '<div class="pg-vtduo">'+cardPt+cardBc+'</div>';
+}
+
+/* ===== LIGHTBOX ẢNH BÁO CÁO — mở từ thumbnail trong pop-up chi tiết ô ==========================
+   Dùng lại vỏ .modal/.modalbox + cặp plgMoModal/plgDongModal của dự án (không dựng overlay riêng),
+   nên nó thừa hưởng luôn animation sheetIn, nền kính mờ và thứ tự đóng bằng Escape. */
+var PLGANH={list:[],i:0,nhan:''};
+function plgAnhMo(i){
+  PLGANH.list=PLGVT.anh||[]; if(!PLGANH.list.length) return;
+  PLGANH.i=Math.max(0,Math.min(PLGANH.list.length-1,i||0));
+  PLGANH.nhan=PLGVT.anhNhan||PLGVT.loc;
+  plgAnhVe(); plgMoModal('plganhmodal');
+}
+function plgAnhDi(k){ var n=PLGANH.list.length; if(n<2) return; PLGANH.i=(PLGANH.i+k+n)%n; plgAnhVe(); }
+function plgAnhVe(){
+  var n=PLGANH.list.length;
+  document.getElementById('plgAnhTitle').textContent=PLGANH.nhan;
+  document.getElementById('plgAnhSub').textContent='Ảnh '+(PLGANH.i+1)+'/'+n+(n>1?' — mũi tên trái/phải để lật':'');
+  document.getElementById('plgAnhImg').src=PLGANH.list[PLGANH.i]||'';
+  var nav=document.querySelectorAll('#plganhmodal .pg-lbnav');
+  for(var j=0;j<nav.length;j++) nav[j].style.display=(n<2)?'none':'';
+}
+function closePlgAnh(){ plgDongModal('plganhmodal'); }
 
 /* .modal của dự án mặc định display:none — chỉ bật class .show là pop-up KHÔNG hiện. Mọi pop-up
    khác đều mở bằng cặp display:flex + rAF(.show) (để kịp chạy animation sheetIn) và đóng bằng
