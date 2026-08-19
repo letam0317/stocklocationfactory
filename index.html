@@ -1647,6 +1647,16 @@ body.side-anim{overflow-x:clip}
   background:var(--overlay);color:#fff;font-size:12.5px;font-weight:650;animation:fadeIn .2s ease both}
 .nds-busy .spin{margin:0}
 
+/* Ô gõ mã: hàng riêng, nhãn rõ, ô nhập to — đây là đường nhanh & chắc nhất nên không nhét
+   lẫn vào đám nút. Dùng lại đúng kiểu ô nhập của .nds-addrow để không chế control mới. */
+.nds-marow{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.nds-marow label{font-size:12px;font-weight:700;color:var(--ink2);white-space:nowrap}
+.nds-marow input{flex:1;min-width:150px;height:34px;border:1px solid var(--border);border-radius:8px;
+  background:var(--surface);color:var(--ink);padding:0 11px;font-size:13px;font-family:inherit;outline:none;
+  font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.nds-marow input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}
+.nds-magoi{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:7px;font-size:11.5px;color:var(--ink3)}
+@media(max-width:560px){ .nds-marow label{width:100%} }
 .nds-ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
 .nds-ctl .sp{flex:1;min-width:0}
 /* Điện thoại: bỏ khoảng đệm đẩy (nó sinh ra một mảng trống lớn giữa hàng) và cho 2 nút
@@ -1862,9 +1872,22 @@ body.side-anim{overflow-x:clip}
         <span class="sp"></span>
         <button type="button" class="kktab nds-go" id="ndsBtnMV" onclick="ndsThuMaVach()" disabled
           title="Đọc mã vạch ngay trên máy — nhanh nhất, không cần mạng, không tốn hạn mức AI">Quét mã vạch</button>
+        <button type="button" class="kktab" id="ndsBtnDocX" hidden></button>
         <button type="button" class="kktab" id="ndsBtnDoc" onclick="ndsDocTem()" disabled
           title="Chụp/chọn ảnh là đã tự chạy rồi — nút này để đọc LẠI sau khi xoay ảnh hoặc chụp gần hơn">Đọc lại bằng AI</button>
       </div>
+      <!-- Ô GÕ MÃ — đường chắc chắn nhất và nhanh nhất. Sự cố thật 19/08/2026: tem in F9-5374
+           (mã CÓ trong danh mục) nhưng AI không đọc ra, máy trả về SKU khác mã. Mã hàng luôn in to
+           rõ trên tem NCC, gõ 7 ký tự là xong — nên nó phải nằm NGAY ĐÂY, không bắt cuộn xuống
+           bước 3 tìm ô "thêm từ khoá". -->
+      <div class="nds-marow">
+        <label for="ndsMa">Mã trên tem</label>
+        <input id="ndsMa" autocomplete="off" spellcheck="false" placeholder="F9-5374 · JC01262 · 8846295…"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();ndsTraMa();}">
+        <button type="button" class="kktab nds-go" onclick="ndsTraMa()">Tra mã</button>
+      </div>
+      <div class="nds-magoi" id="ndsMaGoi" hidden></div>
+
       <!-- Ghi chú GẤP LẠI: trên điện thoại khối này nằm giữa ảnh và kết quả, để mở sẵn là đẩy
            Top 3 xuống dưới màn hình — đúng thứ người dùng cần xem nhất. -->
       <details class="nds-more" style="margin-top:8px">
@@ -7477,7 +7500,8 @@ var NDS_ENGINE = (function(){
     var moTa = function(i, r, diem, khop, xungDot, phu, laSku){
       var dv = r._dv || (r._dv = donVi(r.pn));
       return { i:i, sku:r.sku, pn:r.pn, type:r.type, status:r.status, qty:r.qty,
-        donVi:dv.raw, dv:dv.ma, q:dv.q, gop:!!dv.gop, khoa:(r._k!=null?r._k:(r._k=khoaHang(r.pn))),
+        donVi:dv.raw, dv:dv.ma, q:dv.q, gop:!!dv.gop, coMa:!!(maKhop && maKhop[i]),
+        khoa:(r._k!=null?r._k:(r._k=khoaHang(r.pn))),
         diem:diem, pct:Math.round(diem*100), khop:khop, xungDot:xungDot, phu:phu, laSku:laSku,
         bienThe:[], viDonVi:false, daHoc:false };
     };
@@ -7493,7 +7517,7 @@ var NDS_ENGINE = (function(){
        Nhanh 2,2× thật, nhưng đo trên 800 lượt thì 142 lượt cho kết quả XẤU HƠN: dòng khớp cao nhờ
        màu/thông số mà tên KHÔNG chứa mã đó bị đánh rơi khỏi Top 3 (ca thật: mất một dòng 96% đang
        đứng ngang hạng nhất). Nhanh mà rơi mất đáp án đúng thì không đổi. */
-    var TRAN_MA = 120;
+    var TRAN_MA = 120, maKhop = null;
     var uv = ungVien(nhan, cm, opt.tranUngVien||4000);
     if (opt.tat !== false){
       var gom = Object.create(null), coMa = false;
@@ -7505,6 +7529,7 @@ var NDS_ENGINE = (function(){
       });
       var km = coMa ? Object.keys(gom) : [];
       if (km.length && km.length <= TRAN_MA){
+        maKhop = gom;                                  // dùng lại ở luật cứng "CÓ MÃ" bên dưới
         var daCoUv = Object.create(null);
         for (var u2=0; u2<uv.length; u2++) daCoUv[uv[u2]] = 1;
         for (var u3=0; u3<km.length; u3++){ var im2=Number(km[u3]); if (!daCoUv[im2]) uv.push(im2); }
@@ -7573,6 +7598,14 @@ var NDS_ENGINE = (function(){
       if (a.laSku!==b.laSku) return a.laSku?-1:1;
       var sa=(a.status==='INACTIVE')?1:0, sb=(b.status==='INACTIVE')?1:0;
       if (sa!==sb) return sa-sb;                          // ACTIVE trước — luật cứng
+      /* CÓ MÃ TEM — luật cứng MẠNH NHẤT sau ACTIVE (thêm 19/08/2026 sau sự cố thật).
+         Sự cố: tem in F9-5374 (mã CÓ trong danh mục, 12 SKU) nhưng AI không đọc ra mã, lõi chấm
+         bằng chữ chung "Chỉ · Filtex · Phong Việt · Polyester" rồi trả về 422378537 mang mã
+         F6-7829 — cùng dạng tên, khác hẳn mã. Từ nay: hễ có MỘT mã tem khớp tuyệt đối danh mục
+         thì mọi SKU mang mã đó phải đứng trên mọi SKU không mang, bất kể điểm.
+         Đặt TRÊN luật hàng đóng gói: thà hiện bản combo/cuộn ĐÚNG MÃ còn hơn hiện SKU sai mã. */
+      var ma1=a.coMa?0:1, ma2=b.coMa?0:1;
+      if (ma1!==ma2) return ma1-ma2;
       /* COMBO và ĐƠN VỊ GỘP ("…/Cuộn 5000m", "…/set", "…/thùng") gộp làm MỘT hạng "hàng đóng gói":
          cả hai đều không phải đơn vị để đếm khi kiểm kê, nên tuyệt đối không đứng đầu. */
       var ga=((a.type==='COMBO')||a.gop)?1:0, gb=((b.type==='COMBO')||b.gop)?1:0;
@@ -7599,7 +7632,11 @@ var NDS_ENGINE = (function(){
         got.unshift(itg);
       }
     }
-    return got.slice(0, soLuong);
+    var raCuoi = got.slice(0, soLuong);
+    /* Cờ cho tầng giao diện: lượt này có khớp được MÃ nào của danh mục không. Không có mã thì kết
+       quả chỉ dựa vào chữ chung — phải nói thẳng chứ đừng im lặng đưa ra một SKU trông tự tin. */
+    raCuoi.coMaKhop = !!maKhop;
+    return raCuoi;
   }
 
   /**
@@ -8124,6 +8161,62 @@ function ndsDoiScope(active){
   if (NDS.tokens.length) ndsDoiSoat();
 }
 
+/* ============================================================================================
+ * TRA THẲNG THEO MÃ TRÊN TEM — đường chắc nhất, không cần AI  (19/08/2026)
+ * Sinh ra từ sự cố thật: tem in F9-5374 (mã CÓ trong danh mục, 12 SKU) nhưng AI không đọc ra mã;
+ * lõi chấm bằng chữ chung "Chỉ · Filtex · Phong Việt · Polyester" nên trả về 422378537 mang mã
+ * F6-7829 — cùng dạng tên, khác hẳn mã. Mã hàng luôn in to rõ trên tem, gõ vài ký tự là chắc ăn.
+ * Gõ sai/thiếu thì KHÔNG im lặng: tra trong từ vựng những mã GẦN GIỐNG rồi mời bấm chọn.
+ * ============================================================================================ */
+function ndsTraMa(){
+  var o=document.getElementById('ndsMa'); if (!o) return;
+  var raw=String(o.value||'').trim();
+  if (!raw){ toast('Gõ mã in trên tem (vd F9-5374) rồi bấm Tra mã.','warn'); o.focus(); return; }
+  if (!NDS.cm){ toast('Danh mục chưa tải xong — đợi một nhịp rồi tra lại.','warn'); return; }
+  var b=NDS_ENGINE.bocTen(raw);
+  var ma=b.code.length?b.code:[NDS_ENGINE.chuan(raw)];
+  var trung=[], gan=[];
+  ma.forEach(function(t){ if (NDS.cm.idx[t] && trung.indexOf(t)<0) trung.push(t); });
+  if (!trung.length){
+    /* Không có mã nào khớp -> tìm mã GẦN GIỐNG trong chính từ vựng danh mục (chịu lỗi gõ/OCR) */
+    ma.forEach(function(t){
+      if (t.length<3) return;
+      for (var i=0;i<NDS.cm.tuVung.length && gan.length<8;i++){
+        var w=NDS.cm.tuVung[i];
+        if (w.length<3 || !/\d/.test(w) || !/[a-z]/.test(w)) continue;
+        if (gan.indexOf(w)>=0) continue;
+        if (NDS_ENGINE.tyLe(t,w)>=0.72 || NDS_ENGINE.loi(w)===NDS_ENGINE.loi(t)) gan.push(w);
+      }
+    });
+  }
+  ndsVeMaGoi(gan);
+  if (!trung.length && !gan.length){
+    toast('Không có mã nào giống "'+raw+'" trong danh mục '+nf((NDS.ds||[]).length)+' SKU. Kiểm lại chữ/số trên tem.','err');
+    return;
+  }
+  if (!trung.length){ toast('Chưa thấy mã "'+raw+'". Có mấy mã gần giống ở dưới — bấm để tra.','warn'); return; }
+  /* Mã khớp -> đưa vào vai MÃ rồi đối soát ngay (luật cứng "CÓ MÃ" lo phần xếp hạng) */
+  trung.forEach(function(t){ ndsThemToken(t,'code','tay'); });
+  ndsVeTags();
+  ndsDoiSoat();
+  o.select();
+}
+/** Dải "ý bạn là…" khi mã gõ/đọc được không có trong danh mục. */
+function ndsVeMaGoi(ds){
+  var el=document.getElementById('ndsMaGoi'); if (!el) return;
+  if (!ds || !ds.length){ el.hidden=true; el.innerHTML=''; return; }
+  el.hidden=false;
+  el.innerHTML='<b>Ý bạn là:</b>'+ds.map(function(m){
+    return '<button type="button" class="kktab nds-alt" onclick="ndsDungMa(\'' + esc(m) + '\')">' + esc(m) + '</button>';
+  }).join('');
+}
+function ndsDungMa(m){
+  var o=document.getElementById('ndsMa'); if (o) o.value=m;
+  ndsVeMaGoi([]);
+  ndsThemToken(m,'code','tay'); ndsVeTags(); ndsDoiSoat();
+  toast('Đã tra theo mã '+m+'.','ok');
+}
+
 /* ---------- 5. ĐỐI SOÁT + VẼ KẾT QUẢ ---------- */
 async function ndsDoiSoat(){
   /* Ô "dán chữ trên tem": tách thành từ khoá, nhưng CHỈ khi nội dung ô ĐỔI so với lượt trước.
@@ -8269,8 +8362,24 @@ function ndsVeKetQua(ms, themInactive){
     return;
   }
   ndsTrangThai('');
-  c.innerHTML=NDS.ket.map(function(r,i){ return ndsTheKetQua(r,i+1); }).join('');
+  /* KHÔNG khớp được mã nào -> nói THẲNG. Sự cố 19/08: máy im lặng đưa ra một SKU cùng dạng tên
+     nhưng khác mã, kèm 68% trông rất tự tin. Kết quả chỉ dựa vào chữ chung ("Chỉ", "Filtex",
+     "Phong Việt", "Polyester") thì hàng trăm SKU đều khớp như nhau — phải cảnh báo. */
+  var canh='';
+  if (!NDS.ket.coMaKhop){
+    canh='<div class="pcdnote" style="margin-bottom:10px;background:color-mix(in srgb,var(--warn) 14%,var(--surface));color:var(--ink2)">'+
+      '<b>Chưa khớp được MÃ HÀNG nào.</b> Mấy gợi ý dưới đây chỉ dựa vào chữ chung (loại hàng · nhà cung cấp · '+
+      'chất liệu · màu) — hàng trăm SKU giống nhau ở mấy chữ đó, nên <b>đừng chọn vội</b>. '+
+      'Gõ mã in trên tem (vd <code>F9-5374</code>) vào ô <b>Mã trên tem</b> ở bước 1 là ra đúng ngay.'+
+      ' <button type="button" class="kktab nds-alt" onclick="ndsTroMa()">Nhập mã</button></div>';
+  }
+  c.innerHTML=canh+NDS.ket.map(function(r,i){ return ndsTheKetQua(r,i+1); }).join('');
   ndsCapNhatChan(ms);
+}
+function ndsTroMa(){
+  var o=document.getElementById('ndsMa'); if (!o) return;
+  o.scrollIntoView({ block:'center', behavior:'smooth' });
+  setTimeout(function(){ o.focus(); o.select(); }, 260);
 }
 function ndsCopy(sku){
   var xong=function(){ toast('Đã copy mã SKU '+sku+'.','ok'); };
