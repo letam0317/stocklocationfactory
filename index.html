@@ -6352,6 +6352,10 @@ document.addEventListener('click',function(e){ if(!e.target.closest('#abnmFilter
  * hai mục số liệu, không sinh thêm control lạ. */
 var TVT_TAB='ton-vitri';
 var TVT_CHO='F0-A0';                  // tiền tố bãi chờ khai báo — dòng nào ở đây là ĐÚNG, không vào danh sách
+/* Khu MIỄN TRỪ (người dùng chốt 19/08/2026): F0-KHO-HM không tính sai chỗ. Bộ sync đã cắt từ đầu;
+   lọc lại ở đây là chốt phòng hờ để tab còn dữ liệu cũ (hoặc ai sửa tay Sheet) cũng không hiện ra. */
+var TVT_BO_QUA=['F0-KHO-HM'];
+function tvtBoQua(loc){ var s=String(loc||'').toUpperCase(); return TVT_BO_QUA.some(function(p){ return s.indexOf(p)===0; }); }
 /* Nhận cột theo NHÃN tiêu đề (chấp nhận snake_case / có dấu cách / tiếng Việt) — cùng lối với ABN_COLS */
 var TVT_COLS={
   cty:['company','công ty','cong ty'],
@@ -6406,6 +6410,7 @@ async function tvtLoad(force){
         var uid=String(gv(idx.uid)).trim(); if(!uid) return;
         var loc=String(gv(idx.loc)).trim();
         if(loc.toUpperCase().indexOf(TVT_CHO)===0) return;    // chốt phòng hờ: bãi chờ không phải bất thường
+        if(tvtBoQua(loc)) return;                             // khu miễn trừ (F0-KHO-HM…)
         arr.push({cty:String(gv(idx.cty)), wh:String(gv(idx.wh)), loc:loc, uid:uid, sku:String(gv(idx.sku)),
           pn:String(gv(idx.pn)), cat:String(gv(idx.cat)), nhom:String(gv(idx.nhom)||''), brand:String(gv(idx.brand)),
           qty:tvtNum(gv(idx.qty)), uom:String(gv(idx.uom)), st:String(gv(idx.st)),
@@ -6444,7 +6449,8 @@ function tvtGiaiThich(){
   return 'SKU <b>vải nguyên liệu</b> bắt buộc khai báo UIDgr code. UID nào <b>chưa khai báo</b> '+
     '(Group UID / RFID mapping = 0) thì phải nằm ở bãi chờ <code>'+TVT_CHO+'-00-00-00-00</code> — '+
     'những UID dưới đây đã ở vị trí khác ⇒ cần khai báo UIDgr hoặc trả về bãi chờ.<br>'+
-    '<span class="hint">Phạm vi: chỉ SKU vải, chỉ 2 kho nguyên liệu <b>WH - MATERIAL - MTG</b> và <b>WH - MATERIAL - GARMENT</b>.</span>';
+    '<span class="hint">Phạm vi: chỉ SKU vải, chỉ 2 kho nguyên liệu <b>WH - MATERIAL - MTG</b> và <b>WH - MATERIAL - GARMENT</b>, '+
+    'trừ các vị trí <code>'+TVT_BO_QUA.join('</code>, <code>')+'</code>.</span>';
 }
 function tvtRender(){
   var el=document.getElementById('tvtWrap'); if(!el) return;
@@ -8387,33 +8393,40 @@ var NDS_ENGINE = (function(){
        Tức là SKU nào ghi THIẾU thông số lại được điểm cao hơn SKU ghi ĐỦ mà lệch. Chữa gốc cho
        cơ chế xung đột thì rủi ro (nó đang là thứ tách được 102 biến thể dây kéo), nên chốt bằng
        luật nghiệp vụ: KIỂM KÊ ĐẾM HÀNG THẬT — combo là cách đóng gói, không phải mặt hàng để đếm.
-       Combo KHÔNG bị bỏ, chỉ luôn xuống sau mọi NORMAL trong Top 3.
+       Combo KHÔNG bị bỏ, chỉ luôn xuống sau mọi NORMAL **có cùng bằng chứng định danh** trong Top 3.
+       THỨ TỰ CHỐT (sửa chiều muộn 19/08/2026):
+         laSku → ACTIVE → CÓ MÃ → HÀNG ĐÓNG GÓI → SỔ TAY → điểm → độ phủ → đơn vị nhỏ → tồn
        Ngoại lệ duy nhất đứng trên tất cả: tem in THẲNG mã SKU nội bộ (laSku) — người ta dán mã nào
-       thì trả mã đó, kể cả mã đó là combo. (Sổ tay `ghim` còn đứng trên nữa, xử lý bên dưới.) */
+       thì trả mã đó, kể cả mã đó là combo. */
     got.sort(soSanh);
     function soSanh(a,b){
       if (a.laSku!==b.laSku) return a.laSku?-1:1;
       var sa=(a.status==='INACTIVE')?1:0, sb=(b.status==='INACTIVE')?1:0;
       if (sa!==sb) return sa-sb;                          // ACTIVE trước — luật cứng
-      /* HÀNG ĐÓNG GÓI xuống trước tiên — xem ghi chú ngay dưới. Đặt TRÊN cả sổ tay và luật "có mã":
-         đây là luật tuyệt đối của kho ("combo / cuộn / set không bao giờ đứng đầu"), kể cả khi
-         người dùng lỡ dạy sổ tay chọn bản combo (sự cố thật 19/08: một SKU COMBO chiếm hạng 1 với
-         "100% · từ sổ tay"). */
+      /* ═══ CÓ MÃ TEM — đứng NGAY SAU ACTIVE, TRÊN cả luật hàng đóng gói ═══
+         Hễ có MỘT mã tem khớp tuyệt đối danh mục thì mọi SKU mang mã đó phải đứng trên mọi SKU
+         KHÔNG mang, bất kể điểm. Sự cố sinh ra luật này (19/08/2026): tem in F9-5374 mà AI không
+         đọc ra mã, lõi chấm bằng chữ chung rồi trả về SKU mang mã F6-7829 — cùng dạng tên, khác
+         hẳn mã, kèm 68% trông rất tự tin.
+
+         ⚠ SỬA THỨ TỰ 19/08/2026 (chiều muộn) — trước đó luật này bị đặt DƯỚI luật hàng đóng gói,
+         trái với chính tài liệu của nó. Hậu quả thật thủ kho gặp: gõ `c2080` (mã CÓ trong danh mục,
+         3 SKU) thì **cả 3 SKU đó đều bán theo "Cuộn 5000m"** ⇒ cờ `gop` đẩy chúng xuống hạng 29-31,
+         nhường 28 dòng chỉ khớp mỗi chữ "lavender" (50%) lên trên. Người dùng thấy y như "gợi ý vẫn
+         theo lần tra trước".
+         Nguyên tắc: ĐỊNH DANH thắng ĐÓNG GÓI. Mã hàng là bằng chứng tem này là hàng gì; cuộn/combo
+         chỉ là cách hàng đó được đóng. Thà hiện bản cuộn ĐÚNG MÃ còn hơn hiện SKU SAI HÀNG. */
+      var ma1=a.coMa?0:1, ma2=b.coMa?0:1;
+      if (ma1!==ma2) return ma1-ma2;
+      /* HÀNG ĐÓNG GÓI (COMBO · "…/Cuộn 5000m" · "…/set" · "…/thùng") xuống sau — nhưng CHỈ khi hai
+         bên có cùng bằng chứng định danh. Luật này vẫn đứng TRÊN sổ tay: sự cố thật 19/08 là một SKU
+         COMBO chiếm hạng 1 với "100% · từ sổ tay" vì có người lỡ dạy sổ tay chọn bản combo. Kiểm kê
+         đếm hàng thật, combo/cuộn không phải đơn vị để đếm. */
       var ga=((a.type==='COMBO')||a.gop)?1:0, gb=((b.type==='COMBO')||b.gop)?1:0;
       if (ga!==gb) return ga-gb;
       /* SỔ TAY (người đã xác nhận) đứng trên mọi suy đoán của máy — nhưng dưới luật đóng gói. */
       var h1=a.daHoc?0:1, h2=b.daHoc?0:1;
       if (h1!==h2) return h1-h2;
-      /* CÓ MÃ TEM — luật cứng sau ACTIVE / đóng gói / sổ tay (thêm 19/08/2026 sau sự cố thật).
-         Sự cố: tem in F9-5374 (mã CÓ trong danh mục, 12 SKU) nhưng AI không đọc ra mã, lõi chấm
-         bằng chữ chung "Chỉ · Filtex · Phong Việt · Polyester" rồi trả về 422378537 mang mã
-         F6-7829 — cùng dạng tên, khác hẳn mã. Từ nay: hễ có MỘT mã tem khớp tuyệt đối danh mục
-         thì mọi SKU mang mã đó phải đứng trên mọi SKU không mang, bất kể điểm.
-         Đặt TRÊN luật hàng đóng gói: thà hiện bản combo/cuộn ĐÚNG MÃ còn hơn hiện SKU sai mã. */
-      var ma1=a.coMa?0:1, ma2=b.coMa?0:1;
-      if (ma1!==ma2) return ma1-ma2;
-      /* (COMBO và ĐƠN VỊ GỘP "…/Cuộn 5000m", "…/set", "…/thùng" đã xử ở trên: cả hai đều không
-         phải đơn vị để đếm khi kiểm kê.) */
       if (b.diem!==a.diem) return b.diem-a.diem;
       if (b.phu!==a.phu) return b.phu-a.phu;
       if (a.q!==b.q) return a.q-b.q;                      // đơn vị nhỏ nhất
