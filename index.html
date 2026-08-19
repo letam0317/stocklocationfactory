@@ -174,6 +174,13 @@ h1.brand-title{margin:0;min-width:0}
 /* Pop-up đang mở: footbar (z100) tụt xuống DƯỚI lớp modal (z99) — không thì thanh này đè lên đáy
    modal trên điện thoại, hớt tap của các nút vùng đáy (Lưu / Áp dụng của sheet bộ lọc) */
 body:has(.modal.show) .footbar{z-index:98}
+/* 2 tab của "Công cụ kho" (Nhận diện SKU · Chuyển đổi cân) ẨN HẴN thanh chân — chúng là công cụ
+   tính tay, không đọc tab Sheet nào, nên "Nguồn: …" + số dòng + mốc cập nhật đều vô nghĩa (bỏ
+   19/08/2026). Lớp .an-chan do showTab() bật/tắt. */
+body.an-chan .footbar{display:none}
+/* Không còn thanh chân thì hạ giỏ SKU xuống sát đáy, để nguyên 58/84px là pill lễnh giữa khoảng trống.
+   Dùng #pcbar có thêm class body nên thắng cả rule trong @media(max-width:900px) ở trên. */
+body.an-chan #pcbar{bottom:16px}
 .footbar a{color:var(--brand2);text-decoration:none;font-weight:600}
 .footbar a:hover{text-decoration:underline}
 .footbar .hint{font-variant-numeric:tabular-nums}
@@ -2514,7 +2521,7 @@ function loadMeta(){
 /* Mốc RIÊNG theo tab dữ liệu (26/07/2026 — nhịp phân tầng): kiểm kê / tồn bất thường được máy trạm
    cập nhật (hoặc "chạm mốc" khi kiểm tra xong mà dữ liệu không đổi) nhiều lần trong ngày. Footer
    phải chạy theo giờ KIỂM TRA thật của tab đang xem — Metadata chỉ là mốc của riêng tồn-vị-trí. */
-var TAB_SYNC={kk:0,abn:0,plg:0,sku:0};
+var TAB_SYNC={kk:0,abn:0,plg:0};
 function jsonpTs(tab,cbName,fn){
   window[cbName]=function(j){ try{ if(j&&j.status==='success'&&Number(j.ts)>0) fn(Number(j.ts)); }catch(e){} };
   var old=document.getElementById('sc_'+cbName); if(old) old.remove();
@@ -2527,7 +2534,6 @@ function loadTabSync(){
   jsonpTs('kiemke-location','ts_kk2',function(ts){ if(ts>TAB_SYNC.kk){TAB_SYNC.kk=ts; capNhatThongTin();} });
   jsonpTs('stock-inventory-beta','ts_abn',function(ts){ if(ts>TAB_SYNC.abn){TAB_SYNC.abn=ts; capNhatThongTin();} });
   jsonpTs('VESINH-KHO-DANHMUC','ts_plg',function(ts){ if(ts>TAB_SYNC.plg){TAB_SYNC.plg=ts; capNhatThongTin();} });
-  jsonpTs('SKU_MASTER','ts_sku',function(ts){ if(ts>TAB_SYNC.sku){TAB_SYNC.sku=ts; capNhatThongTin();} });
   ndsHamNong();
 }
 /* HÂM NÓNG TAB NHẬN DIỆN SKU — nạp danh mục + dựng chỉ mục khi máy RẢNH, trước khi người dùng bấm
@@ -3056,6 +3062,8 @@ function fmtTime(ms){  // HH:mm:ss DD/MM/YYYY — NEO GIỜ VN (+07) như mọi 
 /* Footer "· N dòng · cập nhật …": số dòng NEO theo tab đang xem, mốc cập nhật CHUNG (LAST_SYNC_MS)
    -> đồng bộ giữa 3 tab, tab Tồn kho bất thường không còn hiện nhầm số dòng của Trạng thái lưu trữ. */
 function capNhatThongTin(){
+  /* 2 tab "Công cụ kho" đã ẩn hẳn thanh chân -> thoát ngay, không tính rồi ghi vào chỗ không ai thấy */
+  if(TOPTAB==='sku'||TOPTAB==='cd') return;
   var t='';
   if(TOPTAB==='abn'){
     if(typeof ABN!=='undefined' && ABN.ok) t='· '+nf(ABN.agg?ABN.nTong:ABN.rows.length)+' SKU bất thường';
@@ -3064,13 +3072,6 @@ function capNhatThongTin(){
     if(n) t='· '+nf(n)+' dòng kiểm kê';
   }else if(TOPTAB==='plg'){
     if(typeof PLG!=='undefined' && PLG.ok) t='· '+nf(Object.keys(PLG.by).length)+' ô mặt bằng';
-  }else if(TOPTAB==='sku'){
-    if(typeof NDS!=='undefined' && NDS.ds) t='· '+nf(NDS.ds.length)+' SKU danh mục';
-  }else if(TOPTAB==='cd'){
-    /* Công cụ tính tay, KHÔNG đọc tab Sheet nào -> đừng mượn mốc "cập nhật" của tồn kho: mượn
-       là người xem tưởng con số quy đổi cũ/mới theo cụm đồng bộ. Ghi thẳng rồi thoát. */
-    document.getElementById('loadinfo').textContent='· công cụ tính tay · không đọc dữ liệu Sheet';
-    return;
   }else{
     if(_rowCount) t='· '+nf(_rowCount)+' dòng';
     else if(_skuCount) t='· '+nf(_skuCount)+' SKU';
@@ -3079,7 +3080,6 @@ function capNhatThongTin(){
   if(TOPTAB==='kk' && TAB_SYNC.kk) moc=TAB_SYNC.kk;
   else if(TOPTAB==='abn' && TAB_SYNC.abn) moc=TAB_SYNC.abn;
   else if(TOPTAB==='plg' && TAB_SYNC.plg) moc=TAB_SYNC.plg;
-  else if(TOPTAB==='sku' && TAB_SYNC.sku) moc=TAB_SYNC.sku;
   if(moc) t+=(t?' ':'')+'· cập nhật '+fmtTime(moc);
   if(TOPTAB==='stock' && _failed) t+=' · '+_failed+' tab lỗi';
   document.getElementById('loadinfo').textContent=t;
@@ -3249,6 +3249,8 @@ function showTab(t){
   document.getElementById('ttPlg').classList.toggle('active',t==='plg');
   document.getElementById('ttSku').classList.toggle('active',t==='sku');
   document.getElementById('ttCd').classList.toggle('active',t==='cd');
+  /* 2 tab "Công cụ kho" không có thanh chân trang (xem body.an-chan trong CSS) */
+  document.body.classList.toggle('an-chan', t==='sku'||t==='cd');
   if(t!=='sku') ndsRoiTab();   // rời tab thì tắt camera (đèn camera sáng vô cớ + hao pin)
   if(t==='kk' && !KK.loadedOnce){ KK.loadedOnce=true; kkLoad(); }    // lazy-load lần đầu mở tab
   if(t==='abn' && !ABN.loadedOnce){ ABN.loadedOnce=true; abnLoad(); }
@@ -7301,6 +7303,29 @@ var NDS_ENGINE = (function(){
     });
     return s;
   }
+  /* MÃ DÀI GHÉP TỪ NHIỀU ĐOẠN (hkm-det.tt.10-163 · sab-255lk3557-2 · nhs-h.p450.s-30-67h) — phải
+     rút TRƯỚC nhanSpec. Vì sao: mẫu thông số "số 1-3 chữ số, gạch, số 1-3 chữ số" cắn mất khúc GIỮA của mã
+     ("10-163"), phần còn lại "hkm-det.tt" không còn là mã nào của danh mục, thế là mất sạch bằng
+     chứng định danh (đo thật 19/08/2026: ca tem Thun dệt HKM-DET.TT.10-163 tụt xuống 50% và ra SKU
+     vải khác hẳn). Bẫy này chỉ lộ khi đọc CHỮ THÔ — ở đường AI cũ, AI trao nguyên chuỗi mã nên rổ
+     mã vẫn còn bản đầy đủ, còn danh mục thì cũng bị cắn y như vậy nên hai bên "cùng sai một kiểu".
+     Phân biệt MÃ với THÔNG SỐ bằng cấu tạo, không bằng độ dài: mã có ĐOẠN TOÀN CHỮ ("hkm", "det",
+     "sab"), còn thông số là số dính chữ đơn vị ("24-100d-2" = Tex 24-100D-2) — không có đoạn nào
+     toàn chữ nên vẫn đi đường thông số như cũ. */
+  var RE_MA_DAI = /[0-9a-z]+(?:[.-][0-9a-z]+){2,}/gi;
+  function nhanMaDai(text, ra){
+    return String(text).replace(RE_MA_DAI, function(hit){
+      if (!/[0-9]/.test(hit)) return hit;
+      var doan = hit.split(/[.-]/), coChu = false;
+      for (var i=0;i<doan.length;i++) if (/^[a-z]+$/i.test(doan[i])) { coChu = true; break; }
+      if (!coChu) return hit;
+      var t = chuan(hit);
+      if (t.length < 5) return hit;
+      ra.push(t);
+      var l = loi(t); if (l.length>=5 && l!==t) ra.push(l);
+      return ' ';
+    });
+  }
   /* MÃ: có CẢ chữ lẫn số (f9-5284, jc01262, fv8820-8, sab-255lk3557-2, wkf-12473, tn035) hoặc dãy
      số ≥5 chữ số (8846295 · 9151443 · SKU 422440680). */
   var RE_CODE = /\b(?=[0-9a-z.\-]*[a-z])(?=[0-9a-z.\-]*\d)[0-9a-z][0-9a-z.-]{2,}\b|\b\d{5,}\b/gi;
@@ -7336,7 +7361,8 @@ var NDS_ENGINE = (function(){
         if (w.length>=2 && !BO_TU[w]) ra.brand.push(w);
       });
     });
-    var conLai = nhanSpec(s, ra.spec);
+    var conLai = nhanMaDai(s, ra.code);          // MÃ DÀI trước, kẻo mẫu thông số cắn mất khúc giữa
+    conLai = nhanSpec(conLai, ra.spec);
     conLai = nhanCode(conLai, ra.code);
     conLai = conLai.replace(RE_MAMAU, function(m, so, phanTram){
       if (!phanTram) ra.color.push(chuan(so));
@@ -7422,7 +7448,11 @@ var NDS_ENGINE = (function(){
     var v = b[m];
     if (v !== undefined) return v;
     if (m === tok) v = 1;
-    else if (tok.length>=4 && (m.indexOf(tok)>=0 || tok.indexOf(m)>=0)) v = 0.88;
+    /* "CHỨA TRONG NHAU" chỉ tính khi hai chuỗi CÙNG CỠ (mẩu ngắn ≥ nửa mẩu dài). Không có điều kiện
+       này thì mọi số dài trên tem đều "khớp mã" nhờ trùng vài chữ số ngẫu nhiên: đo thật 19/08/2026
+       — số PO "4500219872" ăn 0,88 điểm vai MÃ của một SKU vải chỉ vì tên có mã màu 4 số nằm lọt
+       trong nó, thế là SKU sai chiếm hạng 1; chữ "inspector" cũng khớp "spec" y như vậy. */
+    else if (traiDaiHopNhau(tok, m) && (m.indexOf(tok)>=0 || tok.indexOf(m)>=0)) v = 0.88;
     else {
       var lt = loi(tok);
       if (lt.length>=4 && loi(m)===lt) v = 0.95;
@@ -7435,6 +7465,11 @@ var NDS_ENGINE = (function(){
     if (_capN > 400000) { _capNho = Object.create(null); _capN = 0; b = _capNho[tok] = Object.create(null); }
     b[m] = v; _capN++;
     return v;
+  }
+  /** Hai chuỗi có đáng so kiểu "chứa trong nhau" không: mẩu ngắn ≥4 ký tự VÀ ≥ nửa mẩu dài. */
+  function traiDaiHopNhau(a, b){
+    var n = a.length < b.length ? a.length : b.length, x = a.length > b.length ? a.length : b.length;
+    return n >= 4 && n*2 >= x;
   }
   /** Điểm khớp tốt nhất của 1 từ khoá tem với 1 rổ từ khoá của SKU (0..1). */
   function khopTot(tok, ro){
@@ -7717,7 +7752,7 @@ var NDS_ENGINE = (function(){
       var cu = [];
       for (var q=0;q<cm.tuVung.length;q++){
         var x = cm.tuVung[q];
-        if (t.length>=4 && (x.indexOf(t)>=0 || t.indexOf(x)>=0)) { cu.push(x); continue; }
+        if (traiDaiHopNhau(t,x) && (x.indexOf(t)>=0 || t.indexOf(x)>=0)) { cu.push(x); continue; }
         if (t.length>=4 && loi(x)===loi(t)) { cu.push(x); continue; }
         if (tyLe(t,x)>=0.82) cu.push(x);
       }
@@ -7738,7 +7773,7 @@ var NDS_ENGINE = (function(){
     for (i=0;i<ks.length;i++){
       var m = cm.tuVung[ks[i]];
       if (daCo[m]) continue;
-      if (t.length>=4 && (m.indexOf(t)>=0 || t.indexOf(m)>=0)) { daCo[m]=1; ra.push(m); continue; }
+      if (traiDaiHopNhau(t,m) && (m.indexOf(t)>=0 || t.indexOf(m)>=0)) { daCo[m]=1; ra.push(m); continue; }
       if (t.length>=4 && loi(m)===lt) { daCo[m]=1; ra.push(m); continue; }
       if (tyLe(t,m)>=0.82) { daCo[m]=1; ra.push(m); }
     }
@@ -7994,16 +8029,23 @@ var NDS_ENGINE = (function(){
    * "CÓ MÃ" chỉ nổ khi mã nằm ở vai mã. Cùng một tem, cùng một lõi, hai kết quả khác nhau.
    * Nên: coi vai của AI là GỢI Ý, còn BẰNG CHỨNG là cái đối chiếu được với danh mục thật.
    */
+  /* SỐ ĐO thì KHÔNG phải mã, dù cũng "chữ lẫn số": 10mm · 38cm · tex27 · 24l · 20x58mm. Thiếu
+     bảng chặn này thì "10mm" được nâng lên vai MÃ (nặng 45%) và mọi SKU nào có 10mm cũng thành
+     "khớp mã" — đo thật 19/08/2026: 3 SKU sai chen vào Top 5 với 74–81%. */
+  var RE_KHONG_LA_MA = /^(?:[0-9]+(?:\.[0-9]+)?(?:mm|cm|dm|m|gsm|inch|in|yard|yds|l|d|kg|g|pcs)|(?:tex|text|tkt|tk|ne|nm|dtex)[0-9]+(?:\.[0-9]+)?|[0-9]+x[0-9]+(?:mm|cm)?|#[0-9]+)$/;
   /* "Ra dáng mã" xét trên MỘT token đã chuẩn hoá (RE_CODE xét trên cả câu). */
   function laMaHinhDang(t){
-    if (!t || t.length < 4) return false;
-    if (/[a-z]/.test(t) && /d/.test(t)) return true;         // f9-5284 · jc01262 · v9b11
+    if (!t || t.length < 4 || RE_KHONG_LA_MA.test(t)) return false;
+    if (/[a-z]/.test(t) && /[0-9]/.test(t)) return true;     // f9-5284 · jc01262 · v9b11
     return !/[a-z]/.test(t) && t.replace(/[^0-9]/g,'').length >= 5;   // 8846295 · 422440680
   }
-  /** Mảnh nào RA DÁNG MÃ và CÓ THẬT trong danh mục thì phải vào vai MÃ, bất kể ai xếp nó ở đâu. */
+  /** Mảnh nào RA DÁNG MÃ và CÓ THẬT trong danh mục thì phải vào vai MÃ, bất kể ai xếp nó ở đâu.
+   *  CHỈ xét rổ màu / loại-NCC: đó là hai chỗ AI hay quăng mã hàng vào (đo thật: "F9-5284" nằm ở
+   *  colors, "BEIGE PD00695MIM" cũng ở colors). Rổ THÔNG SỐ thì không xét — hai bên đều bóc bằng
+   *  cùng bộ mẫu số đo nên mã hàng không lạc vào đó, còn kéo số đo lên vai mã thì lợi bất cập hại. */
   function napBangChung(nhan, cm){
     if (!cm || !cm.idx) return nhan;
-    ['spec','color','brand'].forEach(function(v){
+    ['color','brand'].forEach(function(v){
       (nhan[v]||[]).forEach(function(t){
         if (cm.idx[t] && laMaHinhDang(t) && nhan.code.indexOf(t)<0) nhan.code.push(t);
       });
