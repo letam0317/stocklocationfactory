@@ -1615,13 +1615,27 @@ body.side-anim{overflow-x:clip}
 @media(max-width:900px){.nds-grid{grid-template-columns:1fr}}
 
 /* --- Khung xem trước: khoá tỉ lệ 4/3, ảnh/video luôn "contain" để không cắt mất góc tem --- */
+/* ⚠ BẪY ĐÃ CẮN 19/08/2026 — "khung bị chia đôi màn hình".
+   Bản đầu để `.nds-stage{display:flex}` + `.nds-stage video,.nds-stage img{display:block}`. Hai rule
+   `display` đó là selector class (0-2-0) nên ĐÈ LÊN rule `[hidden]{display:none}` (0-1-0) của trình
+   duyệt ⇒ thuộc tính `hidden` MẤT TÁC DỤNG. Hậu quả: thẻ <video> rỗng và <img> cùng tồn tại thành 2
+   flex-item `width:100%` trong một hàng flex ⇒ mỗi cái chiếm nửa khung (ảnh bị ép vào nửa phải,
+   `object-fit:contain` co lại nên trông như méo), còn `.nds-empty` phủ đè lên trên.
+   CHỮA: khung KHÔNG flex nữa — mọi lớp đều `position:absolute;inset:0` xếp CHỒNG lên nhau, và khai
+   thẳng `[hidden]{display:none!important}` trong phạm vi khung để `hidden` luôn thắng. */
 .nds-stage{position:relative;aspect-ratio:4/3;width:100%;border:1px solid var(--line);border-radius:12px;
-  background:var(--surface2);overflow:hidden;display:flex;align-items:center;justify-content:center}
+  background:var(--surface2);overflow:hidden;isolation:isolate}
+.nds-stage>*{position:absolute;inset:0}
+.nds-stage [hidden]{display:none!important}
 .nds-stage video,.nds-stage img{width:100%;height:100%;object-fit:contain;display:block;background:#0b0e18}
 .nds-stage img{transition:transform .25s var(--ez-apple)}
-.nds-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+.nds-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
   color:var(--ink3);font-size:12.5px;text-align:center;padding:18px;line-height:1.6}
 .nds-empty svg{width:44px;height:44px;opacity:.5}
+/* Khi camera ĐANG bật thì câu hướng dẫn thành lớp phủ mờ ở đáy, không che tem, không bắt chạm */
+.nds-hint{position:absolute;left:0;right:0;bottom:0;top:auto;padding:7px 10px;pointer-events:none;
+  background:linear-gradient(transparent,rgba(0,0,0,.62));color:#fff;font-size:11px;line-height:1.5;
+  text-align:center;animation:fadeIn .2s ease both}
 /* Khung ngắm: 4 góc mảnh — nhắc thủ kho đưa TEM lọt trong khung, không cần canh chuẩn */
 .nds-aim{position:absolute;inset:12%;pointer-events:none;opacity:.55}
 .nds-aim i{position:absolute;width:24px;height:24px;border:2px solid var(--accent);border-radius:3px}
@@ -1635,6 +1649,12 @@ body.side-anim{overflow-x:clip}
 
 .nds-ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
 .nds-ctl .sp{flex:1;min-width:0}
+/* Điện thoại: bỏ khoảng đệm đẩy (nó sinh ra một mảng trống lớn giữa hàng) và cho 2 nút
+   hành động giãn đều hết bề ngang — vùng chạm to hơn, mép phải thẳng hàng với khung ảnh. */
+@media(max-width:560px){
+  .nds-ctl .sp{display:none}
+  .nds-ctl #ndsBtnMV,.nds-ctl #ndsBtnDoc{flex:1 1 46%}
+}
 /* Nút của tab này ăn CÙNG nhịp chạm với .kktab toàn dự án (co .96 khi nhấn — khai ở khối
    "phản hồi chạm" đầu file), thêm transition nền/bóng cho khớp .abntile. */
 .kktab{transition:transform .16s var(--ez-apple),box-shadow .25s ease,background .2s ease,border-color .2s ease}
@@ -1828,6 +1848,7 @@ body.side-anim{overflow-x:clip}
           Đưa tem vào giữa khung · chụp gần, đủ sáng, tránh bóng loáng của lớp nylon.
         </div>
         <div class="nds-aim" id="ndsAim" hidden><i></i><i></i><i></i><i></i></div>
+        <div class="nds-hint" id="ndsHint" hidden>Đưa tem lọt trong 4 góc · chụp gần, đủ sáng, tránh bóng loáng của lớp nylon</div>
       </div>
       <div class="nds-ctl">
         <button type="button" class="kktab" id="ndsBtnCam" onclick="ndsCam()">Bật camera</button>
@@ -1937,7 +1958,8 @@ body.side-anim{overflow-x:clip}
   </div>
 </div>
 
-<footer>Dashboard đọc trực tiếp online từ Google Sheet “stocklocationfactory” (gviz API).<br>Trạng thái lưu trữ: SKU đếm distinct theo Kho × Category · Kiểm kê: tab kiemke-sku / kiemke-location (bấm mã phiếu để mở phiếu đó trên WMS ở tab mới; ✎ = phiếu có SL điều chỉnh lưu tab kiemke-adjust) · Pop-up Lệch âm/dương liệt kê thẳng UID group lệch (tab kiemke-uidgr; cột Action sửa tự do, lưu tab kiemke-uidgr-edit bằng email @hasaki.vn) · Planogram: sơ đồ mặt bằng kho nguyên liệu dựng theo bản vẽ MTG_zigzag (14 dãy · 161 ô), trạng thái vệ sinh đọc tab VESINH-KHO-DANHMUC do sync-vesinh-factory.mjs ghi, pop-up chi tiết 1 ô đọc thêm tab VESINH-KHO-YEUCAU (dải 7 ngày · người báo cáo · ảnh — cùng bố cục pop-up vị trí của Audit Hasaki) · Nhận diện SKU: chụp tem nhà cung cấp → thử <b>mã vạch</b> ngay trên máy → tra <b>sổ tay tem</b> (tem đã chọn lần trước ra ngay, không gọi AI) → chỉ khi cả hai không có mới dùng Vision LLM qua Apps Script; đối soát với tab <code>SKU_MASTER</code> (danh mục SKU 3 kho nguyên liệu do sync-sku-master.mjs ghi) theo trọng số mã 45% · thông số 25% · màu 20% · thương hiệu 10%; gợi ý ưu tiên ACTIVE → NORMAL → đơn vị tính nhỏ nhất (mm · gram), các SKU cùng hàng khác đơn vị nằm ngay dưới thẻ; chọn SKU xong là vào luôn giỏ “Tạo lệnh kiểm kê”. Mất mạng/hết hạn mức vẫn đối soát được bằng sổ tay, mã vạch hoặc từ khoá gõ tay · Nút “Tải lại dữ liệu” (trong menu Cài đặt) kéo trực tiếp từ WMS (tối đa 4 giờ/lần).</footer>
+<!-- Dòng chú thích dài ở chân trang đã BỎ 19/08/2026: mọi thứ trong đó đều đã hiện ngay tại
+     chỗ dùng (dòng chân từng tab, tooltip, dải ghi chú), để lại chỉ là một khối chữ không ai đọc. -->
 
 <div class="footbar">
   <span class="chip">Nguồn: stocklocationfactory</span>
@@ -7212,6 +7234,11 @@ var NDS_ENGINE = (function(){
     them('dem', 50, 'cay chai lo tuyp');
     them('dem', 100, 'cuon roll');
     them('dem', 200, 'thung hop box bao kien bich');
+    /* CỜ "GỘP": đơn vị đóng gói nhiều món/nhiều mét vào một (cuộn · thùng · bộ · cây…). Kiểm kê
+       đếm từng đơn vị nhỏ nên các SKU này KHÔNG được đứng đầu gợi ý (luật cứng, xem timTop).
+       Đánh cờ theo TÊN đơn vị chứ không theo ngưỡng q, để đọc mã là hiểu ngay ý định. */
+    'bo set cay chai lo tuyp cuon roll thung hop box bao kien bich'.split(' ')
+      .forEach(function(t){ if (m[t]) m[t].gop = true; });
     return m;
   })();
   /** PRODUCTNAME → đơn vị tính. `q` nhỏ = đơn vị nhỏ; `raw` giữ nguyên chữ WMS để hiển thị. */
@@ -7224,9 +7251,9 @@ var NDS_ENGINE = (function(){
          Nhờ vậy "cuộn 5000m, mm" ra đúng mm chứ không ra "m". */
       if (!w || /\d/.test(w)) return;
       var d = DV[w]; if (!d) return;
-      if (!best || d.q < best.q) best = { ma:w, q:d.q, ho:d.ho };
+      if (!best || d.q < best.q) best = { ma:w, q:d.q, ho:d.ho, gop:!!d.gop };
     });
-    return { raw:raw, ma:best?best.ma:'', q:best?best.q:1, ho:best?best.ho:'' };
+    return { raw:raw, ma:best?best.ma:'', q:best?best.q:1, ho:best?best.ho:'', gop:best?best.gop:false };
   }
   /** Khoá "cùng một mặt hàng" = PRODUCTNAME BỎ đoạn đơn vị ở cuối (chuẩn hoá bỏ dấu, hạ chữ). */
   function khoaHang(pn){
@@ -7450,11 +7477,39 @@ var NDS_ENGINE = (function(){
     var moTa = function(i, r, diem, khop, xungDot, phu, laSku){
       var dv = r._dv || (r._dv = donVi(r.pn));
       return { i:i, sku:r.sku, pn:r.pn, type:r.type, status:r.status, qty:r.qty,
-        donVi:dv.raw, dv:dv.ma, q:dv.q, khoa:(r._k!=null?r._k:(r._k=khoaHang(r.pn))),
+        donVi:dv.raw, dv:dv.ma, q:dv.q, gop:!!dv.gop, khoa:(r._k!=null?r._k:(r._k=khoaHang(r.pn))),
         diem:diem, pct:Math.round(diem*100), khop:khop, xungDot:xungDot, phu:phu, laSku:laSku,
         bienThe:[], viDonVi:false, daHoc:false };
     };
+    /* ═══ THƯ VIỆN MÃ NCC — dùng chỉ mục mã để KHÔNG SÓT (19/08/2026) ═══
+       Mã hàng NCC in trên tem (F9-5374 · JC01262 · 8846295) là thứ định danh mạnh nhất: đo trên
+       1.839 mã của danh mục, 28% mã trỏ tới ĐÚNG 1 SKU và 60% trỏ tới ≤3. `cm.idx` vốn đã là chỉ
+       mục mã → dòng; ở đây bảo đảm mọi dòng mang ĐÚNG mã tem đọc được đều được chấm.
+
+       Vì sao cần: `ungVien` cắt ở 4.000 dòng theo số từ khoá trúng, nên có ca dòng mang đúng mã
+       (98%) bị cắt mất — bắt được khi đối chứng 400 tem mô phỏng. Đây là bản vá cho lỗi SÓT đó.
+
+       ⚠ ĐÃ THỬ VÀ BỎ: "tin mã" — mã khớp tuyệt đối + có dòng ≥85% thì chấm ĐÚNG nhúm mã rồi thôi.
+       Nhanh 2,2× thật, nhưng đo trên 800 lượt thì 142 lượt cho kết quả XẤU HƠN: dòng khớp cao nhờ
+       màu/thông số mà tên KHÔNG chứa mã đó bị đánh rơi khỏi Top 3 (ca thật: mất một dòng 96% đang
+       đứng ngang hạng nhất). Nhanh mà rơi mất đáp án đúng thì không đổi. */
+    var TRAN_MA = 120;
     var uv = ungVien(nhan, cm, opt.tranUngVien||4000);
+    if (opt.tat !== false){
+      var gom = Object.create(null), coMa = false;
+      (nhan.code||[]).forEach(function(t){
+        if (t.length < 4 || !/\d/.test(t) || !cm.idx[t]) return;   // chỉ nhận mã "ra dáng mã", khớp tuyệt đối
+        coMa = true;
+        var dsm = cm.idx[t];
+        for (var z=0; z<dsm.length; z++) gom[dsm[z]] = 1;
+      });
+      var km = coMa ? Object.keys(gom) : [];
+      if (km.length && km.length <= TRAN_MA){
+        var daCoUv = Object.create(null);
+        for (var u2=0; u2<uv.length; u2++) daCoUv[uv[u2]] = 1;
+        for (var u3=0; u3<km.length; u3++){ var im2=Number(km[u3]); if (!daCoUv[im2]) uv.push(im2); }
+      }
+    }
     for (var k=0;k<uv.length;k++){
       var i = uv[k], r = ds[i];
       var d = diemMot(nhan, r._b);
@@ -7487,7 +7542,7 @@ var NDS_ENGINE = (function(){
         if (a.laSku!==b.laSku) return a.laSku?-1:1;                  // tem in ĐÚNG SKU nội bộ -> đừng đổi
         var sa=(a.status==='INACTIVE')?1:0, sb=(b.status==='INACTIVE')?1:0;
         if (sa!==sb) return sa-sb;
-        var ca=(a.type==='COMBO')?1:0, cb=(b.type==='COMBO')?1:0;
+        var ca=((a.type==='COMBO')||a.gop)?1:0, cb=((b.type==='COMBO')||b.gop)?1:0;
         if (ca!==cb) return ca-cb;
         if (a.q!==b.q) return a.q-b.q;                               // ĐƠN VỊ NHỎ NHẤT
         return (Number(b.qty)||0)-(Number(a.qty)||0);
@@ -7498,7 +7553,7 @@ var NDS_ENGINE = (function(){
       for (var z=0; z<v.length; z++) if (v[z].diem>diemMax) diemMax = v[z].diem;
       dd.diem = diemMax; dd.pct = Math.round(diemMax*100);           // gộp KHÔNG được làm tụt điểm nhóm
       dd.bienThe = v.filter(function(x){ return x!==dd; }).map(function(x){
-        return { sku:x.sku, pn:x.pn, donVi:x.donVi, dv:x.dv, status:x.status, qty:x.qty, q:x.q };
+        return { sku:x.sku, pn:x.pn, donVi:x.donVi, dv:x.dv, status:x.status, qty:x.qty, q:x.q, gop:x.gop };
       });
       dd.viDonVi = dd.bienThe.some(function(x){ return x.q>dd.q; });
       got.push(dd);
@@ -7518,8 +7573,10 @@ var NDS_ENGINE = (function(){
       if (a.laSku!==b.laSku) return a.laSku?-1:1;
       var sa=(a.status==='INACTIVE')?1:0, sb=(b.status==='INACTIVE')?1:0;
       if (sa!==sb) return sa-sb;                          // ACTIVE trước — luật cứng
-      var ca=(a.type==='COMBO')?1:0, cb=(b.type==='COMBO')?1:0;
-      if (ca!==cb) return ca-cb;                          // NORMAL trước — luật cứng
+      /* COMBO và ĐƠN VỊ GỘP ("…/Cuộn 5000m", "…/set", "…/thùng") gộp làm MỘT hạng "hàng đóng gói":
+         cả hai đều không phải đơn vị để đếm khi kiểm kê, nên tuyệt đối không đứng đầu. */
+      var ga=((a.type==='COMBO')||a.gop)?1:0, gb=((b.type==='COMBO')||b.gop)?1:0;
+      if (ga!==gb) return ga-gb;                          // luật cứng
       if (b.diem!==a.diem) return b.diem-a.diem;
       if (b.phu!==a.phu) return b.phu-a.phu;
       if (a.q!==b.q) return a.q-b.q;                      // đơn vị nhỏ nhất
@@ -7805,6 +7862,20 @@ function ndsTrangThai(html){
 }
 
 /* ---------- 2. ẢNH: camera / chọn file / xoay / thu nhỏ ---------- */
+/* MỘT CHỖ DUY NHẤT quyết định lớp nào trong khung xem trước được hiện.
+ * Trước đây mỗi hàm (ndsCam / ndsTatCam / ndsDatAnh / onerror) tự bật-tắt vài thẻ rời rạc, rất dễ
+ * rơi vào trạng thái hai lớp cùng hiện — chính là cái đã làm khung "chia đôi".
+ *   che = 'trong' (chưa có gì) | 'camera' (đang quay) | 'anh' (đã có ảnh)
+ */
+function ndsLop(che){
+  var d=function(id){ return document.getElementById(id); };
+  var v=d('ndsVideo'), im=d('ndsShot'), em=d('ndsEmpty'), ai=d('ndsAim'), hi=d('ndsHint');
+  if (v)  v.hidden  = (che!=='camera');
+  if (im) im.hidden = (che!=='anh');
+  if (em) em.hidden = (che!=='trong');
+  if (ai) ai.hidden = (che!=='camera');
+  if (hi) hi.hidden = (che!=='camera');
+}
 async function ndsCam(){
   var v=document.getElementById('ndsVideo');
   if (NDS.stream){ ndsTatCam(); return; }
@@ -7817,20 +7888,16 @@ async function ndsCam(){
   }catch(e){
     toast('Không mở được camera (' + (e.name||e.message) + '). Dùng nút "Chọn ảnh" thay thế.','err'); return;
   }
-  v.srcObject = NDS.stream; v.hidden=false; await v.play().catch(function(){});
-  document.getElementById('ndsShot').hidden=true;
-  document.getElementById('ndsEmpty').hidden=true;
-  document.getElementById('ndsAim').hidden=false;
+  v.srcObject = NDS.stream; ndsLop('camera'); await v.play().catch(function(){});
   document.getElementById('ndsBtnChup').hidden=false;
   document.getElementById('ndsBtnCam').textContent='Tắt camera';
 }
 function ndsTatCam(){
   if (NDS.stream){ NDS.stream.getTracks().forEach(function(t){ t.stop(); }); NDS.stream=null; }
-  var v=document.getElementById('ndsVideo'); if (v){ v.srcObject=null; v.hidden=true; }
+  var v=document.getElementById('ndsVideo'); if (v) v.srcObject=null;
   var b=document.getElementById('ndsBtnChup'); if (b) b.hidden=true;
   var c=document.getElementById('ndsBtnCam'); if (c) c.textContent='Bật camera';
-  var a=document.getElementById('ndsAim'); if (a) a.hidden=true;
-  if (!NDS.anh){ var e=document.getElementById('ndsEmpty'); if (e) e.hidden=false; }
+  ndsLop(NDS.anh ? 'anh' : 'trong');
 }
 function ndsChup(){
   var v=document.getElementById('ndsVideo');
@@ -7853,17 +7920,19 @@ function ndsChonFile(inp){
 }
 function ndsDatAnh(dataUrl){
   NDS.anh=dataUrl; NDS.xoay=0; NDS.maVach=[];
+  /* Đã có ảnh thì TẮT camera: giữ stream sống sau lưng tấm ảnh chỉ tổ nóng máy + sáng đèn camera,
+     mà thanh nút vẫn hiện "Tắt camera / Chụp" trông như đang quay. (ndsChup gọi lại cũng vô hại.) */
+  if (NDS.stream) ndsTatCam();
   var im=document.getElementById('ndsShot');
   /* Ảnh hỏng (điện thoại yếu decode không nổi ảnh 12MP, tệp lỗi, dán data: URL sai): trả khung về
      trạng thái trống + nói rõ, đừng để cái icon ảnh vỡ đứng đó cho người dùng đoán. */
   im.onerror=function(){
-    NDS.anh=null; im.hidden=true; im.removeAttribute('src');
-    document.getElementById('ndsEmpty').hidden=false;
+    NDS.anh=null; im.removeAttribute('src'); ndsLop('trong');
     document.getElementById('ndsBtnDoc').disabled=true;
+    var bm=document.getElementById('ndsBtnMV'); if (bm) bm.disabled=true;
     toast('Không mở được ảnh này — chụp lại hoặc chọn tệp ảnh khác.','err');
   };
-  im.src=dataUrl; im.hidden=false; im.style.transform='';
-  document.getElementById('ndsEmpty').hidden=true;
+  im.src=dataUrl; im.style.transform=''; ndsLop('anh');
   document.getElementById('ndsBtnDoc').disabled=false;
   var bq=document.getElementById('ndsBtnMV'); if (bq) bq.disabled=false;
   /* CÓ ẢNH LÀ CHẠY LUÔN — không bắt bấm thêm nút nào (sửa 19/08/2026). */
