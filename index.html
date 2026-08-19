@@ -1765,7 +1765,7 @@ body.side-anim{overflow-x:clip}
    xuống dòng chứ không tràn. */
 .nds-ton{font-size:11.5px;color:var(--ink3);font-variant-numeric:tabular-nums;white-space:nowrap}
 /* Nút gỡ ghi nhớ dùng lại đúng kiểu nút chữ nhỏ `fcg` của dòng chân (không dựng control mới) */
-.nds-sub .nds-quen{margin-left:4px;vertical-align:baseline}
+.nds-chead .nds-quen{vertical-align:baseline}
 .nds-bar{background:var(--surface2);border-radius:99px;height:6px;margin:8px 0 9px;overflow:hidden}
 .nds-fill{height:100%;border-radius:99px;width:0;background:var(--cc,var(--brand2));transition:width .9s var(--ease)}
 /* Tên hàng là thứ thứ HAI phải đọc; phần trùng khớp tô đậm hơn để mắt bắt ngay chỗ giống tem */
@@ -1773,9 +1773,10 @@ body.side-anim{overflow-x:clip}
 .nds-pn mark{background:color-mix(in srgb,var(--good) 34%,transparent);color:var(--ink);border-radius:3px;
   padding:0 3px;font-weight:800;box-shadow:0 0 0 1px color-mix(in srgb,var(--good) 30%,transparent)}
 /* Mọi thứ còn lại (tồn · lệch · biến thể · vì sao khớp) đều HẠ XUỐNG một bậc: nhỏ, xám, một dòng */
-.nds-sub{margin-top:7px;font-size:11.5px;color:var(--ink3);font-variant-numeric:tabular-nums}
-.nds-sub .nds-lech{color:var(--bad);font-weight:650}
-.nds-sub .nds-ok{color:var(--good);font-weight:650}
+/* Ghi chú "tem in đúng mã này / từ sổ tay / lệch …" nằm ngay trên HÀNG ĐẦU cùng SKU + tồn (không
+   còn dòng phụ riêng), nên hai lớp này phải tự đứng được chứ không núp trong .nds-sub như trước. */
+.nds-lech{font-size:11.5px;color:var(--bad);font-weight:650}
+.nds-ok{font-size:11.5px;color:var(--good);font-weight:650}
 .nds-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:9px}
 .nds-why{font-size:11px;color:var(--ink3);margin-top:7px;line-height:1.6}
 .nds-why b{color:var(--ink2);font-weight:650}
@@ -6466,15 +6467,15 @@ function tvtRender(){
     var W=wh[r.wh]||(wh[r.wh]={n:0,qty:0}); W.n++; W.qty+=r.qty;
   });
   var nLoc=Object.keys(loc).length, nWh=Object.keys(wh).length, nSku=Object.keys(sku).length;
-  var head='<h2>Tồn tại vị trí <span class="hint">(UID chưa khai báo UID group mà đã rời bãi chờ '+TVT_CHO+')</span></h2>'+
+  var head='<h2>Tồn tại vị trí <span class="hint">(UID vải chưa khai báo UID group mà đã rời bãi chờ '+TVT_CHO+')</span></h2>'+
     '<p class="sub" style="margin:2px 0 10px"><span class="muted">'+tvtGiaiThich()+'</span></p>'+tvtNhomBar();
   if(!rows.length){
-    el.innerHTML='<section class="panel">'+head+'<div class="abnempty">Không có UID sai vị trí trong phạm vi'+(ABN.wh?(' kho “'+esc(ABN.wh)+'”'):' này')+(TVT.nhom?(' · nhóm “'+esc(TVT.nhom)+'”'):'')+' — mọi UID chưa khai báo đều đang ở bãi chờ '+TVT_CHO+'.</div></section>';
+    el.innerHTML='<section class="panel">'+head+'<div class="abnempty">Không có UID vải sai vị trí trong phạm vi'+(ABN.wh?(' kho “'+esc(ABN.wh)+'”'):' này')+(TVT.nhom?(' · nhóm “'+esc(TVT.nhom)+'”'):'')+' — mọi UID vải chưa khai báo đều đang ở bãi chờ '+TVT_CHO+'.</div></section>';
     return;
   }
   var tiles='<div class="abntiles">'+
     '<div class="abntile tot" style="--cc:var(--bad)" onclick="tvtOpenAll()" title="Xem toàn bộ UID sai vị trí">'+
-      '<div class="k">'+nf(rows.length)+'</div><div class="l">UID sai vị trí</div><div class="s">chưa khai báo UID group · '+nf(nWh)+' kho</div></div>'+
+      '<div class="k">'+nf(rows.length)+'</div><div class="l">UID vải sai vị trí</div><div class="s">chưa khai báo UID group · '+nf(nWh)+' kho</div></div>'+
     '<div class="abntile" style="--cc:var(--warn)" onclick="tvtOpenAll()" title="Xem toàn bộ UID sai vị trí">'+
       '<div class="k">'+nf(sl)+'</div><div class="l">Tổng số lượng</div><div class="s">cộng theo Qty của UID</div></div>'+
     '<div class="abntile" style="--cc:var(--info,#3b82f6)" onclick="tvtOpenAll()" title="Xem toàn bộ UID sai vị trí">'+
@@ -9596,7 +9597,13 @@ function ndsTheKetQua(r, hang){
     canh='<span class="nds-lech">lệch '+r.xungDot.map(function(h){ return esc(ten[h]||h); }).join(', ')+'</span>';
   }
   var ton='<span class="nds-ton">Tồn '+nf(r.qty)+(dvNhan?(' '+esc(dvNhan)):'')+'</span>';
-  var phu = canh ? ('<div class="nds-sub">'+canh+'</div>') : '';
+  /* GHI CHÚ CŨNG LÊN HÀNG ĐẦU (yêu cầu 19/08/2026). Hàng đầu giờ là TOÀN BỘ phần "đọc nhanh":
+     hạng · SKU · tồn · ghi chú (tem in đúng mã / từ sổ tay / lệch gì) · % — bỏ hẳn dòng phụ.
+     Thẻ còn 2 dòng nội dung + một dòng tóm tắt gấp lại. Vì sao dồn được: mấy ghi chú này đều RẤT
+     ngắn (2-4 chữ) và chúng là thứ quyết định "có tin thẻ này không", tức phải đọc CÙNG LÚC với mã
+     SKU chứ không phải sau khi đã đọc hết tên hàng dài dòng của WMS.
+     Hàng đã `flex-wrap` nên máy hẹp thì ghi chú tự xuống dòng — vẫn ngắn hơn dòng phụ riêng (nó có
+     `margin-top:7px` + chiều cao dòng riêng). */
 
   /* Chi tiết GẤP LẠI: biến thể đơn vị + vì sao khớp gộp chung một chỗ, một dòng tóm tắt */
   var nBt=(r.bienThe||[]).length, chiTiet='', tom=[];
@@ -9624,11 +9631,11 @@ function ndsTheKetQua(r, hang){
       ' onclick="ndsChonSku(\''+esc(r.sku)+'\')"'+
       ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();ndsChonSku(\''+esc(r.sku)+'\');}">'+
     '<div class="nds-chead"><span class="nds-rank">'+hang+'</span>'+
-      '<span class="nds-sku">'+esc(r.sku)+'</span>'+ton+nhan+
+      '<span class="nds-sku">'+esc(r.sku)+'</span>'+ton+canh+nhan+
       '<span class="nds-pct">'+r.pct+'%</span></div>'+
     '<div class="nds-bar"><div class="nds-fill" style="width:'+r.pct+'%"></div></div>'+
     '<div class="nds-pn">'+ndsToTrung(r.pn, r.khop)+'</div>'+
-    phu+chiTiet+
+    chiTiet+
     '</div>';
 }
 function ndsVeKetQua(ms, themInactive){
