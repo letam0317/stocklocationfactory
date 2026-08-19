@@ -1647,6 +1647,14 @@ body.side-anim{overflow-x:clip}
   background:var(--overlay);color:#fff;font-size:12.5px;font-weight:650;animation:fadeIn .2s ease both}
 .nds-busy .spin{margin:0}
 
+/* Hàng zoom: 2 nút bước + thanh trượt + số. Nút bước để chỉnh nhanh bằng ngón cái khi một tay
+   đang giữ tem; thanh trượt để chỉnh mịn. Tái dùng .kktab và .pg-chip, không chế control mới. */
+.nds-zoomrow{display:flex;align-items:center;gap:8px;margin-top:8px}
+.kktab.nds-zbtn{padding:2px 12px;font-size:17px;font-weight:700;line-height:1.35;min-width:40px}
+.nds-zoomrow input[type=range]{flex:1;min-width:80px;accent-color:var(--accent);height:26px;cursor:pointer}
+.nds-zoomrow input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+.nds-zoomrow .pg-chip{font-variant-numeric:tabular-nums;min-width:54px;text-align:center}
+
 /* Ô gõ mã: hàng riêng, nhãn rõ, ô nhập to — đây là đường nhanh & chắc nhất nên không nhét
    lẫn vào đám nút. Dùng lại đúng kiểu ô nhập của .nds-addrow để không chế control mới. */
 .nds-marow{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
@@ -1702,7 +1710,10 @@ body.side-anim{overflow-x:clip}
 .nds-card{position:relative;border:1px solid var(--line);border-radius:12px;background:var(--surface);
   padding:12px 14px;animation:fadeUp .3s ease both;overflow:hidden;
   transition:transform .16s var(--ez-apple),box-shadow .25s ease,background .2s ease}
+.nds-card{cursor:pointer}
 .nds-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.nds-card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.nds-card:active{transform:scale(.995)}
 .nds-card:nth-child(2){animation-delay:.05s}.nds-card:nth-child(3){animation-delay:.1s}
 .nds-card:nth-child(4){animation-delay:.15s}.nds-card:nth-child(n+5){animation-delay:.2s}
 .nds-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--cc,var(--brand2))}
@@ -1712,12 +1723,19 @@ body.side-anim{overflow-x:clip}
 .nds-rank{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:6px;
   background:color-mix(in srgb,var(--cc,var(--brand2)) 18%,transparent);color:var(--cc,var(--brand2));
   font-size:11px;font-weight:780;flex:none}
-.nds-sku{font-size:14.5px;font-weight:750;font-variant-numeric:tabular-nums;letter-spacing:-.01em;color:var(--ink)}
+/* SKU là thứ phải đọc được từ xa nhất trên thẻ -> to hơn hẳn phần còn lại */
+.nds-sku{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:var(--ink)}
 .nds-pct{margin-left:auto;font-size:13px;font-weight:780;font-variant-numeric:tabular-nums;color:var(--cc,var(--brand2))}
 .nds-bar{background:var(--surface2);border-radius:99px;height:6px;margin:8px 0 9px;overflow:hidden}
 .nds-fill{height:100%;border-radius:99px;width:0;background:var(--cc,var(--brand2));transition:width .9s var(--ease)}
-.nds-pn{font-size:12.5px;line-height:1.6;color:var(--ink2);word-break:break-word}
-.nds-pn mark{background:color-mix(in srgb,var(--good) 26%,transparent);color:var(--ink);border-radius:3px;padding:0 2px;font-weight:650}
+/* Tên hàng là thứ thứ HAI phải đọc; phần trùng khớp tô đậm hơn để mắt bắt ngay chỗ giống tem */
+.nds-pn{font-size:13.5px;line-height:1.62;color:var(--ink);word-break:break-word;font-weight:500}
+.nds-pn mark{background:color-mix(in srgb,var(--good) 34%,transparent);color:var(--ink);border-radius:3px;
+  padding:0 3px;font-weight:800;box-shadow:0 0 0 1px color-mix(in srgb,var(--good) 30%,transparent)}
+/* Mọi thứ còn lại (tồn · lệch · biến thể · vì sao khớp) đều HẠ XUỐNG một bậc: nhỏ, xám, một dòng */
+.nds-sub{margin-top:7px;font-size:11.5px;color:var(--ink3);font-variant-numeric:tabular-nums}
+.nds-sub .nds-lech{color:var(--bad);font-weight:650}
+.nds-sub .nds-ok{color:var(--good);font-weight:650}
 .nds-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:9px}
 .nds-why{font-size:11px;color:var(--ink3);margin-top:7px;line-height:1.6}
 .nds-why b{color:var(--ink2);font-weight:650}
@@ -1728,7 +1746,8 @@ body.side-anim{overflow-x:clip}
 .kktab.nds-alt:hover{transform:translateY(-1px);box-shadow:var(--shadow);background:var(--hover)}
 .kktab.nds-alt .badge{padding:1px 6px;font-size:9px;vertical-align:1px}
 .nds-more{margin-top:12px}
-.nds-more>summary{cursor:pointer;font-size:12px;font-weight:650;color:var(--ink2);list-style:none;padding:6px 0}
+.nds-more{margin-top:6px}
+.nds-more>summary{cursor:pointer;font-size:11px;font-weight:600;color:var(--ink3);list-style:none;padding:3px 0}
 .nds-more>summary::-webkit-details-marker{display:none}
 .nds-more>summary::before{content:'▸ ';color:var(--ink3)}
 .nds-more[open]>summary::before{content:'▾ '}
@@ -1860,6 +1879,15 @@ body.side-anim{overflow-x:clip}
         <div class="nds-aim" id="ndsAim" hidden><i></i><i></i><i></i><i></i></div>
         <div class="nds-hint" id="ndsHint" hidden>Đưa tem lọt trong 4 góc · chụp gần, đủ sáng, tránh bóng loáng của lớp nylon</div>
       </div>
+      <!-- ZOOM: chỉ hiện khi camera đang bật. Tem nhỏ để xa thì chữ bé, để gần thì máy không lấy
+           nét được (khoảng nét gần ~10cm) — nên giữ khoảng cách cho NÉT rồi phóng to. -->
+      <div class="nds-zoomrow" id="ndsZoomRow" hidden>
+        <button type="button" class="kktab nds-zbtn" onclick="ndsZoomBuoc(-0.5)" aria-label="Thu nhỏ">−</button>
+        <input type="range" id="ndsZoom" min="1" max="4" step="0.1" value="1" aria-label="Tỉ lệ phóng to"
+          oninput="ndsDatZoom(this.value)">
+        <button type="button" class="kktab nds-zbtn" onclick="ndsZoomBuoc(0.5)" aria-label="Phóng to">+</button>
+        <span class="pg-chip" id="ndsZoomVal">1,0×</span>
+      </div>
       <div class="nds-ctl">
         <button type="button" class="kktab" id="ndsBtnCam" onclick="ndsCam()">Bật camera</button>
         <button type="button" class="kktab" id="ndsBtnChup" onclick="ndsChup()" hidden>Chụp</button>
@@ -1906,7 +1934,7 @@ body.side-anim{overflow-x:clip}
     <!-- ---------- BƯỚC 2: SKU gợi ý — ĐẶT NGAY DƯỚI ẢNH vì đây là thứ người dùng cần;
          từ khoá tụt xuống bước 3 vì nó là công cụ SỬA khi máy đọc nhầm, không phải bước phải làm ---------- -->
     <section class="panel">
-      <h2>2 · SKU gợi ý <span class="hint" id="ndsResHint">Top 3 · chỉ SKU đang ACTIVE</span>
+      <h2>2 · SKU gợi ý <span class="hint" id="ndsResHint">Top 3 · chỉ SKU đang ACTIVE · bấm thẻ để chọn</span>
         <span class="pg-seg sm" role="group" aria-label="Phạm vi danh mục" style="margin-left:auto">
           <button type="button" id="ndsScopeA" class="on" onclick="ndsDoiScope(1)" title="Chỉ SKU còn tồn / có hàng đang về">ACTIVE</button>
           <button type="button" id="ndsScopeAll" onclick="ndsDoiScope(0)" title="Gồm cả SKU không còn tồn (INACTIVE)">Tất cả</button>
@@ -7798,7 +7826,7 @@ async function ndsThuMaVach(imLang){
   return true;
 }
 
-var NDS = { ds:null, cm:null, tokens:[], anh:null, maVach:[], tuDong:false, mime:'image/jpeg', xoay:0, stream:null,
+var NDS = { ds:null, cm:null, tokens:[], anh:null, maVach:[], tuDong:false, zoom:1, zoomCung:false, mime:'image/jpeg', xoay:0, stream:null,
   chiActive:true, dangDoc:false, dangTai:false, ket:[], nguon:'', msDoiSoat:null, loadedOnce:false,
   daBo:{}, rawDaTach:'' };
 var NDS_TAB = 'SKU_MASTER';
@@ -7920,28 +7948,95 @@ async function ndsCam(){
     toast('Trình duyệt không cho mở camera — dùng nút "Chọn ảnh" (điện thoại sẽ mở sẵn camera).','warn'); return;
   }
   try{
+    /* Xin ĐỘ PHÂN GIẢI CAO nhất trong tầm với (2560×1920) chứ không phải 1920×1440: zoom số cắt
+       vùng giữa nên cảm biến càng nhiều điểm ảnh thì chữ trên tem sau khi cắt càng còn nét.
+       `focusMode: continuous` để máy tự lấy nét lại khi đưa tem vào gần. */
     NDS.stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ ideal:'environment' },
-      width:{ ideal:1920 }, height:{ ideal:1440 } }, audio:false });
+      width:{ ideal:2560 }, height:{ ideal:1920 }, advanced:[{ focusMode:'continuous' }] }, audio:false });
   }catch(e){
     toast('Không mở được camera (' + (e.name||e.message) + '). Dùng nút "Chọn ảnh" thay thế.','err'); return;
   }
   v.srcObject = NDS.stream; ndsLop('camera'); await v.play().catch(function(){});
   document.getElementById('ndsBtnChup').hidden=false;
   document.getElementById('ndsBtnCam').textContent='Tắt camera';
+  ndsDungZoom();
+}
+
+/* ============================================================================================
+ * ZOOM — chữa đúng cái vòng luẩn quẩn của tem NHỎ: để xa thì chữ quá bé, để gần thì máy KHÔNG
+ * LẤY NÉT ĐƯỢC (ống kính điện thoại có khoảng nét gần tối thiểu ~10cm, gần hơn là nhoè).
+ * Cách ra khỏi vòng đó là GIỮ KHOẢNG CÁCH đủ để nét rồi PHÓNG TO, chứ không phải rê máy lại gần.
+ *   · Máy CÓ zoom phần cứng (đa số Android) → đổi thẳng `zoom` của track: ảnh vẫn nét nguyên bản.
+ *   · Máy KHÔNG có → zoom SỐ: xem trước phóng to bằng CSS, và lúc chụp thì CẮT đúng vùng giữa đó
+ *     từ khung hình gốc (2560×1920). Cắt 2× còn 1280×960 — vẫn trên mức 1400px mà bước nén gửi AI
+ *     dùng, nên chữ to gấp đôi mà không phải phóng to điểm ảnh (không tự làm nhoè thêm).
+ * ============================================================================================ */
+function ndsTrack(){ return NDS.stream ? (NDS.stream.getVideoTracks()||[])[0] : null; }
+function ndsDungZoom(){
+  var o=document.getElementById('ndsZoom'), h=document.getElementById('ndsZoomRow');
+  if (!o||!h) return;
+  /* Nhớ mức zoom lần trước: kho toàn tem cùng cỡ, bắt chỉnh lại mỗi lần bật camera là phiền */
+  if (!NDS.zoomDaDoc){
+    try{ var z0=parseFloat(localStorage.getItem('nds-zoom')); if (z0>0) NDS.zoom=z0; }catch(e){}
+    NDS.zoomDaDoc=true;
+  }
+  var t=ndsTrack(), cap=null;
+  try{ cap = t && t.getCapabilities ? t.getCapabilities() : null; }catch(e){}
+  NDS.zoomCung = !!(cap && cap.zoom && cap.zoom.max > cap.zoom.min);
+  var min = NDS.zoomCung ? cap.zoom.min : 1;
+  var max = NDS.zoomCung ? Math.min(cap.zoom.max, 8) : 4;      // trần 4× cho zoom số: cắt sâu hơn là mất nét thật
+  o.min = min; o.max = max;
+  o.step = NDS.zoomCung ? ((cap.zoom.step && cap.zoom.step>0) ? cap.zoom.step : (max-min)/40) : 0.1;
+  var cu = Number(NDS.zoom||1);
+  o.value = Math.min(max, Math.max(min, cu));
+  h.hidden = false;
+  ndsDatZoom(o.value, true);
+}
+function ndsDatZoom(v, im){
+  v = Number(v)||1;
+  NDS.zoom = v;
+  var nh=document.getElementById('ndsZoomVal'); if (nh) nh.textContent = v.toFixed(1).replace('.',',') + '×';
+  var vd=document.getElementById('ndsVideo');
+  if (NDS.zoomCung){
+    var t=ndsTrack();
+    if (t && t.applyConstraints) t.applyConstraints({ advanced:[{ zoom:v }] }).catch(function(){});
+    if (vd) vd.style.transform='';
+  } else if (vd){
+    vd.style.transform = 'scale(' + v + ')';                   // zoom số: chỉ là xem trước
+    vd.style.transformOrigin = 'center center';
+  }
+  try{ localStorage.setItem('nds-zoom', String(v)); }catch(e){}
+  if (!im) { /* im=true khi gọi lúc dựng, khỏi báo gì */ }
+}
+function ndsZoomBuoc(d){
+  var o=document.getElementById('ndsZoom'); if (!o) return;
+  o.value = Math.min(Number(o.max), Math.max(Number(o.min), Number(o.value) + d));
+  ndsDatZoom(o.value);
 }
 function ndsTatCam(){
   if (NDS.stream){ NDS.stream.getTracks().forEach(function(t){ t.stop(); }); NDS.stream=null; }
   var v=document.getElementById('ndsVideo'); if (v) v.srcObject=null;
   var b=document.getElementById('ndsBtnChup'); if (b) b.hidden=true;
   var c=document.getElementById('ndsBtnCam'); if (c) c.textContent='Bật camera';
+  var zr=document.getElementById('ndsZoomRow'); if (zr) zr.hidden=true;
+  if (v) v.style.transform='';
   ndsLop(NDS.anh ? 'anh' : 'trong');
 }
 function ndsChup(){
   var v=document.getElementById('ndsVideo');
   if (!NDS.stream || !v.videoWidth){ toast('Camera chưa sẵn sàng.','warn'); return; }
+  var w=v.videoWidth, h=v.videoHeight, z=Number(NDS.zoom)||1;
   var cv=document.createElement('canvas');
-  cv.width=v.videoWidth; cv.height=v.videoHeight;
-  cv.getContext('2d').drawImage(v,0,0);
+  if (!NDS.zoomCung && z>1.01){
+    /* Zoom SỐ: cắt đúng vùng giữa mà người dùng đang thấy trên màn hình. Phải cắt từ khung hình
+       GỐC (không phải từ thẻ video đã bị CSS phóng to) thì mới giữ được điểm ảnh thật. */
+    var cw=Math.max(1,Math.round(w/z)), ch=Math.max(1,Math.round(h/z));
+    cv.width=cw; cv.height=ch;
+    cv.getContext('2d').drawImage(v, Math.round((w-cw)/2), Math.round((h-ch)/2), cw, ch, 0, 0, cw, ch);
+  } else {
+    cv.width=w; cv.height=h;
+    cv.getContext('2d').drawImage(v,0,0);
+  }
   ndsDatAnh(cv.toDataURL('image/jpeg',0.92));
   ndsTatCam();
 }
@@ -8157,7 +8252,7 @@ function ndsDoiScope(active){
   NDS.chiActive=!!active;
   document.getElementById('ndsScopeA').classList.toggle('on',!!active);
   document.getElementById('ndsScopeAll').classList.toggle('on',!active);
-  document.getElementById('ndsResHint').textContent = (active?'Top 3 · chỉ SKU đang ACTIVE':'Top 3 · gồm cả SKU INACTIVE (không còn tồn)')+' · ưu tiên đơn vị nhỏ nhất';
+  document.getElementById('ndsResHint').textContent = (active?'Top 3 · chỉ SKU đang ACTIVE':'Top 3 · gồm cả SKU INACTIVE')+' · bấm thẻ để chọn';
   if (NDS.tokens.length) ndsDoiSoat();
 }
 
@@ -8279,17 +8374,14 @@ function ndsToTrung(pn, khop){
   if (dang) out+='</mark>';
   return out;
 }
-/* THẺ GỢI Ý — GỌN (sửa 19/08/2026 theo phản hồi "quá màu mè").
- * Bản đầu bày cùng lúc: hạng · SKU · badge NORMAL · badge ACTIVE · % · thanh · tên · chip Tồn ·
- * chip ĐVT · 4–6 chip từ khoá khớp · dòng lệch · dòng ưu tiên đơn vị · nút biến thể · 2 nút.
- * Người đứng trước kệ 90% thời gian chỉ cần: MÃ SKU · TÊN · TỒN · có gì bất thường không.
- * Nên cắt theo nguyên tắc "chỉ hiện cái BẤT THƯỜNG":
- *   · badge TYPE  -> chỉ hiện khi COMBO (NORMAL là mặc định, hiện lên chỉ tốn chỗ)
- *   · badge STATUS-> chỉ hiện khi INACTIVE, hoặc khi đang xem phạm vi "Tất cả" (lúc đó ACTIVE/
- *     INACTIVE lẫn lộn nên mới cần phân biệt). Phạm vi mặc định đã lọc ACTIVE rồi.
- *   · chip ĐVT    -> bỏ, vì "Tồn 2.330 pcs" đã có sẵn đơn vị ngay sau con số
- *   · chip từ khoá khớp -> nhốt vào <details> "Vì sao khớp" (dùng .nds-more sẵn có), mở khi cần
- *   · dòng "ưu tiên đơn vị nhỏ nhất" -> gộp thành một câu ngắn ngay trong khối biến thể
+/* THẺ GỢI Ý — RÚT TỚI LÕI (sửa lần 2, 19/08/2026).
+ * Thứ người đứng trước kệ cần đọc, theo đúng thứ tự: MÃ SKU → TÊN (chỗ trùng khớp) → còn lại.
+ * Nên bản này chỉ cho hai thứ đó được "to tiếng":
+ *   · .nds-sku to hơn, đậm hơn; .nds-pn to hơn và <mark> tô rõ hơn;
+ *   · tồn · đơn vị lớn hơn · vì sao khớp — DỒN HẾT xuống MỘT dòng phụ chữ nhỏ, xám, gấp lại được;
+ *   · bỏ hẳn 2 nút "Chọn SKU này" / "Copy mã" — mỗi thẻ 2 nút thì 3 thẻ thành 6 nút, lấn hết chỗ
+ *     của chính thông tin cần đọc. Thay bằng: BẤM CẢ THẺ là chọn (role=button + Enter/Space).
+ * Biến thể đơn vị vẫn bấm chọn được, nhưng phải chặn nổi bọt để không kích nhầm thẻ cha.
  */
 function ndsTheKetQua(r, hang){
   var mau=ndsMauHang(r.pct), lop='nds-card '+(r.xungDot.length?'nghi':mau);
@@ -8298,53 +8390,50 @@ function ndsTheKetQua(r, hang){
   ['code','spec','color','brand'].forEach(function(v){
     (r.khop[v]||[]).forEach(function(t){ chipKhop.push('<span class="nds-tag vai-'+v+'"><span class="vt">'+esc(NDS_VAI_TEN[v])+'</span>'+esc(t)+'</span>'); });
   });
-  var viSao = chipKhop.length
-    ? '<details class="nds-more"><summary>Vì sao khớp ('+chipKhop.length+' từ khoá)</summary><div class="nds-meta">'+chipKhop.join('')+'</div></details>'
-    : '';
 
-  /* Một dòng cảnh báo duy nhất, theo thứ tự quan trọng giảm dần */
-  var canhBao='';
-  if (r.daHoc) canhBao='<div class="nds-why" style="color:var(--good)"><b>Từ sổ tay</b> — tem này đã chọn SKU này lần trước. '+
-    '<button type="button" class="kktab nds-alt" onclick="ndsSoQuen()">Quên</button></div>';
-  else if (r.laSku) canhBao='<div class="nds-why"><b>Tem in đúng mã SKU này.</b></div>';
+  /* MỘT dòng phụ duy nhất: tồn + cảnh báo. Cảnh báo là thứ duy nhất được phép "lên tiếng" ở đây. */
+  var canh='';
+  if (r.daHoc) canh='<span class="nds-ok">· từ sổ tay</span>';
+  else if (r.laSku) canh='<span class="nds-ok">· tem in đúng mã này</span>';
   else if (r.xungDot.length){
-    var ten={ cm:'chiều dài (cm)', mm:'kích thước (mm)', gsm:'định lượng (gsm)', tex:'chi số Tex', tkt:'chi số Tkt',
-      co:'cỡ (#)', l:'cỡ nút (L)', ty:'tỉ lệ sợi', mamau:'mã màu' };
-    canhBao='<div class="nds-why" style="color:var(--bad)"><b>Lệch '+
-      r.xungDot.map(function(h){ return esc(ten[h]||h); }).join(' · ')+'</b> — kiểm lại trước khi chọn.</div>';
+    var ten={ cm:'chiều dài', mm:'kích thước', gsm:'định lượng', tex:'chi số Tex', tkt:'chi số Tkt',
+      co:'cỡ', l:'cỡ nút', ty:'tỉ lệ sợi', mamau:'mã màu' };
+    canh='<span class="nds-lech">· lệch '+r.xungDot.map(function(h){ return esc(ten[h]||h); }).join(', ')+'</span>';
   }
+  var phu='<div class="nds-sub">Tồn '+nf(r.qty)+(dvNhan?(' '+esc(dvNhan)):'')+' '+canh+'</div>';
 
-  /* Biến thể cùng mặt hàng khác đơn vị: giữ nguyên chức năng (bấm là chọn được), gộp câu giải
-     thích "ưu tiên đơn vị nhỏ nhất" vào chính tiêu đề dòng thay vì thêm một dòng riêng. */
-  var bienThe = '';
-  if (r.bienThe && r.bienThe.length){
-    bienThe = '<div class="nds-why"><b>'+(r.viDonVi?'Đơn vị lớn hơn':'Cùng mặt hàng')+':</b><span class="nds-alts">'+
-      r.bienThe.map(function(x){
-        return '<button type="button" class="kktab nds-alt" onclick="ndsChonSku(\''+esc(x.sku)+'\')" '+
-          'title="Chọn SKU này thay cho SKU ở thẻ trên">'+esc(x.sku)+' · '+esc(x.donVi||'?')+
-          (x.status==='INACTIVE'?' · <span class="badge b-pend">INACTIVE</span>':'')+' · '+nf(x.qty)+
-          '</button>';
-      }).join('')+'</span></div>';
+  /* Chi tiết GẤP LẠI: biến thể đơn vị + vì sao khớp gộp chung một chỗ, một dòng tóm tắt */
+  var nBt=(r.bienThe||[]).length, chiTiet='', tom=[];
+  if (nBt) tom.push(nBt+' đơn vị khác');
+  if (chipKhop.length) tom.push(chipKhop.length+' từ khoá khớp');
+  if (tom.length){
+    var ruot='';
+    if (nBt){
+      ruot+='<div class="nds-alts">'+r.bienThe.map(function(x){
+        return '<button type="button" class="kktab nds-alt" onclick="event.stopPropagation();ndsChonSku(\''+esc(x.sku)+'\')" '+
+          'title="Chọn SKU này thay cho SKU ở thẻ">'+esc(x.sku)+' · '+esc(x.donVi||'?')+
+          (x.status==='INACTIVE'?' · <span class="badge b-pend">INACTIVE</span>':'')+' · '+nf(x.qty)+'</button>';
+      }).join('')+'</div>';
+    }
+    if (chipKhop.length) ruot+='<div class="nds-meta">'+chipKhop.join('')+'</div>';
+    chiTiet='<details class="nds-more" onclick="event.stopPropagation()"><summary>'+tom.join(' · ')+'</summary>'+ruot+'</details>';
   }
 
   var nhan='';
   if (r.type==='COMBO') nhan+='<span class="badge b-proc" title="Combo là cách đóng gói, không phải mặt hàng để đếm">COMBO</span>';
   if (r.status==='INACTIVE') nhan+='<span class="badge b-pend" title="Không còn tồn, không có hàng đang về">INACTIVE</span>';
   else if (!NDS.chiActive) nhan+='<span class="badge b-ok">ACTIVE</span>';
-  if (r.daHoc) nhan+='<span class="badge b-ok" title="Lấy từ sổ tay tem — không gọi AI">ĐÃ HỌC</span>';
 
-  return '<div class="'+lop+'">'+
+  return '<div class="'+lop+'" role="button" tabindex="0" title="Bấm để chọn SKU này"'+
+      ' onclick="ndsChonSku(\''+esc(r.sku)+'\')"'+
+      ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();ndsChonSku(\''+esc(r.sku)+'\');}">'+
     '<div class="nds-chead"><span class="nds-rank">'+hang+'</span>'+
       '<span class="nds-sku">'+esc(r.sku)+'</span>'+nhan+
       '<span class="nds-pct">'+r.pct+'%</span></div>'+
     '<div class="nds-bar"><div class="nds-fill" style="width:'+r.pct+'%"></div></div>'+
     '<div class="nds-pn">'+ndsToTrung(r.pn, r.khop)+'</div>'+
-    '<div class="nds-meta"><span class="pg-chip">Tồn '+nf(r.qty)+(dvNhan?(' '+esc(dvNhan)):'')+'</span></div>'+
-    canhBao+bienThe+viSao+
-    '<div class="nds-cact">'+
-      '<button type="button" class="kktab nds-go" onclick="ndsChonSku(\''+esc(r.sku)+'\')">Chọn SKU này</button>'+
-      '<button type="button" class="kktab" onclick="ndsCopy(\''+esc(r.sku)+'\')">Copy mã</button>'+
-    '</div></div>';
+    phu+chiTiet+
+    '</div>';
 }
 function ndsVeKetQua(ms, themInactive){
   var c=document.getElementById('ndsCards');
