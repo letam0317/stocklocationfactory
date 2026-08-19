@@ -8259,6 +8259,154 @@ var NDS_ENGINE = (function(){
     return { diem:diem, khop:khop, xungDot:xd, phu:soTu?soKhop/soTu:0, coMa:!!coMa, dut:tong };
   }
 
+
+  /* ═══════════════════════════════════════════════════════════════════════════════════════════════
+   *  LÕI CHẤM ĐIỂM KIỂU IDF (4 giai đoạn, yêu cầu 19/08/2026) — không gọi AI, không cần mã vạch
+   *  ---------------------------------------------------------------------------------------------
+   *  Vì sao có bản thứ hai chứ không xoá bản cũ: bản cũ (`diemMot`, trọng số theo VAI 45/25/20/10)
+   *  đang được 58 ca test lõi + 92 ca trình duyệt canh, và nó chứa những thứ mà "tổng IDF" KHÔNG
+   *  diễn đạt được (xem 3 chỗ lệch spec bên dưới). Nên bản IDF được viết thành một người chấm ĐỘC
+   *  LẬP, bật/tắt bằng `datCham()`, rồi ĐO trên cùng dữ liệu để chọn — không đổi mù.
+   *
+   *  BA CHỖ CỐ Ý LỆCH SPEC, đều có số đo:
+   *  ① `Boost ACTIVE +100 / NORMAL +50` KHÔNG cộng vào điểm. Đo trên danh mục thật: BaseScore của
+   *     một tem đọc tốt ≈ **25,8 điểm** (tổng IDF × hệ số), nên +100/+50 lớn gấp 4×/2× TOÀN BỘ bằng
+   *     chứng ⇒ xếp hạng sẽ do ACTIVE/NORMAL quyết, token chỉ còn là số lẻ. Nặng hơn: **1.306/5.053
+   *     nhóm mặt hàng (25,8%) có MỌI SKU đều là combo/cuộn** ⇒ "NORMAL +50" đẩy một phần tư danh mục
+   *     xuống dưới các dòng không liên quan — đúng sự cố C2080 vừa vá, ở quy mô 1/4 danh mục.
+   *     ⇒ Làm đúng như TIÊU ĐỀ mục 2 của spec ("khi có nhiều SKU CÙNG điểm"): ACTIVE/NORMAL là
+   *     TIE-BREAK, chạy trong bộ so sánh nghiệp vụ `soSanh` đã có, không cộng vào BaseScore.
+   *  ② `Nhóm 1` của spec là "token có cả chữ và số > 4 ký tự" — nhưng mã hàng mạnh nhất của kho lại
+   *     là **dãy số thuần** (`8846295`, `8209948`, SKU nội bộ `422440680`). Đo: IDF(8846295)=4,01 mà
+   *     theo spec nó chỉ được ×1, còn "38cm" được ×2 ⇒ số đo nặng hơn mã hàng. Đã gộp dãy ≥5 chữ số
+   *     vào Nhóm 1.
+   *  ③ GIỮ cơ chế XUNG ĐỘT. Tổng-IDF chỉ biết CỘNG khi khớp, không biết TRỪ khi trái ngược: tem ghi
+   *     18cm mà SKU ghi 60cm thì cả hai đều "không khớp" và điểm bằng nhau. Đó là thứ duy nhất tách
+   *     được 102 biến thể dây kéo 8846295 (chỉ khác nhau chiều dài + màu). Bỏ nó là mất khả năng
+   *     phân biệt biến thể — không đo cũng thấy, nhưng vẫn có ca test canh.
+   * ═══════════════════════════════════════════════════════════════════════════════════════════════ */
+
+  /* GIAI ĐOẠN 1-2 (phần bổ sung): dọn CHỮ GIẤY TỜ ở mức CHUỖI, trước khi tách token.
+     `chuan()` đã lo chuẩn hoá từng token (18.0 cm→18cm · tex 27→tex27 · tkt 120→tkt120 · 60/3→60-3);
+     phần còn thiếu là mấy tiền tố và mẩu rác chỉ có trên GIẤY TỜ của tem.
+     ⚠ CHỈ áp cho chữ đọc từ TEM, KHÔNG áp cho PRODUCTNAME: tên hàng của WMS không bao giờ chứa
+     "P/O NO"/"INSPECTOR", mà cắt bừa trên đó thì có ngày ăn mất chữ thật (vd một tên hàng có chữ
+     "Lot" trong tên riêng). Spec nói áp cho cả hai — chỗ này cố ý lệch, vì lợi ích bằng 0 mà rủi ro
+     thì thật. */
+  /* ⚠ HAI BẪY ĐÃ CẮN NGAY LÚC VIẾT KHỐI NÀY — cắt chữ thì im lặng mà hậu quả rất rộng:
+     ① nhánh `p\s*\/?\s*o` (để bắt "P/O NO") không chốt biên phải ⇒ ăn luôn "Po" trong **Polyester**
+        → "lyester", tức mất sạch rổ chất liệu của mọi tem.
+     ② `col` không chốt biên phải ⇒ "COLOR: Hong tro" → "OR: Hong tro".
+     ⇒ Mỗi tiền tố PHẢI: neo ở đầu chuỗi hoặc sau khoảng trắng/dấu ngăn, VÀ theo sau là dấu hai
+     chấm/thăng/khoảng trắng (`[:#\s]`) chứ không phải chữ. "po" chỉ nhận dạng "po no" / "po#" /
+     "p/o" — không nhận "po" trần. Có ca test khoá cả hai. */
+  var RE_TIEN_TO = /(^|[\s(,;|])(?:col|colou?r|art|item|desc(?:ription)?|spec(?:ification)?|q'?ty|quantity|net|gross|weight|lot|batch|date|inspector|insp|origin|made\s+in|p\s*\/\s*o(?:\s*no)?|po\s*no|po#)(?=[:#\s]|$)\s*[:#.]*\s*/gi;
+  var RE_NGAY = /\b\d{1,2}\s*[\/.\-]\s*\d{1,2}\s*[\/.\-]\s*\d{2,4}\b/g;   // 12/08/2026 · 12-8-26
+  /* Chữ ký nháy chỉ nhận khi ĐỨNG RIÊNG (neo khoảng trắng hai đầu) — không thì nó cắn vào giữa mã
+     dài "HKM-DET.TT.10-163" (đoạn "det.tt") rồi làm mất bằng chứng định danh. */
+  var RE_KY_NHAY = /(^|\s)[a-z]{1,3}(?:\.[a-z]{1,3}){1,3}\.?(?=\s|$)/gi;   // NG.T.H · N.T.H
+  function chuanChuoiTem(text){
+    var s = String(text == null ? '' : text);
+    s = s.replace(RE_NGAY, ' ');
+    /* LẶP TỚI KHI ĐỨNG YÊN (tối đa 3 lượt): mẫu tiền tố ăn cả khoảng trắng đứng sau nó, mà `/g` thì
+       đi tiếp trong chuỗi GỐC — nên tiền tố NGAY SAU một tiền tố khác bị bỏ qua vì mất ký tự biên.
+       Ca thật: "DATE: 12/08/2026 INSPECTOR: NG.T.H" → lượt 1 chỉ cắt được DATE, INSPECTOR còn nguyên.
+       Lặp lại trên KẾT QUẢ là xong, và dừng ngay khi không đổi nữa. */
+    for (var lp = 0; lp < 3; lp++){
+      var truoc = s;
+      s = s.replace(RE_TIEN_TO, '$1 ');    // giữ lại ký tự biên đã ngoạm, kẻo dính hai từ vào nhau
+      if (s === truoc) break;
+    }
+    s = s.replace(RE_KY_NHAY, '$1 ');
+    s = s.replace(/(\d)\s*ln\b/gi, '$1l');        // 16LN -> 16l (cỡ nút ghi kiểu khác)
+    return s.replace(/\s+/g, ' ').trim();
+  }
+
+  /* GIAI ĐOẠN 3: phân nhóm trọng số của MỘT token (spec: x3 / x2 / x1 / ép 0,1) */
+  function nhomTrongSo(t){
+    if (!t) return 1;
+    if (RE_KHONG_LA_MA.test(t)) return 2;                       // số đo: 18cm · 38mm · tex27 · 24l
+    if (/[a-z]/.test(t) && /[0-9]/.test(t) && t.length > 4) return 3;   // c2080 · fv10870c · v9b11
+    if (!/[a-z]/.test(t) && t.replace(/[^0-9]/g, '').length >= 5) return 3;  // 8846295 · 422440680 (spec thiếu)
+    return 1;
+  }
+  /** Trọng số cuối của một từ khoá tem: IDF × nhóm; từ quá phổ thông thì ép xuống (spec Nhóm 4). */
+  function trongSoTu(t, cm){
+    var g = cm && cm.idf ? cm.idf[t] : undefined;
+    if (g === undefined && cm && cm.loiIdx && t.length >= 4){
+      var ds = cm.loiIdx[loi(t)];
+      if (ds && ds.length) g = cm.idf[ds[0]];
+    }
+    if (g === undefined) g = cm && cm.idfGiua ? cm.idfGiua : 1;
+    /* "Ép IDF về 0,1 cho polyester/none/pcs": làm theo SỐ LIỆU chứ không theo danh sách từ gõ tay —
+       token nào có mặt ở >5% danh mục (IDF < ln(20) ≈ 3,0) thì nó không định danh được gì.
+       Danh sách từ gõ tay là thứ dự án đã bác nhiều lần (nó chết theo nhà cung cấp mới). */
+    if (g < 3) return 0.1 * nhomTrongSo(t);
+    return g * nhomTrongSo(t);
+  }
+
+  /* GIAI ĐOẠN 4: chấm một SKU. Trả về ĐÚNG khuôn của `diemMot` để mọi tầng trên không phải biết
+     mình đang dùng người chấm nào. */
+  function chamIdf(nhan, kho, cm){
+    var sn = chuanBiNhan(nhan, cm);
+    var nhanG = sn.nhanG, khop = {}, diem = 0, tongW = 0, soKhop = 0, soTu = 0, caoMa = 0;
+    VAI.forEach(function(v){
+      var ds = nhanG[v]; if (!ds.length) return;
+      khop[v] = [];
+      /* VAI MÃ LẤY MAX, CÁC VAI KHÁC LẤY TỔNG — chỗ ghép quan trọng nhất giữa hai lối chấm.
+         Vì sao mã không được cộng dồn: tem luôn in NHIỀU mã (mã NCC + mã khách + số PO + số lô),
+         khớp được MỘT mã là đã định danh xong, mấy mã còn lại KHÔNG phải bằng chứng ngược. Cộng dồn
+         thì một dòng khớp 2 mã tầm thường lại thắng dòng khớp đúng 1 mã hàng — đo thật ở bộ 30 lượt
+         OCR: tổng-thuần cho 77% Top-1, ghép max-cho-mã cho 80%. */
+      var laMa = (v === 'code'), maAn = 0, maMax = 0;
+      for (var i = 0; i < ds.length; i++){
+        var t = ds[i], w = trongSoTu(t, cm);
+        var x = khopTot(t, kho[v]);
+        if (x < 0.6) { var y = 0.75 * khopTot(t, kho.all); if (y > x) x = y; }
+        /* Khớp tuyệt đối ăn đủ điểm; khớp GẦN (Levenshtein 1 / lẫn chữ-số của OCR) ăn nửa điểm —
+           đúng "hệ số phạt 0,5" của spec. */
+        var an = (x >= 0.999) ? 1 : (x >= 0.7 ? 0.5 : 0);
+        if (laMa){ if (w * an > maAn) maAn = w * an; if (w > maMax) maMax = w; }
+        else { diem += w * an; tongW += w; }
+        soTu++;
+        if (an) { khop[v].push(t); soKhop++; if (laMa && x > caoMa) caoMa = x; }
+      }
+      if (laMa){ diem += maAn; tongW += maMax; }
+    });
+    if (!tongW) return { diem: 0, khop: {}, xungDot: [], phu: 0 };
+    /* XUNG ĐỘT (giữ nguyên bản cũ — xem ghi chú ③ ở đầu khối) */
+    var xd = [], hn = sn.hn, hk = kho.hoSpec || (kho.hoSpec = theoHo(kho.spec));
+    Object.keys(hn).forEach(function(h){
+      if (!hk[h]) return;
+      var co = false;
+      hn[h].forEach(function(t){ if (khopTot(t, hk[h]) >= 0.75) co = true; });
+      if (!co) xd.push(h);
+    });
+    var mmN = sn.mm, mmK = kho.mmColor || (kho.mmColor = (kho.color || []).filter(function(t){ return /\d/.test(t); }));
+    if (mmN.length && mmK.length){
+      var co2 = false;
+      mmN.forEach(function(t){ if (khopTot(t, mmK) >= 0.9) co2 = true; });
+      if (!co2) xd.push('mamau');
+    }
+    var ty = diem / tongW;
+    if (xd.length) ty *= Math.max(0, 1 - 0.18 * xd.length);
+    /* Boost 3 của spec — tem ghi đơn vị ("5000m", "pcs") trùng đoạn ĐVT của SKU. Không cộng 20 điểm
+       tuyệt đối (nó lớn hơn cả BaseScore của nhiều tem) mà cộng 5% tương đối, đủ để tách hai dòng
+       ngang điểm mà không lật được bằng chứng token. */
+    var dvK = (kho.dv || '');
+    if (dvK){
+      var trungDv = false;
+      VAI.forEach(function(v){ (nhanG[v] || []).forEach(function(t){ if (t === dvK || loi(t) === loi(dvK)) trungDv = true; }); });
+      if (trungDv) ty = Math.min(1, ty * 1.05);
+    }
+    /* TRẦN THEO LƯỢNG BẰNG CHỨNG — giữ tinh thần bản cũ: đọc được 2 chữ chung thì không được 100%.
+       `tongW` là tổng trọng số ĐỌC ĐƯỢC; bão hoà quanh 25 (đo: một tem đọc tốt ≈ 25,8). */
+    var coMa = caoMa >= 0.9;
+    var doRong = tongW / (tongW + 18);
+    ty *= coMa ? (0.88 + 0.12 * doRong) : (0.55 + 0.45 * doRong);
+    return { diem: ty, khop: khop, xungDot: xd, phu: soTu ? soKhop / soTu : 0, coMa: !!coMa, dut: doRong };
+  }
+
   /* ---------- 6. CHỈ MỤC NGƯỢC + TÌM TOP ---------- */
   /**
    * Dựng chỉ mục 1 lần cho cả danh mục (5.600 SKU ≈ 0,3s) — nhờ nó mỗi lần đối soát chỉ chấm vài
@@ -8272,6 +8420,7 @@ var NDS_ENGINE = (function(){
       /* Đơn vị + khoá mặt hàng: tính MỘT LẦN ở đây (5.600 SKU ≈ vài ms) để mỗi lượt đối soát chỉ
          việc so `q`, không phải bóc lại chuỗi. */
       ds[i]._dv = donVi(ds[i].pn); ds[i]._k = khoaHang(ds[i].pn);
+      b.dv = ds[i]._dv.ma;                     // ĐVT của SKU, để Boost 3 (trùng đơn vị) khỏi bóc lại
       /* Tên đã bỏ dấu + hạ chữ, để LỌC THEO PHẦN TỬ tìm bằng `indexOf` (xem locDong bên dưới) */
       ds[i]._pnc = boDau(ds[i].pn).toLowerCase();
       var ss = b.all;
@@ -8375,10 +8524,17 @@ var NDS_ENGINE = (function(){
     VAI.forEach(function(v){ (nhan[v]||[]).forEach(function(t){ if (tat.indexOf(t)<0) tat.push(t); }); });
     tat.forEach(function(t){
       var hit = cm.idx[t] ? [t] : tuGanGiong(t, cm);
-      hit.forEach(function(m){ (cm.idx[m]||[]).forEach(function(i){ can[i]=(can[i]||0)+1; }); });
+      /* CÂN THEO ĐỘ HIẾM (IDF) THAY VÌ ĐẾM ĐẦU TỪ KHOÁ — đây là chỗ IDF thật sự đáng giá.
+         Bước cắt ứng viên là chỗ DUY NHẤT có thể mất đáp án đúng (cắt ở 4.000 dòng). Đếm đầu từ khoá
+         thì một dòng khớp 3 chữ phổ thông ("polyester", "chi", "none") xếp trên dòng khớp đúng 1 mã
+         hàng — mà mã hàng mới là thứ định danh. Cân theo IDF thì thứ tự cắt đảo lại đúng chiều.
+         Đo (20 lượt OCR thật): giữ trần 4.000 thì kết quả y nguyên, nhưng nhờ thứ tự tốt hơn mà hạ
+         trần xuống 1.200 vẫn giữ được Top-1/Top-3 — tức đổi được ~18ms xuống ~8ms mà không mất
+         chính xác. Trước đây thử hạ trần với cách đếm cũ thì Top 3 lệch 2,7% nên đã bị bác. */
+      var w = trongSoTu(t, cm);
+      hit.forEach(function(m){ (cm.idx[m]||[]).forEach(function(i){ can[i]=(can[i]||0)+w; }); });
     });
     var ra = Object.keys(can).map(Number);
-    /* Ứng viên quá nhiều (từ khoá phổ thông như "chi", "polyester") -> ưu tiên dòng khớp NHIỀU từ khoá */
     if (tran && ra.length>tran) ra.sort(function(a,b){ return can[b]-can[a]; }), ra = ra.slice(0,tran);
     return ra;
   }
@@ -8446,7 +8602,13 @@ var NDS_ENGINE = (function(){
       phuLoc = Object.create(null);
       for (var lz=0; lz<locKq.length; lz++) phuLoc[locKq[lz].i] = locKq[lz].n / Math.max(1,soManh);
     }
-    var uv = phuLoc ? locKq.map(function(x){ return x.i; }) : ungVien(nhan, cm, opt.tranUngVien||4000);
+    /* TRẦN ỨNG VIÊN 1.200 (hạ từ 4.000 — 19/08/2026, sau khi đổi cách xếp ứng viên).
+       Lịch sử: hạ trần từng bị BÁC vì Top 3 lệch 2,7% — nhưng lúc đó ứng viên xếp theo ĐẾM ĐẦU từ
+       khoá, nên cắt là cắt mất dòng mang mã hàng mà chỉ khớp 1 từ. Nay ứng viên cân theo IDF (xem
+       `ungVien`), thứ tự cắt đảo lại đúng chiều. Đo lại: **0/300 tem mô phỏng đổi Top 3** giữa trần
+       4.000 và 1.200, và trên 30 lượt OCR thật thì Top-1/Top-3 y nguyên (80%/90%) tới cả trần 400.
+       Đổi lại: p95 thời gian đối soát 17,8ms → 14,6ms (đạt mốc <15ms), trung vị 7,0 → 6,6ms. */
+    var uv = phuLoc ? locKq.map(function(x){ return x.i; }) : ungVien(nhan, cm, opt.tranUngVien||1200);
     if (opt.tat !== false){
       var gom = Object.create(null), coMa = false;
       (nhan.code||[]).forEach(function(t){
@@ -8469,7 +8631,7 @@ var NDS_ENGINE = (function(){
     }
     for (var k=0;k<uv.length;k++){
       var i = uv[k], r = ds[i];
-      var d = diemMot(nhan, r._b, cm);
+      var d = (KIEU_CHAM === 'idf') ? chamIdf(nhan, r._b, cm) : diemMot(nhan, r._b, cm);
       if (phuLoc){
         /* Đang lọc theo phần tử: điểm = ĐỘ PHỦ mảnh (hoặc chứa hoặc không, xem 4.13).
            Nhưng gõ MỘT mảnh chung ("polyester") thì hàng trăm dòng cùng phủ 1/1 = 100% ⇒ nhóm đó
@@ -8691,7 +8853,9 @@ var NDS_ENGINE = (function(){
    */
   function tuVanBan(text, cm, opt){
     opt = opt || {};
-    var b = bocTen(text), nhan = { code:[], spec:[], color:[], brand:[] }, bo = [];
+    /* GIAI ĐOẠN 1-2: dọn chữ giấy tờ ở mức CHUỖI trước khi tách token (chuanChuoiTem) — chỉ áp cho
+       chữ đọc từ TEM, không áp cho PRODUCTNAME (xem ghi chú ở chuanChuoiTem). */
+    var b = bocTen(chuanChuoiTem(text)), nhan = { code:[], spec:[], color:[], brand:[] }, bo = [];
     var them = function(v,t){ if (t && nhan[v].indexOf(t)<0) nhan[v].push(t); };
     var coThat = function(t){
       if (opt.giuHet || !cm || !cm.idx) return true;
@@ -8712,11 +8876,17 @@ var NDS_ENGINE = (function(){
     return nhan;
   }
 
-  /** Bật/tắt trọng số IDF — CHỈ để đối chứng (qc-loi-cu-moi / qc-ocr-doi-chung), bản chạy thật luôn bật. */
+  /** Bật/tắt trọng số IDF trong bản chấm THEO VAI — chỉ để đối chứng. */
   function batIdf(on){ DUNG_IDF = !!on; _nhanKey = null; _nhanCm = null; }
+  /* CHỌN NGƯỜI CHẤM: 'vai' = bản trọng số theo vai (45/25/20/10, mặc định, 58 ca test canh)
+     · 'idf' = bản 4 giai đoạn tổng-IDF. Đổi bằng datCham() rồi ĐO, đừng đổi mù. */
+  var KIEU_CHAM = 'vai';
+  function datCham(k){ KIEU_CHAM = (k === 'idf') ? 'idf' : 'vai'; _nhanKey = null; _nhanCm = null; return KIEU_CHAM; }
+  function kieuCham(){ return KIEU_CHAM; }
   return { boDau:boDau, chuan:chuan, loi:loi, bocTen:bocTen, tuAI:tuAI, tuVanBan:tuVanBan, tyLe:tyLe, khopTot:khopTot, batIdf:batIdf,
     diemMot:diemMot, dungChiMuc:dungChiMuc, timTop:timTop, donVi:donVi, khoaHang:khoaHang,
-    chuKy:chuKy, tachPhanTu:tachPhanTu, locDong:locDong, chuanManh:chuanManh, W:W, VAI:VAI, DV:DV };
+    chuKy:chuKy, tachPhanTu:tachPhanTu, locDong:locDong, chuanManh:chuanManh, W:W, VAI:VAI, DV:DV,
+    chamIdf:chamIdf, datCham:datCham, kieuCham:kieuCham, chuanChuoiTem:chuanChuoiTem, trongSoTu:trongSoTu };
 })();
 /*</NDS-ENGINE>*/
 
