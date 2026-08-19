@@ -1514,6 +1514,45 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 .pg-badge{display:inline-block;border-radius:999px;padding:3px 11px;font-size:11.5px;font-weight:700}
 @media(max-width:640px){ .pg-wrap{padding:10px} }
 
+/* ============================================================================================
+ * TRANG TỔNG QUAN (home) — bảng chọn hạng mục, là màn hình đầu tiên khi mở dashboard
+ * --------------------------------------------------------------------------------------------
+ * Vì sao cần: từ khi .toptabs bị ẩn (thanh bên thay thế), muốn đổi tab phải MỞ thanh bên rồi mới
+ * thấy danh sách — người mới vào không biết dự án có những gì. Trang này bày hết ra một màn hình.
+ * KHÔNG chế control mới: thẻ là <button> thật (có focus ring, bàn phím dùng được), dùng lại
+ * .panel / .pg-chip / .hint và animation fadeUp sẵn có; màu đi qua biến theme nên tự ăn 7 theme.
+ * ============================================================================================ */
+/* MỘT lưới duy nhất cho cả 3 nhóm, tiêu đề nhóm là dòng chiếm trọn bề ngang. Trước đây mỗi nhóm
+   một .panel riêng: nhóm 5S chỉ có 1 tab nên cả khung rộng bỏ trống 3/4, nhìn như hỏng bố cục. */
+.hm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(272px,1fr));gap:10px;align-items:start}
+.hm-h{grid-column:1/-1;display:flex;align-items:center;gap:9px;font-size:13px;font-weight:750;color:var(--ink);
+  letter-spacing:-.01em;padding:12px 2px 0}
+.hm-h:first-child{padding-top:0}
+/* Ô vuông accent y như .s-grp của thanh bên — hai nơi liệt kê cùng một danh sách thì nhìn phải cùng một họ */
+.hm-h::before{content:"";width:11px;height:11px;border-radius:3.5px;background:var(--accent);opacity:.9;flex:none}
+.hm-card{--cc:var(--accent);display:flex;flex-direction:column;gap:7px;width:100%;text-align:left;font-family:inherit;
+  background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--cc);border-radius:11px;
+  padding:13px 15px;cursor:pointer;animation:fadeUp .3s ease both;
+  transition:transform .16s var(--ez-apple),box-shadow .25s ease,background .2s ease}
+.hm-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);background:var(--hover)}
+.hm-card:active{transform:translateY(0)}
+.hm-card:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 25%,transparent)}
+.hm-t{display:flex;align-items:baseline;gap:9px;font-size:14px;font-weight:700;color:var(--ink);letter-spacing:-.01em}
+/* Con số nằm CÙNG HÀNG tiêu đề, canh phải: lướt dọc một cột số là thấy ngay hạng mục nào đang nóng */
+.hm-t .k{margin-left:auto;flex:none;text-align:right;font-size:16px;font-weight:780;color:var(--cc);
+  font-variant-numeric:tabular-nums;line-height:1.1}
+.hm-t .k small{display:block;font-size:9.5px;font-weight:600;color:var(--ink3);letter-spacing:0;margin-top:1px}
+.hm-t .k.trong{color:var(--ink3);font-weight:650}
+/* Tab công cụ không có số liệu nền để khoe — dán nhãn "Công cụ" thay vì "— mở để xem" gây hiểu
+   nhầm là dữ liệu chưa tải xong. */
+.hm-t .k.nhan{font-size:10px;font-weight:750;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
+.hm-d{font-size:11.8px;color:var(--ink2);line-height:1.6}
+.hm-c{display:flex;flex-wrap:wrap;gap:4px;margin-top:1px}
+/* Chip liệt kê mục con: dùng lại .pg-chip nhưng tông trung tính — đây là NHÃN, không phải nút bấm */
+.hm-c .pg-chip{background:var(--surface2);color:var(--ink3);font-size:10.5px;padding:2px 9px;font-weight:600}
+.hm-c .pg-chip b{color:var(--cc);font-weight:750;font-variant-numeric:tabular-nums}
+@media(max-width:640px){ .hm-grid{grid-template-columns:1fr} }
+
 /* ============ THANH BÊN — bê nguyên khuôn sidebar của Audit Hasaki (qc-side-css) ==============
    DRAWER trượt (web + mobile), CHỈ thay lớp điều hướng: showTab() và ruột từng tab giữ nguyên.
    Web ≥769px: mở ra thì GHIM, đẩy nội dung sang phải, không nền mờ.
@@ -1892,8 +1931,13 @@ body.side-anim{overflow-x:clip}
   <button class="toptab" id="ttCd" onclick="showTab('cd')">Chuyển đổi cân</button>
 </div>
 
+<!-- ===== TRANG TỔNG QUAN: bảng chọn hạng mục (màn hình đầu tiên) =====
+     Ruột do homeRender() dựng từ HOME_MUC — cùng một danh sách mà thanh bên dùng, nên thêm/bớt
+     tab chỉ phải sửa MỘT chỗ. -->
+<div id="viewHome"></div>
+
 <!-- ===== TAB 1: Trạng thái lưu trữ (dashboard hiện tại) ===== -->
-<div id="viewStock">
+<div id="viewStock" hidden>
   <p class="sub"><span class="muted">"Đã lên kệ" = có vị trí thực (&ne; <code>F0-A0</code>/<code>F00-A00</code>) &nbsp;·&nbsp; "Còn cần lên kệ" = SKU đang ở <code>F0-A0</code>/<code>F00-A00</code></span></p>
   <div id="content"></div>
   <div id="state" class="state"><div class="spin"></div>Đang tải dữ liệu trực tiếp từ Google Sheet…</div>
@@ -2416,7 +2460,8 @@ var META_TAB = "Metadata";                 // A1 = giờ hiển thị, B1 = epoc
 var COOLDOWN_MS = 4 * 60 * 60 * 1000;      // anti-spam: chỉ được gọi WMS 4 giờ/lần
 var LAST_SYNC_MS = 0;                      // mốc đồng bộ WMS cuối — LẤY TỪ BACKEND, không dùng new Date() local
 var _syncing = false, _rowCount = 0, _skuCount = 0, _unlockTimer = null;
-var TOPTAB = 'stock';   // tab đầu trang đang xem — footer hiển thị số liệu theo tab này
+var _gSh = 0, _gPe = 0, _gRate = 0;   // tổng SKU đã lên kệ / còn cần lên kệ / tỷ lệ — cho trang Tổng quan
+var TOPTAB = 'home';    // màn hình đang xem — mở trang là vào Tổng quan (bảng chọn hạng mục)
 var DIV_ORDER = ["Mastige","Garment"];
 var PAL = ["#2563eb","#0ea5e9","#14b8a6","#f59e0b","#8b5cf6","#ef4444","#10b981","#ec4899","#6366f1","#f43f5e","#0891b2","#84cc16"];
 var WH_DATA = {}, WH_COLOR = {}, curWh = null, curTab = 'pend';
@@ -2836,6 +2881,10 @@ function render(groups,whDiv){
   });
   var gSh=0,gTot=0,gPe=0; groups.forEach(function(d){ gSh+=d[2];gTot+=d[3];gPe+=d[4]; });
   var rate=(gSh+gPe)?gSh/(gSh+gPe)*100:0;
+  /* Chốt lại cho trang Tổng quan: đặt ở ĐÂY (chứ không ở dungTuTong) để cả đường tab tổng lẫn
+     đường tab thô đều cho cùng con số — render() là chỗ duy nhất cả hai đi qua. */
+  _gSh=gSh; _gPe=gPe; _gRate=rate;
+  if(typeof homeRender==='function' && TOPTAB==='home') homeRender();
 
   // Top Category: liệt kê TẤT CẢ category (gộp mọi kho), bấm mở xem thống kê từng kho
   var catAgg={};
@@ -3111,7 +3160,10 @@ function capNhatThongTin(){
   /* 2 tab "Công cụ kho" đã ẩn hẳn thanh chân -> thoát ngay, không tính rồi ghi vào chỗ không ai thấy */
   if(TOPTAB==='sku'||TOPTAB==='cd') return;
   var t='';
-  if(TOPTAB==='abn'){
+  if(TOPTAB==='home'){
+    var nT=HOME_MUC.reduce(function(s,g){ return s+g.items.length; },0);
+    t='· '+nT+' hạng mục';
+  }else if(TOPTAB==='abn'){
     if(typeof ABN!=='undefined' && ABN.ok) t='· '+nf(ABN.agg?ABN.nTong:ABN.rows.length)+' SKU bất thường';
   }else if(TOPTAB==='kk'){
     var n=((KK.data.sku||[]).length)+((KK.data.loc||[]).length);
@@ -3282,9 +3334,86 @@ setTheme(curTheme());
 (function(){ var a=document.getElementById('lnkSheet'); if(!a) return; if(SHOW_SRC){ a.hidden=false; a.href=SHEET_URL; } else a.remove(); })();
 
 /* ===== Tab đầu trang: Trạng thái lưu trữ | Kiểm kê (fade mượt, giữ nguyên DOM/trạng thái) ===== */
+/* ============================================================================================
+ * TRANG TỔNG QUAN — DANH SÁCH HẠNG MỤC DÙNG CHUNG
+ * --------------------------------------------------------------------------------------------
+ * HOME_MUC là NGUỒN DUY NHẤT của "dự án có những tab nào": trang Tổng quan dựng thẻ từ đây, và
+ * thanh bên cũng đọc chính nó (xem IIFE cuối trang). Thêm một tab về sau chỉ phải khai ở đây.
+ *   t   : khoá tab (khớp showTab)          ten : nhãn hiển thị
+ *   cc  : màu nhấn viền trái                mo  : một câu "tab này để làm gì"
+ *   muc : các mục con bên trong tab         so  : () -> {k,l} con số nổi bật, hoặc null nếu chưa có
+ * `so` KHÔNG được tự đi tải dữ liệu — chỉ đọc thứ đã nằm sẵn trong bộ nhớ. Việc tải do
+ * homeNapNhe() lo, và nó chỉ đụng vào 2 nguồn ĐÃ ĐO là nhỏ (xem chú thích tại chỗ).
+ * ========================================================================================== */
+var HOME_MUC=[
+  { g:'Hạng mục Tồn kho', mo:'Số liệu kho đọc từ WMS mỗi ngày', items:[
+    { t:'stock', ten:'Trạng thái lưu trữ', cc:'var(--accent)',
+      mo:'SKU nào đã lên kệ, SKU nào còn nằm bãi chờ F0-A0 — tách theo kho và ngành hàng, kèm biểu đồ tiến độ theo ngày.',
+      muc:['Đã lên kệ','Còn cần lên kệ','Theo ngành hàng','Biểu đồ theo ngày'],
+      so:function(){ return (_gSh+_gPe)?{k:nf(_gPe),l:'SKU chờ lên kệ'}:null; } },
+    { t:'kk', ten:'Kiểm kê', cc:'var(--info,#3b82f6)',
+      mo:'Phiếu kiểm kê thật (physical-count) theo SKU và theo mã vị trí: tiến độ từng kho, phiếu lệch âm/dương, UID group lệch.',
+      muc:['Theo SKU','Theo mã vị trí','Tiến độ theo kho','Lệch âm/dương','Kế hoạch chờ push'],
+      so:function(){ var n=((KK.data.sku||[]).length)+((KK.data.loc||[]).length); return n?{k:nf(n),l:'dòng kiểm kê'}:null; } },
+    { t:'abn', ten:'Tồn kho bất thường', cc:'var(--bad)',
+      mo:'SKU vướng Conflict · UID Temp · Not Found · Unsuitable · Committed, kèm mục Tồn tại vị trí (UID vải chưa khai báo UID group mà đã rời bãi chờ).',
+      muc:function(){
+        var a=['Conflict','UID Temp','Not Found','Unsuitable','Committed'];
+        a.push('Tồn tại vị trí'+(TVT.ok?(' <b>'+nf(tvtRowsInScope().length)+'</b>'):''));
+        return a; },
+      so:function(){ return ABN.ok?{k:nf(ABN.agg?ABN.nTong:ABN.rows.length),l:'SKU bất thường'}:null; } }
+  ]},
+  { g:'Hạng mục 5S', mo:'Vệ sinh theo sơ đồ mặt bằng', items:[
+    { t:'plg', ten:'Planogram', cc:'var(--good)',
+      mo:'Sơ đồ mặt bằng kho nguyên liệu F0-KHO (14 dãy · 161 ô): ô nào thuộc kho nào, ô nào tới hạn vệ sinh, ai phụ trách.',
+      muc:['Sơ đồ mặt bằng','Định danh kho','Trạng thái vệ sinh','Danh sách vị trí'],
+      so:function(){ return (typeof PLG!=='undefined'&&PLG.ok)?{k:nf(Object.keys(PLG.by).length),l:'ô mặt bằng'}:null; } }
+  ]},
+  { g:'Công cụ kho', mo:'Dùng ngay tại chỗ, không cần dữ liệu nền', items:[
+    { t:'sku', ten:'Nhận diện SKU', cc:'var(--warn)', nhan:'Công cụ',
+      mo:'Chụp tem nhà cung cấp → máy bóc từ khoá → gợi ý SKU nội bộ khớp nhất; chọn xong là vào thẳng giỏ tạo lệnh kiểm kê.',
+      muc:['Chụp/chọn ảnh tem','Gợi ý SKU','Từ khoá bóc được','Sổ tay tem'] },
+    { t:'cd', ten:'Chuyển đổi cân', cc:'var(--brand2,var(--accent))', nhan:'Công cụ',
+      mo:'Chỉ trả về từ sản xuất chỉ cân được kg — công cụ quy ra mm theo mật độ cuộn nguyên, đã trừ khối lượng lõi.',
+      muc:['Nhập số cân','Trừ lõi','Phiếu tính từng bước'] }
+  ]}
+];
+function homeMucList(it){ return typeof it.muc==='function'?it.muc():(it.muc||[]); }
+function homeRender(){
+  var el=document.getElementById('viewHome'); if(!el) return;
+  var html='<p class="sub"><span class="muted">Chọn hạng mục cần làm. Vào rồi vẫn đổi tab được ở '+
+    '<b>thanh bên</b> (nút góc trên trái hoặc <kbd>Ctrl</kbd>+<kbd>B</kbd>), hoặc quay lại đây bằng mục <b>Tổng quan</b>.</span></p>';
+  html+='<section class="panel"><div class="hm-grid">';
+  HOME_MUC.forEach(function(grp){
+    html+='<div class="hm-h">'+esc(grp.g)+(grp.mo?' <span class="hint">'+esc(grp.mo)+'</span>':'')+'</div>';
+    grp.items.forEach(function(it){
+      var s=null; try{ s=it.so?it.so():null; }catch(e){ s=null; }   // số liệu chỉ là điểm cộng — hỏng thì thẻ vẫn phải hiện
+      var so=s?('<span class="k">'+s.k+'<small>'+esc(s.l)+'</small></span>')
+             :(it.nhan?('<span class="k nhan">'+esc(it.nhan)+'</span>')
+                      :'<span class="k trong">—<small>mở để xem</small></span>');
+      html+='<button type="button" class="hm-card" style="--cc:'+it.cc+'" data-tab="'+it.t+'" '+
+        'onclick="showTab(this.getAttribute(\'data-tab\'))" title="Mở '+esc(it.ten)+'">'+
+        '<span class="hm-t">'+esc(it.ten)+so+'</span>'+
+        '<span class="hm-d">'+esc(it.mo)+'</span>'+
+        '<span class="hm-c">'+homeMucList(it).map(function(m){ return '<span class="pg-chip">'+m+'</span>'; }).join('')+'</span>'+
+      '</button>';
+    });
+  });
+  html+='</div></section>';
+  el.innerHTML=html;
+}
+/* Nạp NHẸ cho trang Tổng quan: CHỈ 2 nguồn đã đo là nhỏ — tab tổng bất thường (2,5 KB) và
+   tab ton-vitri (vài trăm dòng). KHÔNG đụng tab thô 21 MB, KHÔNG đụng kiểm kê/planogram: chúng
+   nặng và chỉ cần khi thật sự mở tab. Đổi lại, mở tab Tồn kho bất thường sau đó là hiện ngay. */
+var _homeDaNap=false;
+function homeNapNhe(){
+  if(_homeDaNap) return; _homeDaNap=true;
+  if(!ABN.ok) abnNapTong('abngv_home').then(function(ok){ if(ok&&TOPTAB==='home') homeRender(); });
+  if(!TVT.ok) tvtLoad().then(function(){ if(TOPTAB==='home') homeRender(); });
+}
 function showTab(t){
-  var MAP={stock:'viewStock',kk:'viewKK',abn:'viewAbn',plg:'viewPlg',sku:'viewNds',cd:'viewCd'};
-  if(!MAP[t]) t='stock';
+  var MAP={home:'viewHome',stock:'viewStock',kk:'viewKK',abn:'viewAbn',plg:'viewPlg',sku:'viewNds',cd:'viewCd'};
+  if(!MAP[t]) t='home';
   TOPTAB=t;
   Object.keys(MAP).forEach(function(k){ document.getElementById(MAP[k]).hidden=(k!==t); });
   var v=document.getElementById(MAP[t]);
@@ -3303,6 +3432,9 @@ function showTab(t){
   if(t==='plg' && !PLG.loadedOnce){ PLG.loadedOnce=true; plgLoad(); }
   if(t==='cd' && !CD.loadedOnce){ CD.loadedOnce=true; cdLoad(); }       // công cụ tính tay: không gọi mạng
   if(t==='sku' && !NDS.loadedOnce){ NDS.loadedOnce=true; ndsLoad(); }   // lazy: 1MB danh mục chỉ tải khi cần
+  /* Về Tổng quan thì vẽ lại: số trên thẻ phải khớp thứ vừa xem xong (mở tab Kiểm kê rồi quay ra
+     là thấy ngay số dòng kiểm kê), chứ không đứng im ở lần dựng đầu. */
+  if(t==='home'){ homeRender(); homeNapNhe(); }
   capNhatThongTin();   // footer neo theo tab đang xem (số dòng đúng tab + cùng mốc cập nhật)
 }
 
@@ -6008,28 +6140,35 @@ async function abnFetch(){
  * Tab tổng thiếu/hỏng ⇒ tự lùi về đường cũ, không bao giờ trắng màn hình. */
 var ABN_TONG_TAB=ABN_TAB+'-tong';
 var _abnDaNapTho=false, _abnDangNapTho=null;
+/* Nạp TAB TỔNG (2,5 KB) và dựng ABN.agg — tách riêng vì trang Tổng quan cũng cần con số này.
+   Trả true nếu tab tổng hợp lệ. TUYỆT ĐỐI không tự lùi về tab thô 21 MB ở đây: chỉ tab Tồn kho
+   bất thường mới được quyền trả giá đó, trang Tổng quan thì thà không có số còn hơn tải 21 MB. */
+async function abnNapTong(cb){
+  var rt=await gvizP(ABN_TONG_TAB,'&headers=1',cb||'abngv_tong');
+  var rr=(rt&&rt.table&&rt.table.rows)||[];
+  /* Tab chưa tồn tại thì gviz KHÔNG báo lỗi — trả tab đầu tiên của file. Kiểm hình dạng: 4 cột,
+     cột 3 là số, và phải có ít nhất 1 dòng __all__. */
+  var hopLe=rt&&rt.status!=='error'&&rr.length&&(rr[0].c||[]).length>=4&&
+            rr.some(function(x){ var c=x.c||[]; return c[1]&&String(c[1].v)==='__all__'; });
+  if(!hopLe) return false;
+  var agg=[];
+  rr.forEach(function(x){
+    var c=x.c||[]; var g=function(i){ return (c[i]&&c[i].v!=null)?c[i].v:''; };
+    var wh=String(g(0)); if(!wh) return;
+    agg.push({wh:wh,type:String(g(1)),n:Number(g(2))||0,qty:Number(g(3))||0});
+  });
+  ABN.agg=agg; ABN.ok=true; ABN.hasPtype=true; ABN.err='';
+  ABN.all=[]; ABN.rows=[];
+  ABN.nTong=agg.reduce(function(s,o){ return s+(o.type==='__all__'?o.n:0); },0);
+  return true;
+}
 async function abnLoad(){
   var st=document.getElementById('abnState');
   st.style.display='block'; st.innerHTML='<div class="spin"></div>Đang tải dữ liệu tồn kho bất thường…';
   document.getElementById('abnContent').innerHTML=''; document.getElementById('abnWhBar').innerHTML='';
   _abnDaNapTho=false; _abnDangNapTho=null; ABN.agg=null;
   tvtLoad();   // mục "Tồn tại vị trí" nạp SONG SONG từ tab riêng — không chờ nhau, hỏng bên nào bên kia vẫn hiện
-  var rt=await gvizP(ABN_TONG_TAB,'&headers=1','abngv_tong');
-  var rr=(rt&&rt.table&&rt.table.rows)||[];
-  /* Tab chưa tồn tại thì gviz KHÔNG báo lỗi — trả tab đầu tiên của file. Kiểm hình dạng: 4 cột,
-     cột 3 là số, và phải có ít nhất 1 dòng __all__. */
-  var hopLe=rt&&rt.status!=='error'&&rr.length&&(rr[0].c||[]).length>=4&&
-            rr.some(function(x){ var c=x.c||[]; return c[1]&&String(c[1].v)==='__all__'; });
-  if(hopLe){
-    var agg=[];
-    rr.forEach(function(x){
-      var c=x.c||[]; var g=function(i){ return (c[i]&&c[i].v!=null)?c[i].v:''; };
-      var wh=String(g(0)); if(!wh) return;
-      agg.push({wh:wh,type:String(g(1)),n:Number(g(2))||0,qty:Number(g(3))||0});
-    });
-    ABN.agg=agg; ABN.ok=true; ABN.hasPtype=true; ABN.err='';
-    ABN.all=[]; ABN.rows=[];
-    ABN.nTong=agg.reduce(function(s,o){ return s+(o.type==='__all__'?o.n:0); },0);
+  if(await abnNapTong()){
     abnRender();
     if(TOPTAB==='abn') capNhatThongTin();
     return;
@@ -9785,6 +9924,9 @@ function ndsRoiTab(){ if (NDS.stream) ndsTatCam(); }
 try{ PC.sel=JSON.parse(sessionStorage.getItem('pc-sel')||'{}')||{}; }catch(e){ PC.sel={}; }
 pcSyncBar();
 
+/* Mở trang = vào Tổng quan. `loadData()` VẪN chạy ngay như cũ (nó nuôi cả tab Trạng thái lưu trữ
+   lẫn chế độ tô màu kho của Planogram) — chỉ khác là màn hình đầu tiên hiện bảng chọn hạng mục. */
+showTab('home');
 loadData();
 </script>
 
@@ -10046,6 +10188,13 @@ function cdTrong(html,loai){
     { g:'Hạng mục 5S',      items:[['plg','Planogram']] },
     { g:'Công cụ kho',      items:[['sku','Nhận diện SKU'],['cd','Chuyển đổi cân']] }
   ];
+  /* Danh sách tab lấy từ HOME_MUC (nguồn duy nhất, dùng chung với trang Tổng quan) — mảng ngay
+     trên chỉ còn là đường lùi phòng khi HOME_MUC chưa kịp khai báo. Mục "Tổng quan" đứng đầu để
+     từ trong tab bất kỳ luôn quay ra được bảng chọn. */
+  if(typeof HOME_MUC!=='undefined'&&HOME_MUC.length){
+    HM=HOME_MUC.map(function(g){ return { g:g.g, items:g.items.map(function(x){ return [x.t,x.ten]; }) }; });
+  }
+  HM=[{ g:'Audit Factory', items:[['home','Tổng quan']] }].concat(HM);
   var nav=document.getElementById('sideNav'), tg=document.getElementById('sideToggle'), bd=document.getElementById('sideBackdrop');
   function sync(){ nav.querySelectorAll('.s-item').forEach(function(el){ el.classList.toggle('on', el.getAttribute('data-tab')===TOPTAB); }); }
   function build(){
