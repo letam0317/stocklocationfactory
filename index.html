@@ -1664,6 +1664,8 @@ body.side-anim{overflow-x:clip}
   font-variant-numeric:tabular-nums;letter-spacing:.02em}
 .nds-marow input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}
 .nds-magoi{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:7px;font-size:11.5px;color:var(--ink3)}
+.nds-magoi .nds-son{display:inline-block;min-width:16px;padding:0 5px;border-radius:99px;font-size:9.5px;font-weight:750;
+  background:color-mix(in srgb,var(--brand2) 16%,transparent);color:var(--brand2);vertical-align:1px}
 @media(max-width:560px){ .nds-marow label{width:100%} }
 .nds-ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
 .nds-ctl .sp{flex:1;min-width:0}
@@ -1910,7 +1912,8 @@ body.side-anim{overflow-x:clip}
            bước 3 tìm ô "thêm từ khoá". -->
       <div class="nds-marow">
         <label for="ndsMa">Mã trên tem</label>
-        <input id="ndsMa" autocomplete="off" spellcheck="false" placeholder="F9-5374 · JC01262 · 8846295…"
+        <input id="ndsMa" autocomplete="off" spellcheck="false" placeholder="Gõ vài ký tự: 5374 · JC012 · 8846…"
+          oninput="ndsMaGo(this.value)"
           onkeydown="if(event.key==='Enter'){event.preventDefault();ndsTraMa();}">
         <button type="button" class="kktab nds-go" onclick="ndsTraMa()">Tra mã</button>
       </div>
@@ -8156,22 +8159,62 @@ async function ndsDocTem(tuDong){
   NDS.dangDoc=true; ndsBusy(true, tuDong?'Không thấy mã vạch, chưa có trong sổ tay — đang nhờ AI đọc tem…':'Đang đọc tem bằng AI…');
   try{
     var a=await ndsNenAnh();
-    var body={ action:'sku_vision', key:'', email:mail, mime:a.mime, anh:a.b64,
-      nonce:'nds-'+Date.now()+'-'+Math.random().toString(36).slice(2,8) };
-    var ctl=(typeof AbortController!=='undefined')?new AbortController():null;
-    var het=setTimeout(function(){ if(ctl) ctl.abort(); },90000);
-    var r=await fetch(APPSCRIPT_URL,{ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body:JSON.stringify(body), signal:ctl?ctl.signal:undefined });
-    clearTimeout(het);
-    var j=await r.json();
+    /* NONCE GIỮ NGUYÊN QUA MỌI LƯỢT THỬ LẠI — đây là điều kiện để thử lại mà KHÔNG tốn thêm lượt
+       Gemini: doPost của Apps Script cất phản hồi theo nonce 10 phút, lượt sau chỉ nhận lại. */
+    var nonce='nds-'+Date.now()+'-'+Math.random().toString(36).slice(2,8);
+    var body={ action:'sku_vision', key:'', email:mail, mime:a.mime, anh:a.b64, nonce:nonce };
+    var j=await ndsGoiGas(body, tuDong);
     if (j.status!=='success') throw new Error(j.message||'AI trả lỗi không rõ');
     ndsNhanKetQua(j);
   }catch(e){
     var m=String(e&&e.message||e);
     if (/abort/i.test(m)) m='AI đọc quá lâu (>90 giây) — mạng yếu hoặc ảnh quá nặng.';
-    toast('Không đọc được tem bằng AI: '+m+' — vẫn có thể quét mã vạch hoặc gõ từ khoá tay ở bước 3.','err');
+    toast('Không đọc được tem bằng AI: '+m,'err');
+    /* Hỏng AI thì CHỈ THẲNG đường thay thế đang có sẵn, và đưa con trỏ tới đó luôn */
+    setTimeout(function(){ if (typeof ndsTroMa==='function') ndsTroMa(); }, 400);
   } finally { NDS.dangDoc=false; ndsBusy(false); }
 }
+
+/* ============================================================================================
+ * GỌI APPS SCRIPT CÓ THỬ LẠI — chữa lỗi thật 19/08/2026:
+ *     "Không đọc được tem bằng AI: Unexpected token '<', "<!DOCTYPE "... is not valid JSON"
+ * Đó KHÔNG phải AI hỏng, cũng không phải mã mình sai. Gọi một web app của Apps Script luôn đi 2
+ * chặng: POST tới `script.google.com/.../exec` → 302 → GET `script.googleusercontent.com/…/echo`.
+ * Chặng 2 của Google thỉnh thoảng trả về TRANG HTML (lỗi tạm, 404/500, trang đăng nhập) trong khi
+ * script phía sau ĐÃ CHẠY XONG — đúng cái bẫy đã ghi trong hồ sơ sự cố GAS 12/08/2026. Lúc đó
+ * `r.json()` gặp "<!DOCTYPE" và ném ra thông báo khó hiểu như trên.
+ * CHỮA: đọc THÔ trước, nhận diện HTML, rồi thử lại VỚI CÙNG NONCE (nên lượt sau chỉ lấy lại phản
+ * hồi đã cất — không chạy Gemini lần nữa, không tốn thêm hạn mức). Hết lượt thì báo bằng tiếng
+ * người, không quăng thông báo của bộ phân tích JSON vào mặt thủ kho.
+ * ============================================================================================ */
+async function ndsGoiGas(body, tuDong){
+  var LAN=3, cuoi='';
+  for (var i=0;i<LAN;i++){
+    if (i){
+      ndsBusy(true,'Google trả về trang lỗi — đang lấy lại kết quả (lượt '+(i+1)+'/'+LAN+')…');
+      await new Promise(function(r){ setTimeout(r, 900*i); });
+    }
+    var ctl=(typeof AbortController!=='undefined')?new AbortController():null;
+    var het=setTimeout(function(){ if(ctl) ctl.abort(); },90000);
+    var txt='';
+    try{
+      var r=await fetch(APPSCRIPT_URL,{ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body:JSON.stringify(body), signal:ctl?ctl.signal:undefined });
+      txt=await r.text();
+    } finally { clearTimeout(het); }
+    var t=String(txt||'').trim();
+    if (t.charAt(0)==='{' || t.charAt(0)==='['){
+      try{ return JSON.parse(t); }
+      catch(e){ cuoi='phản hồi không phải JSON hợp lệ'; continue; }
+    }
+    /* Không phải JSON -> gần như chắc là trang HTML của chặng 2 */
+    cuoi = /^<!DOCTYPE|^<html/i.test(t)
+      ? 'Google trả về trang HTML thay vì dữ liệu (lỗi chập chờn của Apps Script, không phải lỗi ảnh)'
+      : ('phản hồi lạ: ' + t.slice(0,60));
+  }
+  throw new Error(cuoi + '. Đã thử ' + LAN + ' lượt — gõ MÃ trên tem vào ô "Mã trên tem" là ra ngay, khỏi cần AI.');
+}
+
 /* Nhận kết quả AI -> gộp vào danh sách từ khoá (không xoá từ khoá người dùng đã thêm tay) */
 function ndsNhanKetQua(j){
   var t=j.tokens||{};
@@ -8310,6 +8353,53 @@ function ndsDungMa(m){
   ndsVeMaGoi([]);
   ndsThemToken(m,'code','tay'); ndsVeTags(); ndsDoiSoat();
   toast('Đã tra theo mã '+m+'.','ok');
+}
+
+/* ============================================================================================
+ * GỢI Ý MÃ NGAY KHI GÕ — đường nhanh nhất KHÔNG cần AI, không cần mạng  (19/08/2026)
+ * Sinh ra từ 2 sự cố liên tiếp: AI đọc sót mã F9-5374, rồi AI chết hẳn vì Apps Script trả HTML.
+ * Cả hai lần thứ cứu được người dùng đều là cái mã in to trên tem. Nhưng bắt gõ đủ "F9-5374" thì
+ * vẫn chậm và vẫn sai được (tem mờ, đọc nhầm 3↔8, 5↔S). Nên: gõ 2-3 ký tự BẤT KỲ trong mã là
+ * hiện ngay các mã thật của danh mục có chứa đoạn đó, kèm số SKU — chạm một cái là xong.
+ * Danh sách mã dựng MỘT LẦN từ từ vựng chỉ mục (không quét lại 5.610 dòng mỗi lần gõ).
+ * ============================================================================================ */
+function ndsDsMa(){
+  if (NDS.dsMa) return NDS.dsMa;
+  if (!NDS.cm) return null;
+  var ra=[];
+  for (var i=0;i<NDS.cm.tuVung.length;i++){
+    var w=NDS.cm.tuVung[i];
+    /* "Ra dáng mã hàng": có cả chữ lẫn số, ≥4 ký tự. Bỏ dãy toàn số (là SKU nội bộ hoặc mã màu). */
+    if (w.length<4 || !/\d/.test(w) || !/[a-z]/.test(w)) continue;
+    ra.push({ m:w, n:(NDS.cm.idx[w]||[]).length });
+  }
+  ra.sort(function(a,b){ return a.m<b.m?-1:(a.m>b.m?1:0); });
+  NDS.dsMa=ra;
+  return ra;
+}
+/** Gõ tới đâu gợi ý tới đó: khớp ĐẦU MÃ xếp trước, khớp giữa xếp sau. */
+function ndsGoiMa(txt){
+  var ds=ndsDsMa(); if (!ds) return [];
+  var t=NDS_ENGINE.chuan(String(txt||''));
+  var tt=NDS_ENGINE.loi(t);
+  if (tt.length<2) return [];
+  var dau=[], giua=[];
+  for (var i=0;i<ds.length && dau.length+giua.length<40;i++){
+    var m=ds[i], l=NDS_ENGINE.loi(m.m);
+    if (l.indexOf(tt)===0) dau.push(m);
+    else if (l.indexOf(tt)>=0) giua.push(m);
+  }
+  return dau.concat(giua).slice(0,8);
+}
+function ndsMaGo(txt){
+  var ds=ndsGoiMa(txt);
+  var el=document.getElementById('ndsMaGoi'); if (!el) return;
+  if (!ds.length){ el.hidden=true; el.innerHTML=''; return; }
+  el.hidden=false;
+  el.innerHTML='<b>Mã trong danh mục:</b>'+ds.map(function(x){
+    return '<button type="button" class="kktab nds-alt" onclick="ndsDungMa(\'' + esc(x.m) + '\')">' +
+      esc(x.m) + ' <span class="nds-son">' + x.n + '</span></button>';
+  }).join('');
 }
 
 /* ---------- 5. ĐỐI SOÁT + VẼ KẾT QUẢ ---------- */
