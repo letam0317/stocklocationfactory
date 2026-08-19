@@ -6369,12 +6369,14 @@ var TVT={loadedOnce:false,ok:false,err:'',rows:[],loading:null,nhom:''};
 var TVT_MODAL={base:[],preset:null};
 function tvtIdx(H,al){ for(var i=0;i<al.length;i++){ var j=H.indexOf(al[i]); if(j>=0) return j; } return -1; }
 function tvtNum(v){ if(v==null||v==='') return 0; var n=Number(String(v).replace(/,/g,'')); return isNaN(n)?0:n; }
-/* Ngày WMS trả dạng "2026-08-13 09:24:58" (chuỗi) — gviz có thể đọc ra Date, cắt về chuỗi ngắn để in bảng */
+/* Ngày: WMS ghi "2026-08-13 09:24:58" nhưng gviz trả về theo KIỂU CỘT nó tự đoán — có ô thành
+   Date thật, có ô thành chuỗi "Date(2026,5,5,14,23,57)" (tháng đếm từ 0). Dùng lại đúng cặp
+   kkParseDate/kkFmtD của tab Kiểm kê thay vì tự viết — cùng một quy ước giờ cho cả trang. */
 function tvtNgay(v){
   if(v==null||v==='') return '';
-  if(v instanceof Date){ var p=function(n){return (n<10?'0':'')+n;}; return p(v.getDate())+'/'+p(v.getMonth()+1)+'/'+v.getFullYear()+' '+p(v.getHours())+':'+p(v.getMinutes()); }
-  var s=String(v), m=s.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}:\d{2})/);
-  return m?(m[3]+'/'+m[2]+'/'+m[1]+' '+m[4]):s;
+  if(v instanceof Date) return kkFmtD(Date.UTC(v.getFullYear(),v.getMonth(),v.getDate(),v.getHours(),v.getMinutes()));
+  var ms=kkParseDate(v);
+  return isNaN(ms)?String(v):kkFmtD(ms);
 }
 async function tvtLoad(force){
   if(TVT.loading) return TVT.loading;
