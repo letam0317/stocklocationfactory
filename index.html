@@ -8282,8 +8282,13 @@ var NDS_ENGINE = (function(){
       var i = uv[k], r = ds[i];
       var d = diemMot(nhan, r._b, cm);
       if (phuLoc){
-        /* Đang lọc theo phần tử: điểm = độ phủ mảnh; giữ lại `khop` của bước chấm để tô đậm tên */
-        d = { diem:phuLoc[i], khop:d.khop||{}, xungDot:[], phu:1 };
+        /* Đang lọc theo phần tử: điểm = ĐỘ PHỦ mảnh (hoặc chứa hoặc không, xem 4.13).
+           Nhưng gõ MỘT mảnh chung ("polyester") thì hàng trăm dòng cùng phủ 1/1 = 100% ⇒ nhóm đó
+           trước đây xếp tiếp bằng đơn vị/tồn, tức gần như tuỳ ý — thủ kho nhìn thấy "100,100,100%"
+           rồi chọn nhầm (báo 19/08/2026: "điểm bị cào bằng"). Nay giữ ĐIỂM KHỚP TEM làm THỨ TỰ
+           PHỤ (`phu`): cùng độ phủ thì dòng nào khớp thêm nhiều từ khoá của tem hơn đứng trước.
+           Không có từ khoá tem nào thì điểm khớp = 0 cho tất cả ⇒ thứ tự y như cũ, không đổi hành vi. */
+        d = { diem:phuLoc[i], khop:d.khop||{}, xungDot:[], phu:d.diem||0 };
       }
       if (d.diem<=0) continue;
       ra.push(moTa(i, r, d.diem, d.khop, d.xungDot, d.phu, false));
