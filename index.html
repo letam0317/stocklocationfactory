@@ -7841,11 +7841,19 @@ var NDS_ENGINE = (function(){
        Mọi luật xếp hạng phía dưới (ACTIVE · đóng gói · sổ tay · có mã · đơn vị nhỏ · gom biến thể)
        vẫn chạy y nguyên, nên không có đường thứ hai nào để lệch hành vi. */
     var locKq = (opt.loc && opt.loc.length) ? locDong(opt.loc, cm) : null;
+    var soManh = 0;
+    (opt.loc||[]).forEach(function(t){ if (chuanManh(t).length>=2) soManh++; });
+    /* ⚠ LỖI THẬT 19/08/2026 — "gõ phần tử khác mà gợi ý không đổi".
+       Gõ "gecko" → Tra ra 3 SKU Gài Gecko (đúng). Gõ tiếp "c3298" → Tra: không dòng nào chứa
+       "c3298" nên locDong trả về RỖNG, bản cũ coi như "không có bộ lọc" rồi rơi xuống cho điểm
+       bằng TỪ KHOÁ CŨ → hiện lại đúng 3 SKU Gecko, không một dấu hiệu nào (chỉ tụt 100%→56%).
+       Người dùng ĐÃ NÓI RÕ tem có mảnh nào: không có dòng nào chứa thì câu trả lời trung thực là
+       KHÔNG CÓ, để lớp trên hiện "Ý bạn là…" (mã gần giống) — nhánh đó viết sẵn mà trước giờ
+       không bao giờ chạy tới được. */
+    if (locKq && soManh && !locKq.length) return [];
     var phuLoc = null;
     if (locKq && locKq.length){
       phuLoc = Object.create(null);
-      var soManh = 0;
-      (opt.loc||[]).forEach(function(t){ if (chuanManh(t).length>=2) soManh++; });
       for (var lz=0; lz<locKq.length; lz++) phuLoc[locKq[lz].i] = locKq[lz].n / Math.max(1,soManh);
     }
     var uv = phuLoc ? locKq.map(function(x){ return x.i; }) : ungVien(nhan, cm, opt.tranUngVien||4000);
@@ -8706,12 +8714,18 @@ function ndsTraMa(){
   if (!pt.length){ toast('Mảnh quá ngắn — gõ ít nhất 2 ký tự.','warn'); return; }
 
   NDS.loc=pt;
+  /* ⚠ LỖI THẬT 19/08/2026 — từ khoá của ô này phải THAY, không được CỘNG DỒN.
+     Tra "gecko" xong tra tiếp "c3298" thì token `gecko` của lượt trước vẫn nằm đó và vẫn chấm
+     điểm → ra lại đúng 3 SKU Gecko. Một lượt Tra = MỘT tem đang cầm trên tay, mảnh cũ không
+     còn đúng nữa. Chỉ dọn token do CHÍNH ô này sinh ra (nguon='manh'): từ khoá AI đọc được và
+     từ khoá gõ tay ở bước 3 phải đứng yên — chúng thuộc về cùng cái tem đó. */
+  NDS.tokens=NDS.tokens.filter(function(k){ return k.nguon!=='manh'; });
   /* Mảnh nào KHỚP TUYỆT ĐỐI một mã trong danh mục thì đưa luôn vào vai MÃ, để luật cứng "CÓ MÃ" và
      cơ chế tô đậm tên cùng làm việc. Mảnh không phải mã vẫn có tác dụng qua bộ lọc. */
   pt.forEach(function(t){
     var b=NDS_ENGINE.bocTen(t);
     (b.code.length?b.code:[NDS_ENGINE.chuan(t)]).forEach(function(m){
-      if (NDS.cm.idx[m]) ndsThemToken(m,'code','tay');
+      if (NDS.cm.idx[m]) ndsThemToken(m,'code','manh');
     });
   });
   ndsVeTags();
@@ -8746,7 +8760,10 @@ function ndsVeMaGoi(ds){
 function ndsDungMa(m){
   var o=document.getElementById('ndsMa'); if (o) o.value=m;
   ndsVeMaGoi([]);
-  ndsThemToken(m,'code','tay'); ndsVeTags(); ndsDoiSoat();
+  /* Đi ĐÚNG MỘT ĐƯỜNG với gõ tay rồi bấm Tra: bản cũ tự thêm token nhưng KHÔNG đặt lại
+     NDS.loc, nên bấm mã gợi ý sau khi đã Tra một mảnh khác thì bộ lọc vẫn giữ mảnh CŨ —
+     cùng họ lỗi "gợi ý không đổi theo thứ vừa gõ" (19/08/2026). */
+  ndsTraMa();
   toast('Đã tra theo mã '+m+'.','ok');
 }
 
@@ -8930,6 +8947,16 @@ function ndsVeKetQua(ms, themInactive){
       c.innerHTML='<div class="pcdnote" style="background:color-mix(in srgb,var(--warn) 12%,var(--surface));color:var(--ink2)">'+
         'Không có SKU <b>ACTIVE</b> nào khớp — dưới đây là SKU khớp nhất trong nhóm <b>INACTIVE</b> (không còn tồn, không có hàng đang về). '+
         'Hàng mới nhập lần đầu thường nằm ở nhóm này.</div>'+them;
+      return;
+    }
+    /* Nói ĐÚNG thủ phạm. Đang lọc theo mảnh gõ ở ô "Phần tử trên tem" mà không dòng nào chứa
+       thì lỗi nằm ở MẢNH ĐÓ, không phải "từ khoá đọc nhầm" hay "phạm vi ACTIVE" — bảo người ta
+       bỏ từ khoá trong khi từ khoá không liên quan là đẩy họ đi sai đường. Toast biến mất sau vài
+       giây nên câu này phải ở lại trong panel (lỗi thật 19/08/2026). */
+    if (NDS.loc && NDS.loc.length){
+      ndsTrangThai('Không SKU nào trong danh mục chứa <b>'+NDS.loc.map(esc).join('</b> · <b>')+'</b>. '+
+        'Kiểm lại chữ/số vừa gõ (tem mờ rất dễ đọc nhầm 3↔8, 5↔S, 0↔O), hoặc gõ ít ký tự hơn để máy '+
+        'gợi ý mã có thật trong danh mục.');
       return;
     }
     ndsTrangThai('Không tìm được SKU nào khớp với các từ khoá này. Thử bỏ từ khoá đọc nhầm, hoặc bật phạm vi <b>Tất cả</b>.');
