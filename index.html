@@ -1633,8 +1633,11 @@ body.side-anim{overflow-x:clip}
 
 .nds-ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
 .nds-ctl .sp{flex:1;min-width:0}
+/* Nút của tab này ăn CÙNG nhịp chạm với .kktab toàn dự án (co .96 khi nhấn — khai ở khối
+   "phản hồi chạm" đầu file), thêm transition nền/bóng cho khớp .abntile. */
+.kktab{transition:transform .16s var(--ez-apple),box-shadow .25s ease,background .2s ease,border-color .2s ease}
 .kktab.nds-go{background:var(--accent);border-color:var(--accent);color:var(--accent-text)}
-.kktab.nds-go:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+.kktab.nds-go:hover{background:var(--accent-hover);border-color:var(--accent-hover);box-shadow:var(--shadow)}
 .kktab:disabled{opacity:.45;cursor:not-allowed}
 .kktab:focus-visible,.nds-file:focus-within{outline:2px solid var(--accent);outline-offset:2px}
 .nds-file{display:inline-flex;align-items:center;cursor:pointer}
@@ -1660,10 +1663,16 @@ body.side-anim{overflow-x:clip}
 .nds-raw:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}
 
 /* --- Thẻ kết quả: hạng + SKU + thanh % + tên có tô trùng khớp --- */
-.nds-cards{display:flex;flex-direction:column;gap:10px}
+/* Nhịp giống HỆT thẻ .kkcard/.abntile của 2 tab kia: cùng fadeUp .3s, cùng bậc trễ, cùng
+   transition transform .16s var(--ez-apple) + box-shadow .25s, cùng hover nhấc 2px + shadow-lg.
+   Khối danh sách bọc ngoài dùng paneIn như .cards để lúc đổi kết quả không "nhảy" khác kiểu. */
+.nds-cards{display:flex;flex-direction:column;gap:10px;animation:paneIn .4s var(--ez-apple)}
 .nds-card{position:relative;border:1px solid var(--line);border-radius:12px;background:var(--surface);
-  padding:12px 14px;animation:fadeUp .3s ease both;overflow:hidden}
+  padding:12px 14px;animation:fadeUp .3s ease both;overflow:hidden;
+  transition:transform .16s var(--ez-apple),box-shadow .25s ease,background .2s ease}
+.nds-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
 .nds-card:nth-child(2){animation-delay:.05s}.nds-card:nth-child(3){animation-delay:.1s}
+.nds-card:nth-child(4){animation-delay:.15s}.nds-card:nth-child(n+5){animation-delay:.2s}
 .nds-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--cc,var(--brand2))}
 .nds-card.top{--cc:var(--good)} .nds-card.mid{--cc:var(--warn)} .nds-card.low{--cc:var(--muted)}
 .nds-card.nghi{--cc:var(--bad)}
@@ -1682,7 +1691,9 @@ body.side-anim{overflow-x:clip}
 .nds-why b{color:var(--ink2);font-weight:650}
 .nds-cact{display:flex;flex-wrap:wrap;gap:8px;margin-top:11px}
 .nds-alts{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px}
-.kktab.nds-alt{padding:3px 9px;font-size:11px;font-weight:600;line-height:1.7}
+.kktab.nds-alt{padding:3px 9px;font-size:11px;font-weight:600;line-height:1.7;
+  transition:transform .16s var(--ez-apple),box-shadow .25s ease,background .2s ease;animation:popIn .22s var(--ez-apple) both}
+.kktab.nds-alt:hover{transform:translateY(-1px);box-shadow:var(--shadow);background:var(--hover)}
 .kktab.nds-alt .badge{padding:1px 6px;font-size:9px;vertical-align:1px}
 .nds-more{margin-top:12px}
 .nds-more>summary{cursor:pointer;font-size:12px;font-weight:650;color:var(--ink2);list-style:none;padding:6px 0}
@@ -1801,7 +1812,6 @@ body.side-anim{overflow-x:clip}
      Nguồn từ khoá : Vision LLM qua Apps Script (action sku_vision) — KHÔNG OCR toạ độ cứng,
      nên tem tròn / tem bảng / tem dây kéo cùng chạy một đường. -->
 <div id="viewNds" hidden>
-  <p class="sub"><span class="muted">Chụp tem nhà cung cấp → AI đọc từ khoá (mã hàng · thông số · màu · thương hiệu) → đối soát với <code>PRODUCTNAME</code> của danh mục <code>SKU_MASTER</code> theo trọng số <b>mã 45% · thông số 25% · màu 20% · thương hiệu 10%</b> → gợi ý Top 3 SKU. Sửa/bỏ từ khoá nhận nhầm rồi bấm "Đối soát lại" để đổi kết quả. Một mặt hàng thường có nhiều SKU chỉ khác đơn vị (mét · yard · cuộn ↔ <b>mm</b>; kg ↔ <b>gram</b>) — thẻ gợi ý luôn lấy SKU <b>đơn vị nhỏ nhất</b> (đúng cách kiểm kê đếm), các đơn vị còn lại nằm ngay dưới thẻ kèm trạng thái <b>ACTIVE/INACTIVE</b> và tồn để chọn thay.</span></p>
 
   <div class="nds-grid">
     <!-- ---------- BƯỚC 1: ảnh tem ---------- -->
@@ -1827,17 +1837,35 @@ body.side-anim{overflow-x:clip}
           <button type="button" onclick="ndsXoay(90)" title="Xoay theo chiều kim đồng hồ 90°">⟳</button>
         </div>
         <span class="sp"></span>
-        <button type="button" class="kktab nds-go" id="ndsBtnDoc" onclick="ndsDocTem()" disabled>Đọc tem bằng AI</button>
+        <button type="button" class="kktab nds-go" id="ndsBtnMV" onclick="ndsThuMaVach()" disabled
+          title="Đọc mã vạch ngay trên máy — nhanh nhất, không cần mạng, không tốn hạn mức AI">Quét mã vạch</button>
+        <button type="button" class="kktab" id="ndsBtnDoc" onclick="ndsDocTem()" disabled
+          title="Chỉ cần khi tem không có mã vạch và chưa có trong sổ tay">Đọc tem bằng AI</button>
       </div>
       <div class="pcdnote" style="margin-top:10px;background:color-mix(in srgb,var(--info) 10%,var(--surface));color:var(--ink2)">
+        <b>Thứ tự tự động:</b> có ảnh là máy thử <b>mã vạch</b> trước (ngay trên máy, ~0,1 giây) → rồi tra
+        <b>sổ tay tem</b> (tem đã chọn lần trước ra ngay) → chỉ khi cả hai không có mới cần <b>AI</b>.<br>
         Ảnh được thu nhỏ ngay trên máy (cạnh dài 1400px, JPEG) rồi gửi qua <b>Apps Script</b> → Vision LLM;
-        <b>không lưu ảnh</b> ở bất kỳ đâu. Mất mạng / hết hạn mức thì vẫn dùng được: gõ từ khoá tay hoặc dán chữ trên tem ở bước 2.
+        <b>không lưu ảnh</b> ở bất kỳ đâu. Mất mạng / hết hạn mức thì vẫn dùng được: quét mã vạch, gõ từ khoá tay hoặc dán chữ trên tem ở bước 3.
       </div>
     </section>
 
-    <!-- ---------- BƯỚC 2: từ khoá ---------- -->
-    <section class="panel">
-      <h2>2 · Từ khoá nhận diện <span class="hint">(bấm × để bỏ từ khoá đọc nhầm)</span>
+    <!-- ---------- BƯỚC 2: SKU gợi ý — ĐẶT NGAY DƯỚI ẢNH vì đây là thứ người dùng cần;
+         từ khoá tụt xuống bước 3 vì nó là công cụ SỬA khi máy đọc nhầm, không phải bước phải làm ---------- -->
+    <section class="panel" style="grid-column:1/-1">
+      <h2>2 · SKU gợi ý <span class="hint" id="ndsResHint">Top 3 · chỉ SKU đang ACTIVE</span>
+        <span class="pg-seg sm" role="group" aria-label="Phạm vi danh mục" style="margin-left:auto">
+          <button type="button" id="ndsScopeA" class="on" onclick="ndsDoiScope(1)" title="Chỉ SKU còn tồn / có hàng đang về">ACTIVE</button>
+          <button type="button" id="ndsScopeAll" onclick="ndsDoiScope(0)" title="Gồm cả SKU không còn tồn (INACTIVE)">Tất cả</button>
+        </span></h2>
+      <div class="nds-cards" id="ndsCards"></div>
+      <div id="ndsState" class="state" style="padding:34px 20px">Chưa có kết quả — chụp tem ở bước 1.</div>
+      <div class="nds-why" id="ndsFoot"></div>
+    </section>
+
+    <!-- ---------- BƯỚC 3: từ khoá (công cụ sửa) ---------- -->
+    <section class="panel" style="grid-column:1/-1">
+      <h2>3 · Từ khoá nhận diện <span class="hint">(bấm × để bỏ từ khoá đọc nhầm)</span>
         <span class="pg-chip" id="ndsKwN" style="margin-left:auto">0 từ khoá</span></h2>
       <div class="nds-tags" id="ndsTags"><div class="nds-tagempty">Chưa có từ khoá — chụp tem rồi bấm “Đọc tem bằng AI”, hoặc gõ tay bên dưới.</div></div>
       <div class="nds-addrow">
@@ -1850,17 +1878,6 @@ body.side-anim{overflow-x:clip}
       <textarea id="ndsRaw" class="nds-raw" placeholder="Hoặc dán/gõ nguyên chữ đọc được trên tem (khi mất mạng hoặc AI đọc sai) — mỗi dòng một cụm cũng được. Bấm “Đối soát lại” để tách từ khoá."></textarea>
     </section>
 
-    <!-- ---------- BƯỚC 3: gợi ý SKU ---------- -->
-    <section class="panel" style="grid-column:1/-1">
-      <h2>3 · SKU gợi ý <span class="hint" id="ndsResHint">Top 3 · chỉ SKU đang ACTIVE</span>
-        <span class="pg-seg sm" role="group" aria-label="Phạm vi danh mục" style="margin-left:auto">
-          <button type="button" id="ndsScopeA" class="on" onclick="ndsDoiScope(1)" title="Chỉ SKU còn tồn / có hàng đang về">ACTIVE</button>
-          <button type="button" id="ndsScopeAll" onclick="ndsDoiScope(0)" title="Gồm cả SKU không còn tồn (INACTIVE)">Tất cả</button>
-        </span></h2>
-      <div class="nds-cards" id="ndsCards"></div>
-      <div id="ndsState" class="state" style="padding:34px 20px">Chưa có kết quả — làm bước 1 và 2 trước.</div>
-      <div class="nds-why" id="ndsFoot"></div>
-    </section>
   </div>
 </div>
 
@@ -1911,7 +1928,7 @@ body.side-anim{overflow-x:clip}
   </div>
 </div>
 
-<footer>Dashboard đọc trực tiếp online từ Google Sheet “stocklocationfactory” (gviz API).<br>Trạng thái lưu trữ: SKU đếm distinct theo Kho × Category · Kiểm kê: tab kiemke-sku / kiemke-location (bấm mã phiếu để mở phiếu đó trên WMS ở tab mới; ✎ = phiếu có SL điều chỉnh lưu tab kiemke-adjust) · Pop-up Lệch âm/dương liệt kê thẳng UID group lệch (tab kiemke-uidgr; cột Action sửa tự do, lưu tab kiemke-uidgr-edit bằng email @hasaki.vn) · Planogram: sơ đồ mặt bằng kho nguyên liệu dựng theo bản vẽ MTG_zigzag (14 dãy · 161 ô), trạng thái vệ sinh đọc tab VESINH-KHO-DANHMUC do sync-vesinh-factory.mjs ghi, pop-up chi tiết 1 ô đọc thêm tab VESINH-KHO-YEUCAU (dải 7 ngày · người báo cáo · ảnh — cùng bố cục pop-up vị trí của Audit Hasaki) · Nhận diện SKU: chụp tem nhà cung cấp → Vision LLM (qua Apps Script, cần email @hasaki.vn) bóc từ khoá → đối soát với tab <code>SKU_MASTER</code> (danh mục SKU 3 kho nguyên liệu do sync-sku-master.mjs ghi) theo trọng số mã 45% · thông số 25% · màu 20% · thương hiệu 10%; gợi ý luôn lấy SKU có đơn vị tính nhỏ nhất (mm · gram) và hiện rõ ACTIVE/INACTIVE, các SKU cùng hàng khác đơn vị nằm ngay dưới thẻ; chọn SKU xong là vào luôn giỏ “Tạo lệnh kiểm kê”. Mất mạng/hết hạn mức vẫn đối soát được bằng từ khoá gõ tay · Nút “Tải lại dữ liệu” (trong menu Cài đặt) kéo trực tiếp từ WMS (tối đa 4 giờ/lần).</footer>
+<footer>Dashboard đọc trực tiếp online từ Google Sheet “stocklocationfactory” (gviz API).<br>Trạng thái lưu trữ: SKU đếm distinct theo Kho × Category · Kiểm kê: tab kiemke-sku / kiemke-location (bấm mã phiếu để mở phiếu đó trên WMS ở tab mới; ✎ = phiếu có SL điều chỉnh lưu tab kiemke-adjust) · Pop-up Lệch âm/dương liệt kê thẳng UID group lệch (tab kiemke-uidgr; cột Action sửa tự do, lưu tab kiemke-uidgr-edit bằng email @hasaki.vn) · Planogram: sơ đồ mặt bằng kho nguyên liệu dựng theo bản vẽ MTG_zigzag (14 dãy · 161 ô), trạng thái vệ sinh đọc tab VESINH-KHO-DANHMUC do sync-vesinh-factory.mjs ghi, pop-up chi tiết 1 ô đọc thêm tab VESINH-KHO-YEUCAU (dải 7 ngày · người báo cáo · ảnh — cùng bố cục pop-up vị trí của Audit Hasaki) · Nhận diện SKU: chụp tem nhà cung cấp → thử <b>mã vạch</b> ngay trên máy → tra <b>sổ tay tem</b> (tem đã chọn lần trước ra ngay, không gọi AI) → chỉ khi cả hai không có mới dùng Vision LLM qua Apps Script; đối soát với tab <code>SKU_MASTER</code> (danh mục SKU 3 kho nguyên liệu do sync-sku-master.mjs ghi) theo trọng số mã 45% · thông số 25% · màu 20% · thương hiệu 10%; gợi ý ưu tiên ACTIVE → NORMAL → đơn vị tính nhỏ nhất (mm · gram), các SKU cùng hàng khác đơn vị nằm ngay dưới thẻ; chọn SKU xong là vào luôn giỏ “Tạo lệnh kiểm kê”. Mất mạng/hết hạn mức vẫn đối soát được bằng sổ tay, mã vạch hoặc từ khoá gõ tay · Nút “Tải lại dữ liệu” (trong menu Cài đặt) kéo trực tiếp từ WMS (tối đa 4 giờ/lần).</footer>
 
 <div class="footbar">
   <span class="chip">Nguồn: stocklocationfactory</span>
@@ -2229,6 +2246,23 @@ function loadTabSync(){
   jsonpTs('stock-inventory-beta','ts_abn',function(ts){ if(ts>TAB_SYNC.abn){TAB_SYNC.abn=ts; capNhatThongTin();} });
   jsonpTs('VESINH-KHO-DANHMUC','ts_plg',function(ts){ if(ts>TAB_SYNC.plg){TAB_SYNC.plg=ts; capNhatThongTin();} });
   jsonpTs('SKU_MASTER','ts_sku',function(ts){ if(ts>TAB_SYNC.sku){TAB_SYNC.sku=ts; capNhatThongTin();} });
+  ndsHamNong();
+}
+/* HÂM NÓNG TAB NHẬN DIỆN SKU — nạp danh mục + dựng chỉ mục khi máy RẢNH, trước khi người dùng bấm
+ * vào tab. Đo 19/08: danh mục 1,1 MB qua gviz mất 0,6–1,1 giây trên máy bàn (điện thoại 4G còn lâu
+ * hơn) + dựng chỉ mục ~0,2 giây. Làm trước lúc rảnh thì mở tab là có ngay, không thấy vòng xoay.
+ * Chỉ chạy khi trình duyệt báo RẢNH và tab đang hiển thị — không giành băng thông với màn hình
+ * chính, cũng không tốn gì thêm của WMS/Apps Script (đọc gviz, y như lúc mở tab). */
+function ndsHamNong(){
+  var chay=function(){
+    if (NDS.loadedOnce || NDS.dangTai || document.hidden) return;
+    /* Gọi ĐÚNG ndsLoad() mà showTab vẫn gọi (chứ không chép lại các bước): nó lo cả việc trả dòng
+       trạng thái về "Chưa có kết quả — chụp tem ở bước 1" sau khi tải xong. Chép lại là quên. */
+    NDS.loadedOnce=true;
+    Promise.resolve(ndsLoad()).catch(function(){ NDS.loadedOnce=false; });
+  };
+  if (typeof requestIdleCallback==='function') requestIdleCallback(chay,{ timeout:6000 });
+  else setTimeout(chay,2500);
 }
 /* ---------- Lịch sử snapshot theo ngày (tab "history": Date, Division, Warehouse, SkuShelf, SkuPend) ---------- */
 var HIST=[], _histDone=false;
@@ -6918,7 +6952,19 @@ var NDS_ENGINE = (function(){
   /** Chuẩn hoá 1 token: bỏ dấu, hạ chữ, gọt ký tự rác 2 đầu, thống nhất số/đơn vị.
    *  Mọi biến thể của CÙNG một thông số phải rơi về CÙNG một chuỗi — đó là điều kiện để chữ trên
    *  tem (Tex 27 · 60/3 · 38.0 CM) khớp được với PRODUCTNAME của WMS (Text 27-60-3 · 38cm · 58,5cm). */
+  /* NHỚ KẾT QUẢ: `chuan` chạy 12 lượt replace, mà cả danh mục 5.610 tên chỉ xoay quanh vài chục
+     nghìn mẩu lặp đi lặp lại ("polyester", "none", "100%"…). Nhớ lại rẻ hơn tính lại rất nhiều
+     (đo 19/08: chiếm phần lớn thời gian còn lại của bước dựng chỉ mục). */
+  var _chuanNho = Object.create(null), _chuanN = 0;
   function chuan(t){
+    var k = (typeof t === 'string') ? t : String(t==null?'':t);
+    var c = _chuanNho[k];
+    if (c !== undefined) return c;
+    c = _chuanTinh(k);
+    if (_chuanN < 60000) { _chuanNho[k] = c; _chuanN++; }   // trần an toàn, khỏi phình vô hạn
+    return c;
+  }
+  function _chuanTinh(t){
     t = boDau(t).toLowerCase();
     t = t.replace(/\s+/g,' ').trim();
     t = t.replace(/^[^0-9a-z#]+|[^0-9a-z%)]+$/g,'');        // gọt rác 2 đầu, giữ # đầu (dây kéo #3), % cuối
@@ -6954,7 +7000,10 @@ var NDS_ENGINE = (function(){
   function nhanSpec(text, ra){
     var s = ' ' + boDau(text).toLowerCase() + ' ';
     RE_SPEC.forEach(function(m){
-      s = s.replace(new RegExp(m.re.source, m.re.flags), function(hit){
+      /* Dùng LẠI chính regex trong bảng, không `new RegExp(...)` mỗi lượt: `String.replace` luôn
+         quét từ đầu và tự trả lastIndex về 0, nên tái dùng là an toàn. Bản đầu biên dịch lại 8 mẫu
+         cho MỖI tên hàng = ~45.000 lượt biên dịch lúc dựng chỉ mục (đo 19/08: chiếm ~1/3 thời gian). */
+      s = s.replace(m.re, function(hit){
         var t = chuan(hit);
         if (m.sua) t = m.sua(t);
         if (t.length>1) ra.push(t);
@@ -7071,18 +7120,41 @@ var NDS_ENGINE = (function(){
     }
     return c;
   }
+  /** Điểm khớp của MỘT cặp (từ khoá tem, từ khoá SKU) — thứ tự ưu tiên y như bản đầu.
+   *  NHỚ KẾT QUẢ theo cặp: cùng một lượt đối soát, "polyester" hay "none" được so đi so lại với
+   *  hàng nghìn dòng. Đo 19/08: đây là phần đắt nhất của cả lượt đối soát. Nhớ lại cho ra ĐÚNG
+   *  con số cũ (hàm thuần), không phải xấp xỉ. */
+  var _capNho = Object.create(null), _capN = 0;
+  function diemCap(tok, m){
+    /* Nhớ 2 TẦNG (`[tok][m]`) chứ không nối chuỗi làm khoá: nối chuỗi thì mỗi lần tra phải cấp phát
+       + băm một chuỗi mới, mà hàm này chạy hàng trăm nghìn lượt một lượt đối soát — đo 19/08: nối
+       chuỗi đắt hơn cả phép so sánh nó định tiết kiệm. Tra 2 tầng chỉ là 2 lượt tra thuộc tính. */
+    var b = _capNho[tok] || (_capNho[tok] = Object.create(null));
+    var v = b[m];
+    if (v !== undefined) return v;
+    if (m === tok) v = 1;
+    else if (tok.length>=4 && (m.indexOf(tok)>=0 || tok.indexOf(m)>=0)) v = 0.88;
+    else {
+      var lt = loi(tok);
+      if (lt.length>=4 && loi(m)===lt) v = 0.95;
+      else {
+        var ot = ocr(tok);
+        if (ot.length>=4 && ocr(m)===ot) v = 0.9;
+        else { var r = tyLe(tok,m); v = r ? r*0.92 : 0; }
+      }
+    }
+    if (_capN > 400000) { _capNho = Object.create(null); _capN = 0; b = _capNho[tok] = Object.create(null); }
+    b[m] = v; _capN++;
+    return v;
+  }
   /** Điểm khớp tốt nhất của 1 từ khoá tem với 1 rổ từ khoá của SKU (0..1). */
   function khopTot(tok, ro){
     if (!ro || !ro.length) return 0;
-    var best=0, lt=loi(tok), ot=ocr(tok);
+    var best=0;
     for (var i=0;i<ro.length;i++){
-      var m=ro[i];
-      if (m===tok) return 1;
-      if (tok.length>=4 && (m.indexOf(tok)>=0 || tok.indexOf(m)>=0)) { if (best<0.88) best=0.88; continue; }
-      if (lt.length>=4 && loi(m)===lt) { if (best<0.95) best=0.95; continue; }
-      if (ot.length>=4 && ocr(m)===ot) { if (best<0.9) best=0.9; continue; }
-      var r=tyLe(tok,m);
-      if (r) { var v=r*0.92; if (v>best) best=v; }
+      var v = diemCap(tok, ro[i]);
+      if (v === 1) return 1;
+      if (v > best) best = v;
     }
     return best;
   }
@@ -7171,10 +7243,23 @@ var NDS_ENGINE = (function(){
     });
     return ra;
   }
-  function diemMot(nhan, kho){
-    var tong=0, khop={}, chiTiet={};
-    var nhanG={};
+  /* Phần CHỈ phụ thuộc từ khoá TEM (gộp từ trùng bản chất, tổng trọng số, họ thông số, mã màu):
+     bản đầu tính lại cho TỪNG ứng viên — tức là tới 4.000 lần cho một lượt đối soát, dù kết quả y
+     hệt nhau. Nhớ theo ĐÚNG đối tượng `nhan` mà timTop truyền vào (engine không sửa nhan tại chỗ). */
+  var _nhanKey = null, _nhanNho = null;
+  function chuanBiNhan(nhan){
+    if (_nhanKey === nhan) return _nhanNho;
+    var nhanG = {}, tong = 0;
     VAI.forEach(function(v){ nhanG[v]=gonTu(nhan[v]); if (nhanG[v].length) tong += W[v]; });
+    _nhanKey = nhan;
+    _nhanNho = { nhanG:nhanG, tong:tong, hn:theoHo(nhanG.spec),
+      mm:(nhan.color||[]).filter(function(t){ return /\d/.test(t); }) };
+    return _nhanNho;
+  }
+  function diemMot(nhan, kho){
+    var sn = chuanBiNhan(nhan);
+    var khop={}, chiTiet={};
+    var nhanG = sn.nhanG, tong = sn.tong;
     if (!tong) return { diem:0, khop:{}, xungDot:[], phu:0 };
     var diem=0, soKhop=0, soTu=0;
     VAI.forEach(function(v){
@@ -7198,7 +7283,9 @@ var NDS_ENGINE = (function(){
       diem += (W[v]/tong) * chiTiet[v];
     });
     /* XUNG ĐỘT thông số / mã màu */
-    var xd=[], hn=theoHo(nhanG.spec), hk=theoHo(kho.spec);
+    /* `hoSpec` / `mmColor` gắn sẵn vào rổ của SKU lúc dựng chỉ mục (xem dungChiMuc) — cũng là thứ
+       bản đầu tính lại cho từng ứng viên mỗi lượt. */
+    var xd=[], hn=sn.hn, hk=kho.hoSpec || (kho.hoSpec = theoHo(kho.spec));
     Object.keys(hn).forEach(function(h){
       if (!hk[h]) return;
       var co=false;
@@ -7207,8 +7294,8 @@ var NDS_ENGINE = (function(){
       hn[h].forEach(function(t){ if (khopTot(t, hk[h])>=0.75) co=true; });
       if (!co) xd.push(h);
     });
-    var mmN=(nhan.color||[]).filter(function(t){ return /\d/.test(t); });
-    var mmK=(kho.color||[]).filter(function(t){ return /\d/.test(t); });
+    var mmN=sn.mm;
+    var mmK=kho.mmColor || (kho.mmColor = (kho.color||[]).filter(function(t){ return /\d/.test(t); }));
     if (mmN.length && mmK.length){
       var co2=false;
       mmN.forEach(function(t){ if (khopTot(t,mmK)>=0.9) co2=true; });
@@ -7247,22 +7334,80 @@ var NDS_ENGINE = (function(){
       var sk = String(ds[i].sku).toLowerCase();
       if (!idx[sk]) { idx[sk]=[i]; tuVung.push(sk); } else idx[sk].push(i);
     }
-    return { idx:idx, tuVung:tuVung, ds:ds };
+    /* CHỈ MỤC 2-GRAM CỦA TỪ VỰNG — để bước tìm ứng viên khỏi quét tuyến tính cả 9.272 từ mỗi lượt.
+       Vì sao 2-gram chứ không 3: một ký tự sai phá tối đa HAI 2-gram, mà từ dài ≥5 có ≥4 cái, nên
+       mọi cặp mà Levenshtein-có-ngưỡng chấp nhận đều còn chung ít nhất một 2-gram ⇒ rút ngắn danh
+       sách mà KHÔNG bỏ sót kết quả nào (3-gram thì "abcde" vs "abXde" mất sạch, sẽ sót). */
+    var gram = Object.create(null), loiIdx = Object.create(null), tuNgan = [];
+    for (var v=0; v<tuVung.length; v++){
+      var w = tuVung[v];
+      if (w.length < 2) { tuNgan.push(v); continue; }
+      var da = Object.create(null);
+      for (var g=0; g+2<=w.length; g++){
+        var k2 = w.substr(g,2);
+        if (da[k2]) continue;
+        da[k2] = 1;
+        (gram[k2] || (gram[k2]=[])).push(v);
+      }
+      var lw = loi(w);
+      if (lw) (loiIdx[lw] || (loiIdx[lw]=[])).push(w);
+    }
+    var theoSku = Object.create(null);
+    for (var s2=0; s2<ds.length; s2++) if (theoSku[String(ds[s2].sku)]==null) theoSku[String(ds[s2].sku)] = s2;
+    return { idx:idx, tuVung:tuVung, ds:ds, gram:gram, loiIdx:loiIdx, tuNgan:tuNgan, theoSku:theoSku };
+  }
+  /**
+   * CHỮ KÝ của một tem — khoá tra "sổ tay tem" (thư viện tự học, xem NDS_SO ở tầng giao diện).
+   * Chỉ lấy 3 vai ĐỊNH DANH (mã · thông số · màu); cố tình BỎ vai loại/NCC vì nó quá chung
+   * ("polyester", "chi may", "none") — để vào thì hai tem khác hẳn nhau vẫn ra cùng chữ ký, sổ tay
+   * sẽ trả lời chắc nịch một SKU sai. Ít hơn 2 từ khoá thì KHÔNG đáng nhớ (trả '').
+   */
+  function chuKy(nhan){
+    var t = [];
+    ['code','spec','color'].forEach(function(v){
+      (nhan[v]||[]).forEach(function(x){ if (x && t.indexOf(x)<0) t.push(x); });
+    });
+    return t.length>=2 ? t.sort().join('·') : '';
+  }
+  /** Từ khoá tem -> các từ vựng GẦN GIỐNG, lấy qua chỉ mục 2-gram (thay cho quét cả bảng từ vựng). */
+  function tuGanGiong(t, cm){
+    if (!cm.gram) {                                   // chỉ mục cũ (không có 2-gram) -> đường quét cũ
+      var cu = [];
+      for (var q=0;q<cm.tuVung.length;q++){
+        var x = cm.tuVung[q];
+        if (t.length>=4 && (x.indexOf(t)>=0 || t.indexOf(x)>=0)) { cu.push(x); continue; }
+        if (t.length>=4 && loi(x)===loi(t)) { cu.push(x); continue; }
+        if (tyLe(t,x)>=0.82) cu.push(x);
+      }
+      return cu;
+    }
+    var ra = [], daCo = Object.create(null), lt = loi(t), i, j, ds;
+    if (t.length>=4 && cm.loiIdx[lt]) {              // loi() trùng nhau -> tra thẳng, khỏi so từng từ
+      ds = cm.loiIdx[lt];
+      for (i=0;i<ds.length;i++) if (!daCo[ds[i]]) { daCo[ds[i]]=1; ra.push(ds[i]); }
+    }
+    var ung = Object.create(null);
+    for (i=0; i+2<=t.length; i++){
+      ds = cm.gram[t.substr(i,2)];
+      if (ds) for (j=0;j<ds.length;j++) ung[ds[j]] = 1;
+    }
+    for (i=0;i<cm.tuNgan.length;i++) ung[cm.tuNgan[i]] = 1;   // từ 1 ký tự không có 2-gram
+    var ks = Object.keys(ung);
+    for (i=0;i<ks.length;i++){
+      var m = cm.tuVung[ks[i]];
+      if (daCo[m]) continue;
+      if (t.length>=4 && (m.indexOf(t)>=0 || t.indexOf(m)>=0)) { daCo[m]=1; ra.push(m); continue; }
+      if (t.length>=4 && loi(m)===lt) { daCo[m]=1; ra.push(m); continue; }
+      if (tyLe(t,m)>=0.82) { daCo[m]=1; ra.push(m); }
+    }
+    return ra;
   }
   /** Từ khoá tem -> danh sách chỉ số dòng ứng viên (khớp thẳng + fuzzy trên TỪ VỰNG, không phải trên bảng). */
   function ungVien(nhan, cm, tran){
     var can = Object.create(null), tat = [];
     VAI.forEach(function(v){ (nhan[v]||[]).forEach(function(t){ if (tat.indexOf(t)<0) tat.push(t); }); });
     tat.forEach(function(t){
-      var hit = cm.idx[t] ? [t] : [];
-      if (!hit.length){
-        for (var i=0;i<cm.tuVung.length;i++){
-          var m = cm.tuVung[i];
-          if (t.length>=4 && (m.indexOf(t)>=0 || t.indexOf(m)>=0)) { hit.push(m); continue; }
-          if (t.length>=4 && loi(m)===loi(t)) { hit.push(m); continue; }
-          if (tyLe(t,m)>=0.82) hit.push(m);
-        }
-      }
+      var hit = cm.idx[t] ? [t] : tuGanGiong(t, cm);
       hit.forEach(function(m){ (cm.idx[m]||[]).forEach(function(i){ can[i]=(can[i]||0)+1; }); });
     });
     var ra = Object.keys(can).map(Number);
@@ -7298,7 +7443,7 @@ var NDS_ENGINE = (function(){
       return { i:i, sku:r.sku, pn:r.pn, type:r.type, status:r.status, qty:r.qty,
         donVi:dv.raw, dv:dv.ma, q:dv.q, khoa:(r._k!=null?r._k:(r._k=khoaHang(r.pn))),
         diem:diem, pct:Math.round(diem*100), khop:khop, xungDot:xungDot, phu:phu, laSku:laSku,
-        bienThe:[], viDonVi:false };
+        bienThe:[], viDonVi:false, daHoc:false };
     };
     var uv = ungVien(nhan, cm, opt.tranUngVien||4000);
     for (var k=0;k<uv.length;k++){
@@ -7325,11 +7470,17 @@ var NDS_ENGINE = (function(){
     var got = [];
     thuTu.forEach(function(kh){
       var v = nhom[kh];
+      /* THỨ TỰ ƯU TIÊN (chốt 19/08/2026): ACTIVE → NORMAL → ĐƠN VỊ NHỎ NHẤT → tồn nhiều.
+         ACTIVE đứng trước đơn vị nhỏ nhất vì một SKU đã chết (0 tồn, không hàng về) thì đơn vị nhỏ
+         đến mấy cũng không kiểm kê được; NORMAL trước COMBO vì combo là cách đóng gói, không phải
+         mặt hàng để đếm. Cái bị xếp sau KHÔNG mất đi — nó xuống dòng "cùng mặt hàng, khác đơn vị". */
       v.sort(function(a,b){
         if (a.laSku!==b.laSku) return a.laSku?-1:1;                  // tem in ĐÚNG SKU nội bộ -> đừng đổi
-        if (a.q!==b.q) return a.q-b.q;                               // ĐƠN VỊ NHỎ NHẤT trước
         var sa=(a.status==='INACTIVE')?1:0, sb=(b.status==='INACTIVE')?1:0;
-        if (sa!==sb) return sa-sb;                                   // cùng đơn vị -> cái còn sống trước
+        if (sa!==sb) return sa-sb;
+        var ca=(a.type==='COMBO')?1:0, cb=(b.type==='COMBO')?1:0;
+        if (ca!==cb) return ca-cb;
+        if (a.q!==b.q) return a.q-b.q;                               // ĐƠN VỊ NHỎ NHẤT
         return (Number(b.qty)||0)-(Number(a.qty)||0);
       });
       var hop = chiActive ? v.filter(function(x){ return x.status!=='INACTIVE'; }) : v;
@@ -7346,9 +7497,31 @@ var NDS_ENGINE = (function(){
     got.sort(function(a,b){
       if (b.diem!==a.diem) return b.diem-a.diem;
       if (b.phu!==a.phu) return b.phu-a.phu;
-      if (a.q!==b.q) return a.q-b.q;                     // cùng điểm -> đơn vị nhỏ hơn trước
-      return (Number(b.qty)||0)-(Number(a.qty)||0);      // rồi mới đến SKU đang có tồn
+      /* Cùng điểm -> CÙNG bộ ưu tiên với lúc chọn đại diện: ACTIVE → NORMAL → đơn vị nhỏ → tồn nhiều */
+      var sa=(a.status==='INACTIVE')?1:0, sb=(b.status==='INACTIVE')?1:0;
+      if (sa!==sb) return sa-sb;
+      var ca=(a.type==='COMBO')?1:0, cb=(b.type==='COMBO')?1:0;
+      if (ca!==cb) return ca-cb;
+      if (a.q!==b.q) return a.q-b.q;
+      return (Number(b.qty)||0)-(Number(a.qty)||0);
     });
+
+    /* SỔ TAY TEM: SKU mà NGƯỜI đã xác nhận cho đúng tem này (hoặc đúng mã vạch này) — ghim lên đầu,
+       100%, khỏi đoán lại. Đây là đường không-cần-AI: lần sau gặp lại tem cũ là ra ngay.
+       Ghim NGƯỢC danh sách để phần tử đầu của `ghim` cuối cùng nằm trên cùng. */
+    if (opt.ghim && opt.ghim.length && cm.theoSku){
+      for (var gi=opt.ghim.length-1; gi>=0; gi--){
+        var si = cm.theoSku[String(opt.ghim[gi])];
+        if (si == null) continue;
+        var rg = ds[si];
+        if (chiActive && rg.status==='INACTIVE') continue;
+        var vt = -1;
+        for (var z2=0; z2<got.length; z2++) if (got[z2].i===si) { vt=z2; break; }
+        var itg = (vt>=0) ? got.splice(vt,1)[0] : moTa(si, rg, 1, {}, [], 1, false);
+        itg.diem=1; itg.pct=100; itg.daHoc=true; itg.xungDot=[];
+        got.unshift(itg);
+      }
+    }
     return got.slice(0, soLuong);
   }
 
@@ -7385,12 +7558,133 @@ var NDS_ENGINE = (function(){
 
   return { boDau:boDau, chuan:chuan, loi:loi, bocTen:bocTen, tuAI:tuAI, tyLe:tyLe, khopTot:khopTot,
     diemMot:diemMot, dungChiMuc:dungChiMuc, timTop:timTop, donVi:donVi, khoaHang:khoaHang,
-    W:W, VAI:VAI, DV:DV };
+    chuKy:chuKy, W:W, VAI:VAI, DV:DV };
 })();
 /*</NDS-ENGINE>*/
 
 /* ============================== TẦNG GIAO DIỆN ============================== */
-var NDS = { ds:null, cm:null, tokens:[], anh:null, mime:'image/jpeg', xoay:0, stream:null,
+/* ==================================================================================================
+ * SỔ TAY TEM — THƯ VIỆN TỰ HỌC, KHÔNG CẦN AI  (19/08/2026)
+ * --------------------------------------------------------------------------------------------
+ * AI chỉ làm ĐÚNG MỘT việc: biến pixel thành từ khoá (đo thật 3–7 giây + tốn hạn mức ngày). Nhưng
+ * kho nguyên liệu nhập đi nhập lại đúng những mặt hàng đó, nên thứ đáng nhớ là KẾT LUẬN CỦA NGƯỜI:
+ * "tem có chữ ký này (hoặc mã vạch này) = SKU kia". Nhớ rồi thì lần sau ra NGAY: 0 giây, 100%,
+ * không mạng cũng chạy, và AI tụt xuống vai lưới đỡ cho tem LẠ lần đầu.
+ *
+ * ⚠ Nói rõ để khỏi hiểu nhầm: Gemini KHÔNG học được gì từ ảnh mình gửi — mỗi lượt gọi là độc lập,
+ *   gửi 1.000 tấm tem giống nhau thì tấm 1.001 vẫn tốn đúng ngần ấy giây. Cuốn sổ này là CỦA MÌNH:
+ *   tra cứu, giải thích được ("lần trước tem này được chọn là SKU X"), và sửa/xoá được.
+ *
+ * Khoá gồm 2 loại, tra cái nào trúng cũng được:
+ *   · `bc:<mã vạch>`  — quét được từ tem (chắc chắn nhất, không phụ thuộc chữ đọc đúng hay sai)
+ *   · `tk:<chữ ký>`   — NDS_ENGINE.chuKy(): các từ khoá ĐỊNH DANH (mã · thông số · màu) đã sắp xếp
+ * ================================================================================================== */
+var NDS_SO_KEY='nds-so-v1', NDS_SO_TRAN=5000;
+var NDS_SO={ ds:null };
+function ndsSoNap(){
+  if (NDS_SO.ds) return NDS_SO.ds;
+  try{
+    var o=JSON.parse(localStorage.getItem(NDS_SO_KEY)||'null');
+    NDS_SO.ds=(o&&o.ds&&typeof o.ds==='object')?o.ds:{};
+  }catch(e){ NDS_SO.ds={}; }
+  return NDS_SO.ds;
+}
+function ndsSoLuu(){
+  try{ localStorage.setItem(NDS_SO_KEY, JSON.stringify({ v:1, ds:NDS_SO.ds||{} })); }
+  catch(e){ /* hết quota -> sổ vẫn dùng được trong phiên này, chỉ không sống qua lần mở sau */ }
+}
+/** Mọi khoá tra được từ trạng thái hiện tại (mã vạch đã quét + chữ ký từ khoá đang có). */
+function ndsSoKhoa(){
+  var ks=[];
+  (NDS.maVach||[]).forEach(function(m){ if(m) ks.push('bc:'+m); });
+  var goi={ item_codes:[], specs:[], colors:[], brands:[], others:[] };
+  var oNhom={ code:'item_codes', spec:'specs', color:'colors', brand:'brands', other:'others' };
+  NDS.tokens.forEach(function(k){ goi[oNhom[k.vai]||'others'].push(k.t); });
+  var ck=NDS_ENGINE.chuKy(NDS_ENGINE.tuAI(goi));
+  if (ck) ks.push('tk:'+ck);
+  return ks;
+}
+/** SKU đã học cho tem đang xem (mảng, thứ tự ưu tiên: mã vạch trước, chữ ký sau). */
+function ndsSoTra(){
+  var so=ndsSoNap(), ra=[];
+  ndsSoKhoa().forEach(function(k){
+    var o=so[k];
+    if (o && o.sku && ra.indexOf(String(o.sku))<0) ra.push(String(o.sku));
+  });
+  return ra;
+}
+/** Ghi nhớ lựa chọn của người dùng cho MỌI khoá của tem đang xem. */
+function ndsSoHoc(sku, pn){
+  var ks=ndsSoKhoa(); if (!ks.length) return 0;
+  var so=ndsSoNap(), gio=Date.now(), n=0;
+  ks.forEach(function(k){
+    var cu=so[k];
+    so[k]={ sku:String(sku), pn:String(pn||''), n:((cu&&cu.n)||0)+1, at:gio };
+    n++;
+  });
+  /* Trần sổ: bỏ bớt mục CŨ NHẤT (không phải ít dùng nhất — tem theo mùa/đơn hàng, cái lâu không
+     gặp thì gần như chắc chắn không gặp lại). */
+  var keys=Object.keys(so);
+  if (keys.length>NDS_SO_TRAN){
+    keys.sort(function(a,b){ return (so[a].at||0)-(so[b].at||0); });
+    keys.slice(0, keys.length-NDS_SO_TRAN).forEach(function(k){ delete so[k]; });
+  }
+  ndsSoLuu();
+  return n;
+}
+function ndsSoDem(){ return Object.keys(ndsSoNap()).length; }
+function ndsSoQuen(){
+  var ks=ndsSoKhoa(), so=ndsSoNap(), n=0;
+  ks.forEach(function(k){ if (so[k]){ delete so[k]; n++; } });
+  if (n){ ndsSoLuu(); toast('Đã quên '+n+' ghi nhớ của tem này — lần sau sẽ đối soát lại từ đầu.','ok'); ndsDoiSoat(); }
+  else toast('Tem này chưa có gì trong sổ tay.','warn');
+}
+function ndsSoXoaHet(){
+  if (!window.confirm('Xoá TOÀN BỘ sổ tay tem ('+ndsSoDem()+' ghi nhớ)? Sau đó tem cũ sẽ phải đối soát lại (hoặc gọi AI) như lần đầu.')) return;
+  NDS_SO.ds={}; ndsSoLuu(); toast('Đã xoá sổ tay tem.','ok'); ndsCapNhatChan();
+}
+
+/* ---------- MÃ VẠCH: đường nhận diện NHANH NHẤT và KHÔNG cần AI ----------
+ * `BarcodeDetector` có sẵn trong Edge/Chrome trên Android — không tải thêm thư viện nào, chạy
+ * offline, ~0,1 giây. Mã vạch trên tem NCC không phải SKU nội bộ, nên nó đi qua sổ tay: lần đầu
+ * người xác nhận một lần, từ đó về sau quét phát là ra. Nếu con số quét được TRÙNG một SKU nội bộ
+ * (hàng đã dán tem kho) thì ăn thẳng, khỏi sổ. */
+var NDS_BD=null;
+function ndsCoMaVach(){ return (typeof window!=='undefined') && ('BarcodeDetector' in window); }
+async function ndsQuetMaVach(){
+  if (!ndsCoMaVach() || !NDS.anh) return [];
+  try{
+    if (!NDS_BD) NDS_BD=new window.BarcodeDetector({ formats:['code_128','code_39','ean_13','ean_8','itf','codabar','qr_code','data_matrix','upc_a','upc_e'] });
+    var img=await new Promise(function(res,rej){ var i=new Image(); i.onload=function(){res(i);}; i.onerror=rej; i.src=NDS.anh; });
+    var kq=await NDS_BD.detect(img);
+    var ma=[];
+    (kq||[]).forEach(function(x){
+      var v=String(x.rawValue||'').trim();
+      if (v && ma.indexOf(v)<0) ma.push(v);
+    });
+    return ma;
+  }catch(e){ return []; }
+}
+/** Quét mã vạch của ảnh vừa chụp rồi đối soát ngay — chạy TRƯỚC và ĐỘC LẬP với AI. */
+async function ndsThuMaVach(imLang){
+  var ma=await ndsQuetMaVach();
+  NDS.maVach=ma;
+  ndsCapNhatChan();
+  if (!ma.length){ if(!imLang) toast('Không thấy mã vạch trên ảnh — dùng "Đọc tem bằng AI" hoặc gõ từ khoá tay.','warn'); return false; }
+  /* Mã vạch trùng thẳng SKU nội bộ -> khỏi cần sổ, khỏi cần AI */
+  var thang=null;
+  if (NDS.ds) for (var i=0;i<NDS.ds.length;i++) if (ma.indexOf(String(NDS.ds[i].sku))>=0) { thang=NDS.ds[i]; break; }
+  ma.forEach(function(m){ ndsThemToken(m,'code','mavach'); });
+  ndsVeTags();
+  var hoc=ndsSoTra();
+  ndsDoiSoat();
+  if (thang) toast('Mã vạch là SKU nội bộ '+thang.sku+' — khớp tuyệt đối, không cần AI.','ok');
+  else if (hoc.length) toast('Mã vạch đã có trong sổ tay → SKU '+hoc[0]+' (0 giây, không cần AI).','ok');
+  else toast('Đọc được mã vạch '+ma[0]+' — chưa có trong sổ tay, chọn đúng SKU một lần là lần sau tự ra.','warn');
+  return true;
+}
+
+var NDS = { ds:null, cm:null, tokens:[], anh:null, maVach:[], mime:'image/jpeg', xoay:0, stream:null,
   chiActive:true, dangDoc:false, dangTai:false, ket:[], nguon:'', msDoiSoat:null, loadedOnce:false,
   daBo:{}, rawDaTach:'' };
 var NDS_TAB = 'SKU_MASTER';
@@ -7467,11 +7761,16 @@ function ndsCapNhatChan(ms){
   if (typeof ms === 'number') NDS.msDoiSoat = ms;
   if (!NDS.ds){ el.innerHTML=''; return; }
   var nA=0; for (var i=0;i<NDS.ds.length;i++) if (NDS.ds[i].status==='ACTIVE') nA++;
+  var nSo=ndsSoDem();
   el.innerHTML = 'Danh mục: <b>' + nf(NDS.ds.length) + ' SKU</b> kho nguyên liệu (' + nf(nA) + ' ACTIVE / ' +
     nf(NDS.ds.length - nA) + ' INACTIVE) · nguồn: ' + esc(NDS.nguon) +
-    ' · tồn = tổng các kho nguyên liệu · ĐVT lấy từ đoạn cuối tên hàng, gợi ý ưu tiên đơn vị nhỏ nhất' +
+    ' · tồn = tổng các kho nguyên liệu · ĐVT lấy từ đoạn cuối tên hàng, gợi ý ưu tiên ACTIVE → NORMAL → đơn vị nhỏ nhất' +
     (NDS.msDoiSoat!=null ? (' · đối soát ' + NDS.msDoiSoat + 'ms') : '') +
-    ' &nbsp;<button type="button" class="fcg" onclick="ndsTaiLaiDanhMuc()">⟳ Tải lại danh mục</button>';
+    '<br><b>Sổ tay tem: ' + nf(nSo) + ' ghi nhớ</b> (tem đã học thì ra ngay, không gọi AI)' +
+    ((NDS.maVach&&NDS.maVach.length) ? (' · mã vạch trên ảnh: <code>'+esc(NDS.maVach.join(', '))+'</code>') : '') +
+    (ndsCoMaVach() ? '' : ' · <i>trình duyệt này không đọc được mã vạch — dùng Edge/Chrome trên Android để có đường nhanh nhất</i>') +
+    ' &nbsp;<button type="button" class="fcg" onclick="ndsTaiLaiDanhMuc()">⟳ Tải lại danh mục</button>' +
+    (nSo ? ' &nbsp;<button type="button" class="fcg" onclick="ndsSoXoaHet()">Xoá sổ tay</button>' : '');
 }
 async function ndsTaiLaiDanhMuc(){
   try{ localStorage.removeItem(NDS_CACHE); }catch(e){}
@@ -7533,7 +7832,7 @@ function ndsChonFile(inp){
   inp.value='';
 }
 function ndsDatAnh(dataUrl){
-  NDS.anh=dataUrl; NDS.xoay=0;
+  NDS.anh=dataUrl; NDS.xoay=0; NDS.maVach=[];
   var im=document.getElementById('ndsShot');
   /* Ảnh hỏng (điện thoại yếu decode không nổi ảnh 12MP, tệp lỗi, dán data: URL sai): trả khung về
      trạng thái trống + nói rõ, đừng để cái icon ảnh vỡ đứng đó cho người dùng đoán. */
@@ -7546,6 +7845,10 @@ function ndsDatAnh(dataUrl){
   im.src=dataUrl; im.hidden=false; im.style.transform='';
   document.getElementById('ndsEmpty').hidden=true;
   document.getElementById('ndsBtnDoc').disabled=false;
+  var bq=document.getElementById('ndsBtnMV'); if (bq) bq.disabled=false;
+  /* Có ảnh là THỬ MÃ VẠCH NGAY, im lặng: đây là đường rẻ nhất (0,1 giây, không mạng, không hạn
+     mức). Trúng thì người dùng có kết quả trước cả khi kịp bấm "Đọc tem bằng AI". */
+  if (ndsCoMaVach()) setTimeout(function(){ ndsThuMaVach(true); }, 0);
 }
 function ndsXoay(do_){
   if (!NDS.anh){ toast('Chưa có ảnh để xoay.','warn'); return; }
@@ -7578,15 +7881,20 @@ function ndsNenAnh(){
 }
 
 /* ---------- 3. GỌI VISION LLM QUA APPS SCRIPT ---------- */
+/* DANH TÍNH GỬI KÈM KHI GỌI AI — KHÔNG HỎI NGƯỜI DÙNG NỮA (19/08/2026).
+ * Trước đây hỏi email @hasaki.vn ngay giữa lúc đang cầm điện thoại đứng trước kệ: vướng, mà thật
+ * ra KHÔNG bảo vệ được gì — trang là GitHub Pages công khai, ai cũng gõ đại một chuỗi @hasaki.vn
+ * là qua. Nó chỉ có tác dụng CHIA HẠN MỨC (120 ảnh/ngày/danh tính, 400/ngày toàn hệ thống).
+ * Nên thay bằng danh tính THEO MÁY, tự sinh một lần, im lặng: cùng tác dụng chia hạn mức, mà chia
+ * theo máy còn đúng hơn theo email gõ tay. Email cũ (nếu đã lưu) được giữ để không mất lịch sử
+ * hạn mức của người đang dùng. Hàng rào thật vẫn nằm ở GAS: trần ngày + cờ chống gửi chồng. */
 function ndsEmail(){
   var m='';
   try{ m=localStorage.getItem('nds-mail')||localStorage.getItem('uidgr-mail')||''; }catch(e){}
-  if (!/^[a-z0-9._%+-]+@hasaki\.vn$/i.test(m)){
-    m=String(window.prompt('Email @hasaki.vn của bạn (dùng để mở hạn mức đọc tem bằng AI):', m||'')||'').trim().toLowerCase();
-    if (!/^[a-z0-9._%+-]+@hasaki\.vn$/.test(m)) { toast('Cần email đúng định dạng ten@hasaki.vn để dùng AI đọc tem.','warn'); return ''; }
-    try{ localStorage.setItem('nds-mail',m); }catch(e){}
-  }
-  return m.toLowerCase();
+  if (/^[a-z0-9._%+-]+@hasaki\.vn$/i.test(m)) return m.toLowerCase();
+  m='may-'+Math.random().toString(36).slice(2,10)+'@hasaki.vn';
+  try{ localStorage.setItem('nds-mail',m); }catch(e){}
+  return m;
 }
 function ndsBusy(on,chu){
   var st=document.getElementById('ndsStage'), cu=document.getElementById('ndsBusyBox');
@@ -7618,7 +7926,7 @@ async function ndsDocTem(){
   }catch(e){
     var m=String(e&&e.message||e);
     if (/abort/i.test(m)) m='AI đọc quá lâu (>90 giây) — mạng yếu hoặc ảnh quá nặng.';
-    toast('Không đọc được tem bằng AI: '+m+' — vẫn có thể gõ từ khoá tay ở bước 2.','err');
+    toast('Không đọc được tem bằng AI: '+m+' — vẫn có thể quét mã vạch hoặc gõ từ khoá tay ở bước 3.','err');
   } finally { NDS.dangDoc=false; ndsBusy(false); }
 }
 /* Nhận kết quả AI -> gộp vào danh sách từ khoá (không xoá từ khoá người dùng đã thêm tay) */
@@ -7692,10 +8000,10 @@ function ndsThemTay(){
   if (them) ndsDoiSoat();
 }
 function ndsXoaHet(){
-  NDS.tokens=[]; NDS.ket=[]; NDS.daBo={}; NDS.rawDaTach='';
+  NDS.tokens=[]; NDS.ket=[]; NDS.daBo={}; NDS.rawDaTach=''; NDS.maVach=[];
   var ta=document.getElementById('ndsRaw'); if (ta) ta.value='';
   ndsVeTags();
-  ndsTrangThai('Chưa có kết quả — làm bước 1 và 2 trước.');
+  ndsTrangThai('Chưa có kết quả — chụp tem ở bước 1.');
 }
 function ndsDoiScope(active){
   NDS.chiActive=!!active;
@@ -7728,13 +8036,14 @@ async function ndsDoiSoat(){
   var oNhom={ code:'item_codes', spec:'specs', color:'colors', brand:'brands', other:'others' };
   NDS.tokens.forEach(function(k){ goi[oNhom[k.vai]||'others'].push(k.t); });
   var nhan=NDS_ENGINE.tuAI(goi);
+  var ghim=ndsSoTra();                 // sổ tay tem: tem/mã vạch này người đã chốt SKU rồi -> ghim
   var t0=(window.performance&&performance.now)?performance.now():Date.now();
-  NDS.ket=NDS_ENGINE.timTop(nhan, NDS.cm, { soLuong:3, chiActive:NDS.chiActive });
+  NDS.ket=NDS_ENGINE.timTop(nhan, NDS.cm, { soLuong:3, chiActive:NDS.chiActive, ghim:ghim });
   var ms=Math.round(((window.performance&&performance.now)?performance.now():Date.now())-t0);
   /* Không có ứng viên ACTIVE nào -> thử lại trên toàn danh mục để KHÔNG im lặng nuốt kết quả */
   var themInactive=[];
   if (NDS.chiActive && !NDS.ket.length){
-    themInactive=NDS_ENGINE.timTop(nhan, NDS.cm, { soLuong:3, chiActive:false });
+    themInactive=NDS_ENGINE.timTop(nhan, NDS.cm, { soLuong:3, chiActive:false, ghim:ghim });
   }
   ndsVeKetQua(ms, themInactive);
 }
@@ -7773,7 +8082,9 @@ function ndsTheKetQua(r, hang){
     (r.khop[v]||[]).forEach(function(t){ chipKhop.push('<span class="nds-tag vai-'+v+'"><span class="vt">'+esc(NDS_VAI_TEN[v])+'</span>'+esc(t)+'</span>'); });
   });
   var canhBao='';
-  if (r.laSku) canhBao='<div class="nds-why"><b>Khớp tuyệt đối:</b> tem có in đúng mã SKU nội bộ này.</div>';
+  if (r.daHoc) canhBao='<div class="nds-why" style="color:var(--good)"><b>Từ sổ tay:</b> tem này (hoặc mã vạch này) đã được chọn SKU này trước đây — không cần AI, không cần đoán. '+
+    'Sai thì bấm <button type="button" class="kktab nds-alt" onclick="ndsSoQuen()">Quên ghi nhớ này</button></div>';
+  else if (r.laSku) canhBao='<div class="nds-why"><b>Khớp tuyệt đối:</b> tem có in đúng mã SKU nội bộ này.</div>';
   else if (r.xungDot.length){
     var ten={ cm:'chiều dài (cm)', mm:'kích thước (mm)', gsm:'định lượng (gsm)', tex:'chi số Tex', tkt:'chi số Tkt',
       co:'cỡ (#)', l:'cỡ nút (L)', ty:'tỉ lệ sợi', mamau:'mã màu' };
@@ -7808,6 +8119,7 @@ function ndsTheKetQua(r, hang){
       '<span class="badge '+(r.status==='INACTIVE'?'b-pend':'b-ok')+'" title="'+
         (r.status==='INACTIVE'?'Không còn tồn, không có hàng đang về':'Còn tồn / còn khả dụng / có hàng đang về')+
         '">'+esc(r.status)+'</span>'+
+      (r.daHoc?'<span class="badge b-proc" title="Lấy từ sổ tay tem — không gọi AI">ĐÃ HỌC</span>':'')+
       '<span class="nds-pct">'+r.pct+'%</span></div>'+
     '<div class="nds-bar"><div class="nds-fill" style="width:'+r.pct+'%"></div></div>'+
     '<div class="nds-pn">'+ndsToTrung(r.pn, r.khop)+'</div>'+
@@ -7867,7 +8179,12 @@ function ndsChonSku(sku){
   var tuKhoa=NDS.tokens.slice(0,5).map(function(x){ return x.t; }).join(' ');
   var lyDo='Nhận diện tem: '+tuKhoa+(pct?(' ('+pct+'%)'):'')+(dv?(' · ĐVT '+dv):'');
   pcAdd(NDS_KHO, String(r.sku), r.pn, 2, lyDo);
-  toast('Đã thêm SKU '+r.sku+(dv?(' (ĐVT '+dv+')'):'')+' vào giỏ kiểm kê ('+nf(pcCount())+' SKU) — bấm "Tạo lệnh kiểm kê" ở thanh giỏ để đi tiếp.','ok');
+  /* HỌC: đây là lúc DUY NHẤT ta biết chắc tem nào ứng với SKU nào — vì người vừa xác nhận. Ghi vào
+     sổ tay để lần sau khỏi gọi AI. Học xong vẽ lại để thẻ hiện huy hiệu "đã học" ngay. */
+  var daHoc=ndsSoHoc(r.sku, r.pn);
+  toast('Đã thêm SKU '+r.sku+(dv?(' (ĐVT '+dv+')'):'')+' vào giỏ kiểm kê ('+nf(pcCount())+' SKU)'+
+    (daHoc?' · đã ghi vào sổ tay — lần sau gặp tem này ra ngay, không cần AI':'')+'.','ok');
+  if (daHoc && NDS.tokens.length) ndsDoiSoat();
 }
 /* Kho ghi vào giỏ: tem NCC chỉ có ở kho nguyên liệu; Warehouse Code thật vẫn do modal "Tạo lệnh
    kiểm kê" chọn, ở đây chỉ cần một nhãn kho đúng để nhóm dòng trong giỏ. */
@@ -7877,7 +8194,7 @@ var NDS_KHO='WH - MATERIAL - MTG';
 async function ndsLoad(){
   ndsVeTags();
   await ndsTaiDanhMuc(false);
-  if (NDS.ds) ndsTrangThai('Chưa có kết quả — chụp tem ở bước 1, hoặc gõ từ khoá ở bước 2.');
+  if (NDS.ds) ndsTrangThai('Chưa có kết quả — chụp tem ở bước 1 (có mã vạch thì ra ngay), hoặc gõ từ khoá ở bước 3.');
 }
 /* Rời tab thì TẮT camera: giữ stream sống làm nóng máy + đèn camera sáng vô cớ trên điện thoại */
 function ndsRoiTab(){ if (NDS.stream) ndsTatCam(); }
