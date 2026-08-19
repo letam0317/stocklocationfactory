@@ -1929,6 +1929,9 @@ body.side-anim{overflow-x:clip}
   <div class="kkbar" id="abnWhBar" style="margin-bottom:12px"></div>
   <div id="abnContent"></div>
   <div id="abnState" class="state"><div class="spin"></div>Đang tải dữ liệu tồn kho bất thường…</div>
+  <!-- Mục "Tồn tại vị trí": UID nguyên liệu chưa khai báo UID group mà đã rời bãi chờ F0-A0.
+       Nguồn riêng (tab Sheet ton-vitri) nên nằm ngoài #abnContent — tab bất thường lỗi thì mục này vẫn hiện. -->
+  <div id="tvtWrap"></div>
 </div>
 
 <!-- ===== TAB 4: Planogram — vệ sinh theo sơ đồ mặt bằng kho nguyên liệu (F0-KHO) =====
@@ -2375,6 +2378,21 @@ body.side-anim{overflow-x:clip}
       <th class="num">Tồn</th><th class="num">Available</th>
       <th class="num">Conflict</th><th class="num">UID Temp</th><th class="num">Not Found</th><th class="num">Unsuitable</th><th class="num">Committed</th><th class="num">Committed Outbound</th>
     </tr></thead><tbody id="abnmBody"></tbody></table></div>
+  </div>
+</div>
+
+<!-- Modal drill-down "Tồn tại vị trí": danh sách UID chưa khai báo UID group mà đã rời bãi chờ F0-A0.
+     Cùng khuôn combo chain-filter với 2 pop-up kia (#kkmFilters / #abnmFilters) — chỉ khác bộ cột. -->
+<div id="tvtmodal" class="modal" onclick="if(event.target===this)closeTvtModal()">
+  <div class="modalbox">
+    <div class="modalhd"><div><div class="mt" id="tvtmTitle"></div><div class="mtsub" id="tvtmSub"></div></div><button class="mclose" onclick="closeTvtModal()">&times;</button></div>
+    <div class="mfilters kkmf" id="tvtmFilters"></div>
+    <div class="msum" id="tvtmSum"></div>
+    <div class="modalbody"><table class="mtbl"><thead><tr>
+      <th class="pcc"><input type="checkbox" class="pcall" title="Chọn/bỏ chọn tất cả dòng đang lọc (kể cả ngoài 500 dòng hiển thị)"></th>
+      <th>Kho</th><th>Vị trí</th><th>UID</th><th>SKU</th><th>ProductName</th>
+      <th class="num">SL</th><th>Group UID</th><th>Trạng thái</th><th>Cập nhật</th>
+    </tr></thead><tbody id="tvtmBody"></tbody></table></div>
   </div>
 </div>
 
@@ -4549,7 +4567,7 @@ function kkEval(inv,cnt){ if(cnt==null||cnt==='') return {d:0,counted:false}; va
 var CACHE_TTL=10*60*1000;
 function cacheGet(k){ try{ var o=JSON.parse(sessionStorage.getItem(k)||'null'); if(o&&(Date.now()-o.at)<CACHE_TTL) return o.d; }catch(e){} return null; }
 function cacheSet(k,d){ try{ sessionStorage.setItem(k,JSON.stringify({at:Date.now(),d:d})); }catch(e){ /* quá quota -> bỏ qua, không cache */ } }
-function clearCaches(){ try{ ['slf-kk-sku','slf-kk-loc','slf-kk3-sku','slf-kk3-loc','slf-hist','slf-hist2','slf-abn3','slf-adj','slf-uidgr','slf-uide'].forEach(function(k){ sessionStorage.removeItem(k); }); }catch(e){} }
+function clearCaches(){ try{ ['slf-kk-sku','slf-kk-loc','slf-kk3-sku','slf-kk3-loc','slf-hist','slf-hist2','slf-abn3','slf-adj','slf-uidgr','slf-uide','slf-tvt'].forEach(function(k){ sessionStorage.removeItem(k); }); }catch(e){} }
 function gvizP(sheet,params,cb){
   return new Promise(function(res){
     // null = LỖI TẢI (mạng/treo/chặn) — khác "tab rỗng"; caller phân biệt để không hiển thị nhầm "không có dữ liệu"
@@ -5975,6 +5993,7 @@ async function abnLoad(){
   st.style.display='block'; st.innerHTML='<div class="spin"></div>Đang tải dữ liệu tồn kho bất thường…';
   document.getElementById('abnContent').innerHTML=''; document.getElementById('abnWhBar').innerHTML='';
   _abnDaNapTho=false; _abnDangNapTho=null; ABN.agg=null;
+  tvtLoad();   // mục "Tồn tại vị trí" nạp SONG SONG từ tab riêng — không chờ nhau, hỏng bên nào bên kia vẫn hiện
   var rt=await gvizP(ABN_TONG_TAB,'&headers=1','abngv_tong');
   var rr=(rt&&rt.table&&rt.table.rows)||[];
   /* Tab chưa tồn tại thì gviz KHÔNG báo lỗi — trả tab đầu tiên của file. Kiểm hình dạng: 4 cột,
@@ -6042,13 +6061,16 @@ function abnRowsInScope(){
     return true;
   });
 }
-function abnSetCompany(c){ if(ABN.company===c) c=''; ABN.company=c; ABN.wh=''; abnRender(); }   // đổi công ty -> bỏ lọc kho
-function abnSetWh(w){ if(ABN.wh===w) w=''; ABN.wh=w; abnRender(); }
+function abnSetCompany(c){ if(ABN.company===c) c=''; ABN.company=c; ABN.wh=''; abnRender(); tvtRender(); }   // đổi công ty -> bỏ lọc kho (kéo theo mục Tồn tại vị trí)
+function abnSetWh(w){ if(ABN.wh===w) w=''; ABN.wh=w; abnRender(); tvtRender(); }
 /* Thanh lọc 2 tầng: ① công ty (Mastige/Garment) luôn hiện — gọn; ② kho của công ty đó chỉ hiện khi đã chọn công ty */
 function abnRenderWhBar(){
   var el=document.getElementById('abnWhBar'); if(!el) return;
   var byCo={}, _ds=ABN.agg?ABN.agg:ABN.rows;
   _ds.forEach(function(r){ if(!r.wh) return; var co=abnCompanyOf(r.wh); (byCo[co]=byCo[co]||{})[r.wh]=1; });
+  /* Gộp cả kho của mục "Tồn tại vị trí": một thanh chip điều khiển CẢ HAI mục, nên kho chỉ xuất
+     hiện ở mục dưới cũng phải bấm lọc được (không thì UID sai vị trí ở kho đó thành không lọc nổi). */
+  if(TVT.ok) TVT.rows.forEach(function(r){ if(!r.wh) return; (byCo[abnCompanyOf(r.wh)]=byCo[abnCompanyOf(r.wh)]||{})[r.wh]=1; });
   var ord={Mastige:0,Garment:1,'Khác':2};
   var cos=Object.keys(byCo).sort(function(a,b){ return (ord[a]==null?9:ord[a])-(ord[b]==null?9:ord[b]); });
   if(!cos.length){ el.innerHTML=''; return; }
@@ -6295,6 +6317,295 @@ document.getElementById('abnmFilters').addEventListener('click',function(e){
 });
 document.addEventListener('click',function(e){ if(!e.target.closest('#abnmFilters .combo')) abnmCloseCombos(); });
 
+/* ============================================================================================
+ * MỤC "TỒN TẠI VỊ TRÍ" (nằm trong tab Tồn kho bất thường)
+ * --------------------------------------------------------------------------------------------
+ * LUẬT NGHIỆP VỤ (người dùng chốt 19/08/2026): SKU vải nguyên liệu BẮT BUỘC khai báo UIDgr code.
+ * UID nào trên WMS còn hiện "Group UID / RFID mapping: 0" (RFID mapping: N/A) thì BUỘC phải đứng
+ * ở F0-A0-00-00-00-00 — bãi chờ khai báo. Đã nằm ở vị trí thật (khác F0-A0) mà VẪN chưa khai báo
+ * ⇒ BẤT THƯỜNG: hàng đã lên kệ nhưng không truy được theo group, kiểm kê sẽ lệch.
+ *
+ * NGUỒN: tab Sheet TVT_TAB do hasaki/ton-vitri.mjs ghi (quét report-inventories MỨC UID, đã lọc
+ * sẵn 2 điều kiện trên nên mỗi dòng ở đây đều là một UID cần đi xử lý).
+ * Vài nghìn dòng ⇒ nạp thẳng MỘT tầng, không cần tab tổng như stock-inventory-beta (50k dòng).
+ * Bộ lọc kho/công ty DÙNG CHUNG chip của tab bất thường (ABN.company/ABN.wh) — một thanh lọc,
+ * hai mục số liệu, không sinh thêm control lạ. */
+var TVT_TAB='ton-vitri';
+var TVT_CHO='F0-A0';                  // tiền tố bãi chờ khai báo — dòng nào ở đây là ĐÚNG, không vào danh sách
+/* Nhận cột theo NHÃN tiêu đề (chấp nhận snake_case / có dấu cách / tiếng Việt) — cùng lối với ABN_COLS */
+var TVT_COLS={
+  cty:['company','công ty','cong ty'],
+  wh:['warehouse name','warehouse_name','warehousename','warehouse','kho'],
+  loc:['location','location_description','locationdescription','vị trí','vi tri','mã vị trí'],
+  uid:['uid','mã uid','ma uid'],
+  sku:['sku','mã sku','ma sku'],
+  pn:['product name','product_name','productname','tên sản phẩm','ten san pham'],
+  cat:['category name','category_name','categoryname','category','danh mục','danh muc'],
+  brand:['brand name','brand_name','brandname','brand','thương hiệu'],
+  qty:['qty','quantity','số lượng','so luong','sl'],
+  uom:['uom','đơn vị','don vi'],
+  st:['status','status_name','statusname','trạng thái','trang thai'],
+  grp:['group uid','group_uid','groupuid','uid group','uidgr'],
+  upd:['updated at','updated_at','updatedat','cập nhật','cap nhat']
+};
+var TVT={loadedOnce:false,ok:false,err:'',rows:[],loading:null};
+var TVT_MODAL={base:[],preset:null};
+function tvtIdx(H,al){ for(var i=0;i<al.length;i++){ var j=H.indexOf(al[i]); if(j>=0) return j; } return -1; }
+function tvtNum(v){ if(v==null||v==='') return 0; var n=Number(String(v).replace(/,/g,'')); return isNaN(n)?0:n; }
+/* Ngày WMS trả dạng "2026-08-13 09:24:58" (chuỗi) — gviz có thể đọc ra Date, cắt về chuỗi ngắn để in bảng */
+function tvtNgay(v){
+  if(v==null||v==='') return '';
+  if(v instanceof Date){ var p=function(n){return (n<10?'0':'')+n;}; return p(v.getDate())+'/'+p(v.getMonth()+1)+'/'+v.getFullYear()+' '+p(v.getHours())+':'+p(v.getMinutes()); }
+  var s=String(v), m=s.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}:\d{2})/);
+  return m?(m[3]+'/'+m[2]+'/'+m[1]+' '+m[4]):s;
+}
+async function tvtLoad(force){
+  if(TVT.loading) return TVT.loading;
+  var ck='slf-tvt', hit=force?null:cacheGet(ck);
+  if(hit){ TVT.rows=hit; TVT.ok=true; TVT.err=''; tvtRender(); return; }
+  TVT.loading=(async function(){
+    var resp=await gvizP(TVT_TAB,'&headers=1','tvtgv'+(force?'_f':''));
+    if(!resp||resp.status==='error') resp=await gvizP(TVT_TAB,'&headers=1','tvtgv_r');
+    if(!resp||resp.status==='error'){ TVT.ok=false; TVT.err='net'; tvtRender(); return; }
+    try{
+      var H=(resp.table&&resp.table.cols||[]).map(function(c){ return String((c&&c.label)||'').replace(/\s+/g,' ').trim().toLowerCase(); });
+      var idx={}; Object.keys(TVT_COLS).forEach(function(k){ idx[k]=tvtIdx(H,TVT_COLS[k]); });
+      /* Tab chưa tồn tại thì gviz KHÔNG báo lỗi mà trả TAB ĐẦU TIÊN của file (bẫy đã gặp ở
+         planogram + tab tổng bất thường) — bắt buộc kiểm hình dạng trước khi tin. */
+      if(idx.uid<0||idx.loc<0||idx.sku<0) throw 0;
+      var arr=[];
+      (resp.table&&resp.table.rows||[]).forEach(function(r){
+        var c=r.c||[]; function gv(i){ return (i>=0&&c[i]&&c[i].v!=null)?c[i].v:''; }
+        var uid=String(gv(idx.uid)).trim(); if(!uid) return;
+        var loc=String(gv(idx.loc)).trim();
+        if(loc.toUpperCase().indexOf(TVT_CHO)===0) return;    // chốt phòng hờ: bãi chờ không phải bất thường
+        arr.push({cty:String(gv(idx.cty)), wh:String(gv(idx.wh)), loc:loc, uid:uid, sku:String(gv(idx.sku)),
+          pn:String(gv(idx.pn)), cat:String(gv(idx.cat)), brand:String(gv(idx.brand)),
+          qty:tvtNum(gv(idx.qty)), uom:String(gv(idx.uom)), st:String(gv(idx.st)),
+          grp:String(gv(idx.grp)), upd:tvtNgay(gv(idx.upd))});
+      });
+      TVT.rows=arr; TVT.ok=true; TVT.err='';
+      cacheSet(ck,arr);
+    }catch(e){ TVT.ok=false; TVT.err='tab'; }
+    tvtRender();
+  })();
+  TVT.loading.then(function(){ TVT.loading=null; });
+  return TVT.loading;
+}
+/* Cùng phạm vi lọc với tab bất thường: chip Công ty / Kho ở #abnWhBar điều khiển luôn mục này */
+function tvtRowsInScope(){
+  return TVT.rows.filter(function(r){
+    if(ABN.company && abnCompanyOf(r.wh)!==ABN.company) return false;
+    if(ABN.wh && r.wh!==ABN.wh) return false;
+    return true;
+  });
+}
+function tvtGiaiThich(){
+  return 'UID <b>chưa khai báo UID group</b> (Group UID / RFID mapping = 0) thì phải nằm ở bãi chờ '+
+    '<code>'+TVT_CHO+'-00-00-00-00</code>. Những UID dưới đây đã ở vị trí khác ⇒ cần khai báo UIDgr hoặc trả về bãi chờ.';
+}
+function tvtRender(){
+  var el=document.getElementById('tvtWrap'); if(!el) return;
+  if(!TVT.ok){
+    if(TVT.err==='net'){
+      el.innerHTML='<section class="panel"><h2>Tồn tại vị trí <span class="hint">(UID chưa khai báo UID group)</span></h2>'+
+        '<div class="abnempty">⚠ Không tải được tab <code>'+esc(TVT_TAB)+'</code> (mạng/Google Sheet). '+
+        '<button class="fcg" onclick="tvtLoad(true)">Thử lại</button></div></section>';
+    }else if(TVT.err==='tab'){
+      el.innerHTML='<section class="panel"><h2>Tồn tại vị trí <span class="hint">(UID chưa khai báo UID group)</span></h2>'+
+        '<div class="abnempty">Chưa có tab <code>'+esc(TVT_TAB)+'</code> trên Google Sheet — chạy <code>node hasaki/sync-tonbatthuong.js</code> (bước "Tồn tại vị trí") để tạo.</div></section>';
+    }else el.innerHTML='';
+    return;
+  }
+  var rows=tvtRowsInScope();
+  var sl=0, sku={}, loc={}, wh={};
+  rows.forEach(function(r){
+    sl+=r.qty; sku[r.sku]=1;
+    var L=loc[r.loc]||(loc[r.loc]={n:0,qty:0,wh:r.wh}); L.n++; L.qty+=r.qty;
+    var W=wh[r.wh]||(wh[r.wh]={n:0,qty:0}); W.n++; W.qty+=r.qty;
+  });
+  var nLoc=Object.keys(loc).length, nWh=Object.keys(wh).length, nSku=Object.keys(sku).length;
+  var head='<h2>Tồn tại vị trí <span class="hint">(UID chưa khai báo UID group mà đã rời bãi chờ '+TVT_CHO+')</span></h2>'+
+    '<p class="sub" style="margin:2px 0 10px"><span class="muted">'+tvtGiaiThich()+'</span></p>';
+  if(!rows.length){
+    el.innerHTML='<section class="panel">'+head+'<div class="abnempty">Không có UID sai vị trí trong phạm vi'+(ABN.wh?(' kho “'+esc(ABN.wh)+'”'):' này')+' — mọi UID chưa khai báo đều đang ở bãi chờ '+TVT_CHO+'.</div></section>';
+    return;
+  }
+  var tiles='<div class="abntiles">'+
+    '<div class="abntile tot" style="--cc:var(--bad)" onclick="tvtOpenAll()" title="Xem toàn bộ UID sai vị trí">'+
+      '<div class="k">'+nf(rows.length)+'</div><div class="l">UID sai vị trí</div><div class="s">chưa khai báo UID group · '+nf(nWh)+' kho</div></div>'+
+    '<div class="abntile" style="--cc:var(--warn)" onclick="tvtOpenAll()" title="Xem toàn bộ UID sai vị trí">'+
+      '<div class="k">'+nf(sl)+'</div><div class="l">Tổng số lượng</div><div class="s">cộng theo Qty của UID</div></div>'+
+    '<div class="abntile" style="--cc:var(--info,#3b82f6)" onclick="tvtOpenAll()" title="Xem toàn bộ UID sai vị trí">'+
+      '<div class="k">'+nf(nSku)+'</div><div class="l">SKU liên quan</div><div class="s">nguyên liệu vải (NVL)</div></div>'+
+    '<div class="abntile" style="--cc:var(--accent)" onclick="tvtOpenAll()" title="Xem toàn bộ UID sai vị trí">'+
+      '<div class="k">'+nf(nLoc)+'</div><div class="l">Vị trí liên quan</div><div class="s">bấm thanh bên dưới để lọc 1 vị trí</div></div>'+
+  '</div>';
+  var lk=Object.keys(loc).sort(function(a,b){ return loc[b].n-loc[a].n; });
+  var maxL=1; lk.forEach(function(k){ maxL=Math.max(maxL,loc[k].n); });
+  var locBars=lk.map(function(k){
+    var o=loc[k], wp=o.n/maxL*100;
+    return '<div class="abnrow" data-l="'+esc(k)+'" onclick="tvtOpenLoc(this.getAttribute(\'data-l\'))" title="Bấm xem UID tại '+esc(k)+'">'+
+      '<span class="abnrl"><span class="dot" style="background:'+abnColor(o.wh)+'"></span>'+esc(k)+'</span>'+
+      '<span class="abntrack"><span class="abnfill" data-w="'+wp.toFixed(2)+'" style="background:var(--bad)"></span></span>'+
+      '<span class="abnrv"><b>'+nf(o.n)+'</b><small>'+nf(o.qty)+' SL</small></span></div>';
+  }).join('');
+  var wk=Object.keys(wh).sort(function(a,b){ return wh[b].n-wh[a].n; });
+  var maxW=1; wk.forEach(function(k){ maxW=Math.max(maxW,wh[k].n); });
+  var whBars=wk.map(function(k){
+    var o=wh[k], wp=o.n/maxW*100;
+    return '<div class="abnrow" data-w2="'+esc(k)+'" onclick="tvtOpenWh(this.getAttribute(\'data-w2\'))" title="Bấm xem UID của kho '+esc(k)+'">'+
+      '<span class="abnrl"><span class="dot" style="background:'+abnColor(k)+'"></span>'+esc(k)+'</span>'+
+      '<span class="abntrack"><span class="abnfill" data-w="'+wp.toFixed(2)+'" style="background:'+abnColor(k)+'"></span></span>'+
+      '<span class="abnrv"><b>'+nf(o.n)+'</b><small>'+nf(o.qty)+' SL</small></span></div>';
+  }).join('');
+  el.innerHTML='<section class="panel">'+head+tiles+'</section>'+
+    '<div class="grid2 abn2">'+
+      '<section class="panel"><h2>Theo vị trí <span class="hint">(số UID sai chỗ · bấm để xem danh sách)</span></h2><div class="abnchart">'+locBars+'</div></section>'+
+      '<section class="panel"><h2>Theo kho <span class="hint">(bấm để xem danh sách)</span></h2><div class="abnchart">'+whBars+'</div></section>'+
+    '</div>';
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){
+    el.querySelectorAll('.abnfill').forEach(function(f){ f.style.width=f.getAttribute('data-w')+'%'; });
+  }); });
+}
+/* ---------- Pop-up danh sách UID (combo chain-filter y như 2 pop-up kia) ---------- */
+var TVT_FDEF=[
+  {k:'wh',   lb:'Kho (Warehouse)', vals:function(r){ return r.wh?[r.wh]:[]; }},
+  {k:'loc',  lb:'Vị trí',          vals:function(r){ return r.loc?[r.loc]:[]; }},
+  {k:'cat',  lb:'Category',        vals:function(r){ return r.cat?[r.cat]:[]; }},
+  {k:'brand',lb:'Thương hiệu',     vals:function(r){ return r.brand?[r.brand]:[]; }}
+];
+function tvtmFdef(k){ for(var i=0;i<TVT_FDEF.length;i++) if(TVT_FDEF[i].k===k) return TVT_FDEF[i]; return null; }
+function tvtReason(r){ return 'Tồn tại vị trí: UID chưa khai báo UID group đang ở '+r.loc; }
+function tvtOpenAll(){ tvtShowModal(tvtRowsInScope(),'UID sai vị trí'+(ABN.wh?(' · '+ABN.wh):''),null); }
+function tvtOpenLoc(l){ tvtShowModal(tvtRowsInScope(),'UID sai vị trí tại '+l,{k:'loc',raw:l}); }
+function tvtOpenWh(w){ tvtShowModal(TVT.rows.filter(function(r){ return r.wh===w; }),'UID sai vị trí · kho '+w,null); }
+function tvtShowModal(base,title,preset){
+  TVT_MODAL.base=base||[]; TVT_MODAL.preset=preset||null;
+  document.getElementById('tvtmTitle').textContent=title;
+  document.getElementById('tvtmSub').textContent=nf(TVT_MODAL.base.length)+' UID — chưa khai báo UID group mà không nằm ở bãi chờ '+TVT_CHO;
+  tvtmBuildFilters();
+  document.getElementById('tvtmSum').textContent='';
+  document.getElementById('tvtmBody').innerHTML='<tr><td colspan="10" class="empty">Đang hiển thị…</td></tr>';
+  var m=document.getElementById('tvtmodal'); m.style.display='flex';
+  requestAnimationFrame(function(){ m.classList.add('show'); setTimeout(tvtmRender,60); });
+}
+function tvtmBuildFilters(){
+  var rows=TVT_MODAL.base, html='';
+  TVT_FDEF.forEach(function(d){
+    var uniq=new Set();
+    rows.forEach(function(r){ d.vals(r).forEach(function(v){ if(v) uniq.add(v); }); });
+    if(uniq.size>1){
+      html+='<div class="fld"><label>'+esc(d.lb)+'</label><div class="combo" data-fk="'+d.k+'" data-lb="'+esc(d.lb)+'">'+
+        '<input data-fk="'+d.k+'" autocomplete="off" placeholder="Tất cả…" oninput="tvtmComboInput(this)" onfocus="tvtmComboMenu(this.parentNode)">'+
+        '<div class="combo-menu"></div></div></div>';
+    }
+  });
+  html+='<div class="fld q"><label>Tìm nhanh</label><input id="tvtmQ" autocomplete="off" placeholder="UID / SKU / tên sản phẩm…" oninput="tvtmQuick()"></div>';
+  html+='<button type="button" class="mfbtn" onclick="tvtmFltThu()">Bộ lọc <span class="n" id="tvtmFltN"></span><span id="tvtmFltCh">▾</span></button>';
+  html+='<div class="mfsh">Bộ lọc <button type="button" class="mclose" onclick="tvtmFltThu()" aria-label="Đóng">&times;</button></div>';
+  html+='<div class="mfsf"><button type="button" onclick="tvtmFltClear()">Xóa lọc</button><button type="button" class="mfok" onclick="tvtmFltThu()">Áp dụng</button></div>';
+  var el=document.getElementById('tvtmFilters'); el.innerHTML=html;
+  var mob=window.matchMedia&&window.matchMedia('(max-width:640px)').matches;
+  el.classList.toggle('mf-thu',mob); el.classList.remove('mf-xo');
+  if(TVT_MODAL.preset){
+    var p=TVT_MODAL.preset, inp=el.querySelector('.combo[data-fk="'+p.k+'"] input');
+    if(inp){ inp.value=p.raw; inp.setAttribute('data-exact','1'); }
+  }
+  tvtmFltBadge();
+}
+function tvtmFltThu(){
+  var c=document.getElementById('tvtmFilters'), thu=c.classList.toggle('mf-thu');
+  c.classList.toggle('mf-xo',!thu&&window.matchMedia&&window.matchMedia('(max-width:640px)').matches);
+  var ch=document.getElementById('tvtmFltCh'); if(ch) ch.textContent=thu?'▾':'▴';
+}
+function tvtmFltClear(){
+  document.querySelectorAll('#tvtmFilters .combo input').forEach(function(i2){ i2.value=''; i2.removeAttribute('data-exact'); });
+  var q=document.getElementById('tvtmQ'); if(q) q.value='';
+  tvtmApply();
+}
+function tvtmFltBadge(){
+  var n=0;
+  document.querySelectorAll('#tvtmFilters .combo input').forEach(function(i2){ if(i2.value.trim()) n++; });
+  var b=document.getElementById('tvtmFltN'); if(b) b.textContent=n?String(n):'';
+}
+function tvtmQval(){ return ((document.getElementById('tvtmQ')||{}).value||'').trim().toLowerCase(); }
+function tvtmState(){
+  return Array.prototype.slice.call(document.querySelectorAll('#tvtmFilters .combo input')).map(function(inp){
+    var v=inp.value.trim();
+    return {k:inp.getAttribute('data-fk'),raw:v,v:v.toLowerCase(),exact:!!inp.getAttribute('data-exact')};
+  });
+}
+function tvtmRowsWith(excludeK,state,q){
+  return TVT_MODAL.base.filter(function(r){
+    for(var i=0;i<state.length;i++){ var f=state[i];
+      if(f.k===excludeK||!f.v) continue;
+      var vs=tvtmFdef(f.k).vals(r).map(String);
+      if(f.exact){ if(vs.indexOf(f.raw)<0) return false; }
+      else if(!vs.some(function(v){ return v.toLowerCase().indexOf(f.v)>=0; })) return false;
+    }
+    if(q&&((r.uid+' '+r.sku+' '+r.pn+' '+r.loc).toLowerCase().indexOf(q)<0)) return false;
+    return true;
+  });
+}
+function tvtmComboMenu(combo){
+  var k=combo.getAttribute('data-fk'), lb=combo.getAttribute('data-lb');
+  var inp=combo.querySelector('input'), menu=combo.querySelector('.combo-menu');
+  var uniq=new Set(), cnt={};
+  tvtmRowsWith(k,tvtmState(),tvtmQval()).forEach(function(r){ tvtmFdef(k).vals(r).forEach(function(v){ if(!v) return; uniq.add(v); cnt[v]=(cnt[v]||0)+1; }); });
+  var typed=inp.getAttribute('data-exact')?'':inp.value.trim().toLowerCase();
+  var items=Array.from(uniq).filter(function(v){ return !typed||v.toLowerCase().indexOf(typed)>=0; }).sort();
+  var html='<div class="combo-item all" data-v=""><span class="nm">Tất cả '+esc(lb)+'</span><span class="c">'+uniq.size+' mục</span></div>';
+  html+=items.map(function(v){ return '<div class="combo-item" data-v="'+esc(v)+'"><span class="nm">'+esc(v)+'</span><span class="c">'+nf(cnt[v])+'</span></div>'; }).join('');
+  if(!items.length) html+='<div class="combo-empty">Không có mục phù hợp</div>';
+  menu.innerHTML=html;
+  tvtmCloseCombos(combo);
+  menu.classList.add('show');
+}
+function tvtmComboInput(inp){ inp.removeAttribute('data-exact'); tvtmComboMenu(inp.parentNode); tvtmQuick(); }
+function tvtmCloseCombos(except){
+  document.querySelectorAll('#tvtmFilters .combo-menu.show').forEach(function(m){ if(!except||m.parentNode!==except) m.classList.remove('show'); });
+}
+var _tvtmDeb=null,_tvtmT=null;
+function tvtmQuick(){ clearTimeout(_tvtmDeb); _tvtmDeb=setTimeout(tvtmApply,120); }
+function tvtmApply(){ var b=document.getElementById('tvtmBody'); if(b) b.classList.add('is-filtering'); clearTimeout(_tvtmT); _tvtmT=setTimeout(function(){ tvtmRender(); tvtmFltBadge(); if(b) b.classList.remove('is-filtering'); },150); }
+function tvtmRender(){
+  var state=tvtmState(), q=tvtmQval();
+  var rows=tvtmRowsWith(null,state,q).slice().sort(function(a,b){
+    return String(a.wh).localeCompare(String(b.wh))||String(a.loc).localeCompare(String(b.loc))||(b.qty-a.qty);
+  });
+  var NCOL=10, cap=500, out=[], sl=0, sku={};
+  for(var i=0;i<rows.length;i++){ var r=rows[i];
+    sl+=r.qty; sku[r.sku]=1;
+    if(out.length<cap){
+      out.push('<tr>'+pcCell(r.wh,r.sku,r.pn,0,tvtReason(r))+
+        '<td class="whn"><span class="dot" style="background:'+abnColor(r.wh)+'"></span>'+esc(r.wh)+'</td>'+
+        '<td>'+esc(r.loc)+'</td><td>'+esc(r.uid)+'</td><td>'+esc(r.sku)+'</td><td class="pn">'+esc(r.pn)+'</td>'+
+        '<td class="num">'+nf(r.qty)+'</td><td class="abncell0">'+esc(r.grp||'0')+'</td><td>'+esc(r.st||'—')+'</td><td>'+esc(r.upd||'—')+'</td></tr>');
+    }
+  }
+  if(rows.length>cap) out.push('<tr><td colspan="'+NCOL+'" class="empty">Hiển thị '+nf(cap)+' / '+nf(rows.length)+' dòng — dùng bộ lọc để thu hẹp.</td></tr>');
+  var body=document.getElementById('tvtmBody');
+  body.innerHTML=out.length?out.join(''):'<tr><td colspan="'+NCOL+'" class="empty">Không có dòng phù hợp</td></tr>';
+  pcSyncAll(document.getElementById('tvtmodal'),rows);
+  var nAct=state.filter(function(f){ return f.v; }).length+(q?1:0);
+  document.getElementById('tvtmSum').textContent=nf(rows.length)+' / '+nf(TVT_MODAL.base.length)+' UID'+(nAct?(' · '+nAct+' bộ lọc đang áp dụng'):'')+
+    ' · Tổng SL '+nf(sl)+' · '+nf(Object.keys(sku).length)+' SKU';
+}
+function closeTvtModal(){
+  var m=document.getElementById('tvtmodal'); m.classList.remove('show');
+  setTimeout(function(){ m.style.display='none'; document.getElementById('tvtmFilters').innerHTML=''; document.getElementById('tvtmBody').innerHTML=''; },240);
+}
+document.getElementById('tvtmFilters').addEventListener('click',function(e){
+  if(e.target===this&&this.classList.contains('mf-xo')){ tvtmFltThu(); return; }
+  var it=e.target.closest('.combo-item'); if(!it) return;
+  var inp=it.closest('.combo').querySelector('input');
+  inp.value=it.getAttribute('data-v')||'';
+  if(inp.value) inp.setAttribute('data-exact','1'); else inp.removeAttribute('data-exact');
+  tvtmCloseCombos(); tvtmApply();
+});
+document.addEventListener('click',function(e){ if(!e.target.closest('#tvtmFilters .combo')) tvtmCloseCombos(); });
+
 /* ================= CHỌN SKU -> TẠO LỆNH KIỂM KÊ WMS (template WMS_INVENTORY_KEY_TEMPLATE_CP_CHECKLIST_SKU) =================
    Tick chọn SKU ở pop-up 2 tab (Kiểm kê + Tồn kho bất thường) -> giỏ nổi #pcbar gom xuyên tab ->
    modal #pcmodal chọn Kho kiểm (Warehouse Code) / Type (SKU=1, SKU factory=2) / Plan Date / Executed By ->
@@ -6412,9 +6723,16 @@ function pcRowChange(e){
 }
 document.getElementById('abnmBody').addEventListener('change',pcRowChange);
 document.getElementById('kkmBody').addEventListener('change',pcRowChange);
+document.getElementById('tvtmBody').addEventListener('change',pcRowChange);
 /* Chọn tất cả pop-up BẤT THƯỜNG: thead tĩnh ngoài tbody -> gắn thẳng; tập = toàn bộ dòng ĐANG LỌC */
 document.querySelector('#abnmodal .pcall').addEventListener('change',function(){
   var rows=abnmRowsWith(null,abnmState(),abnmQval()).map(function(r){ return {wh:r.wh,sku:r.sku,pn:r.pn,_t:0,src:abnReason(r)}; });
+  pcBulk(rows,this.checked);
+});
+/* Chọn tất cả pop-up TỒN TẠI VỊ TRÍ: nhiều UID có thể cùng 1 SKU — giỏ khoá theo (kho|SKU) nên
+   pcBulk tự gộp, lý do chọn gộp luôn các vị trí đang sai. */
+document.querySelector('#tvtmodal .pcall').addEventListener('change',function(){
+  var rows=tvtmRowsWith(null,tvtmState(),tvtmQval()).map(function(r){ return {wh:r.wh,sku:r.sku,pn:r.pn,_t:0,src:tvtReason(r)}; });
   pcBulk(rows,this.checked);
 });
 /* Chọn tất cả pop-up KIỂM KÊ: thead sinh trong kkmBody -> delegation chung ô change */
@@ -8290,7 +8608,9 @@ async function ndsQuetMaVach(){
 }
 /** Quét mã vạch của ảnh vừa chụp rồi đối soát ngay — chạy TRƯỚC và ĐỘC LẬP với AI. */
 async function ndsThuMaVach(imLang){
+  var luot=NDS.luot;
   var ma=await ndsQuetMaVach();
+  if (!ndsConLuot(luot)) return false;    // ảnh mới trong lúc giải mã ảnh cũ
   NDS.maVach=ma;
   ndsCapNhatChan();
   if (!ma.length){ if(!imLang) toast('Không thấy mã vạch trên ảnh — dùng "Đọc tem bằng AI" hoặc gõ từ khoá tay.','warn'); return false; }
@@ -8309,7 +8629,11 @@ async function ndsThuMaVach(imLang){
 
 var NDS = { ds:null, cm:null, tokens:[], anh:null, maVach:[], loc:null, tuDong:false, zoom:1, zoomCung:false, mime:'image/jpeg', xoay:0, stream:null,
   chiActive:true, dangDoc:false, dangTai:false, ket:[], nguon:'', msDoiSoat:null, loadedOnce:false,
-  daBo:{}, rawDaTach:'' };
+  daBo:{}, rawDaTach:'',
+  /* MỘT LƯỢT QUÉT = MỘT TẤM TEM (xem ndsLuotMoi). `luot` tăng mỗi lần đặt ảnh mới / bấm Xoá hết;
+     `huy` giữ AbortController của lượt gọi mạng đang bay để huỷ được khi có ảnh mới; `boRac` là số
+     mảnh giấy tờ đã lọc bỏ; `loiAI` là lỗi của bậc AI để bậc OCR nói lại cho đủ. */
+  luot:0, huy:null, boRac:0, loiAI:'', dongHo:null };
 var NDS_TAB = 'SKU_MASTER';
 var NDS_CACHE = 'nds-master-v1';
 var NDS_CACHE_TTL = 12*60*60*1000;
@@ -8543,7 +8867,11 @@ function ndsChonFile(inp){
   inp.value='';
 }
 function ndsDatAnh(dataUrl){
-  NDS.anh=dataUrl; NDS.xoay=0; NDS.maVach=[];
+  /* ẢNH MỚI = LƯỢT MỚI: dọn sạch từ khoá / mảnh đã gõ / chữ trên tem / kết quả của tem TRƯỚC.
+     Trước 19/08/2026 chỗ này chỉ đặt lại `anh`+`xoay`+`maVach` nên tem mới thừa hưởng hết state cũ. */
+  ndsLuotMoi();
+  ndsTrangThai('Đang nhận diện tem vừa chụp…');     // xoá luôn thẻ gợi ý của tem cũ, đừng để nó đứng cạnh ảnh mới
+  NDS.anh=dataUrl; NDS.xoay=0;
   /* Đã có ảnh thì TẮT camera: giữ stream sống sau lưng tấm ảnh chỉ tổ nóng máy + sáng đèn camera,
      mà thanh nút vẫn hiện "Tắt camera / Chụp" trông như đang quay. (ndsChup gọi lại cũng vô hại.) */
   if (NDS.stream) ndsTatCam();
@@ -8573,12 +8901,20 @@ function ndsDatAnh(dataUrl){
  * `NDS.tuDong` chặn chạy chồng khi người dùng chọn ảnh liên tiếp.
  * ============================================================================================ */
 async function ndsTuDongNhanDien(){
-  if (NDS.tuDong || NDS.dangDoc || !NDS.anh) return;
+  if (NDS.tuDong || !NDS.anh) return;
+  /* Lượt đọc của ảnh TRƯỚC vừa bị huỷ ở ndsLuotMoi nhưng cờ `dangDoc` chỉ nhả trong `finally` của
+     nó — chờ một nhịp ngắn rồi chạy, ĐỪNG bỏ luôn lượt mới. Bản cũ `return` thẳng khi dangDoc=true,
+     nên chụp 2 tem liên tiếp thì tem thứ hai KHÔNG được đọc mà vẫn hiện kết quả của tem thứ nhất. */
+  for (var ch=0; ch<12 && NDS.dangDoc; ch++) await new Promise(function(r){ setTimeout(r,60); });
+  if (NDS.dangDoc || !NDS.anh) return;
   NDS.tuDong=true; NDS.loiAI='';
+  var luot=NDS.luot;
   try{
     if (ndsCoMaVach()) await ndsThuMaVach(true);
+    if (!ndsConLuot(luot)) return;                 // đã có ảnh mới trong lúc quét mã vạch
     if (ndsDaChac()) return;                       // mã vạch đã cho kết quả chắc -> khỏi gọi tiếp
-    if (NDS.tokens.length){ await ndsDoiSoat(); if (ndsDaChac()) return; }   // sổ tay theo từ khoá sẵn có
+    /* Từ khoá lúc này CHỈ có thể là của mã vạch vừa quét (ảnh mới đã dọn sạch state) -> tra sổ tay. */
+    if (NDS.tokens.length){ await ndsDoiSoat(); if (!ndsConLuot(luot)) return; if (ndsDaChac()) return; }
     /* AI TRƯỚC, OCR LÀ LƯỚI ĐỠ — đảo lại chiều 19/08/2026 sau khi thủ kho báo "đọc quá lâu >20s".
        ĐO THẬT trên chính cổng này (cùng một tem, cùng đường truyền):
          · phí cố định 2 chặng Apps Script (không ảnh) ........ 1,7 s
@@ -8590,6 +8926,7 @@ async function ndsTuDongNhanDien(){
        ⇒ AI là người đọc chính; OCR giữ đúng vai TRỊ GIÁ NHẤT của nó: chạy khi AI hết hạn mức / trả
        JSON sai khuôn — tức đúng ca "không có kết quả nào" mà thủ kho báo sáng nay. */
     var ok=await ndsDocTem(true);
+    if (!ndsConLuot(luot)) return;
     if (ok && ndsDuCanCu()) return;
     await ndsDocOcr(true);
   } finally { NDS.tuDong=false; }
@@ -8699,6 +9036,7 @@ function ndsBusy(on,chu){
 async function ndsDocOcr(tuDong){
   if (NDS.dangDoc) return false;
   if (!NDS.anh){ if(!tuDong) toast('Chưa có ảnh tem — bấm "Bật camera" rồi "Chụp", hoặc "Chọn ảnh".','warn'); return false; }
+  var luot=NDS.luot;
   NDS.dangDoc=true;
   ndsBusy(true, tuDong
     ? (NDS.loiAI ? 'AI không đọc được — đang thử OCR của Google (miễn phí)…' : 'Chưa lập được mã hàng — đang đọc lại bằng OCR của Google (miễn phí)…')
@@ -8707,10 +9045,12 @@ async function ndsDocOcr(tuDong){
     var a=await ndsNenAnh(NDS_MAX_OCR);
     var nonce='ocr-'+Date.now()+'-'+Math.random().toString(36).slice(2,8);
     var j=await ndsGoiGas({ action:'sku_ocr', email:ndsEmail(), mime:a.mime, anh:a.b64, lang:'vi', nonce:nonce }, tuDong);
+    if (!ndsConLuot(luot)) return false;   // ảnh mới -> bỏ kết quả của ảnh cũ
     if (j.status!=='success' || !j.text) throw new Error(j.message||'OCR không trả về chữ nào');
     await ndsNhanVanBan(j.text, 'ocr', j);
-    return true;
+    return ndsConLuot(luot);
   }catch(e){
+    if (!ndsConLuot(luot)) return false;
     var m=String(e&&e.message||e);
     if (/abort/i.test(m)) m='OCR quá lâu (>90 giây) — mạng yếu hoặc ảnh quá nặng.';
     /* OCR là bậc CUỐI. Hỏng ở đây nghĩa là cả hai người đọc đều hỏng -> lúc này mới được nói, và
@@ -8747,9 +9087,10 @@ async function ndsNhanVanBan(chu, nguon, j){
   await ndsDoiSoat();
 }
 async function ndsDocTem(tuDong){
-  if (NDS.dangDoc) return;
-  if (!NDS.anh){ if(!tuDong) toast('Chưa có ảnh tem — bấm "Bật camera" rồi "Chụp", hoặc "Chọn ảnh".','warn'); return; }
-  var mail=ndsEmail(); if (!mail) return;
+  if (NDS.dangDoc) return false;
+  if (!NDS.anh){ if(!tuDong) toast('Chưa có ảnh tem — bấm "Bật camera" rồi "Chụp", hoặc "Chọn ảnh".','warn'); return false; }
+  var mail=ndsEmail(); if (!mail) return false;
+  var luot=NDS.luot;                       // chốt lượt: hết hàm phải kiểm lại, kẻo ghi kết quả của ảnh cũ
   NDS.dangDoc=true; ndsBusy(true, tuDong?'Không thấy mã vạch, chưa có trong sổ tay — đang nhờ AI đọc tem…':'Đang đọc tem bằng AI…');
   try{
     var a=await ndsNenAnh();
@@ -8758,10 +9099,12 @@ async function ndsDocTem(tuDong){
     var nonce='nds-'+Date.now()+'-'+Math.random().toString(36).slice(2,8);
     var body={ action:'sku_vision', key:'', email:mail, mime:a.mime, anh:a.b64, nonce:nonce };
     var j=await ndsGoiGas(body, tuDong);
+    if (!ndsConLuot(luot)) return false;   // đã có ảnh mới -> kết quả này thuộc ảnh cũ, BỎ
     if (j.status!=='success') throw new Error(j.message||'AI trả lỗi không rõ');
     await ndsNhanKetQua(j);
-    return true;
+    return ndsConLuot(luot);
   }catch(e){
+    if (!ndsConLuot(luot)) return false;   // lượt này bị huỷ vì có ảnh mới -> im lặng, đúng ý người dùng
     var m=String(e&&e.message||e);
     if (/abort/i.test(m)) m='AI đọc quá lâu (>90 giây) — mạng yếu hoặc ảnh quá nặng.';
     /* Chạy tự động thì ĐỪNG quăng lỗi ra mặt người dùng ngay: phía sau còn OCR miễn phí đỡ.
@@ -8795,13 +9138,16 @@ async function ndsGoiGas(body, tuDong){
       await new Promise(function(r){ setTimeout(r, 900*i); });
     }
     var ctl=(typeof AbortController!=='undefined')?new AbortController():null;
+    /* Gửi ra ngoài để `ndsLuotMoi()` huỷ được lượt đang bay khi người dùng chụp tem mới: vừa nhả cờ
+       `dangDoc` cho lượt mới chạy, vừa khỏi để phản hồi của tem CŨ rơi vào tem mới. */
+    NDS.huy=ctl;
     var het=setTimeout(function(){ if(ctl) ctl.abort(); },90000);
     var txt='';
     try{
       var r=await fetch(APPSCRIPT_URL,{ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
         body:JSON.stringify(body), signal:ctl?ctl.signal:undefined });
       txt=await r.text();
-    } finally { clearTimeout(het); }
+    } finally { clearTimeout(het); if (NDS.huy===ctl) NDS.huy=null; }
     var t=String(txt||'').trim();
     if (t.charAt(0)==='{' || t.charAt(0)==='['){
       try{ return JSON.parse(t); }
@@ -8901,12 +9247,41 @@ function ndsThemTay(){
   ndsVeTags();
   if (them) ndsDoiSoat();
 }
-function ndsXoaHet(){
+/* ============================================================================================
+ * MỘT LƯỢT QUÉT = MỘT TẤM TEM. Hàm này dọn SẠCH mọi thứ thuộc về lượt trước.
+ * --------------------------------------------------------------------------------------------
+ * SỰ CỐ THẬT (19/08/2026, thủ kho báo): chụp tem mới nhưng từ khoá của tem CŨ vẫn còn và vẫn được
+ * tính điểm (ví dụ mã `C3968` của lượt trước), ô "Phần tử trên tem" vẫn giữ chữ cũ, sổ tay tem thì
+ * bị trộn token của hai lượt nên ghi nhớ/tra ra SKU của tem cũ, và điểm bị "cào bằng" (nhiều dòng
+ * cùng 75%).
+ * GỐC: `ndsXoaHet` dọn đủ 6 thứ, nhưng `ndsDatAnh` chỉ đặt lại `anh` + `xoay` + `maVach` — hai
+ * đường dọn KHÁC NHAU cho cùng một việc. Cái "cào bằng 75%" là dấu hiệu chỉ đúng một chỗ:
+ * `NDS.loc` (mảnh gõ ở ô "Phần tử trên tem") còn sót lại ⇒ `timTop` chuyển sang chấm bằng ĐỘ PHỦ
+ * mảnh (3/4 = 75%, 2/4 = 50%) chứ không phải điểm khớp tem — nên hàng loạt dòng cùng điểm.
+ * CHỮA: một hàm duy nhất, gọi từ CẢ HAI chỗ (đặt ảnh mới · bấm "Xoá hết"). Thêm hàm là quên hàm —
+ * đúng bài học của `ndsLop()` khi khung xem trước bị "chia đôi".
+ *
+ * `NDS.luot` = SỐ THỨ TỰ LƯỢT QUÉT. Mọi lượt đọc (AI/OCR/mã vạch) chụp lại số này lúc bắt đầu và
+ * kiểm lại sau mỗi `await`: khác số thì kết quả đó thuộc TẤM ẢNH CŨ ⇒ bỏ, không được ghi vào state.
+ * Không có nó thì chụp 2 tem liên tiếp là kết quả tem 1 rơi vào tem 2 (lỗi đúng như thủ kho gặp).
+ * ============================================================================================ */
+function ndsLuotMoi(){
+  NDS.luot=(NDS.luot||0)+1;
+  /* Huỷ luôn lượt gọi mạng đang bay: nó vừa tốn hạn mức vừa giữ cờ `dangDoc` chặn lượt mới. */
+  try{ if (NDS.huy) NDS.huy.abort(); }catch(e){ /* trình duyệt cũ không có AbortController */ }
+  NDS.huy=null;
   NDS.tokens=[]; NDS.ket=[]; NDS.daBo={}; NDS.rawDaTach=''; NDS.maVach=[]; NDS.loc=null;
+  NDS.boRac=0; NDS.loiAI='';
   var om=document.getElementById('ndsMa'); if (om) om.value='';
   if (typeof ndsVeMaGoi==='function') ndsVeMaGoi([]);
   var ta=document.getElementById('ndsRaw'); if (ta) ta.value='';
   ndsVeTags();
+  return NDS.luot;
+}
+/** Lượt đọc này còn thuộc tấm ảnh đang xem không (gọi lại sau MỖI await). */
+function ndsConLuot(luot){ return luot===NDS.luot; }
+function ndsXoaHet(){
+  ndsLuotMoi();
   ndsTrangThai('Chụp hoặc chọn ảnh tem ở bước 1 — máy tự nhận diện ngay.');
 }
 function ndsDoiScope(active){
@@ -9048,7 +9423,9 @@ async function ndsDoiSoat(){
   /* DANH MỤC PHẢI CÓ TRƯỚC khi tách chữ thô: từ 19/08/2026 bước tách dùng NDS_ENGINE.tuVanBan, mà
      hàm đó LỌC mảnh theo chính danh mục (mảnh nào 5.610 tên hàng không hề có thì là chữ giấy tờ) —
      chưa có chỉ mục thì không lọc được. */
+  var luot=NDS.luot;
   if (!NDS.ds){ var ok=await ndsTaiDanhMuc(false); if (!ok) return; }
+  if (!ndsConLuot(luot)) return;          // nạp danh mục xong thì ảnh đã đổi -> đừng vẽ kết quả cũ
   if (raw && raw!==NDS.rawDaTach){
     NDS.rawDaTach=raw;
     var b=NDS_ENGINE.tuVanBan(raw, NDS.cm);
