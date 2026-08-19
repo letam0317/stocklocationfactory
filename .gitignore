@@ -1,0 +1,16 @@
+# ⚠ REPO NÀY LÀ REPO CÔNG KHAI (GitHub Pages: letam0317.github.io/stocklocationfactory).
+# Mọi thứ commit vào đây là công khai vĩnh viễn — kể cả khi xoá ở commit sau.
+
+# Cầu nối WMS đã ghim (factory/wms-bridge/ghim-extension.mjs sinh ra thư mục này):
+#   wms-bridge.pem = KHOÁ RIÊNG, chính là danh tính của extension. Lộ khoá = người khác đóng gói
+#   được extension mang cùng ID. wms-bridge.crx + update.xml chỉ là sản phẩm build, không cần commit.
+wms-bridge-ghim/
+
+# Bí mật chung — không bao giờ commit
+.env
+.env.*
+!.env.example
+*.pem
+*.secret
+credentials.json
+service-account*.json
