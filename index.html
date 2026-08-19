@@ -1626,16 +1626,41 @@ body.side-anim{overflow-x:clip}
 .nds-stage{position:relative;aspect-ratio:4/3;width:100%;border:1px solid var(--line);border-radius:12px;
   background:var(--surface2);overflow:hidden;isolation:isolate}
 .nds-stage>*{position:absolute;inset:0}
-.nds-stage [hidden]{display:none!important}
+/* ⚠ LUẬT CHUNG CHO CẢ TAB, đừng gỡ: mọi khai báo `display` bằng selector class (0-1-0 trở lên)
+   đều ĐÈ LÊN rule `[hidden]{display:none}` (0-1-0) của trình duyệt, làm thuộc tính `hidden`
+   MẤT TÁC DỤNG lặng lẽ. Đã cắn 2 lần trong đúng tab này: lần 1 khung xem trước bị "chia đôi"
+   (video rỗng + ảnh thành 2 flex-item), lần 2 hàng zoom không ẩn được khi tắt camera. Khai
+   một lần ở phạm vi cả tab thì mọi phần tử thêm sau này đều được che chắn sẵn. */
+#viewNds [hidden]{display:none!important}
 .nds-stage video,.nds-stage img{width:100%;height:100%;object-fit:contain;display:block;background:#0b0e18}
 .nds-stage img{transition:transform .25s var(--ez-apple)}
 .nds-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
   color:var(--ink3);font-size:12.5px;text-align:center;padding:18px;line-height:1.6}
 .nds-empty svg{width:44px;height:44px;opacity:.5}
-/* Khi camera ĐANG bật thì câu hướng dẫn thành lớp phủ mờ ở đáy, không che tem, không bắt chạm */
-.nds-hint{position:absolute;left:0;right:0;bottom:0;top:auto;padding:7px 10px;pointer-events:none;
-  background:linear-gradient(transparent,rgba(0,0,0,.62));color:#fff;font-size:11px;line-height:1.5;
+/* Khi camera ĐANG bật thì câu hướng dẫn thành lớp phủ mờ ở ĐỈNH khung (đáy đã dành cho thanh
+   điều khiển), không che tem, không bắt chạm */
+.nds-hint{position:absolute;left:0;right:0;top:0;bottom:auto;padding:7px 10px;pointer-events:none;
+  background:linear-gradient(rgba(0,0,0,.62),transparent);color:#fff;font-size:11px;line-height:1.5;
   text-align:center;animation:fadeIn .2s ease both}
+
+/* THANH ĐIỀU KHIỂN TRONG KHUNG — kiểu app camera. Nút nổi trên nền mờ nên đọc được trên mọi ảnh
+   (tem trắng, nền đen, vải sẫm). Dùng nhịp chạm/animation chung của dự án (--ez-apple, scale .96). */
+.nds-tools{position:absolute;left:0;right:0;bottom:0;top:auto;display:flex;align-items:center;gap:7px;
+  padding:9px 10px;background:linear-gradient(transparent,rgba(0,0,0,.66));
+  animation:fadeIn .2s ease both}
+.nds-tools .sp{flex:1;min-width:0}
+.ndsib{display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;
+  border:1px solid rgba(255,255,255,.34);background:rgba(18,22,30,.56);color:#fff;
+  border-radius:999px;padding:6px 13px;font-size:12.5px;font-weight:650;font-family:inherit;
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  transition:transform .16s var(--ez-apple),background .2s ease,border-color .2s ease}
+.ndsib:hover{background:rgba(18,22,30,.76);border-color:rgba(255,255,255,.55)}
+.ndsib:active{transform:scale(.96)}
+.ndsib:focus-visible,.ndsib:focus-within{outline:2px solid #fff;outline-offset:2px}
+.ndsib.chinh{background:var(--accent);border-color:var(--accent);color:var(--accent-text)}
+.ndsib.chinh:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+.ndsib.tron{padding:6px 0;width:34px;font-size:15px;line-height:1}
+@media(max-width:430px){ .ndsib{padding:6px 10px;font-size:12px} .ndsib.tron{width:32px} }
 /* Khung ngắm: 4 góc mảnh — nhắc thủ kho đưa TEM lọt trong khung, không cần canh chuẩn */
 .nds-aim{position:absolute;inset:12%;pointer-events:none;opacity:.55}
 .nds-aim i{position:absolute;width:24px;height:24px;border:2px solid var(--accent);border-radius:3px}
@@ -1880,6 +1905,18 @@ body.side-anim{overflow-x:clip}
         </div>
         <div class="nds-aim" id="ndsAim" hidden><i></i><i></i><i></i><i></i></div>
         <div class="nds-hint" id="ndsHint" hidden>Đưa tem lọt trong 4 góc · chụp gần, đủ sáng, tránh bóng loáng của lớp nylon</div>
+        <!-- Thanh điều khiển KHUNG nằm TRONG khung, kiểu app camera: nút thao tác với chính khung
+             hình (bật/tắt camera · chụp · chọn ảnh · xoay) thì phải ở ngay trên khung, không rải ra
+             ngoài. Mấy nút hành động với KẾT QUẢ (quét mã vạch · đọc lại bằng AI) vẫn ở dưới. -->
+        <div class="nds-tools">
+          <button type="button" class="ndsib" id="ndsBtnCam" onclick="ndsCam()">Bật camera</button>
+          <button type="button" class="ndsib chinh" id="ndsBtnChup" onclick="ndsChup()" hidden>Chụp</button>
+          <label class="ndsib nds-file">Chọn ảnh
+            <input type="file" accept="image/*" hidden onchange="ndsChonFile(this)"></label>
+          <span class="sp"></span>
+          <button type="button" class="ndsib tron" onclick="ndsXoay(-90)" title="Xoay ngược chiều kim đồng hồ 90°" aria-label="Xoay trái">⟲</button>
+          <button type="button" class="ndsib tron" onclick="ndsXoay(90)" title="Xoay theo chiều kim đồng hồ 90°" aria-label="Xoay phải">⟳</button>
+        </div>
       </div>
       <!-- ZOOM: chỉ hiện khi camera đang bật. Tem nhỏ để xa thì chữ bé, để gần thì máy không lấy
            nét được (khoảng nét gần ~10cm) — nên giữ khoảng cách cho NÉT rồi phóng to. -->
@@ -1891,18 +1928,8 @@ body.side-anim{overflow-x:clip}
         <span class="pg-chip" id="ndsZoomVal">1,0×</span>
       </div>
       <div class="nds-ctl">
-        <button type="button" class="kktab" id="ndsBtnCam" onclick="ndsCam()">Bật camera</button>
-        <button type="button" class="kktab" id="ndsBtnChup" onclick="ndsChup()" hidden>Chụp</button>
-        <label class="kktab nds-file">Chọn ảnh
-          <input type="file" accept="image/*" hidden onchange="ndsChonFile(this)"></label>
-        <div class="pg-seg sm" role="group" aria-label="Xoay ảnh">
-          <button type="button" onclick="ndsXoay(-90)" title="Xoay ngược chiều kim đồng hồ 90°">⟲</button>
-          <button type="button" onclick="ndsXoay(90)" title="Xoay theo chiều kim đồng hồ 90°">⟳</button>
-        </div>
-        <span class="sp"></span>
         <button type="button" class="kktab nds-go" id="ndsBtnMV" onclick="ndsThuMaVach()" disabled
           title="Đọc mã vạch ngay trên máy — nhanh nhất, không cần mạng, không tốn hạn mức AI">Quét mã vạch</button>
-        <button type="button" class="kktab" id="ndsBtnDocX" hidden></button>
         <button type="button" class="kktab" id="ndsBtnDoc" onclick="ndsDocTem()" disabled
           title="Chụp/chọn ảnh là đã tự chạy rồi — nút này để đọc LẠI sau khi xoay ảnh hoặc chụp gần hơn">Đọc lại bằng AI</button>
       </div>
