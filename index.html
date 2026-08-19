@@ -1705,7 +1705,7 @@ body.side-anim{overflow-x:clip}
    hành động giãn đều hết bề ngang — vùng chạm to hơn, mép phải thẳng hàng với khung ảnh. */
 @media(max-width:560px){
   .nds-ctl .sp{display:none}
-  .nds-ctl #ndsBtnMV,.nds-ctl #ndsBtnDoc{flex:1 1 46%}
+  .nds-ctl #ndsBtnMV,.nds-ctl #ndsBtnOcr,.nds-ctl #ndsBtnDoc{flex:1 1 46%}
 }
 /* Nút của tab này ăn CÙNG nhịp chạm với .kktab toàn dự án (co .96 khi nhấn — khai ở khối
    "phản hồi chạm" đầu file), thêm transition nền/bóng cho khớp .abntile. */
@@ -1995,8 +1995,10 @@ body.side-anim{overflow-x:clip}
       <div class="nds-ctl">
         <button type="button" class="kktab nds-go" id="ndsBtnMV" onclick="ndsThuMaVach()" disabled
           title="Đọc mã vạch ngay trên máy — nhanh nhất, không cần mạng, không tốn hạn mức AI">Quét mã vạch</button>
+        <button type="button" class="kktab" id="ndsBtnOcr" onclick="ndsDocOcr()" disabled
+          title="Đọc chữ trên tem bằng OCR của Google — MIỄN PHÍ, không tốn hạn mức AI. Dùng lại sau khi xoay ảnh hoặc chụp gần hơn">Đọc lại chữ (OCR)</button>
         <button type="button" class="kktab" id="ndsBtnDoc" onclick="ndsDocTem()" disabled
-          title="Chụp/chọn ảnh là đã tự chạy rồi — nút này để đọc LẠI sau khi xoay ảnh hoặc chụp gần hơn">Đọc lại bằng AI</button>
+          title="Nhờ AI đọc — dùng khi tem chữ nhỏ / nhoè / nghiêng mà OCR đọc lệch. Có tốn hạn mức ngày">Nhờ AI đọc</button>
       </div>
       <!-- Ô GÕ MÃ — đường chắc chắn nhất và nhanh nhất. Sự cố thật 19/08/2026: tem in F9-5374
            (mã CÓ trong danh mục) nhưng AI không đọc ra, máy trả về SKU khác mã. Mã hàng luôn in to
@@ -2014,14 +2016,20 @@ body.side-anim{overflow-x:clip}
       <!-- Ghi chú GẤP LẠI: trên điện thoại khối này nằm giữa ảnh và kết quả, để mở sẵn là đẩy
            Top 3 xuống dưới màn hình — đúng thứ người dùng cần xem nhất. -->
       <details class="nds-more" style="margin-top:8px">
-        <summary>Máy tự chạy thế nào? (mã vạch → sổ tay → AI)</summary>
+        <summary>Máy tự chạy thế nào? (mã vạch → sổ tay → OCR → AI)</summary>
         <div class="pcdnote" style="margin-top:8px;background:color-mix(in srgb,var(--info) 10%,var(--surface));color:var(--ink2)">
-          <b>Chụp hoặc chọn ảnh là chạy ngay, không phải bấm gì thêm.</b> Máy đi từ rẻ tới đắt và dừng khi
-          đã chắc: <b>mã vạch</b> (~0,1 giây, offline) → <b>sổ tay tem</b> (tem đã chọn lần trước, 0 giây)
-          → chỉ khi cả hai không ra mới nhờ <b>AI</b>.<br>
-          Ảnh được thu nhỏ ngay trên máy (cạnh dài 1400px, JPEG) rồi gửi qua <b>Apps Script</b> → Vision LLM;
-          <b>không lưu ảnh</b> ở bất kỳ đâu. Mất mạng / hết hạn mức thì vẫn dùng được:
-          quét mã vạch, gõ từ khoá tay hoặc dán chữ trên tem ở bước 3.
+          <b>Chụp hoặc chọn ảnh là chạy ngay, không phải bấm gì thêm.</b> Máy đi từ rẻ tới đắt và dừng ngay khi
+          <b>đã lập được mã hàng có thật trong danh mục</b>:<br>
+          ① <b>mã vạch</b> (~0,1 giây, offline) → ② <b>sổ tay tem</b> (tem đã chọn lần trước, 0 giây) →
+          ③ <b>OCR của Google</b> (5–7 giây, <b>miễn phí</b>, không tốn hạn mức) → ④ chỉ khi vẫn chưa lập được
+          mã mới nhờ <b>AI</b> (tem chữ nhỏ / nhoè / nghiêng thì AI đọc khá hơn OCR).<br>
+          Cả OCR và AI đều chỉ trả <b>chữ đọc được</b>; việc xếp mảnh nào là mã / thông số / màu do máy này
+          làm, đối chiếu với chính danh mục SKU — mảnh nào danh mục không hề có (địa chỉ, số PO, ngày,
+          cân nặng) thì bỏ, khỏi làm loãng kết quả.<br>
+          Ảnh được thu nhỏ ngay trên máy (JPEG, cạnh dài 2000px cho OCR / 1400px cho AI) rồi gửi qua
+          <b>Apps Script</b>; <b>không lưu ảnh</b> ở bất kỳ đâu — bản OCR tạm trong Drive bị xoá ngay sau khi
+          lấy chữ. Mất mạng / hết hạn mức thì vẫn dùng được: quét mã vạch, gõ mảnh ở ô <b>Phần tử trên tem</b>,
+          hoặc dán chữ trên tem ở bước 3.
         </div>
       </details>
     </section>
@@ -2043,7 +2051,7 @@ body.side-anim{overflow-x:clip}
     <section class="panel" style="grid-column:1/-1">
       <h2>3 · Từ khoá nhận diện <span class="hint">(bấm × để bỏ từ khoá đọc nhầm)</span>
         <span class="pg-chip" id="ndsKwN" style="margin-left:auto">0 từ khoá</span></h2>
-      <div class="nds-tags" id="ndsTags"><div class="nds-tagempty">Chưa có từ khoá — chụp tem rồi bấm “Đọc tem bằng AI”, hoặc gõ tay bên dưới.</div></div>
+      <div class="nds-tags" id="ndsTags"><div class="nds-tagempty">Chưa có từ khoá — chụp tem là máy tự đọc (mã vạch → sổ tay → OCR → AI), hoặc gõ tay bên dưới.</div></div>
       <div class="nds-addrow">
         <input id="ndsAdd" autocomplete="off" placeholder="Thêm từ khoá rồi Enter… (JC01262 · Tex 27 · 38cm · 345 · YKK)"
           onkeydown="if(event.key==='Enter'){event.preventDefault();ndsThemTay();}">
@@ -7313,11 +7321,27 @@ var NDS_ENGINE = (function(){
      "sab"), còn thông số là số dính chữ đơn vị ("24-100d-2" = Tex 24-100D-2) — không có đoạn nào
      toàn chữ nên vẫn đi đường thông số như cũ. */
   var RE_MA_DAI = /[0-9a-z]+(?:[.-][0-9a-z]+){2,}/gi;
+  /* Đoạn chữ là ĐƠN VỊ/CHI SỐ thì KHÔNG tính là dấu hiệu của mã. Bẫy thật 19/08/2026: WMS ghi
+     "Text 27-60-3-Tkt 120", cụm "27-60-3-tkt" có đoạn toàn chữ ("tkt") nên bị nhận là mã dài —
+     rổ THÔNG SỐ của đúng SKU đó mất sạch "27-60-3" và "tkt120", còn SKU đối thủ ghi rời
+     ("Text 27 - 60-3- Tkt 120") thì giữ nguyên ⇒ tem chỉ Irisa F9-5284 tụt hạng, một SKU chỉ may
+     khác chiếm hạng 1 với 87%. Bộ qc-tem-vision bắt được ngay ca này. */
+  var DV_CHU = Object.create(null);
+  ('tex text tkt tk ne nm dtex cm mm dm m km gsm in inch yard yd yds l d pcs pc kg g gr gam set roll cuon ' +
+   'xs s m l xl xxl xxxl 2xl 3xl 4xl free all size sz')      // CỠ cũng không phải dấu hiệu của mã
+    .split(' ').forEach(function(t){ DV_CHU[t]=1; });
   function nhanMaDai(text, ra){
     return String(text).replace(RE_MA_DAI, function(hit){
       if (!/[0-9]/.test(hit)) return hit;
+      /* Dấu hiệu của MÃ là có ĐOẠN CHỮ ĐỦ DÀI (≥3 chữ cái) và không phải đơn vị/cỡ: "hkm", "det",
+         "sab", "nhs". Bẫy thật 19/08/2026 (bắt được khi đối chứng lõi cũ/mới trên 30 lượt đọc):
+         tem nhãn care in "20-52mm-XS" — đoạn "xs" là CỠ, nhận cả cụm thành mã thì mất luôn dấu hiệu
+         tách XS/S/M/L, cả 4 cỡ cùng 69% và đúng cỡ XS rơi khỏi Top 3. */
       var doan = hit.split(/[.-]/), coChu = false;
-      for (var i=0;i<doan.length;i++) if (/^[a-z]+$/i.test(doan[i])) { coChu = true; break; }
+      for (var i=0;i<doan.length;i++){
+        var d = doan[i];
+        if (d.length>=3 && /^[a-z]+$/i.test(d) && !DV_CHU[d.toLowerCase()]) { coChu = true; break; }
+      }
       if (!coChu) return hit;
       var t = chuan(hit);
       if (t.length < 5) return hit;
@@ -7329,14 +7353,22 @@ var NDS_ENGINE = (function(){
   /* MÃ: có CẢ chữ lẫn số (f9-5284, jc01262, fv8820-8, sab-255lk3557-2, wkf-12473, tn035) hoặc dãy
      số ≥5 chữ số (8846295 · 9151443 · SKU 422440680). */
   var RE_CODE = /\b(?=[0-9a-z.\-]*[a-z])(?=[0-9a-z.\-]*\d)[0-9a-z][0-9a-z.-]{2,}\b|\b\d{5,}\b/gi;
-  function nhanCode(text, ra){
+  function nhanCode(text, ra, raSpec){
     /* Gạch dưới là DẤU PHÂN CÁCH của WMS ("F9-5284_Phong Việt"), không phải ký tự trong mã. Bỏ bước
        này thì mã dính luôn tên NCC thành "f9-5284_phong" — tem in "F9-5284" chỉ khớp kiểu "chứa
        trong" (0,88) chứ không khớp tuyệt đối, thế là mất luôn kết luận "đã khớp mã" (đo thật 18/08). */
     text = String(text).replace(/_/g, ' ');
     return (' '+text+' ').replace(RE_CODE, function(m){
       var t = chuan(m);
-      if (t.length>=3){ ra.push(t); if (/[-._]/.test(t)) { var l=loi(t); if(l.length>=4) ra.push(l); } }
+      if (t.length < 3) return ' ';
+      /* SỐ ĐO KHÔNG PHẢI MÃ (5000m · 12.5kg · 170gsm): RE_CODE nhận vì cũng "chữ lẫn số", nhưng để
+         nó vào rổ MÃ là phá luật cứng "CÓ MÃ" — sự cố thật 19/08/2026: tem in "5000m", cả danh mục
+         có hàng nghìn tên chứa "5000m", nhúm mã vì thế vượt trần 120 dòng nên `maKhop` bị bỏ ⇒
+         `coMaKhop` = false ⇒ giao diện cảnh báo "chưa khớp mã" trong khi mã F9-5284 khớp tuyệt đối.
+         Đưa về rổ THÔNG SỐ: cả tem lẫn tên hàng đều bóc bằng hàm này nên hai bên vẫn khớp nhau. */
+      if (RE_KHONG_LA_MA.test(t)) { if (raSpec && raSpec.indexOf(t)<0) raSpec.push(t); return ' '; }
+      ra.push(t);
+      if (/[-._]/.test(t)) { var l=loi(t); if(l.length>=4) ra.push(l); }
       return ' ';
     });
   }
@@ -7363,7 +7395,7 @@ var NDS_ENGINE = (function(){
     });
     var conLai = nhanMaDai(s, ra.code);          // MÃ DÀI trước, kẻo mẫu thông số cắn mất khúc giữa
     conLai = nhanSpec(conLai, ra.spec);
-    conLai = nhanCode(conLai, ra.code);
+    conLai = nhanCode(conLai, ra.code, ra.spec); // số đo lọt vào mẫu mã (5000m) thì trả về rổ thông số
     conLai = conLai.replace(RE_MAMAU, function(m, so, phanTram){
       if (!phanTram) ra.color.push(chuan(so));
       return ' ';
@@ -8229,7 +8261,12 @@ var NDS_TAB = 'SKU_MASTER';
 var NDS_CACHE = 'nds-master-v1';
 var NDS_CACHE_TTL = 12*60*60*1000;
 var NDS_MAX_CANH = 1400;          // cạnh dài ảnh gửi AI (đủ đọc chữ nhỏ trên tem, ~200KB JPEG)
+/* OCR gửi ảnh TO HƠN: nó nhận dạng theo hình chữ nên ăn theo độ nét từng nét chữ, còn AI thì đoán
+   được cả chữ nhoè. 2000px ≈ 400-600KB JPEG — vẫn dưới trần 1,9MB base64 của cổng. */
+var NDS_MAX_OCR = 2000;
 var NDS_VAI_TEN = { code:'Mã', spec:'Thông số', color:'Màu', brand:'Loại/NCC', other:'Khác' };
+/* Từ khoá này ở đâu ra — hiện trong tooltip của badge để người dùng biết nên tin tới mức nào */
+var NDS_NGUON_TEN = { ai:'AI đọc', ocr:'OCR Google đọc', chu:'tách từ chữ trên tem', mavach:'mã vạch', tay:'gõ tay' };
 
 /* ---------- 1. DANH MỤC SKU_MASTER ---------- */
 function ndsDocCache(){
@@ -8305,6 +8342,7 @@ function ndsCapNhatChan(ms){
     ' · tồn = tổng các kho nguyên liệu · ĐVT lấy từ đoạn cuối tên hàng, gợi ý ưu tiên ACTIVE → NORMAL → đơn vị nhỏ nhất' +
     (NDS.msDoiSoat!=null ? (' · đối soát ' + NDS.msDoiSoat + 'ms') : '') +
     '<br><b>Sổ tay tem: ' + nf(nSo) + ' ghi nhớ</b> (tem đã học thì ra ngay, không gọi AI)' +
+    (NDS.boRac ? (' · đã bỏ <b>' + NDS.boRac + ' mảnh giấy tờ</b> không có trong danh mục (địa chỉ · số PO · ngày · cân nặng)') : '') +
     ((NDS.maVach&&NDS.maVach.length) ? (' · mã vạch trên ảnh: <code>'+esc(NDS.maVach.join(', '))+'</code>') : '') +
     (ndsCoMaVach() ? '' : ' · <i>trình duyệt này không đọc được mã vạch — dùng Edge/Chrome trên Android để có đường nhanh nhất</i>') +
     ' &nbsp;<button type="button" class="fcg" onclick="ndsTaiLaiDanhMuc()">⟳ Tải lại danh mục</button>' +
@@ -8457,11 +8495,13 @@ function ndsDatAnh(dataUrl){
   im.onerror=function(){
     NDS.anh=null; im.removeAttribute('src'); ndsLop('trong');
     document.getElementById('ndsBtnDoc').disabled=true;
+    var bx=document.getElementById('ndsBtnOcr'); if (bx) bx.disabled=true;
     var bm=document.getElementById('ndsBtnMV'); if (bm) bm.disabled=true;
     toast('Không mở được ảnh này — chụp lại hoặc chọn tệp ảnh khác.','err');
   };
   im.src=dataUrl; im.style.transform=''; ndsLop('anh');
   document.getElementById('ndsBtnDoc').disabled=false;
+  var bo=document.getElementById('ndsBtnOcr'); if (bo) bo.disabled=false;
   var bq=document.getElementById('ndsBtnMV'); if (bq) bq.disabled=false;
   /* CÓ ẢNH LÀ CHẠY LUÔN — không bắt bấm thêm nút nào (sửa 19/08/2026). */
   setTimeout(ndsTuDongNhanDien, 0);
@@ -8479,10 +8519,23 @@ async function ndsTuDongNhanDien(){
   NDS.tuDong=true;
   try{
     if (ndsCoMaVach()) await ndsThuMaVach(true);
-    if (ndsDaChac()) return;                       // mã vạch đã cho kết quả chắc -> khỏi gọi AI
-    if (NDS.tokens.length){ ndsDoiSoat(); if (ndsDaChac()) return; }   // sổ tay theo từ khoá sẵn có
+    if (ndsDaChac()) return;                       // mã vạch đã cho kết quả chắc -> khỏi gọi tiếp
+    if (NDS.tokens.length){ await ndsDoiSoat(); if (ndsDaChac()) return; }   // sổ tay theo từ khoá sẵn có
+    /* OCR CỦA GOOGLE trước AI: miễn phí, không tốn hạn mức nào, và nó trả CHỮ THÔ nên không có
+       chuyện "gán vai sai" như AI (xem NHAN-DIEN-SKU.md mục 5). Lập được MÃ trong danh mục là xong. */
+    var ok=await ndsDocOcr(true);
+    if (ok && ndsDuCanCu()) return;
+    /* Chưa đủ căn cứ (OCR không thấy mã nào có thật trong danh mục, hoặc OCR chết) -> LEO THANG sang
+       AI. Đo 19/08/2026: tem chữ nhỏ + nhoè + nghiêng thì OCR đọc lệch ký tự, còn AI vẫn đọc đúng. */
     await ndsDocTem(true);
   } finally { NDS.tuDong=false; }
+}
+/** ĐỦ CĂN CỨ chưa: đã lập được một MÃ HÀNG có thật trong danh mục (hoặc chắc chắn bằng sổ tay/tem
+ *  in mã kho). Đây là cái quyết định có leo thang sang AI hay không — không phải % điểm, vì điểm
+ *  cao nhờ chữ chung chính là thứ đưa ra SKU sai một cách tự tin. */
+function ndsDuCanCu(){
+  if (ndsDaChac()) return true;
+  return !!(NDS.ket && NDS.ket.coMaKhop && NDS.ket.length);
 }
 /** "Chắc chắn" = kết quả đến từ sổ tay hoặc tem in thẳng mã SKU nội bộ — hai đường không cần đoán. */
 function ndsDaChac(){
@@ -8498,12 +8551,12 @@ function ndsXoay(do_){
   im.style.transform='rotate('+NDS.xoay+'deg)'+co;
 }
 /** Thu nhỏ + áp góc xoay + nén JPEG → base64 (bỏ tiền tố data:) để gửi AI. */
-function ndsNenAnh(){
+function ndsNenAnh(canh){
   return new Promise(function(res,rej){
     var img=new Image();
     img.onload=function(){
       var w=img.naturalWidth, h=img.naturalHeight, xoay=NDS.xoay;
-      var ti=Math.min(1, NDS_MAX_CANH/Math.max(w,h));
+      var ti=Math.min(1, (canh||NDS_MAX_CANH)/Math.max(w,h));
       var nw=Math.max(1,Math.round(w*ti)), nh=Math.max(1,Math.round(h*ti));
       var cv=document.createElement('canvas');
       cv.width = (xoay%180)?nh:nw; cv.height=(xoay%180)?nw:nh;
@@ -8539,11 +8592,66 @@ function ndsBusy(on,chu){
   var st=document.getElementById('ndsStage'), cu=document.getElementById('ndsBusyBox');
   if (cu) cu.remove();
   document.getElementById('ndsBtnDoc').disabled = !!on || !NDS.anh;
+  var bo=document.getElementById('ndsBtnOcr'); if (bo) bo.disabled = !!on || !NDS.anh;
   if (!on) return;
   var d=document.createElement('div');
   d.id='ndsBusyBox'; d.className='nds-busy';
   d.innerHTML='<div class="spin"></div>'+esc(chu||'Đang đọc tem…');
   st.appendChild(d);
+}
+/* ============================================================================================
+ * ĐỌC CHỮ TRÊN TEM BẰNG OCR CỦA GOOGLE (Apps Script action=sku_ocr → Drive OCR)
+ * --------------------------------------------------------------------------------------------
+ * Vì sao có đường này bên cạnh AI (19/08/2026, sau khi thủ kho báo "nhận diện toàn sai hoặc không
+ * ra kết quả nào"):
+ *   · MIỄN PHÍ — không tốn hạn mức Gemini, nên hết hạn mức vẫn đọc được tem (đúng luật nhẹ tải).
+ *   · Nó trả CHỮ THÔ, không gán vai. Vai do lõi tự xếp bằng bằng chứng của danh mục
+ *     (NDS_ENGINE.tuVanBan) — hết cảnh AI trả mã hàng vào ô "colors" làm mất 45% trọng số vai mã.
+ *   · Ảnh gửi ở cạnh dài LỚN HƠN lúc gửi AI (NDS_MAX_OCR): OCR ăn theo độ nét của chữ, còn AI thì
+ *     hiểu được cả chữ nhoè.
+ * Đo thật: 5–7 giây (kể cả 2 chặng của Apps Script), đọc được 16/16 tem mô phỏng.
+ * ============================================================================================ */
+async function ndsDocOcr(tuDong){
+  if (NDS.dangDoc) return false;
+  if (!NDS.anh){ if(!tuDong) toast('Chưa có ảnh tem — bấm "Bật camera" rồi "Chụp", hoặc "Chọn ảnh".','warn'); return false; }
+  NDS.dangDoc=true; ndsBusy(true, tuDong?'Đang đọc chữ trên tem bằng OCR của Google (miễn phí)…':'Đang đọc lại chữ trên tem…');
+  try{
+    var a=await ndsNenAnh(NDS_MAX_OCR);
+    var nonce='ocr-'+Date.now()+'-'+Math.random().toString(36).slice(2,8);
+    var j=await ndsGoiGas({ action:'sku_ocr', email:ndsEmail(), mime:a.mime, anh:a.b64, lang:'vi', nonce:nonce }, tuDong);
+    if (j.status!=='success' || !j.text) throw new Error(j.message||'OCR không trả về chữ nào');
+    await ndsNhanVanBan(j.text, 'ocr', j);
+    return true;
+  }catch(e){
+    var m=String(e&&e.message||e);
+    if (/abort/i.test(m)) m='OCR quá lâu (>90 giây) — mạng yếu hoặc ảnh quá nặng.';
+    /* Chạy tự động thì KHÔNG quăng lỗi ra mặt người dùng: bậc thang còn AI ở phía sau. */
+    if (!tuDong) toast('Không đọc được chữ bằng OCR: '+m,'err');
+    return false;
+  } finally { NDS.dangDoc=false; ndsBusy(false); }
+}
+/** CHỮ THÔ (OCR hoặc raw_text của AI) → ô "chữ trên tem" + từ khoá đã LỌC theo danh mục. */
+async function ndsNhanVanBan(chu, nguon, j){
+  var ta=document.getElementById('ndsRaw');
+  if (ta) ta.value=String(chu||'');
+  NDS.rawDaTach='';                       // ép ndsDoiSoat tách lại chữ mới (dù ô có nội dung cũ)
+  if (!NDS.ds){ var ok=await ndsTaiDanhMuc(false); if (!ok) return; }
+  var b=NDS_ENGINE.tuVanBan(String(chu||''), NDS.cm), them=0;
+  ['code','spec','color','brand'].forEach(function(vai){
+    b[vai].forEach(function(t){ if (!NDS.daBo[t] && ndsThemToken(t,vai,nguon)) them++; });
+  });
+  NDS.rawDaTach=String(chu||'').trim();
+  NDS.boRac=(b.bo||[]).length;
+  ndsVeTags();
+  var ten = nguon==='ocr' ? 'OCR của Google' : 'AI';
+  if (!them && !NDS.tokens.length){
+    toast(ten+' đọc được chữ nhưng không mảnh nào có trong danh mục — kiểm lại ảnh, hoặc gõ mã trên tem.','warn');
+  } else {
+    toast(ten+' đọc được '+b.code.length+' mã · '+(b.spec.length+b.color.length)+' thông số/màu'+
+      (NDS.boRac?(' · bỏ '+NDS.boRac+' mảnh giấy tờ'):'')+
+      ((j&&j.ms)?(' · '+Math.round(j.ms/100)/10+'s'):'')+'.', b.code.length?'ok':'warn');
+  }
+  await ndsDoiSoat();
 }
 async function ndsDocTem(tuDong){
   if (NDS.dangDoc) return;
@@ -8617,8 +8725,20 @@ function ndsNhanKetQua(j){
     .forEach(function(p){
       (p[1]||[]).forEach(function(x){ if (ndsThemToken(x,p[0],'ai')) them++; });
     });
+  /* CHỮ THÔ CỦA AI cũng được tách bằng tuVanBan (không chỉ nhét vào ô cho người đọc). Đo 19/08/2026
+     trên 12 tem khó: đường "chữ thô" lập được MÃ trong 92% lượt, còn đường "tin vai AI" chỉ 75% —
+     vì AI hay cắt cụt mã khi phải tự phân loại (vd trả "255LK3557-2" thay cho cả chuỗi). Hai nguồn
+     GHÉP lại: từ khoá không xoá của nhau, chỉ dồn thêm bằng chứng. */
   var raw=String(j.text||'');
-  if (raw){ var ta=document.getElementById('ndsRaw'); if (ta && !ta.value.trim()) ta.value=raw; }
+  if (raw){
+    var ta=document.getElementById('ndsRaw'); if (ta) ta.value=raw;
+    NDS.rawDaTach='';
+    var bv=NDS_ENGINE.tuVanBan(raw, NDS.cm);
+    ['code','spec','color','brand'].forEach(function(vai){
+      bv[vai].forEach(function(t){ if (!NDS.daBo[t] && ndsThemToken(t,vai,'chu')) them++; });
+    });
+    NDS.rawDaTach=raw.trim();
+  }
   var chatLuong=String(j.quality||'');
   if (!them){
     toast('AI không bóc được từ khoá nào (ảnh mờ / tem rách?) — chụp gần hơn, hoặc gõ từ khoá tay.','warn');
@@ -8647,11 +8767,11 @@ function ndsVeTags(){
   var n=NDS.tokens.length;
   document.getElementById('ndsKwN').textContent = n+' từ khoá';
   if (!n){
-    el.innerHTML='<div class="nds-tagempty">Chưa có từ khoá — chụp tem rồi bấm “Đọc tem bằng AI”, hoặc gõ tay bên dưới.</div>';
+    el.innerHTML='<div class="nds-tagempty">Chưa có từ khoá — chụp tem là máy tự đọc (mã vạch → sổ tay → OCR → AI), hoặc gõ tay bên dưới.</div>';
     return;
   }
   el.innerHTML=NDS.tokens.map(function(k,i){
-    return '<span class="nds-tag vai-'+k.vai+'" title="'+esc(NDS_VAI_TEN[k.vai])+(k.nguon==='ai'?' · AI đọc':' · gõ tay')+
+    return '<span class="nds-tag vai-'+k.vai+'" title="'+esc(NDS_VAI_TEN[k.vai])+' · '+esc(NDS_NGUON_TEN[k.nguon]||'gõ tay')+
       (k.goc&&k.goc.toLowerCase()!==k.t?(' · trên tem: '+esc(k.goc)):'')+'">'+
       '<span class="vt">'+esc(NDS_VAI_TEN[k.vai])+'</span>'+esc(k.t)+
       '<button type="button" class="x" onclick="ndsBoToken('+i+')" aria-label="Bỏ từ khoá '+esc(k.t)+'">&times;</button></span>';
@@ -8821,22 +8941,29 @@ async function ndsDoiSoat(){
      thủ kho bỏ một từ khoá đọc nhầm (bấm ×) là nó lập tức sống lại từ ô raw — đúng lỗi mà
      qc-tab-nhan-dien.mjs bắt được 18/08/2026. Kèm theo: tôn trọng NDS.daBo (đã bỏ thì đừng thêm lại). */
   var ta=document.getElementById('ndsRaw'), raw=ta?String(ta.value||'').trim():'';
+  if (!NDS.tokens.length && !raw && !(NDS.loc&&NDS.loc.length)){ ndsTrangThai('Chưa có từ khoá nào để đối soát.'); return; }
+  /* DANH MỤC PHẢI CÓ TRƯỚC khi tách chữ thô: từ 19/08/2026 bước tách dùng NDS_ENGINE.tuVanBan, mà
+     hàm đó LỌC mảnh theo chính danh mục (mảnh nào 5.610 tên hàng không hề có thì là chữ giấy tờ) —
+     chưa có chỉ mục thì không lọc được. */
+  if (!NDS.ds){ var ok=await ndsTaiDanhMuc(false); if (!ok) return; }
   if (raw && raw!==NDS.rawDaTach){
     NDS.rawDaTach=raw;
-    var b=NDS_ENGINE.bocTen(raw);
+    var b=NDS_ENGINE.tuVanBan(raw, NDS.cm);
     ['code','spec','color','brand'].forEach(function(vai){
-      b[vai].forEach(function(t){ if (!NDS.daBo[t]) ndsThemToken(t,vai,'tay'); });
+      b[vai].forEach(function(t){ if (!NDS.daBo[t]) ndsThemToken(t,vai,'chu'); });
     });
+    NDS.boRac=(b.bo||[]).length;
     ndsVeTags();
   }
   if (!NDS.tokens.length && !(NDS.loc&&NDS.loc.length)){ ndsTrangThai('Chưa có từ khoá nào để đối soát.'); return; }
-  if (!NDS.ds){ var ok=await ndsTaiDanhMuc(false); if (!ok) return; }
   /* Gom badge đang hiển thị về đúng 5 nhóm của schema AI rồi để NDS_ENGINE.tuAI xếp vai — dùng
      chung một đường với 2 bộ test (qc-nhan-dien-sku / qc-tem-vision), khỏi lệch cách xếp. */
   var goi={ item_codes:[], specs:[], colors:[], brands:[], others:[] };
   var oNhom={ code:'item_codes', spec:'specs', color:'colors', brand:'brands', other:'others' };
   NDS.tokens.forEach(function(k){ goi[oNhom[k.vai]||'others'].push(k.t); });
-  var nhan=NDS_ENGINE.tuAI(goi);
+  /* Truyền chỉ mục vào tuAI: mảnh nào RA DÁNG MÃ và CÓ THẬT trong danh mục thì được nâng lên vai
+     MÃ, bất kể AI xếp nó ở rổ nào (sửa 19/08/2026 — xem napBangChung trong lõi). */
+  var nhan=NDS_ENGINE.tuAI(goi, NDS.cm);
   var ghim=ndsSoTra();                 // sổ tay tem: tem/mã vạch này người đã chốt SKU rồi -> ghim
   var t0=(window.performance&&performance.now)?performance.now():Date.now();
   NDS.ket=NDS_ENGINE.timTop(nhan, NDS.cm, { soLuong:3, chiActive:NDS.chiActive, ghim:ghim, loc:NDS.loc });
@@ -8973,6 +9100,27 @@ function ndsVeKetQua(ms, themInactive){
       'chất liệu · màu) — hàng trăm SKU giống nhau ở mấy chữ đó, nên <b>đừng chọn vội</b>. '+
       'Gõ mã in trên tem (vd <code>F9-5374</code>) vào ô <b>Mã trên tem</b> ở bước 1 là ra đúng ngay.'+
       ' <button type="button" class="kktab nds-alt" onclick="ndsTroMa()">Nhập mã</button></div>';
+  } else {
+    /* ĐÃ khớp mã nhưng CÁC GỢI Ý CHỈ KHÁC NHAU Ở MÀU / THÔNG SỐ — phải nói ra, đừng để con số 91%
+       của hạng 1 trông như một kết luận. Đo thật 19/08/2026: tem chữ nhỏ thì máy đọc "345" thành
+       "145", "Đen-580-AA" thành "Ben-380-AA" ⇒ ra ĐÚNG mã nhưng SAI biến thể màu, mà điểm vẫn cao.
+       Mã hàng đọc lệch thì đã có cảnh báo "chưa khớp mã" ở trên; còn màu đọc lệch thì chỉ có mắt
+       người phân biệt được — nên việc của máy ở đây là thu hẹp còn mấy dòng cùng mã rồi MỜI CHỌN. */
+    var dsMa=NDS.ket.filter(function(r){ return r.coMa && r.khop && (r.khop.code||[]).length; });
+    var maChung=null;
+    if (dsMa.length>=2){
+      (dsMa[0].khop.code||[]).forEach(function(t){
+        if (maChung) return;
+        var duHet=dsMa.every(function(r){ return (r.khop.code||[]).indexOf(t)>=0; });
+        if (duHet) maChung=t;
+      });
+    }
+    if (maChung){
+      canh='<div class="pcdnote" style="margin-bottom:10px;background:color-mix(in srgb,var(--info) 12%,var(--surface));color:var(--ink2)">'+
+        '<b>'+dsMa.length+' gợi ý dưới đây đều mang đúng mã <code>'+esc(maChung)+'</code></b> — chỉ khác nhau ở '+
+        '<b>màu / thông số</b>. Chữ màu trên tem thường in nhỏ nên máy dễ đọc lệch (<code>345</code>↔<code>145</code>, '+
+        '<code>580</code>↔<code>380</code>), vì vậy máy KHÔNG tự chốt: nhìn tem rồi chọn đúng dòng.</div>';
+    }
   }
   c.innerHTML=canh+NDS.ket.map(function(r,i){ return ndsTheKetQua(r,i+1); }).join('');
   ndsCapNhatChan(ms);
