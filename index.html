@@ -1760,6 +1760,12 @@ body.side-anim{overflow-x:clip}
 /* SKU là thứ phải đọc được từ xa nhất trên thẻ -> to hơn hẳn phần còn lại */
 .nds-sku{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:var(--ink)}
 .nds-pct{margin-left:auto;font-size:13px;font-weight:780;font-variant-numeric:tabular-nums;color:var(--cc,var(--brand2))}
+/* TỒN đứng ngay cạnh SKU: cùng hàng nhưng chữ nhỏ + xám như dòng phụ, để nó KHÔNG tranh chỗ đọc
+   với mã SKU. `nowrap` giữ con số + đơn vị liền khối; hàng đã `flex-wrap` nên máy hẹp thì nó tự
+   xuống dòng chứ không tràn. */
+.nds-ton{font-size:11.5px;color:var(--ink3);font-variant-numeric:tabular-nums;white-space:nowrap}
+/* Nút gỡ ghi nhớ dùng lại đúng kiểu nút chữ nhỏ `fcg` của dòng chân (không dựng control mới) */
+.nds-sub .nds-quen{margin-left:4px;vertical-align:baseline}
 .nds-bar{background:var(--surface2);border-radius:99px;height:6px;margin:8px 0 9px;overflow:hidden}
 .nds-fill{height:100%;border-radius:99px;width:0;background:var(--cc,var(--brand2));transition:width .9s var(--ease)}
 /* Tên hàng là thứ thứ HAI phải đọc; phần trùng khớp tô đậm hơn để mắt bắt ngay chỗ giống tem */
@@ -6362,9 +6368,10 @@ var TVT_COLS={
   grp:['group uid','group_uid','groupuid','uid group','uidgr'],
   upd:['updated at','updated_at','updatedat','cập nhật','cap nhat']
 };
-/* Luật người dùng phát biểu cho SKU VẢI nguyên liệu, nhưng danh mục "Thời Trang (NVL)" còn có chỉ,
-   sợi, phụ liệu. Bộ sync dán nhãn cột "Nhóm" (Vải / NVL khác) và ở đây tách bằng chip — mặc định
-   "Tất cả" để không giấu dòng nào, nhưng bấm 1 nhát là ra đúng con số vải. */
+/* TVT.nhom + chip "Nhóm": bộ sync hiện CHỈ ghi SKU vải (2 kho nguyên liệu) nên tab chỉ có một nhóm
+   và thanh chip TỰ ẨN (tvtNhomBar trả rỗng khi <2 nhóm). Giữ lại vì đây là van an toàn: ngày nào
+   mở rộng TVT_CATEGORY_IDS bên ton-vitri.mjs (chỉ, sợi, phụ liệu…) thì chip hiện lại ngay, không
+   phải sửa dashboard — mà cũng không bao giờ trộn chung vải với thứ khác thành một con số. */
 var TVT={loadedOnce:false,ok:false,err:'',rows:[],loading:null,nhom:''};
 var TVT_MODAL={base:[],preset:null};
 function tvtIdx(H,al){ for(var i=0;i<al.length;i++){ var j=H.indexOf(al[i]); if(j>=0) return j; } return -1; }
@@ -6433,8 +6440,10 @@ function tvtNhomBar(){
     '</div>';
 }
 function tvtGiaiThich(){
-  return 'UID <b>chưa khai báo UID group</b> (Group UID / RFID mapping = 0) thì phải nằm ở bãi chờ '+
-    '<code>'+TVT_CHO+'-00-00-00-00</code>. Những UID dưới đây đã ở vị trí khác ⇒ cần khai báo UIDgr hoặc trả về bãi chờ.';
+  return 'SKU <b>vải nguyên liệu</b> bắt buộc khai báo UIDgr code. UID nào <b>chưa khai báo</b> '+
+    '(Group UID / RFID mapping = 0) thì phải nằm ở bãi chờ <code>'+TVT_CHO+'-00-00-00-00</code> — '+
+    'những UID dưới đây đã ở vị trí khác ⇒ cần khai báo UIDgr hoặc trả về bãi chờ.<br>'+
+    '<span class="hint">Phạm vi: chỉ SKU vải, chỉ 2 kho nguyên liệu <b>WH - MATERIAL - MTG</b> và <b>WH - MATERIAL - GARMENT</b>.</span>';
 }
 function tvtRender(){
   var el=document.getElementById('tvtWrap'); if(!el) return;
@@ -6469,7 +6478,7 @@ function tvtRender(){
     '<div class="abntile" style="--cc:var(--warn)" onclick="tvtOpenAll()" title="Xem toàn bộ UID sai vị trí">'+
       '<div class="k">'+nf(sl)+'</div><div class="l">Tổng số lượng</div><div class="s">cộng theo Qty của UID</div></div>'+
     '<div class="abntile" style="--cc:var(--info,#3b82f6)" onclick="tvtOpenAll()" title="Xem toàn bộ UID sai vị trí">'+
-      '<div class="k">'+nf(nSku)+'</div><div class="l">SKU liên quan</div><div class="s">'+(TVT.nhom?esc(TVT.nhom):'danh mục Thời Trang (NVL)')+'</div></div>'+
+      '<div class="k">'+nf(nSku)+'</div><div class="l">SKU liên quan</div><div class="s">'+(TVT.nhom?esc(TVT.nhom):'vải nguyên liệu')+'</div></div>'+
     '<div class="abntile" style="--cc:var(--accent)" onclick="tvtOpenAll()" title="Xem toàn bộ UID sai vị trí">'+
       '<div class="k">'+nf(nLoc)+'</div><div class="l">Vị trí liên quan</div><div class="s">bấm thanh bên dưới để lọc 1 vị trí</div></div>'+
   '</div>';
@@ -9566,16 +9575,28 @@ function ndsTheKetQua(r, hang){
     (r.khop[v]||[]).forEach(function(t){ chipKhop.push('<span class="nds-tag vai-'+v+'"><span class="vt">'+esc(NDS_VAI_TEN[v])+'</span>'+esc(t)+'</span>'); });
   });
 
-  /* MỘT dòng phụ duy nhất: tồn + cảnh báo. Cảnh báo là thứ duy nhất được phép "lên tiếng" ở đây. */
+  /* TỒN LÊN NGAY CẠNH SKU (gọn thẻ — yêu cầu 19/08/2026). Trước đây tồn chiếm riêng một dòng phụ
+     dù nó chỉ là một con số đọc kèm; nay dòng phụ CHỈ còn khi có điều đáng nói (từ sổ tay · tem in
+     đúng mã · lệch thông số) ⇒ thẻ thường bớt hẳn một dòng, ba thẻ bớt ba dòng.
+     Vì vậy `canh` không mang dấu "·" ở đầu nữa: nó không còn đứng sau con số tồn. */
   var canh='';
-  if (r.daHoc) canh='<span class="nds-ok">· từ sổ tay</span>';
-  else if (r.laSku) canh='<span class="nds-ok">· tem in đúng mã này</span>';
+  /* CHỌN NHẦM THÌ GỠ Ở ĐÂY. Lỗ thật phát hiện 19/08/2026: `ndsSoQuen()` có hàm, có ca test, nhưng
+     KHÔNG có nút nào trong giao diện gọi tới — nên thủ kho bấm nhầm một lần là sổ tay ghim SKU sai
+     ở 100% mãi mãi, cách duy nhất là "Xoá sổ tay" (mất sạch mọi ghi nhớ). Nút phải nằm ĐÚNG CHỖ
+     người ta nhìn thấy cái sai: ngay trên thẻ đang ghi "từ sổ tay".
+     `stopPropagation` là bắt buộc — cả thẻ là nút chọn SKU, không chặn thì bấm "quên" lại thành
+     "chọn lại đúng cái SKU sai đó" (đúng bẫy đã cắn với nút biến thể đơn vị). */
+  if (r.daHoc) canh='<span class="nds-ok">từ sổ tay</span>'+
+    ' <button type="button" class="fcg nds-quen" onclick="event.stopPropagation();ndsSoQuen()"'+
+    ' title="Tem này từng được chốt sang SKU khác — gỡ ghi nhớ để máy đối soát lại từ đầu">quên ghi nhớ này</button>';
+  else if (r.laSku) canh='<span class="nds-ok">tem in đúng mã này</span>';
   else if (r.xungDot.length){
     var ten={ cm:'chiều dài', mm:'kích thước', gsm:'định lượng', tex:'chi số Tex', tkt:'chi số Tkt',
       co:'cỡ', l:'cỡ nút', ty:'tỉ lệ sợi', mamau:'mã màu' };
-    canh='<span class="nds-lech">· lệch '+r.xungDot.map(function(h){ return esc(ten[h]||h); }).join(', ')+'</span>';
+    canh='<span class="nds-lech">lệch '+r.xungDot.map(function(h){ return esc(ten[h]||h); }).join(', ')+'</span>';
   }
-  var phu='<div class="nds-sub">Tồn '+nf(r.qty)+(dvNhan?(' '+esc(dvNhan)):'')+' '+canh+'</div>';
+  var ton='<span class="nds-ton">Tồn '+nf(r.qty)+(dvNhan?(' '+esc(dvNhan)):'')+'</span>';
+  var phu = canh ? ('<div class="nds-sub">'+canh+'</div>') : '';
 
   /* Chi tiết GẤP LẠI: biến thể đơn vị + vì sao khớp gộp chung một chỗ, một dòng tóm tắt */
   var nBt=(r.bienThe||[]).length, chiTiet='', tom=[];
@@ -9603,7 +9624,7 @@ function ndsTheKetQua(r, hang){
       ' onclick="ndsChonSku(\''+esc(r.sku)+'\')"'+
       ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();ndsChonSku(\''+esc(r.sku)+'\');}">'+
     '<div class="nds-chead"><span class="nds-rank">'+hang+'</span>'+
-      '<span class="nds-sku">'+esc(r.sku)+'</span>'+nhan+
+      '<span class="nds-sku">'+esc(r.sku)+'</span>'+ton+nhan+
       '<span class="nds-pct">'+r.pct+'%</span></div>'+
     '<div class="nds-bar"><div class="nds-fill" style="width:'+r.pct+'%"></div></div>'+
     '<div class="nds-pn">'+ndsToTrung(r.pn, r.khop)+'</div>'+
