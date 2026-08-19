@@ -1911,11 +1911,11 @@ body.side-anim{overflow-x:clip}
            rõ trên tem NCC, gõ 7 ký tự là xong — nên nó phải nằm NGAY ĐÂY, không bắt cuộn xuống
            bước 3 tìm ô "thêm từ khoá". -->
       <div class="nds-marow">
-        <label for="ndsMa">Mã trên tem</label>
-        <input id="ndsMa" autocomplete="off" spellcheck="false" placeholder="Gõ vài ký tự: 5374 · JC012 · 8846…"
+        <label for="ndsMa">Phần tử trên tem</label>
+        <input id="ndsMa" autocomplete="off" spellcheck="false" placeholder="Gõ mảnh đọc được: 8916123 V9B11 29-all"
           oninput="ndsMaGo(this.value)"
           onkeydown="if(event.key==='Enter'){event.preventDefault();ndsTraMa();}">
-        <button type="button" class="kktab nds-go" onclick="ndsTraMa()">Tra mã</button>
+        <button type="button" class="kktab nds-go" onclick="ndsTraMa()">Tra</button>
       </div>
       <div class="nds-magoi" id="ndsMaGoi" hidden></div>
 
@@ -7316,6 +7316,52 @@ var NDS_ENGINE = (function(){
     return boDau(i>=0 ? s.slice(0,i) : s).toLowerCase().replace(/\s+/g,' ').trim();
   }
 
+  /* ---------- 4c. PHẦN TỬ CỦA TÊN HÀNG — lối đọc tem KHÔNG cần AI (19/08/2026) ----------
+   * PRODUCTNAME của WMS vốn LÀ một chuỗi PHẦN TỬ ghép bằng "/":
+   *   Half zipper-DÂY KÉO TRỤ: PHAO, #3 / 8916123_YKK / 100% Polyester / Xám đậm V9B11 / 29-all / pcs
+   * Tem nhà cung cấp in đúng mấy phần tử đó. Nên cách chắc nhất và nhanh nhất là: thủ kho đọc được
+   * mảnh nào thì gõ mảnh đó, máy tìm những dòng có CHỨA các mảnh ấy. Không chấm điểm mờ, không
+   * đoán, không gọi mạng — hoặc chứa hoặc không.
+   * `tachPhanTu` để hiển thị/kiểm thử; việc lọc thật thì dùng `locDong` (chạy trên `_pnc`).
+   */
+  function tachPhanTu(pn){
+    var ra = [];
+    String(pn==null?'':pn).split('/').forEach(function(d){
+      d = d.replace(/\s+/g,' ').trim();
+      if (d) ra.push(d);
+    });
+    return ra;
+  }
+  /** Chuẩn hoá một mảnh người gõ để đem đi `indexOf` trong `_pnc` (đã bỏ dấu, hạ chữ). */
+  function chuanManh(t){
+    return boDau(String(t==null?'':t)).toLowerCase().replace(/\s+/g,' ').trim();
+  }
+  /**
+   * Tìm các dòng CHỨA những mảnh đã cho. Trả [{i, n}] với n = số mảnh khớp (để xếp: khớp đủ trước).
+   * Quét `indexOf` trên 5.610 chuỗi tên — đo 19/08: ~1–3 ms/mảnh, rẻ hơn nhiều so với chấm điểm.
+   * Mảnh nào cũng thử thêm dạng BỎ HẾT ký tự ngăn ("v9b11" ~ "v9-b11", "8916123ykk" ~ "8916123_ykk")
+   * để người gõ khỏi phải canh đúng dấu gạch/gạch dưới in trên tem.
+   */
+  function locDong(manh, cm){
+    var ms = [];
+    (manh||[]).forEach(function(t){
+      var c = chuanManh(t);
+      if (c.length >= 2) ms.push({ c:c, l:loi(c) });
+    });
+    if (!ms.length) return [];
+    var ds = cm.ds, dem = Object.create(null), co = [];
+    for (var i=0;i<ds.length;i++){
+      var pnc = ds[i]._pnc || (ds[i]._pnc = boDau(ds[i].pn).toLowerCase());
+      var n = 0;
+      for (var k=0;k<ms.length;k++){
+        if (pnc.indexOf(ms[k].c) >= 0) { n++; continue; }
+        if (ms[k].l.length >= 3 && loi(pnc).indexOf(ms[k].l) >= 0) n++;
+      }
+      if (n){ dem[i]=n; co.push(i); }
+    }
+    return co.map(function(i){ return { i:i, n:dem[i] }; });
+  }
+
   /* ---------- 5. ĐIỂM 1 SKU ---------- */
   var W = { code:0.45, spec:0.25, color:0.20, brand:0.10 };
   var VAI = ['code','spec','color','brand'];
@@ -7415,6 +7461,8 @@ var NDS_ENGINE = (function(){
       /* Đơn vị + khoá mặt hàng: tính MỘT LẦN ở đây (5.600 SKU ≈ vài ms) để mỗi lượt đối soát chỉ
          việc so `q`, không phải bóc lại chuỗi. */
       ds[i]._dv = donVi(ds[i].pn); ds[i]._k = khoaHang(ds[i].pn);
+      /* Tên đã bỏ dấu + hạ chữ, để LỌC THEO PHẦN TỬ tìm bằng `indexOf` (xem locDong bên dưới) */
+      ds[i]._pnc = boDau(ds[i].pn).toLowerCase();
       var ss = b.all;
       for (var j=0;j<ss.length;j++){
         var t = ss[j];
@@ -7549,7 +7597,19 @@ var NDS_ENGINE = (function(){
        màu/thông số mà tên KHÔNG chứa mã đó bị đánh rơi khỏi Top 3 (ca thật: mất một dòng 96% đang
        đứng ngang hạng nhất). Nhanh mà rơi mất đáp án đúng thì không đổi. */
     var TRAN_MA = 120, maKhop = null;
-    var uv = ungVien(nhan, cm, opt.tranUngVien||4000);
+    /* LỌC THEO PHẦN TỬ: người gõ mảnh nào thì chỉ chấm những dòng CÓ CHỨA mảnh đó. Điểm lúc này
+       KHÔNG phải điểm đoán mà là ĐỘ PHỦ: khớp 3/3 mảnh = 100%, 2/3 = 67% — đọc thẳng, không mơ hồ.
+       Mọi luật xếp hạng phía dưới (ACTIVE · đóng gói · sổ tay · có mã · đơn vị nhỏ · gom biến thể)
+       vẫn chạy y nguyên, nên không có đường thứ hai nào để lệch hành vi. */
+    var locKq = (opt.loc && opt.loc.length) ? locDong(opt.loc, cm) : null;
+    var phuLoc = null;
+    if (locKq && locKq.length){
+      phuLoc = Object.create(null);
+      var soManh = 0;
+      (opt.loc||[]).forEach(function(t){ if (chuanManh(t).length>=2) soManh++; });
+      for (var lz=0; lz<locKq.length; lz++) phuLoc[locKq[lz].i] = locKq[lz].n / Math.max(1,soManh);
+    }
+    var uv = phuLoc ? locKq.map(function(x){ return x.i; }) : ungVien(nhan, cm, opt.tranUngVien||4000);
     if (opt.tat !== false){
       var gom = Object.create(null), coMa = false;
       (nhan.code||[]).forEach(function(t){
@@ -7561,14 +7621,22 @@ var NDS_ENGINE = (function(){
       var km = coMa ? Object.keys(gom) : [];
       if (km.length && km.length <= TRAN_MA){
         maKhop = gom;                                  // dùng lại ở luật cứng "CÓ MÃ" bên dưới
-        var daCoUv = Object.create(null);
-        for (var u2=0; u2<uv.length; u2++) daCoUv[uv[u2]] = 1;
-        for (var u3=0; u3<km.length; u3++){ var im2=Number(km[u3]); if (!daCoUv[im2]) uv.push(im2); }
+        /* Đang LỌC THEO PHẦN TỬ thì chỉ dùng `maKhop` để XẾP HẠNG, KHÔNG kéo thêm dòng ngoài bộ
+           lọc vào — người dùng đã nói rõ tem có những mảnh nào, đừng tự ý mở rộng. */
+        if (!phuLoc){
+          var daCoUv = Object.create(null);
+          for (var u2=0; u2<uv.length; u2++) daCoUv[uv[u2]] = 1;
+          for (var u3=0; u3<km.length; u3++){ var im2=Number(km[u3]); if (!daCoUv[im2]) uv.push(im2); }
+        }
       }
     }
     for (var k=0;k<uv.length;k++){
       var i = uv[k], r = ds[i];
       var d = diemMot(nhan, r._b);
+      if (phuLoc){
+        /* Đang lọc theo phần tử: điểm = độ phủ mảnh; giữ lại `khop` của bước chấm để tô đậm tên */
+        d = { diem:phuLoc[i], khop:d.khop||{}, xungDot:[], phu:1 };
+      }
       if (d.diem<=0) continue;
       ra.push(moTa(i, r, d.diem, d.khop, d.xungDot, d.phu, false));
     }
@@ -7625,11 +7693,21 @@ var NDS_ENGINE = (function(){
        Combo KHÔNG bị bỏ, chỉ luôn xuống sau mọi NORMAL trong Top 3.
        Ngoại lệ duy nhất đứng trên tất cả: tem in THẲNG mã SKU nội bộ (laSku) — người ta dán mã nào
        thì trả mã đó, kể cả mã đó là combo. (Sổ tay `ghim` còn đứng trên nữa, xử lý bên dưới.) */
-    got.sort(function(a,b){
+    got.sort(soSanh);
+    function soSanh(a,b){
       if (a.laSku!==b.laSku) return a.laSku?-1:1;
       var sa=(a.status==='INACTIVE')?1:0, sb=(b.status==='INACTIVE')?1:0;
       if (sa!==sb) return sa-sb;                          // ACTIVE trước — luật cứng
-      /* CÓ MÃ TEM — luật cứng MẠNH NHẤT sau ACTIVE (thêm 19/08/2026 sau sự cố thật).
+      /* HÀNG ĐÓNG GÓI xuống trước tiên — xem ghi chú ngay dưới. Đặt TRÊN cả sổ tay và luật "có mã":
+         đây là luật tuyệt đối của kho ("combo / cuộn / set không bao giờ đứng đầu"), kể cả khi
+         người dùng lỡ dạy sổ tay chọn bản combo (sự cố thật 19/08: một SKU COMBO chiếm hạng 1 với
+         "100% · từ sổ tay"). */
+      var ga=((a.type==='COMBO')||a.gop)?1:0, gb=((b.type==='COMBO')||b.gop)?1:0;
+      if (ga!==gb) return ga-gb;
+      /* SỔ TAY (người đã xác nhận) đứng trên mọi suy đoán của máy — nhưng dưới luật đóng gói. */
+      var h1=a.daHoc?0:1, h2=b.daHoc?0:1;
+      if (h1!==h2) return h1-h2;
+      /* CÓ MÃ TEM — luật cứng sau ACTIVE / đóng gói / sổ tay (thêm 19/08/2026 sau sự cố thật).
          Sự cố: tem in F9-5374 (mã CÓ trong danh mục, 12 SKU) nhưng AI không đọc ra mã, lõi chấm
          bằng chữ chung "Chỉ · Filtex · Phong Việt · Polyester" rồi trả về 422378537 mang mã
          F6-7829 — cùng dạng tên, khác hẳn mã. Từ nay: hễ có MỘT mã tem khớp tuyệt đối danh mục
@@ -7637,31 +7715,35 @@ var NDS_ENGINE = (function(){
          Đặt TRÊN luật hàng đóng gói: thà hiện bản combo/cuộn ĐÚNG MÃ còn hơn hiện SKU sai mã. */
       var ma1=a.coMa?0:1, ma2=b.coMa?0:1;
       if (ma1!==ma2) return ma1-ma2;
-      /* COMBO và ĐƠN VỊ GỘP ("…/Cuộn 5000m", "…/set", "…/thùng") gộp làm MỘT hạng "hàng đóng gói":
-         cả hai đều không phải đơn vị để đếm khi kiểm kê, nên tuyệt đối không đứng đầu. */
-      var ga=((a.type==='COMBO')||a.gop)?1:0, gb=((b.type==='COMBO')||b.gop)?1:0;
-      if (ga!==gb) return ga-gb;                          // luật cứng
+      /* (COMBO và ĐƠN VỊ GỘP "…/Cuộn 5000m", "…/set", "…/thùng" đã xử ở trên: cả hai đều không
+         phải đơn vị để đếm khi kiểm kê.) */
       if (b.diem!==a.diem) return b.diem-a.diem;
       if (b.phu!==a.phu) return b.phu-a.phu;
       if (a.q!==b.q) return a.q-b.q;                      // đơn vị nhỏ nhất
       return (Number(b.qty)||0)-(Number(a.qty)||0);
-    });
+    }
 
-    /* SỔ TAY TEM: SKU mà NGƯỜI đã xác nhận cho đúng tem này (hoặc đúng mã vạch này) — ghim lên đầu,
-       100%, khỏi đoán lại. Đây là đường không-cần-AI: lần sau gặp lại tem cũ là ra ngay.
-       Ghim NGƯỢC danh sách để phần tử đầu của `ghim` cuối cùng nằm trên cùng. */
+    /* SỔ TAY TEM: SKU mà NGƯỜI đã xác nhận cho đúng tem này (hoặc đúng mã vạch này) — cho 100% và
+       đóng dấu "đã học", nhưng KHÔNG chen thẳng lên đầu nữa (sửa 19/08/2026).
+       Vì sao đổi: bản trước `unshift` nên nó vượt qua MỌI luật xếp hạng. Kết quả thật gặp phải là
+       một SKU COMBO nằm chễm chệ hạng 1 với "100% · từ sổ tay", trong khi luật của kho là combo và
+       đơn vị gộp TUYỆT ĐỐI không được đứng đầu. Nay ghim xong thì XẾP LẠI bằng đúng bộ so sánh
+       chung, nên NORMAL/đơn vị nhỏ vẫn thắng; SKU đã học chỉ thắng khi cùng hạng. */
     if (opt.ghim && opt.ghim.length && cm.theoSku){
-      for (var gi=opt.ghim.length-1; gi>=0; gi--){
+      var daGhim = false;
+      for (var gi=0; gi<opt.ghim.length; gi++){
         var si = cm.theoSku[String(opt.ghim[gi])];
         if (si == null) continue;
         var rg = ds[si];
         if (chiActive && rg.status==='INACTIVE') continue;
         var vt = -1;
         for (var z2=0; z2<got.length; z2++) if (got[z2].i===si) { vt=z2; break; }
-        var itg = (vt>=0) ? got.splice(vt,1)[0] : moTa(si, rg, 1, {}, [], 1, false);
+        var itg = (vt>=0) ? got[vt] : null;
+        if (!itg){ itg = moTa(si, rg, 1, {}, [], 1, false); got.push(itg); }
         itg.diem=1; itg.pct=100; itg.daHoc=true; itg.xungDot=[];
-        got.unshift(itg);
+        daGhim = true;
       }
+      if (daGhim) got.sort(soSanh);
     }
     var raCuoi = got.slice(0, soLuong);
     /* Cờ cho tầng giao diện: lượt này có khớp được MÃ nào của danh mục không. Không có mã thì kết
@@ -7703,7 +7785,7 @@ var NDS_ENGINE = (function(){
 
   return { boDau:boDau, chuan:chuan, loi:loi, bocTen:bocTen, tuAI:tuAI, tyLe:tyLe, khopTot:khopTot,
     diemMot:diemMot, dungChiMuc:dungChiMuc, timTop:timTop, donVi:donVi, khoaHang:khoaHang,
-    chuKy:chuKy, W:W, VAI:VAI, DV:DV };
+    chuKy:chuKy, tachPhanTu:tachPhanTu, locDong:locDong, chuanManh:chuanManh, W:W, VAI:VAI, DV:DV };
 })();
 /*</NDS-ENGINE>*/
 
@@ -7829,7 +7911,7 @@ async function ndsThuMaVach(imLang){
   return true;
 }
 
-var NDS = { ds:null, cm:null, tokens:[], anh:null, maVach:[], tuDong:false, zoom:1, zoomCung:false, mime:'image/jpeg', xoay:0, stream:null,
+var NDS = { ds:null, cm:null, tokens:[], anh:null, maVach:[], loc:null, tuDong:false, zoom:1, zoomCung:false, mime:'image/jpeg', xoay:0, stream:null,
   chiActive:true, dangDoc:false, dangTai:false, ket:[], nguon:'', msDoiSoat:null, loadedOnce:false,
   daBo:{}, rawDaTach:'' };
 var NDS_TAB = 'SKU_MASTER';
@@ -8286,7 +8368,9 @@ function ndsThemTay(){
   if (them) ndsDoiSoat();
 }
 function ndsXoaHet(){
-  NDS.tokens=[]; NDS.ket=[]; NDS.daBo={}; NDS.rawDaTach=''; NDS.maVach=[];
+  NDS.tokens=[]; NDS.ket=[]; NDS.daBo={}; NDS.rawDaTach=''; NDS.maVach=[]; NDS.loc=null;
+  var om=document.getElementById('ndsMa'); if (om) om.value='';
+  if (typeof ndsVeMaGoi==='function') ndsVeMaGoi([]);
   var ta=document.getElementById('ndsRaw'); if (ta) ta.value='';
   ndsVeTags();
   ndsTrangThai('Chụp hoặc chọn ảnh tem ở bước 1 — máy tự nhận diện ngay.');
@@ -8309,34 +8393,42 @@ function ndsDoiScope(active){
 function ndsTraMa(){
   var o=document.getElementById('ndsMa'); if (!o) return;
   var raw=String(o.value||'').trim();
-  if (!raw){ toast('Gõ mã in trên tem (vd F9-5374) rồi bấm Tra mã.','warn'); o.focus(); return; }
+  if (!raw){ toast('Gõ mảnh đọc được trên tem (mã · màu · thông số), cách nhau bằng dấu cách.','warn'); o.focus(); return; }
   if (!NDS.cm){ toast('Danh mục chưa tải xong — đợi một nhịp rồi tra lại.','warn'); return; }
-  var b=NDS_ENGINE.bocTen(raw);
-  var ma=b.code.length?b.code:[NDS_ENGINE.chuan(raw)];
-  var trung=[], gan=[];
-  ma.forEach(function(t){ if (NDS.cm.idx[t] && trung.indexOf(t)<0) trung.push(t); });
-  if (!trung.length){
-    /* Không có mã nào khớp -> tìm mã GẦN GIỐNG trong chính từ vựng danh mục (chịu lỗi gõ/OCR) */
-    ma.forEach(function(t){
-      if (t.length<3) return;
-      for (var i=0;i<NDS.cm.tuVung.length && gan.length<8;i++){
-        var w=NDS.cm.tuVung[i];
-        if (w.length<3 || !/\d/.test(w) || !/[a-z]/.test(w)) continue;
-        if (gan.indexOf(w)>=0) continue;
-        if (NDS_ENGINE.tyLe(t,w)>=0.72 || NDS_ENGINE.loi(w)===NDS_ENGINE.loi(t)) gan.push(w);
-      }
+
+  /* Tách thành PHẦN TỬ: cắt ở dấu phẩy, gạch chéo và khoảng trắng. Cắt cả khoảng trắng là CÓ CHỦ Ý
+     — thủ kho gõ "8916123 V9B11" thành 2 mảnh; mà gõ "xam dam" thành "xam"+"dam" thì cả hai vẫn
+     nằm trong "Xám đậm" nên vẫn khớp đủ. Không bắt ai canh dấu phân cách cho đúng. */
+  var pt=raw.split(/[,/;]+|\s+/).map(function(x){ return x.trim(); }).filter(function(x){ return x.length>=2; });
+  if (!pt.length){ toast('Mảnh quá ngắn — gõ ít nhất 2 ký tự.','warn'); return; }
+
+  NDS.loc=pt;
+  /* Mảnh nào KHỚP TUYỆT ĐỐI một mã trong danh mục thì đưa luôn vào vai MÃ, để luật cứng "CÓ MÃ" và
+     cơ chế tô đậm tên cùng làm việc. Mảnh không phải mã vẫn có tác dụng qua bộ lọc. */
+  pt.forEach(function(t){
+    var b=NDS_ENGINE.bocTen(t);
+    (b.code.length?b.code:[NDS_ENGINE.chuan(t)]).forEach(function(m){
+      if (NDS.cm.idx[m]) ndsThemToken(m,'code','tay');
     });
-  }
-  ndsVeMaGoi(gan);
-  if (!trung.length && !gan.length){
-    toast('Không có mã nào giống "'+raw+'" trong danh mục '+nf((NDS.ds||[]).length)+' SKU. Kiểm lại chữ/số trên tem.','err');
-    return;
-  }
-  if (!trung.length){ toast('Chưa thấy mã "'+raw+'". Có mấy mã gần giống ở dưới — bấm để tra.','warn'); return; }
-  /* Mã khớp -> đưa vào vai MÃ rồi đối soát ngay (luật cứng "CÓ MÃ" lo phần xếp hạng) */
-  trung.forEach(function(t){ ndsThemToken(t,'code','tay'); });
+  });
   ndsVeTags();
   ndsDoiSoat();
+
+  if (!(NDS.ket||[]).length){
+    /* Không dòng nào chứa mảnh nào -> gợi ý mã gần giống cho mảnh DÀI NHẤT (chịu lỗi gõ/OCR) */
+    var dai=pt.slice().sort(function(a,b){ return b.length-a.length; })[0];
+    var gan=[], t0=NDS_ENGINE.chuan(dai);
+    for (var i=0;i<NDS.cm.tuVung.length && gan.length<8;i++){
+      var w=NDS.cm.tuVung[i];
+      if (w.length<3 || !/\d/.test(w) || !/[a-z]/.test(w)) continue;
+      if (NDS_ENGINE.tyLe(t0,w)>=0.72 || NDS_ENGINE.loi(w)===NDS_ENGINE.loi(t0)) gan.push(w);
+    }
+    ndsVeMaGoi(gan);
+    toast(gan.length ? ('Không thấy dòng nào chứa "'+dai+'" — mấy mã gần giống ở ngay dưới ô nhập.')
+                     : 'Không có SKU nào chứa các mảnh đó — kiểm lại chữ/số trên tem.', gan.length?'warn':'err');
+    return;
+  }
+  ndsVeMaGoi([]);
   o.select();
 }
 /** Dải "ý bạn là…" khi mã gõ/đọc được không có trong danh mục. */
@@ -8417,7 +8509,7 @@ async function ndsDoiSoat(){
     });
     ndsVeTags();
   }
-  if (!NDS.tokens.length){ ndsTrangThai('Chưa có từ khoá nào để đối soát.'); return; }
+  if (!NDS.tokens.length && !(NDS.loc&&NDS.loc.length)){ ndsTrangThai('Chưa có từ khoá nào để đối soát.'); return; }
   if (!NDS.ds){ var ok=await ndsTaiDanhMuc(false); if (!ok) return; }
   /* Gom badge đang hiển thị về đúng 5 nhóm của schema AI rồi để NDS_ENGINE.tuAI xếp vai — dùng
      chung một đường với 2 bộ test (qc-nhan-dien-sku / qc-tem-vision), khỏi lệch cách xếp. */
@@ -8427,12 +8519,12 @@ async function ndsDoiSoat(){
   var nhan=NDS_ENGINE.tuAI(goi);
   var ghim=ndsSoTra();                 // sổ tay tem: tem/mã vạch này người đã chốt SKU rồi -> ghim
   var t0=(window.performance&&performance.now)?performance.now():Date.now();
-  NDS.ket=NDS_ENGINE.timTop(nhan, NDS.cm, { soLuong:3, chiActive:NDS.chiActive, ghim:ghim });
+  NDS.ket=NDS_ENGINE.timTop(nhan, NDS.cm, { soLuong:3, chiActive:NDS.chiActive, ghim:ghim, loc:NDS.loc });
   var ms=Math.round(((window.performance&&performance.now)?performance.now():Date.now())-t0);
   /* Không có ứng viên ACTIVE nào -> thử lại trên toàn danh mục để KHÔNG im lặng nuốt kết quả */
   var themInactive=[];
   if (NDS.chiActive && !NDS.ket.length){
-    themInactive=NDS_ENGINE.timTop(nhan, NDS.cm, { soLuong:3, chiActive:false, ghim:ghim });
+    themInactive=NDS_ENGINE.timTop(nhan, NDS.cm, { soLuong:3, chiActive:false, ghim:ghim, loc:NDS.loc });
   }
   ndsVeKetQua(ms, themInactive);
 }
