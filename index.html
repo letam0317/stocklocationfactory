@@ -8395,7 +8395,8 @@ var NDS_ENGINE = (function(){
        luật nghiệp vụ: KIỂM KÊ ĐẾM HÀNG THẬT — combo là cách đóng gói, không phải mặt hàng để đếm.
        Combo KHÔNG bị bỏ, chỉ luôn xuống sau mọi NORMAL **có cùng bằng chứng định danh** trong Top 3.
        THỨ TỰ CHỐT (sửa chiều muộn 19/08/2026):
-         laSku → ACTIVE → CÓ MÃ → HÀNG ĐÓNG GÓI → SỔ TAY → điểm → độ phủ → đơn vị nhỏ → tồn
+         laSku → ACTIVE → [HÀNG ĐÓNG GÓI, chỉ khi hai bên cùng mức "có mã"] → SỔ TAY → CÓ MÃ
+                → điểm → độ phủ → đơn vị nhỏ → tồn
        Ngoại lệ duy nhất đứng trên tất cả: tem in THẲNG mã SKU nội bộ (laSku) — người ta dán mã nào
        thì trả mã đó, kể cả mã đó là combo. */
     got.sort(soSanh);
@@ -8417,16 +8418,31 @@ var NDS_ENGINE = (function(){
          Nguyên tắc: ĐỊNH DANH thắng ĐÓNG GÓI. Mã hàng là bằng chứng tem này là hàng gì; cuộn/combo
          chỉ là cách hàng đó được đóng. Thà hiện bản cuộn ĐÚNG MÃ còn hơn hiện SKU SAI HÀNG. */
       var ma1=a.coMa?0:1, ma2=b.coMa?0:1;
-      if (ma1!==ma2) return ma1-ma2;
-      /* HÀNG ĐÓNG GÓI (COMBO · "…/Cuộn 5000m" · "…/set" · "…/thùng") xuống sau — nhưng CHỈ khi hai
-         bên có cùng bằng chứng định danh. Luật này vẫn đứng TRÊN sổ tay: sự cố thật 19/08 là một SKU
-         COMBO chiếm hạng 1 với "100% · từ sổ tay" vì có người lỡ dạy sổ tay chọn bản combo. Kiểm kê
-         đếm hàng thật, combo/cuộn không phải đơn vị để đếm. */
-      var ga=((a.type==='COMBO')||a.gop)?1:0, gb=((b.type==='COMBO')||b.gop)?1:0;
-      if (ga!==gb) return ga-gb;
-      /* SỔ TAY (người đã xác nhận) đứng trên mọi suy đoán của máy — nhưng dưới luật đóng gói. */
+      /* HÀNG ĐÓNG GÓI (COMBO · "…/Cuộn 5000m" · "…/set" · "…/thùng") — CHỈ ĐƯỢC NÓI KHI HAI BÊN CÙNG
+         MỨC BẰNG CHỨNG ĐỊNH DANH. Đây là chỗ sửa cốt lõi 19/08/2026 (chiều muộn).
+         Ý nghĩa thật của luật này luôn là "GIỮA HAI DÒNG CỦA CÙNG MỘT MẶT HÀNG thì đừng gợi ý bản
+         cuộn/combo, hãy gợi ý bản đếm được". Nhưng nó bị viết thành luật TOÀN CỤC, nên nó cũng đè
+         lên các dòng CHẲNG LIÊN QUAN GÌ tới nhau — sinh ra 2 sự cố ngược nhau:
+           · Gõ `c2080`: cả 3 SKU của mã đó đều bán theo "Cuộn 5000m" ⇒ bị đẩy xuống hạng 29-31,
+             nhường chỗ cho 28 dòng chỉ khớp chữ "lavender". Muốn chữa thì CÓ MÃ phải trên đóng gói.
+           · Nhưng nếu đưa CÓ MÃ lên trên hẳn thì SỔ TAY (người đã tự tay xác nhận cho đúng tem này)
+             lại bị một dòng "tình cờ mang mã" vượt qua — mà sổ tay tồn tại chính để xử mấy tem có mã
+             NCC không nằm trong tên SKU.
+         Ba ràng buộc đó tạo thành VÒNG (gop > sổ tay > có mã > gop) nên không thể xếp thành một dãy.
+         Cách ra khỏi vòng: trả luật đóng gói về đúng phạm vi của nó — chỉ so khi `coMa` hai bên bằng
+         nhau (cùng mang mã, hoặc cùng không mang). Lúc đó:
+           C2080: hai bên khác mức ⇒ đóng gói im, CÓ MÃ quyết  ✓
+           Morito COMBO vs NORMAL cùng mã: cùng mức ⇒ đóng gói quyết, COMBO xuống  ✓
+           Sổ tay lỡ học COMBO của cùng mặt hàng: cùng mức ⇒ COMBO vẫn xuống  ✓
+           Sổ tay chốt SKU không mang mã: khác mức ⇒ đóng gói im, SỔ TAY quyết  ✓ */
+      if (ma1===ma2){
+        var ga=((a.type==='COMBO')||a.gop)?1:0, gb=((b.type==='COMBO')||b.gop)?1:0;
+        if (ga!==gb) return ga-gb;
+      }
+      /* SỔ TAY (người đã tự tay xác nhận cho ĐÚNG tem này) đứng trên mọi suy đoán của máy. */
       var h1=a.daHoc?0:1, h2=b.daHoc?0:1;
       if (h1!==h2) return h1-h2;
+      if (ma1!==ma2) return ma1-ma2;
       if (b.diem!==a.diem) return b.diem-a.diem;
       if (b.phu!==a.phu) return b.phu-a.phu;
       if (a.q!==b.q) return a.q-b.q;                      // đơn vị nhỏ nhất
