@@ -95,7 +95,11 @@ body{margin:0;background:var(--bg);color:var(--ink);
 .wrap{max-width:1720px;margin:0 auto;padding:20px clamp(20px,3.2vw,52px) 40px;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
 .wrap>footer{margin-top:auto}   /* đẩy footer + footbar xuống đáy khi còn khoảng trống */
 header.hdr{display:flex;align-items:flex-start;gap:12px}
-header.hdr .hgrow{flex:1;min-width:0}
+header.hdr .hgrow{flex:1;min-width:0;display:flex;align-items:flex-start;gap:0}
+/* Nút "!" phải nằm CẠNH tiêu đề, không rớt xuống dưới: `.brand-title` là khối nhiều dòng (tên + dòng
+   chữ nhỏ bên dưới, tuỳ kiểu tiêu đề) nên để mặc định thì nút bị đẩy xuống hàng mới — ảnh chụp cho
+   thấy nó nằm lơ lửng dưới chữ "KIỂM SOÁT KHO". Cho .hgrow thành flex và neo nút theo đỉnh. */
+header.hdr .hgrow > .h2tip{flex:none;margin-top:6px}
 .sub{margin:0 0 10px;color:var(--ink2);font-size:12.5px}
 
 /* ===== Bộ 8 kiểu tiêu đề — bê nguyên từ Audit Kiểm soát kho (đổi HASAKI -> FACTORY) ===== */
@@ -2337,6 +2341,66 @@ body.side-anim{overflow-x:clip}
   .pg-legbox .lb-t,.pg-vthist b,.phy b,.mfilters label,.pcdfoot .fld2 label,.fcfact span{font-size:10.5px}
   .phseg span{font-size:10px}
 }
+
+/* ===== NÚT CHÚ THÍCH "!" SAU TIÊU ĐỀ (20/08/2026 — người dùng chốt) =============================
+ * VÌ SAO: mỗi tab trước đây mở đầu bằng một đoạn `<p class="sub">` giảng giải chỉ số đọc từ đâu, lọc
+ * theo luật gì. Đọc một lần là biết, nhưng nó chiếm 2-3 dòng đầu MÀN HÌNH mỗi lần vào tab — trên
+ * điện thoại là chiếm luôn phần đáng lẽ dành cho số liệu. Tab "Nhận diện SKU" đã bỏ hẳn kiểu này
+ * (vào là thấy ô nhập ngay) và đó là mẫu để theo.
+ * CÁCH: dán một nút "!" nhỏ ngay sau tiêu đề; rê chuột vào thì hiện, rê ra thì ẩn.
+ * DÙNG LẠI khuôn tooltip đã có của `#sideToggle` (data-tip + ::after bubble + ::before mũi nhọn +
+ * độ trễ 0,3s cho khỏi nháy khi rê ngang) — lệ dự án: không dựng control mới khi đã có cái tương đương.
+ * KHÁC #sideToggle 2 điểm CÓ LÝ DO:
+ *   · `white-space:normal` + `max-width` — nội dung ở đây là câu dài (luật nghiệp vụ), không phải
+ *     nhãn một dòng như tooltip của nút thu/xổ thanh bên.
+ *   · là `<button>` chứ không phải `<span>`: máy cảm ứng KHÔNG có hover, nên phải chạm được —
+ *     `:focus-visible` lo phần bàn phím, `:focus` lo phần chạm (xem khối @media(hover:none) dưới).
+ * `data-tip` là VĂN BẢN THUẦN: `content:attr()` không dựng được thẻ, nên nội dung phải bỏ hết <b>,
+ * <code>, <br>. Chỗ nào cần link bấm được thì KHÔNG dùng nút này (vd .pcsteps). */
+.h2tip{position:relative;display:inline-flex;align-items:center;justify-content:center;
+  width:20px;height:20px;min-width:20px;margin-left:7px;padding:0;vertical-align:2px;
+  border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--ink3);
+  font-family:inherit;font-size:12px;font-weight:800;line-height:1;cursor:help;
+  transition:border-color .15s var(--ease),color .15s var(--ease),background .15s var(--ease)}
+.h2tip:hover,.h2tip:focus-visible{border-color:var(--accent);color:var(--accent);background:var(--hover);outline:0}
+/* NEO MÉP TRÁI, không canh giữa: hai nút đang dùng đều nằm sát lề trái trang (sau tiêu đề trang và
+   sau <h2>). Canh giữa thì bong bóng 420px trổ ra ngoài mép trái màn hình và MẤT MẤY CHỮ ĐẦU — ảnh
+   chụp bắt được đúng lỗi này, số đo bề rộng thì không thấy (rộng vẫn đủ, chỉ là nằm sai chỗ).
+   Ai đặt nút sát lề PHẢI thì thêm class `tip-r`. */
+/* ⚠ BẪY ĐÃ DÍNH (bộ đo bắt được: trang kéo ngang 186px trên MỌI tab): bong bóng rộng 420px, dù đang
+   ẩn bằng `visibility:hidden` thì VẪN NẰM TRONG LUỒNG TÍNH VÙNG CUỘN — nó nới `scrollWidth` của cả
+   trang ra. Đúng cái bẫy đã ghi ở khối `#prmodal .prcb .combo-menu` phía trên.
+   ⇒ Ẩn bằng `display:none` cho nó KHÔNG được dựng, rồi hiện bằng animation `popIn` sẵn có của dự án
+   (lệ dự án: dùng lại combo/animation đang có, không dựng hiệu ứng mới). Bỏ luôn cặp
+   opacity/visibility/transition: giữ lại là quay về đúng cái bẫy vừa thoát. */
+.h2tip::after{content:attr(data-tip);position:absolute;left:-6px;top:calc(100% + 9px);display:none;
+  transform-origin:top left;
+  background:var(--ink);color:var(--bg);font-size:11.5px;font-weight:600;line-height:1.5;letter-spacing:.1px;
+  text-align:left;white-space:normal;width:max-content;max-width:min(420px,calc(100vw - 32px));
+  padding:8px 11px;border-radius:8px;pointer-events:none;box-shadow:0 6px 20px rgba(0,0,0,.22);z-index:60}
+/* mũi nhọn vẫn chỉ vào giữa nút, chỉ bong bóng là neo mép trái */
+.h2tip::before{content:"";position:absolute;left:50%;top:calc(100% + 3px);width:0;height:0;display:none;
+  pointer-events:none;transform:translateX(-50%);border:5px solid transparent;border-bottom-color:var(--ink)}
+.h2tip:hover::after,.h2tip:focus-visible::after{display:block;animation:popIn .18s var(--ez-apple) both}
+.h2tip:hover::before,.h2tip:focus-visible::before{display:block}
+/* Nút nằm sát mép phải thì bong bóng canh giữa sẽ tràn ra ngoài màn — biến thể neo mép phải. */
+.h2tip.tip-r::after{left:auto;right:-6px;transform-origin:top right}
+@media(hover:none){
+  /* Máy cảm ứng: không có "rê chuột" nên CHẠM để hiện, chạm ra ngoài (mất focus) thì ẩn.
+     Nút to hơn cho ngón tay, và bong bóng bám mép trái khung cho khỏi tràn ở màn hẹp. */
+  .h2tip{width:26px;height:26px;min-width:26px;font-size:13px}
+  /* MÁY CẢM ỨNG: bong bóng thành DẢI ĐÁY MÀN thay vì bong bóng neo theo nút.
+     Vì sao không neo theo nút: `width:max-content` neo mép trái thì nút nào nằm giữa/phải màn 360px
+     là bong bóng trổ ra ngoài, mà CSS thuần không biết nút đang ở đâu để tự lật chiều.
+     Dải đáy thì `left/right` chốt cứng vào viewport ⇒ không bao giờ tràn, bất kể nút ở đâu, và đúng
+     khuôn bottom-sheet mà bộ lọc pop-up đã dùng trên điện thoại (lệ dự án: dùng lại khuôn có sẵn).
+     Mũi nhọn bỏ đi — dải đáy không trỏ vào đâu cả. */
+  .h2tip::after{position:fixed;left:12px;right:12px;bottom:16px;top:auto;
+    width:auto;max-width:none;font-size:12.5px;line-height:1.55;padding:11px 13px;border-radius:10px;
+    box-shadow:0 -4px 24px rgba(0,0,0,.28);z-index:120}
+  .h2tip::before{content:none}
+  .h2tip:focus::after{display:block;animation:popIn .18s var(--ez-apple) both}
+}
 </style>
 </head>
 <body>
@@ -2349,7 +2413,12 @@ body.side-anim{overflow-x:clip}
 <div id="sideBackdrop" aria-hidden="true"></div>
 <div class="wrap">
 <header class="hdr">
-  <div class="hgrow"><h1 class="brand-title" id="brandTitle"></h1></div>
+  <!-- Nút "!" NGAY SAU TIÊU ĐỀ (người dùng chốt 20/08/2026): mỗi tab trước đây mở đầu bằng một đoạn
+       `<p class="sub">` giảng giải chỉ số đọc từ đâu, lọc theo luật gì — đọc một lần là biết nhưng
+       chiếm 2-3 dòng đầu màn hình MỖI LẦN vào tab. Nay gom hết vào đây: rê chuột vào thì hiện, rê ra
+       thì ẩn. Nội dung đổi theo tab trong showTab(); tab không có gì để nói thì nút tự ẩn.
+       Mẫu để theo là tab "Nhận diện SKU" — nó không có khối giảng giải nào, vào là thấy ô nhập ngay. -->
+  <div class="hgrow"><h1 class="brand-title" id="brandTitle"></h1><button type="button" class="h2tip" id="tabTip" hidden aria-label="Chú thích về hạng mục đang xem">!</button></div>
   <div class="settings" id="settingsWrap">
     <button id="btnSettings" title="Cài đặt hiển thị &amp; dữ liệu" aria-label="Mở cài đặt"><span class="bars"></span></button>
     <div class="settings-pop hidden" id="settingsPop">
@@ -2385,14 +2454,12 @@ body.side-anim{overflow-x:clip}
 
 <!-- ===== TAB 1: Trạng thái lưu trữ (dashboard hiện tại) ===== -->
 <div id="viewStock" hidden>
-  <p class="sub"><span class="muted">"Đã lên kệ" = có vị trí thực (&ne; <code>F0-A0</code>/<code>F00-A00</code>) &nbsp;·&nbsp; "Còn cần lên kệ" = SKU đang ở <code>F0-A0</code>/<code>F00-A00</code></span></p>
   <div id="content"></div>
   <div id="state" class="state"><div class="spin"></div>Đang tải dữ liệu trực tiếp từ Google Sheet…</div>
 </div>
 
 <!-- ===== TAB 2: Kiểm kê — 2 khối song song: theo SKU & theo mã vị trí ===== -->
 <div id="viewKK" hidden>
-  <p class="sub"><span class="muted">Kiểm kê THẬT từ phiếu <code>physical-count</code> WMS (Type: SKU &amp; Location) — "Kế hoạch chờ push": lệnh kiểm kê tạo từ dashboard nằm ở sổ kế hoạch WMS trước khi thành phiếu (Pending = chờ push · Processing = đã push).</span></p>
   <!-- HÀNG ĐIỀU KHIỂN 1 DÒNG: chip lọc KHO đứng trước → bộ lọc trường (Ngày/Request/Type) → nút Kế hoạch
        (nút chuẩn chung 2 tab — không icon, màn hẹp rút gọn còn "Kế hoạch"); các segment display:contents để wrap chung 1 dòng -->
   <div class="kkbar kkonebar" style="margin-bottom:12px">
@@ -2421,7 +2488,6 @@ body.side-anim{overflow-x:clip}
 
 <!-- ===== TAB 3: Tồn kho bất thường (báo cáo stock-inventory-beta · Product Type = Normal) ===== -->
 <div id="viewAbn" hidden>
-  <p class="sub"><span class="muted">Chỉ số "bất thường" đọc từ báo cáo <code>stock-inventory-beta</code> — chỉ SKU có <b>Product Type = Normal</b> và có ít nhất 1 loại &gt; 0: Conflict · UID Temp · Not Found · Unsuitable product · Committed · Committed Outbound.</span></p>
   <!-- Cross-filter KHO: chip kho lọc toàn bộ thẻ chỉ số + chart + pop-up -->
   <div class="kkbar" style="margin-bottom:6px"><span class="hint" style="flex:1"></span><button class="kktab kkplan" onclick="plOpen()" title="Lệnh kiểm kê tạo từ dashboard nằm ở 'sổ kế hoạch' WMS trước khi thành phiếu — Pending = chờ push · Processing = đã push · đọc trực tiếp từ WMS"><span class="pt">Kế hoạch chờ push (WMS)</span><span class="ps">Kế hoạch</span></button></div>
   <div class="kkbar" id="abnWhBar" style="margin-bottom:12px"></div>
@@ -2550,7 +2616,6 @@ body.side-anim{overflow-x:clip}
 
 <!-- ===== TAB 6: Chuyển đổi cân — kg chỉ trả về  ->  mm (Công cụ kho) ===== -->
 <div id="viewCd" hidden>
-  <p class="sub"><span class="muted">Cuộn chỉ mua về theo quy cách <code>2,500,000</code> / <code>3,000,000</code> / <code>5,000,000</code> mm. Đưa vào sản xuất dùng dở, trả về kho thì <b>không còn nguyên kiện nhà cung cấp</b> — chỉ <b>cân</b> được chứ không đo được mm. Nhập số cân + quy cách, máy trừ lõi rồi quy ra <code>mm</code>.</span></p>
 
   <div class="cd-grid">
     <!-- ---------- BƯỚC 1: số liệu cân ---------- -->
@@ -2827,7 +2892,7 @@ body.side-anim{overflow-x:clip}
 <!-- Modal tạo lệnh kiểm kê WMS: điền template WMS_INVENTORY_KEY_TEMPLATE_CP_CHECKLIST_SKU rồi import qua backend GAS -->
 <div id="pcmodal" class="modal" onclick="if(event.target===this)closePcModal()">
   <div class="modalbox pcbox">
-    <div class="modalhd"><div><div class="mt">Tạo lệnh kiểm kê WMS <span class="hint">(template CHECKLIST_SKU · mỗi SKU 1 dòng)</span></div><div class="mtsub" id="pcSub"></div></div><button class="mclose" onclick="closePcModal()">&times;</button></div>
+    <div class="modalhd"><div><div class="mt">Tạo lệnh kiểm kê WMS<button type="button" class="h2tip" aria-label="Chú thích cách tạo lệnh" data-tip="Template CHECKLIST_SKU, mỗi SKU 1 dòng. Cách tạo để lệnh ghi ĐÚNG TÊN BẠN: bấm Tải file .xlsx, rồi vào trang Import SKU của WMS (đang đăng nhập bằng tài khoản của bạn), thả file vừa tải vào.">!</button></div><div class="mtsub" id="pcSub"></div></div><button class="mclose" onclick="closePcModal()">&times;</button></div>
     <!-- Bộ lọc đồng bộ 100% thiết kế .mfilters + combo gõ-để-lọc của dự án (như pop-up Trạng thái lưu trữ / Kiểm kê).
          Combo "Kho kiểm": nhóm ĐỀ XUẤT = kho nguồn của chính các SKU đã chọn (kèm số SKU), rồi mới tới kho khác. -->
     <div class="mfilters" id="pcFilters">
@@ -2854,9 +2919,12 @@ body.side-anim{overflow-x:clip}
     </tr></thead><tbody id="pcBody"></tbody></table></div>
     <!-- Luồng ÍT RỦI RO NHẤT: dashboard chỉ dựng file .xlsx (không đụng token WMS) -> operator tự import
          trong WMS bằng CHÍNH tài khoản họ -> WMS ghi created_by = họ, không đá phiên ai, không cướp chuột. -->
+    <!-- Đoạn "Cách tạo lệnh ①②③" đã dồn vào nút "!" cạnh tiêu đề pop-up (20/08/2026). GIỮ LẠI đúng
+         một thứ ở đây: ĐƯỜNG LINK sang trang Import của WMS — nó phải BẤM ĐƯỢC, mà tooltip dựng bằng
+         `content:attr(data-tip)` thì không chứa được thẻ <a>. Đây là ranh giới của nút "!": chú thích
+         thì vào tooltip, thao tác thì phải ở lại trên màn. -->
     <div class="pcsteps" id="pcSteps">
-      <b>Cách tạo lệnh (ghi đúng tên bạn):</b>
-      <span>① Bấm <b>Tải file .xlsx</b> → ② vào <a id="pcWmsLink" href="https://wms.inshasaki.com/physical-count/request/import/sku" target="_blank" rel="noopener">trang Import SKU của WMS ↗</a> (đang đăng nhập bằng tài khoản của bạn) → ③ thả file vừa tải vào. Lệnh sẽ mang tên <b>chính bạn</b>.</span>
+      <a id="pcWmsLink" href="https://wms.inshasaki.com/physical-count/request/import/sku" target="_blank" rel="noopener">Trang Import SKU của WMS ↗</a>
     </div>
     <div class="pcfoot">
       <span class="hint" id="pcStatus"></span><span class="sp"></span>
@@ -3891,9 +3959,9 @@ var HOME_MUC=[
 function homeMucList(it){ return typeof it.muc==='function'?it.muc():(it.muc||[]); }
 function homeRender(){
   var el=document.getElementById('viewHome'); if(!el) return;
-  var html='<p class="sub"><span class="muted">Chọn hạng mục cần làm. Vào rồi vẫn đổi tab được ở '+
-    '<b>thanh bên</b> (nút góc trên trái hoặc <kbd>Ctrl</kbd>+<kbd>B</kbd>), hoặc quay lại đây bằng mục <b>Tổng quan</b>.</span></p>';
-  html+='<section class="panel"><div class="hm-grid">';
+  /* Đoạn "Chọn hạng mục cần làm…" đã chuyển vào nút "!" sau tiêu đề (TAB_TIP.home) — bảng chọn tự
+     nói lên nó là bảng chọn, không cần một dòng dạy cách bấm nằm chắn trước nó. */
+  var html='<section class="panel"><div class="hm-grid">';
   /* Nhóm có `uuTien` vẽ TRƯỚC (sort ổn định nên các nhóm còn lại giữ nguyên thứ tự khai báo). */
   HOME_MUC.slice().sort(function(a,b){ return (b.uuTien?1:0)-(a.uuTien?1:0); }).forEach(function(grp){
     html+='<div class="hm-h">'+esc(grp.g)+(grp.mo?' <span class="hint">'+esc(grp.mo)+'</span>':'')+'</div>';
@@ -3922,6 +3990,32 @@ function homeNapNhe(){
   if(!ABN.ok) abnNapTong('abngv_home').then(function(ok){ if(ok&&TOPTAB==='home') homeRender(); });
   if(!TVT.ok) tvtLoad().then(function(){ if(TOPTAB==='home') homeRender(); });
 }
+/* Chú thích của từng hạng mục — hiện qua nút "!" sau tiêu đề, KHÔNG còn nằm chắn đầu tab.
+   VĂN BẢN THUẦN, không thẻ HTML: nút dùng `content:attr(data-tip)` nên <b>/<code>/<br> sẽ hiện ra
+   nguyên dạng chữ. Tab nào không có gì phải nói (Planogram, Nhận diện SKU) thì KHÔNG khai — nút tự ẩn,
+   đúng lệ của tab Nhận diện SKU: vào là làm việc ngay. */
+var TAB_TIP={
+  home:'Chọn hạng mục cần làm. Vào rồi vẫn đổi hạng mục ở thanh bên (nút góc trên trái hoặc Ctrl+B), '+
+    'hoặc quay lại đây bằng mục Tổng quan.',
+  stock:'"Đã lên kệ" = SKU có vị trí thực (khác F0-A0 / F00-A00). "Còn cần lên kệ" = SKU đang nằm ở '+
+    'bãi chờ F0-A0 / F00-A00.',
+  kk:'Kiểm kê THẬT từ phiếu physical-count của WMS (Type: SKU và Location). "Kế hoạch chờ push" là '+
+    'lệnh kiểm kê tạo từ dashboard, còn nằm ở sổ kế hoạch WMS trước khi thành phiếu — '+
+    'Pending = chờ push, Processing = đã push.',
+  abn:'Chỉ số "bất thường" đọc từ báo cáo stock-inventory-beta: chỉ lấy SKU có Product Type = Normal '+
+    'và có ít nhất 1 loại lớn hơn 0 — Conflict, UID Temp, Not Found, Unsuitable product, Committed, '+
+    'Committed Outbound.',
+  cd:'Cuộn chỉ mua về theo quy cách 2.500.000 / 3.000.000 / 5.000.000 mm. Đưa vào sản xuất dùng dở, '+
+    'trả về kho thì không còn nguyên kiện nhà cung cấp — chỉ cân được chứ không đo được mm. '+
+    'Nhập số cân và quy cách, máy trừ lõi rồi quy ra mm.'
+};
+/* Gán bằng setAttribute (không nối vào HTML) để khỏi phải lo thoát dấu ngoặc kép trong câu. */
+function tabTipVe(t){
+  var b=document.getElementById('tabTip'); if(!b) return;
+  var tip=TAB_TIP[t]||'';
+  if(tip){ b.setAttribute('data-tip',tip); b.hidden=false; }
+  else { b.removeAttribute('data-tip'); b.hidden=true; }
+}
 function showTab(t){
   var MAP={home:'viewHome',stock:'viewStock',kk:'viewKK',abn:'viewAbn',plg:'viewPlg',sku:'viewNds',cd:'viewCd'};
   if(!MAP[t]) t='home';
@@ -3935,6 +4029,7 @@ function showTab(t){
   document.getElementById('ttPlg').classList.toggle('active',t==='plg');
   document.getElementById('ttSku').classList.toggle('active',t==='sku');
   document.getElementById('ttCd').classList.toggle('active',t==='cd');
+  tabTipVe(t);
   /* 2 tab "Công cụ kho" không có thanh chân trang (xem body.an-chan trong CSS) */
   document.body.classList.toggle('an-chan', t==='sku'||t==='cd');
   if(t!=='sku') ndsRoiTab();   // rời tab thì tắt camera (đèn camera sáng vô cớ + hao pin)
@@ -7113,23 +7208,30 @@ function tvtNhomBar(){
     ks.map(function(k){ return '<button class="kktab'+(TVT.nhom===k?' active':'')+'" data-n="'+esc(k)+'" onclick="tvtSetNhom(this.getAttribute(\'data-n\'))">'+esc(k)+' <b>'+nf(dem[k])+'</b></button>'; }).join('')+
     '</div>';
 }
+/* Chú thích mục "Tồn tại vị trí" — VĂN BẢN THUẦN cho nút "!" (content:attr không dựng được thẻ).
+   Trước đây là một đoạn 4 dòng nằm ngay dưới tiêu đề, đẩy bảng số liệu xuống dưới màn hình.
+   Phạm vi vẫn dựng ĐỘNG từ TVT_BO_QUA/TVT_ST_BO_QUA để sửa luật lọc là chú thích tự đúng theo. */
 function tvtGiaiThich(){
-  return 'SKU <b>vải nguyên liệu</b> bắt buộc khai báo UIDgr code. UID nào <b>chưa khai báo</b> '+
-    '(Group UID / RFID mapping = 0) thì phải nằm ở bãi chờ <code>'+TVT_CHO+'-00-00-00-00</code> — '+
-    'những UID dưới đây đã ở vị trí khác ⇒ cần khai báo UIDgr hoặc trả về bãi chờ.<br>'+
-    '<span class="hint">Phạm vi: chỉ SKU vải, chỉ 2 kho nguyên liệu <b>WH - MATERIAL - MTG</b> và <b>WH - MATERIAL - GARMENT</b>, '+
-    'trừ các vị trí <code>'+TVT_BO_QUA.join('</code>, <code>')+'</code> và trạng thái <code>Adjustment - shipped</code> '+
-    '(UID đã xuất theo phiếu điều chỉnh, bản ghi chỉ còn treo vị trí cũ).</span>';
+  return 'SKU vải nguyên liệu bắt buộc khai báo UIDgr code. UID nào chưa khai báo '+
+    '(Group UID / RFID mapping = 0) thì phải nằm ở bãi chờ '+TVT_CHO+'-00-00-00-00 — '+
+    'những UID trong danh sách này đã ở vị trí khác, cần khai báo UIDgr hoặc trả về bãi chờ. '+
+    'Phạm vi: chỉ SKU vải, chỉ 2 kho nguyên liệu WH - MATERIAL - MTG và WH - MATERIAL - GARMENT; '+
+    'trừ vị trí '+TVT_BO_QUA.join(', ')+' và trạng thái Adjustment - shipped '+
+    '(UID đã xuất theo phiếu điều chỉnh, bản ghi chỉ còn treo vị trí cũ).';
+}
+/* Nút "!" dựng bằng chuỗi nên phải thoát dấu ngoặc kép trong thuộc tính — esc() lo việc đó. */
+function tvtTipBtn(){
+  return '<button type="button" class="h2tip" aria-label="Chú thích mục Tồn tại vị trí" data-tip="'+esc(tvtGiaiThich())+'">!</button>';
 }
 function tvtRender(){
   var el=document.getElementById('tvtWrap'); if(!el) return;
   if(!TVT.ok){
     if(TVT.err==='net'){
-      el.innerHTML='<section class="panel"><h2>Tồn tại vị trí <span class="hint">(UID chưa khai báo UID group)</span></h2>'+
+      el.innerHTML='<section class="panel"><h2>Tồn tại vị trí'+tvtTipBtn()+'</h2>'+
         '<div class="abnempty">⚠ Không tải được tab <code>'+esc(TVT_TAB)+'</code> (mạng/Google Sheet). '+
         '<button class="fcg" onclick="tvtLoad(true)">Thử lại</button></div></section>';
     }else if(TVT.err==='tab'){
-      el.innerHTML='<section class="panel"><h2>Tồn tại vị trí <span class="hint">(UID chưa khai báo UID group)</span></h2>'+
+      el.innerHTML='<section class="panel"><h2>Tồn tại vị trí'+tvtTipBtn()+'</h2>'+
         '<div class="abnempty">Chưa có tab <code>'+esc(TVT_TAB)+'</code> trên Google Sheet — chạy <code>node hasaki/sync-tonbatthuong.js</code> (bước "Tồn tại vị trí") để tạo.</div></section>';
     }else el.innerHTML='';
     return;
@@ -7142,8 +7244,9 @@ function tvtRender(){
     var W=wh[r.wh]||(wh[r.wh]={n:0,qty:0}); W.n++; W.qty+=r.qty;
   });
   var nLoc=Object.keys(loc).length, nWh=Object.keys(wh).length, nSku=Object.keys(sku).length;
-  var head='<h2>Tồn tại vị trí <span class="hint">(UID vải chưa khai báo UID group mà đã rời bãi chờ '+TVT_CHO+')</span></h2>'+
-    '<p class="sub" style="margin:2px 0 10px"><span class="muted">'+tvtGiaiThich()+'</span></p>'+tvtNhomBar();
+  /* Tiêu đề GỌN + nút "!": phần trong ngoặc "(UID vải chưa khai báo UID group mà đã rời bãi chờ…)"
+     và cả đoạn giải thích 4 dòng bên dưới đã dồn vào chú thích rê chuột. */
+  var head='<h2>Tồn tại vị trí'+tvtTipBtn()+'</h2>'+tvtNhomBar();
   if(!rows.length){
     el.innerHTML='<section class="panel">'+head+'<div class="abnempty">Không có UID vải sai vị trí trong phạm vi'+(ABN.wh?(' kho “'+esc(ABN.wh)+'”'):' này')+(TVT.nhom?(' · nhóm “'+esc(TVT.nhom)+'”'):'')+' — mọi UID vải chưa khai báo đều đang ở bãi chờ '+TVT_CHO+'.</div></section>';
     return;
