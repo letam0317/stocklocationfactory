@@ -877,6 +877,61 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
   .abnrv{grid-area:v}
 }
 
+/* ===== IN TEM SKU (20/08/2026) — chọn vào danh sách chờ in, chọn mẫu + số lượng, rồi in =====
+   Nút "＋ Tem" trên thẻ: dùng lại khuôn .kktab như .nds-alt (lệ dự án: không dựng control mới).
+   Cao 28px để ngón tay chạm được mà không lấn chỗ đọc của mã SKU. Khi đã trong danh sách thì nút
+   đổi sang trạng thái .co (viền + nền accent) và bấm lần nữa là BỎ — không cần vào bảng mới xoá. */
+.kktab.nds-tem{padding:3px 10px;font-size:11px;font-weight:700;line-height:1.7;min-height:28px;
+  transition:transform .16s var(--ez-apple),box-shadow .25s ease,background .2s ease;animation:popIn .22s var(--ez-apple) both}
+.kktab.nds-tem:hover{transform:translateY(-1px);box-shadow:var(--shadow);background:var(--hover)}
+.kktab.nds-tem.co{background:color-mix(in srgb,var(--accent) 16%,transparent);border-color:var(--accent);color:var(--accent)}
+/* Thanh "Danh sách in" nổi: cùng khuôn pill + barIn của #pcbar, nhưng viền brand2 để không nhìn
+   lẫn với giỏ kiểm kê, và ngồi CAO HƠN một tầng vì đáy màn hình đã có nút CHỤP của tab này. */
+#prbar{position:fixed;left:50%;bottom:112px;transform:translateX(-50%);z-index:110;display:flex;align-items:center;gap:8px;
+  background:var(--surface);border:1px solid var(--brand2,var(--accent));border-radius:999px;padding:7px 9px 7px 16px;
+  box-shadow:var(--shadow-lg);font-size:12.5px;font-weight:650;flex-wrap:wrap;justify-content:center;row-gap:4px;
+  max-width:94vw;animation:barIn .22s var(--ez-spring)}
+#prbar.hidden{display:none}
+#prbar b{color:var(--brand2,var(--accent));font-variant-numeric:tabular-nums}
+#prbar button{border:0;border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:650;cursor:pointer;font-family:inherit}
+#prbar .go{background:var(--brand2,var(--accent));color:#fff} #prbar .go:hover{filter:brightness(1.06)}
+#prbar .rm{background:transparent;color:var(--muted)} #prbar .rm:hover{color:var(--bad)}
+@media(max-width:900px){#prbar{bottom:138px}}
+body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
+/* Bảng danh sách in trong modal: dùng .mtbl có sẵn, chỉ thêm 2 ô nhập */
+#prBody input.prsl{width:64px;padding:5px 7px;font-family:inherit;font-size:12.5px;text-align:right;
+  border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+#prBody input.prsl:focus{outline:2px solid var(--accent);outline-offset:1px}
+#prBody select.prmau{padding:5px 7px;font-family:inherit;font-size:12px;border:1px solid var(--line);
+  border-radius:8px;background:var(--surface);color:var(--ink);max-width:190px}
+#prBody .prdel{background:0;border:0;color:var(--ink3);cursor:pointer;font-size:17px;line-height:1;padding:2px 6px;border-radius:7px}
+#prBody .prdel:hover{color:var(--bad);background:var(--hover)}
+.prfoot{display:flex;align-items:center;gap:10px;padding:14px 22px;border-top:1px solid var(--line);flex-wrap:wrap}
+.prfoot .sp{flex:1}
+.prfoot button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;
+  padding:9px 16px;font-size:13px;font-weight:650;cursor:pointer;font-family:inherit}
+.prfoot button.primary{background:var(--accent);color:var(--accent-text);border-color:transparent}
+.prfoot button:disabled{opacity:.5;cursor:not-allowed}
+/* ---- Khung tem để in. Trên màn hình nó nằm trong modal (xem trước); lúc in thì @media print ẩn
+   sạch phần còn lại của trang và chỉ để #prsheet ra giấy. ---- */
+#prsheet{display:none}
+.pr-xem{background:var(--surface2);border:1px dashed var(--line);border-radius:10px;padding:12px;
+  display:flex;flex-wrap:wrap;gap:10px;max-height:320px;overflow:auto}
+.pr-tem{background:#fff;color:#000;border:1px solid #999;box-sizing:border-box;padding:1.5mm 2mm;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.6mm;overflow:hidden;
+  font-family:'Segoe UI',Arial,sans-serif}
+.pr-tem .pr-sku{font-size:5.2mm;font-weight:800;letter-spacing:.02em;line-height:1;font-variant-numeric:tabular-nums}
+.pr-tem .pr-sku-nho{font-size:4mm}
+.pr-tem .pr-pn{font-size:2.1mm;line-height:1.25;text-align:center;max-height:5.4mm;overflow:hidden}
+.pr-tem .pr-pn3{font-size:2.4mm;max-height:9mm}
+.pr-tem .pr-dv{font-size:2mm;color:#333}
+@media print{
+  body.in-tem>*{display:none !important}
+  body.in-tem #prsheet{display:block !important}
+  body.in-tem #prsheet .pr-tem{border:0;page-break-after:always;break-after:page}
+  body.in-tem #prsheet .pr-tem:last-child{page-break-after:auto;break-after:auto}
+}
+
 /* ===== Chọn SKU từ pop-up (2 tab) -> tạo lệnh kiểm kê WMS (template CHECKLIST_SKU) ===== */
 .pcc{width:34px;text-align:center !important}
 .pcc input{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;vertical-align:middle}
@@ -2327,6 +2382,47 @@ body.side-anim{overflow-x:clip}
   <button class="rm" onclick="pcClear()" title="Bỏ chọn tất cả">Xoá</button>
 </div>
 
+<!-- Danh sách CHỜ IN TEM (tab Nhận diện SKU) — giỏ RIÊNG, không dùng chung với giỏ kiểm kê:
+     khoá khác (SKU|mẫu tem), phạm vi khác, và hậu quả khác (in sai là mất tem thật). -->
+<div id="prbar" class="hidden">
+  <span>Chờ in <b id="prbarN">0</b> SKU · <b id="prbarT">0</b> tem</span>
+  <button class="go" onclick="prMo()" title="Xem lại danh sách, chọn mẫu tem và số lượng trước khi in">Xem &amp; in</button>
+  <button class="rm" onclick="prXoaHet()" title="Bỏ hết SKU khỏi danh sách chờ in">Xoá</button>
+</div>
+
+<!-- Modal danh sách in: chọn mẫu tem + số lượng cho TỪNG SKU, xoá được từng dòng, xem trước rồi in -->
+<div id="prmodal" class="modal" onclick="if(event.target===this)prDong()">
+  <div class="modalbox" style="max-width:1000px;width:100%">
+    <div class="modalhd"><div>
+      <div class="mt">In tem SKU <span class="hint">(chọn mẫu tem + số lượng cho từng dòng)</span></div>
+      <div class="mtsub" id="prSub"></div>
+    </div><button class="mclose" onclick="prDong()">&times;</button></div>
+    <div class="mfilters" style="align-items:end">
+      <div class="fld"><label>Áp mẫu tem cho tất cả</label>
+        <select id="prMauAll" class="prmau" onchange="prApMau(this.value)"></select></div>
+      <div class="fld"><label>Áp số lượng cho tất cả</label>
+        <input id="prSlAll" class="prsl" type="number" min="1" max="200" step="1" value="1" style="width:96px"
+          onchange="prApSl(this.value)" title="Gõ số rồi rời ô: mọi dòng nhận số này"></input></div>
+    </div>
+    <div class="msum" id="prSum"></div>
+    <div class="modalbody"><table class="mtbl"><thead><tr>
+      <th>SKU</th><th class="pn">Tên sản phẩm</th><th>ĐVT</th><th>Mẫu tem</th><th class="num">Số tem</th><th></th>
+    </tr></thead><tbody id="prBody"></tbody></table></div>
+    <div style="padding:0 22px 4px"><div class="hint" style="margin-bottom:6px">Xem trước (đúng khổ tem, tỉ lệ 1:1):</div>
+      <div class="pr-xem" id="prXem"></div></div>
+    <div class="prfoot">
+      <span class="hint" id="prTrangThai">Bấm <b>In</b> sẽ mở hộp thoại in của Windows — chọn máy in, khổ giấy đã đặt sẵn theo mẫu tem.</span>
+      <span class="sp"></span>
+      <button onclick="prXoaHet()">Xoá hết</button>
+      <button class="primary" id="prBtnIn" onclick="prIn()">In</button>
+    </div>
+  </div>
+</div>
+
+<!-- Giấy in: chỉ khối này ra giấy (xem @media print). Rỗng cho tới lúc bấm In. -->
+<style id="prPage"></style>
+<div id="prsheet"></div>
+
 <!-- Preview giỏ chọn: xem lại SKU + lý do chọn (bất thường loại nào / còn lại chưa kiểm...) trước khi tạo lệnh -->
 <div id="pcprev" class="hidden">
   <div class="ph">Đã chọn <b id="pcprevN">0</b> SKU — xem lại trước khi tạo lệnh<span class="sp"></span><button class="pcx" onclick="pcPrevToggle()" title="Đóng">&times;</button></div>
@@ -3468,6 +3564,7 @@ function showTab(t){
   /* Thanh giỏ chọn chỉ được hiện ở tab Kiểm kê / Tồn kho bất thường (xem PC_TAB) — phải gọi lại sau
      MỖI lần đổi tab, kể cả khi giỏ không đổi số lượng. */
   if(typeof pcSyncBar==='function') pcSyncBar();
+  if(typeof prSyncBar==='function') prSyncBar();   // thanh chờ in chỉ hiện ở tab Nhận diện SKU
   capNhatThongTin();   // footer neo theo tab đang xem (số dòng đúng tab + cùng mốc cập nhật)
 }
 
@@ -8276,8 +8373,24 @@ var NDS_ENGINE = (function(){
     }
     _nhanKey = nhan; _nhanCm = cm;
     _nhanNho = { nhanG:nhanG, tong:tong, hn:theoHo(nhanG.spec), w:w,
-      mm:(nhan.color||[]).filter(function(t){ return /\d/.test(t); }) };
+      mm:(nhan.color||[]).filter(raDangMaMau) };
     return _nhanNho;
+  }
+  /* CÓ RA DÁNG MÃ MÀU KHÔNG? (thêm 20/08/2026 — sự cố tem Lenio F0-1588)
+   * Mã màu thật của danh mục có 3 dạng: SỐ NGẮN ("345", "074", "#006"), số CÓ GẠCH ("19-3911"),
+   * hoặc CHỮ-SỐ ("V8S41", "PD00695MIM", "TN050"). Một dãy SỐ TRẦN từ 4 chữ số trở lên (>= 1000)
+   * gần như luôn là thứ khác: chiều dài cuộn ("5000 M" trên tem chỉ), MOQ ("MOQ: <= 1000"), mã keo
+   * Bemis ("3914"), mã vải ("92419").
+   * SỰ CỐ: tem Lenio in "5000 M" -> "5000" rơi vào rổ MÀU -> so với mã màu THẬT của dòng đúng
+   * ("19-3911", "PD00695MIM") -> XUNG ĐỘT MÃ MÀU GIẢ -> trừ 18% -> dòng ĐÚNG (422487060) tụt từ
+   * 88% xuống 59%, nhường hạng 1 cho 3 dòng "Chỉ Lenio mẫu" ghi THIẾU thông số nên không có gì
+   * để lệch. Đây đúng mặt trái đã ghi ở 5b (Morito): dòng ghi ĐỦ bị phạt, dòng ghi THIẾU thoát án.
+   * Lọc ở CẢ HAI phía (tem và danh mục) bằng cùng một hàm, không thì lại lệch nhau. */
+  function raDangMaMau(t){
+    t = String(t == null ? '' : t);
+    if (!/\d/.test(t)) return false;                 // không có số -> là TÊN màu, không phải mã
+    if (!/^\d+$/.test(t)) return true;               // có gạch / có chữ -> mã màu
+    return Number(t) < 1000;                         // số trần: chỉ 1-3 chữ số mới là mã màu
   }
   function diemMot(nhan, kho, cm){
     var sn = chuanBiNhan(nhan, cm);
@@ -8322,7 +8435,7 @@ var NDS_ENGINE = (function(){
       if (!co) xd.push(h);
     });
     var mmN=sn.mm;
-    var mmK=kho.mmColor || (kho.mmColor = (kho.color||[]).filter(function(t){ return /\d/.test(t); }));
+    var mmK=kho.mmColor || (kho.mmColor = (kho.color||[]).filter(raDangMaMau));
     if (mmN.length && mmK.length){
       var co2=false;
       mmN.forEach(function(t){ if (khopTot(t,mmK)>=0.9) co2=true; });
@@ -8462,7 +8575,7 @@ var NDS_ENGINE = (function(){
       hn[h].forEach(function(t){ if (khopTot(t, hk[h]) >= 0.75) co = true; });
       if (!co) xd.push(h);
     });
-    var mmN = sn.mm, mmK = kho.mmColor || (kho.mmColor = (kho.color || []).filter(function(t){ return /\d/.test(t); }));
+    var mmN = sn.mm, mmK = kho.mmColor || (kho.mmColor = (kho.color || []).filter(raDangMaMau));
     if (mmN.length && mmK.length){
       var co2 = false;
       mmN.forEach(function(t){ if (khopTot(t, mmK) >= 0.9) co2 = true; });
@@ -10169,6 +10282,16 @@ function ndsToTrung(pn, khop){
  *     — copy mã + ghi sổ tay; từ 20/08/2026 KHÔNG còn đổ vào giỏ kiểm kê (xem PC_TAB).
  * Biến thể đơn vị vẫn bấm chọn được, nhưng phải chặn nổi bọt để không kích nhầm thẻ cha.
  */
+/** NÚT "＋ Tem" — đường DUY NHẤT đưa SKU vào danh sách chờ in (xem ghi chú ① ở khối PR).
+ *  Vì sao là nút riêng chứ không phải bấm cả thẻ: bấm thẻ là thao tác dễ xảy ra do chạm lệch (cả ô
+ *  là một nút lớn), mà in tem thì tốn giấy thật — nên việc "sinh ra tem để in" phải là một cú bấm
+ *  CÓ ĐỊA CHỈ. Nút tự nói trạng thái: chưa có thì "＋ Tem", đã có thì "✓ Tem" và bấm lại là BỎ. */
+function ndsNutTem(sku){
+  var co = (typeof prCo === 'function') && prCo(sku);
+  return '<button type="button" class="kktab nds-tem' + (co ? ' co' : '') + '" data-s="' + esc(sku) + '"' +
+    ' title="' + (co ? 'Đang chờ in — bấm để bỏ khỏi danh sách in' : 'Thêm SKU này vào danh sách chờ in tem') + '"' +
+    ' onclick="prTick(this.getAttribute(\'data-s\'),event)">' + (co ? '✓ Tem' : '＋ Tem') + '</button>';
+}
 function ndsTheKetQua(r, hang){
   var mau=ndsMauHang(r.pct), lop='nds-card '+(r.xungDot.length?'nghi':mau);
   var dvNhan = r.donVi || r.dv || '';
@@ -10228,7 +10351,8 @@ function ndsTheKetQua(r, hang){
       ruot+='<div class="nds-alts">'+r.bienThe.map(function(x){
         return '<button type="button" class="kktab nds-alt" onclick="event.stopPropagation();ndsChonSku(\''+esc(x.sku)+'\')" '+
           'title="Xác nhận đơn vị này thay cho SKU ở thẻ — copy mã + ghi vào sổ tay tem">'+esc(x.sku)+' · '+esc(x.donVi||'?')+
-          (x.status==='INACTIVE'?' · <span class="badge b-pend">INACTIVE</span>':'')+' · '+nf(x.qty)+'</button>';
+          (x.status==='INACTIVE'?' · <span class="badge b-pend">INACTIVE</span>':'')+' · '+nf(x.qty)+'</button>'+
+          ndsNutTem(x.sku);
       }).join('')+'</div>';
     }
     if (chipKhop.length) ruot+='<div class="nds-meta">'+chipKhop.join('')+'</div>';
@@ -10249,7 +10373,7 @@ function ndsTheKetQua(r, hang){
       ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();ndsChonSku(\''+esc(r.sku)+'\');}">'+
     '<div class="nds-chead"><span class="nds-rank">'+hang+'</span>'+
       '<span class="nds-sku">'+esc(r.sku)+'</span>'+ton+canh+nhan+
-      '<span class="nds-pct">'+r.pct+'%</span></div>'+
+      '<span class="nds-pct">'+r.pct+'%</span>'+ndsNutTem(r.sku)+'</div>'+
     '<div class="nds-bar"><div class="nds-fill" style="width:'+r.pct+'%"></div></div>'+
     '<div class="nds-pn">'+ndsToTrung(r.pn, r.khop)+'</div>'+
     chiTiet+
@@ -10353,6 +10477,326 @@ function ndsCopyIm(sku){
   else ndsCopyDuPhong(sku,function(){});
 }
 
+/*<PR-TEM>*/
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════
+ *  IN TEM SKU — LÕI THUẦN TÍNH TOÁN (không chạm DOM), 20/08/2026
+ *  Bước 1 của việc in tem: chọn SKU vào danh sách chờ → chọn mẫu tem + số lượng → in bằng hộp
+ *  thoại in của Windows (người dùng chọn máy in ở đó). Danh sách máy in + trạng thái sẵn sàng
+ *  NGAY TRONG TRANG là bước 2, cần một tiến trình chạy ở máy — trình duyệt không có API nào cho
+ *  việc đó (đã đo: web thuần không liệt kê được máy in).
+ *  Giữ 2 mốc PR-TEM để `hasaki/qc-in-tem.mjs` cắt ra chạy trong Node — cùng một bản mã với bản
+ *  đang in thật, khỏi lệch nhau.
+ * ═══════════════════════════════════════════════════════════════════════════════════════════════ */
+var PR_TEM = (function(){
+  "use strict";
+  /* ---------- 1. MÃ VẠCH CODE 128B ----------
+   * Vì sao Code 128B: mã SKU của kho là dãy 9 chữ số, 128B mã hoá được nguyên chuỗi mà vẫn ngắn
+   * (11 module/ký tự), và mọi máy quét cầm tay đều đọc. KHÔNG tự nhớ bảng mẫu vạch — bảng dưới đây
+   * lấy từ JsBarcode (constants.js) và được `qc-in-tem.mjs` đối chiếu lại với BẢN GỐC lưu ở
+   * `hasaki/.code128-doi-chung.json`; sai một bit là quét không ra mà nhìn mắt thường không thấy.
+   * Bảng nén thành MỘT chuỗi: 106 mẫu × 11 ký tự, cắt theo chỉ số; mẫu STOP dài 13 để riêng. */
+  var C128 = '11011001100110011011001100110011010010011000100100011001000100110010011001000100110001001000110010011001001000110010001001100010010010110011100100110111001001100111010111001100100111011001001110011011001110010110010111001100100111011011100100110011101001110110111011101001100111001011001110010011011101100100111001101001110011001011011011000110110001101100011011010100011000100010110001000100011010110001000100011010001000110001011010001000110001010001100010001010110111000101100011101000110111010111011000101110001101000111011011101110110110100011101100010111011011101000110111000101101110111011101011000111010001101110001011011101101000111011000101110001101011101111010110010000101111000101010100110000101000011001001011000010010000110100001011001000010011010110010000101100001001001101000010011000010100001101001000011001011000010010110010100001111011101011000010100100011110101010011110010010111100100100111101011110010010011110100100111100101111010010011110010100111100100101101101111011011110110111101101101010111100010100011110100010111101011110100010111100010111101010001111010001010111011110101111011101110101111011110101110110100001001101001000011010011100';
+  var C128_STOP = '1100011101011';
+  var START_B = 104, MODULO = 103;
+  function mauCua(v){ return (v === 106) ? C128_STOP : C128.substr(v * 11, 11); }
+  /** Chuỗi → dãy mã 128B (đã kèm start + checksum + stop). Trả null nếu có ký tự ngoài tầm 128B. */
+  function maHoa(txt){
+    var s = String(txt == null ? '' : txt), ma = [START_B], i, c;
+    for (i = 0; i < s.length; i++){
+      c = s.charCodeAt(i);
+      if (c < 32 || c > 126) return null;      // 128B phủ ASCII 32..126
+      ma.push(c - 32);
+    }
+    /* Checksum = (start + Σ vị_trí × giá_trị) % 103 — vị trí đếm từ 1 cho ký tự đầu. */
+    var tong = START_B;
+    for (i = 1; i < ma.length; i++) tong += i * ma[i];
+    ma.push(tong % MODULO);
+    ma.push(106);
+    return ma;
+  }
+  /** Chuỗi → chuỗi bit ('1' = vạch đen, '0' = khoảng trắng). */
+  function bit(txt){
+    var ma = maHoa(txt); if (!ma) return '';
+    var ra = '';
+    for (var i = 0; i < ma.length; i++) ra += mauCua(ma[i]);
+    return ra;
+  }
+  /**
+   * Chuỗi → SVG mã vạch. Vẽ bằng <rect> gộp các module liền nhau, không dùng thư viện ngoài
+   * (lệ dự án: không CDN) và không canvas (in ra canvas bị mờ, máy quét kém đọc).
+   * @param opt {mm: bề rộng 1 module (mm), cao: chiều cao vạch (mm), soLe: có in chuỗi số dưới vạch}
+   */
+  function svg(txt, opt){
+    opt = opt || {};
+    var b = bit(txt); if (!b) return '';
+    var mm = opt.mm || 0.28, cao = opt.cao || 9;
+    var rong = b.length * mm, i = 0, rects = '';
+    while (i < b.length){
+      if (b[i] === '1'){
+        var j = i; while (j < b.length && b[j] === '1') j++;
+        rects += '<rect x="' + (i * mm).toFixed(3) + '" y="0" width="' + ((j - i) * mm).toFixed(3) + '" height="' + cao + '" fill="#000"/>';
+        i = j;
+      } else i++;
+    }
+    return '<svg class="pr-bc" width="' + rong.toFixed(2) + 'mm" height="' + cao + 'mm" viewBox="0 0 ' + rong.toFixed(3) + ' ' + cao +
+      '" preserveAspectRatio="none" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">' + rects + '</svg>';
+  }
+
+  /* ---------- 2. MẪU TEM ----------
+   * Khổ tem là thứ DUY NHẤT phải khớp với giấy đang lắp trong máy in, nên nó nằm ngay trong tên mẫu
+   * để thủ kho chọn không cần đoán. Mỗi tem in ra ĐÚNG MỘT trang khổ đó (break-after:page) — đó là
+   * cách máy in nhãn hiểu "một con tem".
+   * `ve(d)` chỉ dựng HTML, không chạm DOM, để test dựng được tem mà không cần trình duyệt.
+   * `d` = {sku, pn, dv, ton, ngay}
+   */
+  function cat(s, n){ s = String(s == null ? '' : s); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
+  var MAU = {
+    't50x30': { ten: 'Tem kho 50 × 30 mm', w: 50, h: 30, mm: 0.26, cao: 9,
+      ve: function(d, esc){
+        return '<div class="pr-sku">' + esc(d.sku) + '</div>' +
+          svg(d.sku, { mm: 0.26, cao: 9 }) +
+          '<div class="pr-pn">' + esc(cat(d.pn, 78)) + '</div>' +
+          (d.dv ? '<div class="pr-dv">ĐVT: ' + esc(d.dv) + '</div>' : '');
+      } },
+    't70x40': { ten: 'Tem lớn 70 × 40 mm (có ngày in)', w: 70, h: 40, mm: 0.30, cao: 11,
+      ve: function(d, esc){
+        return '<div class="pr-sku">' + esc(d.sku) + '</div>' +
+          svg(d.sku, { mm: 0.30, cao: 11 }) +
+          '<div class="pr-pn pr-pn3">' + esc(cat(d.pn, 150)) + '</div>' +
+          '<div class="pr-dv">' + (d.dv ? 'ĐVT: ' + esc(d.dv) + ' · ' : '') + 'in ' + esc(d.ngay || '') + '</div>';
+      } },
+    't40x20': { ten: 'Tem nhỏ 40 × 20 mm (chỉ mã)', w: 40, h: 20, mm: 0.22, cao: 7,
+      ve: function(d, esc){
+        return '<div class="pr-sku pr-sku-nho">' + esc(d.sku) + '</div>' + svg(d.sku, { mm: 0.22, cao: 7 });
+      } }
+  };
+  var MAU_MAC_DINH = 't50x30';
+  function mau(k){ return MAU[k] || MAU[MAU_MAC_DINH]; }
+
+  /* ---------- 3. TÍNH TOÁN TRÊN DANH SÁCH CHỜ ---------- */
+  /** Tổng số CON TEM sẽ ra khỏi máy in (không phải số dòng) — con số duy nhất đáng cảnh báo. */
+  function tongTem(ds){
+    var n = 0;
+    (ds || []).forEach(function(r){ n += Math.max(0, Number(r.sl) || 0); });
+    return n;
+  }
+  /** Gom theo mẫu tem: mỗi mẫu là một khổ giấy khác nhau, in lẫn nhau trong một lượt là ra sai khổ. */
+  function theoMau(ds){
+    var m = {}, thuTu = [];
+    (ds || []).forEach(function(r){
+      var k = MAU[r.mau] ? r.mau : MAU_MAC_DINH;
+      if (!m[k]) { m[k] = []; thuTu.push(k); }
+      m[k].push(r);
+    });
+    return { m: m, thuTu: thuTu };
+  }
+  return { maHoa: maHoa, bit: bit, svg: svg, MAU: MAU, MAU_MAC_DINH: MAU_MAC_DINH, mau: mau,
+    tongTem: tongTem, theoMau: theoMau, cat: cat };
+})();
+/*</PR-TEM>*/
+
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════
+ *  DANH SÁCH CHỜ IN TEM — tầng giao diện (20/08/2026)
+ *  ---------------------------------------------------------------------------------------------
+ *  HAI YÊU CẦU CHỐT CỦA NGƯỜI DÙNG, và chỗ nào trong mã đáp lại:
+ *  ① "Chọn SKU để in phải là do NGƯỜI chọn, tránh nhấn nhầm cũng tự thêm vào danh sách in."
+ *     → Thêm vào danh sách CHỈ qua nút "＋ Tem" trên thẻ (`prTick`). Bấm vào THẺ (vốn là nút lớn
+ *       chiếm cả ô) vẫn chỉ làm việc cũ: copy mã + ghi sổ tay — KHÔNG thêm tem. Nghĩa là chạm lệch
+ *       tay thì tệ nhất là copy lại cái mã, chứ không sinh ra tem để in.
+ *     → Nút có `event.stopPropagation()` nên bấm nút KHÔNG kích luôn thẻ cha (bẫy đã cắn với nút
+ *       "quên ghi nhớ", có ca test canh).
+ *     → Lượt nhận diện mới KHÔNG tự thêm gì vào danh sách; danh sách chỉ đổi khi người bấm.
+ *  ② "Vào danh sách in rồi vẫn xoá / bỏ chọn được."
+ *     → 3 đường bỏ, không đường nào phải làm lại từ đầu: bấm lại nút "✓ Tem" trên thẻ (toggle),
+ *       nút ✕ từng dòng trong bảng, và "Xoá hết".
+ *  Giỏ này RIÊNG với giỏ kiểm kê (PC.sel): khoá theo SKU (không theo kho), mang thêm mẫu tem + số
+ *  lượng, và sống ở tab Nhận diện SKU. Trộn hai giỏ là trộn hai luật khác nhau.
+ * ═══════════════════════════════════════════════════════════════════════════════════════════════ */
+var PR_KEY = 'pr-tem-v1', PR_TRAN_DONG = 200, PR_TRAN_TEM = 2000, PR_TRAN_SL = 200;
+var PR = { sel: {} };        // sel: sku -> {sku, pn, dv, mau, sl}
+try{ PR.sel = JSON.parse(sessionStorage.getItem(PR_KEY) || '{}') || {}; }catch(e){ PR.sel = {}; }
+function prLuu(){ try{ sessionStorage.setItem(PR_KEY, JSON.stringify(PR.sel)); }catch(e){} }
+function prDs(){ return Object.keys(PR.sel).map(function(k){ return PR.sel[k]; }); }
+function prSo(){ return Object.keys(PR.sel).length; }
+function prTongTem(){ return PR_TEM.tongTem(prDs()); }
+function prCo(sku){ return !!PR.sel[String(sku)]; }
+/** Bật/tắt một SKU trong danh sách chờ in. Đây là ĐƯỜNG DUY NHẤT thêm tem — xem ghi chú ① ở trên. */
+function prTick(sku, ev){
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  var k = String(sku);
+  if (PR.sel[k]){
+    delete PR.sel[k];
+    prLuu(); prSyncBar(); ndsVeKetQua(NDS.msDoiSoat);
+    toast('Đã bỏ SKU ' + k + ' khỏi danh sách in.', 'ok');
+    return;
+  }
+  if (prSo() >= PR_TRAN_DONG){ toast('Danh sách in tối đa ' + nf(PR_TRAN_DONG) + ' SKU.', 'warn'); return; }
+  var r = prTimSku(k);
+  if (!r){ toast('Không thấy SKU ' + k + ' trong danh mục.', 'err'); return; }
+  PR.sel[k] = { sku: k, pn: r.pn || '', dv: r.donVi || r.dv || '', mau: PR_TEM.MAU_MAC_DINH, sl: 1 };
+  prLuu(); prSyncBar(); ndsVeKetQua(NDS.msDoiSoat);
+  toast('Đã thêm SKU ' + k + ' vào danh sách in (' + nf(prSo()) + ' SKU · ' + nf(prTongTem()) + ' tem).', 'ok');
+}
+/** Tìm 1 SKU trong kết quả đang hiện (kể cả biến thể đơn vị), rồi mới tới cả danh mục. */
+function prTimSku(sku){
+  var ds = NDS.ket || [], i, j;
+  for (i = 0; i < ds.length; i++){
+    if (String(ds[i].sku) === String(sku)) return ds[i];
+    var bt = ds[i].bienThe || [];
+    for (j = 0; j < bt.length; j++) if (String(bt[j].sku) === String(sku)) return bt[j];
+  }
+  if (NDS.ds) for (i = 0; i < NDS.ds.length; i++) if (String(NDS.ds[i].sku) === String(sku)){
+    var r = NDS.ds[i], dv = NDS_ENGINE.donVi(r.pn);
+    return { sku: r.sku, pn: r.pn, donVi: dv.raw, dv: dv.ma };
+  }
+  return null;
+}
+function prSyncBar(){
+  var el = document.getElementById('prbar'); if (!el) return;
+  var n = prSo();
+  document.getElementById('prbarN').textContent = nf(n);
+  document.getElementById('prbarT').textContent = nf(prTongTem());
+  /* Chỉ hiện ở tab Nhận diện SKU: đây là nơi chọn được SKU. Các tab khác không có gì để thêm nên
+     một thanh nổi lơ lửng ở đó chỉ làm rối (và đè lên thanh giỏ kiểm kê của tab Kiểm kê). */
+  var dungTab = (typeof TOPTAB !== 'undefined') && TOPTAB === 'sku';
+  el.classList.toggle('hidden', !n || !dungTab);
+  var md = document.getElementById('prmodal');
+  if (md && md.classList.contains('show')) prVe();
+}
+function prXoaHet(){
+  if (!prSo()) return;
+  PR.sel = {}; prLuu(); prSyncBar();
+  var md = document.getElementById('prmodal');
+  if (md && md.classList.contains('show')) prVe();
+  ndsVeKetQua(NDS.msDoiSoat);
+  toast('Đã xoá danh sách in.', 'ok');
+}
+function prXoa(sku){
+  delete PR.sel[String(sku)];
+  prLuu(); prSyncBar(); prVe(); ndsVeKetQua(NDS.msDoiSoat);
+}
+function prDatSl(sku, v){
+  var r = PR.sel[String(sku)]; if (!r) return;
+  var n = Math.round(Number(v) || 0);
+  if (n < 1) n = 1;
+  if (n > PR_TRAN_SL){ n = PR_TRAN_SL; toast('Mỗi SKU in tối đa ' + PR_TRAN_SL + ' tem một lượt.', 'warn'); }
+  r.sl = n; prLuu(); prSyncBar(); prVe();
+}
+function prDatMau(sku, m){
+  var r = PR.sel[String(sku)]; if (!r) return;
+  r.mau = PR_TEM.MAU[m] ? m : PR_TEM.MAU_MAC_DINH;
+  prLuu(); prVe();
+}
+function prApMau(m){ prDs().forEach(function(r){ r.mau = PR_TEM.MAU[m] ? m : PR_TEM.MAU_MAC_DINH; }); prLuu(); prVe(); }
+function prApSl(v){ prDs().forEach(function(r){ r.sl = Math.max(1, Math.min(PR_TRAN_SL, Math.round(Number(v) || 1))); }); prLuu(); prSyncBar(); prVe(); }
+function prMo(){
+  if (!prSo()){ toast('Chưa chọn SKU nào — bấm nút "＋ Tem" trên thẻ gợi ý.', 'warn'); return; }
+  var sel = document.getElementById('prMauAll');
+  if (sel && !sel.options.length){
+    Object.keys(PR_TEM.MAU).forEach(function(k){
+      var o = document.createElement('option'); o.value = k; o.textContent = PR_TEM.MAU[k].ten; sel.appendChild(o);
+    });
+    sel.value = PR_TEM.MAU_MAC_DINH;
+  }
+  document.body.classList.add('prm-open');
+  var m = document.getElementById('prmodal');
+  m.style.display = 'flex';
+  requestAnimationFrame(function(){ m.classList.add('show'); });
+  prVe();
+}
+function prDong(){
+  var m = document.getElementById('prmodal');
+  m.classList.remove('show');
+  document.body.classList.remove('prm-open');
+  setTimeout(function(){ m.style.display = 'none'; }, 200);
+  prSyncBar();
+}
+/** Vẽ bảng danh sách + phần xem trước. Dựng lại cả bảng mỗi lượt (danh sách tối đa 200 dòng). */
+function prVe(){
+  var tb = document.getElementById('prBody'); if (!tb) return;
+  var ds = prDs();
+  var mauOpt = function(chon){
+    return Object.keys(PR_TEM.MAU).map(function(k){
+      return '<option value="' + k + '"' + (k === chon ? ' selected' : '') + '>' + esc(PR_TEM.MAU[k].ten) + '</option>';
+    }).join('');
+  };
+  tb.innerHTML = ds.length ? ds.map(function(r){
+    return '<tr><td><b>' + esc(r.sku) + '</b></td>' +
+      '<td class="pn">' + esc(PR_TEM.cat(r.pn, 110)) + '</td>' +
+      '<td>' + esc(r.dv || '—') + '</td>' +
+      '<td><select class="prmau" data-s="' + esc(r.sku) + '" onchange="prDatMau(this.getAttribute(\'data-s\'),this.value)">' + mauOpt(r.mau) + '</select></td>' +
+      '<td class="num"><input class="prsl" type="number" min="1" max="' + PR_TRAN_SL + '" step="1" value="' + (Number(r.sl) || 1) + '"' +
+        ' data-s="' + esc(r.sku) + '" onchange="prDatSl(this.getAttribute(\'data-s\'),this.value)"></td>' +
+      '<td><button class="prdel" data-s="' + esc(r.sku) + '" title="Bỏ SKU này khỏi danh sách in"' +
+        ' onclick="prXoa(this.getAttribute(\'data-s\'))">&times;</button></td></tr>';
+  }).join('') : '<tr><td colspan="6"><div class="state" style="padding:18px">Danh sách in đang trống.</div></td></tr>';
+  var tong = prTongTem(), nhom = PR_TEM.theoMau(ds);
+  document.getElementById('prSub').textContent = ds.length + ' SKU · ' + tong + ' tem' +
+    (nhom.thuTu.length > 1 ? ' · ' + nhom.thuTu.length + ' khổ tem khác nhau' : '');
+  document.getElementById('prSum').innerHTML = nhom.thuTu.map(function(k){
+    var mm = PR_TEM.mau(k);
+    return '<span class="badge b-ok">' + esc(mm.ten) + ': ' + PR_TEM.tongTem(nhom.m[k]) + ' tem</span>';
+  }).join(' ') + (tong > 100 ? ' <span class="badge b-pend">' + nf(tong) + ' tem — kiểm lại số lượng trước khi in</span>' : '');
+  var btn = document.getElementById('prBtnIn');
+  btn.disabled = !ds.length || tong < 1;
+  btn.textContent = ds.length ? ('In ' + nf(tong) + ' tem') : 'In';
+  /* XEM TRƯỚC: chỉ dựng tối đa 12 con tem đầu — xem trước là để soi bố cục/khổ giấy, không phải để
+     dựng cả 2.000 tem trên màn hình (dựng đủ là treo trang mà chẳng ai đọc hết). */
+  var xem = [], dem = 0;
+  for (var i = 0; i < ds.length && dem < 12; i++){
+    var lan = Math.min(Number(ds[i].sl) || 1, 12 - dem);
+    for (var j = 0; j < lan; j++){ xem.push(prMotTem(ds[i])); dem++; }
+  }
+  document.getElementById('prXem').innerHTML = xem.join('') +
+    (tong > dem ? '<div class="hint" style="align-self:center">… và ' + nf(tong - dem) + ' tem nữa</div>' : '');
+}
+/** HTML của MỘT con tem (dùng cho cả xem trước và bản in — một bản mã, không có chỗ để lệch). */
+function prMotTem(r){
+  var m = PR_TEM.mau(r.mau);
+  var d = { sku: r.sku, pn: r.pn, dv: r.dv, ngay: new Date().toLocaleDateString('vi-VN') };
+  return '<div class="pr-tem" style="width:' + m.w + 'mm;height:' + m.h + 'mm">' + m.ve(d, esc) + '</div>';
+}
+/**
+ * IN: dựng đúng số con tem vào #prsheet, đặt @page theo khổ của mẫu, rồi gọi hộp thoại in.
+ * Máy in nào / khổ giấy nào là do người dùng chọn trong hộp thoại của Windows — trình duyệt không
+ * có API liệt kê máy in, nên "chọn máy in ngay trong trang" là việc của bước 2 (cần cầu nối ở máy).
+ */
+function prIn(){
+  var ds = prDs(), tong = prTongTem();
+  if (!ds.length || tong < 1){ toast('Danh sách in đang trống.', 'warn'); return; }
+  if (tong > PR_TRAN_TEM){ toast('Một lượt in tối đa ' + nf(PR_TRAN_TEM) + ' tem — hãy chia nhỏ.', 'warn'); return; }
+  var nhom = PR_TEM.theoMau(ds);
+  /* MỖI KHỔ TEM MỘT LƯỢT IN: @page chỉ nhận MỘT khổ, in lẫn 2 khổ trong một lượt là ra sai giấy.
+     Nói thẳng ra cho người dùng chứ không im lặng in bừa. */
+  if (nhom.thuTu.length > 1){
+    toast('Danh sách đang có ' + nhom.thuTu.length + ' khổ tem khác nhau. Hãy áp một mẫu cho tất cả, hoặc in từng khổ một lượt.', 'warn');
+    return;
+  }
+  /* XÁC NHẬN khi số tem lớn: giấy tem là vật tư thật, in nhầm 500 con là mất 500 con. */
+  if (tong > 30 && !confirm('In ' + tong + ' con tem cho ' + ds.length + ' SKU?')) return;
+  var m = PR_TEM.mau(nhom.thuTu[0]);
+  document.getElementById('prPage').textContent = '@page{size:' + m.w + 'mm ' + m.h + 'mm;margin:0}';
+  var out = [];
+  ds.forEach(function(r){
+    var n = Math.max(1, Number(r.sl) || 1);
+    for (var i = 0; i < n; i++) out.push(prMotTem(r));
+  });
+  document.getElementById('prsheet').innerHTML = out.join('');
+  document.body.classList.add('in-tem');
+  /* Dọn sau khi hộp thoại in đóng (in xong hoặc bấm Huỷ): giữ #prsheet đầy tem thì lần in sau của
+     TRANG KHÁC (vd bảng kiểm kê) cũng ra tem. `afterprint` không phải trình duyệt nào cũng bắn, nên
+     có thêm một lượt dọn chậm làm lưới an toàn. */
+  var don = function(){
+    document.body.classList.remove('in-tem');
+    document.getElementById('prsheet').innerHTML = '';
+    window.removeEventListener('afterprint', don);
+  };
+  window.addEventListener('afterprint', don);
+  setTimeout(don, 60000);
+  document.getElementById('prTrangThai').innerHTML = 'Đã gửi <b>' + nf(tong) + ' tem</b> sang hộp thoại in — chọn máy in ở đó. Khổ giấy đã đặt sẵn <b>' + m.w + '×' + m.h + 'mm</b>.';
+  setTimeout(function(){ window.print(); }, 60);
+}
+
 /* ---------- 6. VÒNG ĐỜI TAB ---------- */
 async function ndsLoad(){
   ndsVeTags();
@@ -10365,6 +10809,7 @@ function ndsRoiTab(){ if (NDS.stream) ndsTatCam(); }
 /* Khôi phục giỏ từ phiên (F5 không mất lựa chọn) */
 try{ PC.sel=JSON.parse(sessionStorage.getItem('pc-sel')||'{}')||{}; }catch(e){ PC.sel={}; }
 pcSyncBar();
+prSyncBar();          // thanh "Chờ in N SKU" — ẩn khi danh sách rỗng hoặc đang ở tab khác
 
 /* Mở trang = vào Tổng quan. `loadData()` VẪN chạy ngay như cũ (nó nuôi cả tab Trạng thái lưu trữ
    lẫn chế độ tô màu kho của Planogram) — chỉ khác là màn hình đầu tiên hiện bảng chọn hạng mục. */
