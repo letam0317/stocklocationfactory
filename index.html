@@ -5111,7 +5111,7 @@ function kkEval(inv,cnt){ if(cnt==null||cnt==='') return {d:0,counted:false}; va
 var CACHE_TTL=10*60*1000;
 function cacheGet(k){ try{ var o=JSON.parse(sessionStorage.getItem(k)||'null'); if(o&&(Date.now()-o.at)<CACHE_TTL) return o.d; }catch(e){} return null; }
 function cacheSet(k,d){ try{ sessionStorage.setItem(k,JSON.stringify({at:Date.now(),d:d})); }catch(e){ /* quá quota -> bỏ qua, không cache */ } }
-function clearCaches(){ try{ ['slf-kk-sku','slf-kk-loc','slf-kk3-sku','slf-kk3-loc','slf-hist','slf-hist2','slf-abn3','slf-adj','slf-uidgr','slf-uide','slf-tvt'].forEach(function(k){ sessionStorage.removeItem(k); }); }catch(e){} }
+function clearCaches(){ try{ ['slf-kk-sku','slf-kk-loc','slf-kk3-sku','slf-kk3-loc','slf-hist','slf-hist2','slf-abn3','slf-adj','slf-uidgr','slf-uide','slf-tvt','slf-tvt2'].forEach(function(k){ sessionStorage.removeItem(k); }); }catch(e){} }
 function gvizP(sheet,params,cb){
   return new Promise(function(res){
     // null = LỖI TẢI (mạng/treo/chặn) — khác "tab rỗng"; caller phân biệt để không hiển thị nhầm "không có dữ liệu"
@@ -6883,10 +6883,17 @@ document.addEventListener('click',function(e){ if(!e.target.closest('#abnmFilter
  * hai mục số liệu, không sinh thêm control lạ. */
 var TVT_TAB='ton-vitri';
 var TVT_CHO='F0-A0';                  // tiền tố bãi chờ khai báo — dòng nào ở đây là ĐÚNG, không vào danh sách
-/* Khu MIỄN TRỪ (người dùng chốt 19/08/2026): F0-KHO-HM không tính sai chỗ. Bộ sync đã cắt từ đầu;
-   lọc lại ở đây là chốt phòng hờ để tab còn dữ liệu cũ (hoặc ai sửa tay Sheet) cũng không hiện ra. */
-var TVT_BO_QUA=['F0-KHO-HM'];
+/* Khu MIỄN TRỪ (chốt 19/08/2026: F0-KHO-HM · bổ sung 20/08/2026: F0-AJ = khu điều chỉnh) và
+   TRẠNG THÁI MIỄN TRỪ (20/08/2026: Adjustment - shipped = UID đã xuất theo phiếu điều chỉnh, bản ghi
+   còn treo vị trí cũ nên "sai vị trí" là ảo — ví dụ người dùng chỉ ra F0-KHO-507-01-03-01).
+   Bộ sync (hasaki/ton-vitri.mjs) đã cắt từ đầu; lọc lại ở đây là chốt phòng hờ để tab còn dữ liệu cũ
+   (hoặc ai sửa tay Sheet) cũng không hiện ra. Giữ 2 danh sách TRÙNG với VT_BO_QUA/ST_BO_QUA bên đó. */
+var TVT_BO_QUA=['F0-KHO-HM','F0-AJ'];
+var TVT_ST_BO_QUA=['adjustment - shipped'];
 function tvtBoQua(loc){ var s=String(loc||'').toUpperCase(); return TVT_BO_QUA.some(function(p){ return s.indexOf(p)===0; }); }
+/* Chuẩn hoá y như chuanSt() bên ton-vitri.mjs: WMS ghi lẫn "…- shipped" / "…- Shipped" */
+function tvtChuanSt(v){ return String(v==null?'':v).replace(/\s*-\s*/g,' - ').replace(/\s+/g,' ').trim().toLowerCase(); }
+function tvtBoQuaSt(st){ var s=tvtChuanSt(st); return !!s && TVT_ST_BO_QUA.indexOf(s)>=0; }
 /* Nhận cột theo NHÃN tiêu đề (chấp nhận snake_case / có dấu cách / tiếng Việt) — cùng lối với ABN_COLS */
 var TVT_COLS={
   cty:['company','công ty','cong ty'],
@@ -6923,7 +6930,9 @@ function tvtNgay(v){
 }
 async function tvtLoad(force){
   if(TVT.loading) return TVT.loading;
-  var ck='slf-tvt', hit=force?null:cacheGet(ck);
+  /* Khoá cache mang HẬU TỐ luật lọc: bản `slf-tvt` cũ trong sessionStorage là rows CHƯA trừ
+     F0-AJ / Adjustment - shipped — đọc lại là hiện ngược. Đổi khoá ⇒ tab đang mở cũng nạp lại đúng. */
+  var ck='slf-tvt2', hit=force?null:cacheGet(ck);
   if(hit){ TVT.rows=hit; TVT.ok=true; TVT.err=''; tvtRender(); return; }
   TVT.loading=(async function(){
     var resp=await gvizP(TVT_TAB,'&headers=1','tvtgv'+(force?'_f':''));
@@ -6941,7 +6950,8 @@ async function tvtLoad(force){
         var uid=String(gv(idx.uid)).trim(); if(!uid) return;
         var loc=String(gv(idx.loc)).trim();
         if(loc.toUpperCase().indexOf(TVT_CHO)===0) return;    // chốt phòng hờ: bãi chờ không phải bất thường
-        if(tvtBoQua(loc)) return;                             // khu miễn trừ (F0-KHO-HM…)
+        if(tvtBoQua(loc)) return;                             // khu miễn trừ (F0-KHO-HM, F0-AJ…)
+        if(tvtBoQuaSt(gv(idx.st))) return;                    // trạng thái miễn trừ (Adjustment - shipped)
         arr.push({cty:String(gv(idx.cty)), wh:String(gv(idx.wh)), loc:loc, uid:uid, sku:String(gv(idx.sku)),
           pn:String(gv(idx.pn)), cat:String(gv(idx.cat)), nhom:String(gv(idx.nhom)||''), brand:String(gv(idx.brand)),
           qty:tvtNum(gv(idx.qty)), uom:String(gv(idx.uom)), st:String(gv(idx.st)),
@@ -6981,7 +6991,8 @@ function tvtGiaiThich(){
     '(Group UID / RFID mapping = 0) thì phải nằm ở bãi chờ <code>'+TVT_CHO+'-00-00-00-00</code> — '+
     'những UID dưới đây đã ở vị trí khác ⇒ cần khai báo UIDgr hoặc trả về bãi chờ.<br>'+
     '<span class="hint">Phạm vi: chỉ SKU vải, chỉ 2 kho nguyên liệu <b>WH - MATERIAL - MTG</b> và <b>WH - MATERIAL - GARMENT</b>, '+
-    'trừ các vị trí <code>'+TVT_BO_QUA.join('</code>, <code>')+'</code>.</span>';
+    'trừ các vị trí <code>'+TVT_BO_QUA.join('</code>, <code>')+'</code> và trạng thái <code>Adjustment - shipped</code> '+
+    '(UID đã xuất theo phiếu điều chỉnh, bản ghi chỉ còn treo vị trí cũ).</span>';
 }
 function tvtRender(){
   var el=document.getElementById('tvtWrap'); if(!el) return;
