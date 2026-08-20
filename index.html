@@ -1896,6 +1896,17 @@ body.side-anim{overflow-x:clip}
    thẳng `[hidden]{display:none!important}` trong phạm vi khung để `hidden` luôn thắng. */
 .nds-stage{position:relative;margin-top:9px;aspect-ratio:4/3;width:100%;border:1px solid var(--line);border-radius:12px;
   background:var(--surface2);overflow:hidden;isolation:isolate}
+/* CHẶN TRẦN CHIỀU CAO trên máy hẹp: khung 4/3 trên màn 390px cao ~293px, còn khi `aspect-ratio` không
+   được hỗ trợ (Safari cũ) thì nó cao TỰ DO theo khung hình camera — dựng đứng 3/4 là chiếm cả màn,
+   đẩy nút "Chụp" và hàng zoom ra khỏi tầm mắt. */
+@media(max-width:1000px){ .nds-stage{max-height:min(52vh,420px)} }
+@supports not (aspect-ratio: 4 / 3){
+  .nds-stage{height:0;padding-top:75%}          /* khuôn cũ: giữ tỉ lệ 4/3 bằng padding */
+}
+/* Bỏ thanh điều khiển gốc của Safari (có nút toàn màn hình) — người dùng chỉ được dùng nút của mình,
+   và một cú chạm nhầm vào nút đó là mất luôn khung. */
+.nds-stage video::-webkit-media-controls{display:none!important}
+.nds-stage video::-webkit-media-controls-start-playback-button{display:none!important}
 .nds-stage>*{position:absolute;inset:0}
 /* ⚠ LUẬT CHUNG CHO CẢ TAB, đừng gỡ: mọi khai báo `display` bằng selector class (0-1-0 trở lên)
    đều ĐÈ LÊN rule `[hidden]{display:none}` (0-1-0) của trình duyệt, làm thuộc tính `hidden`
@@ -2275,7 +2286,11 @@ body.side-anim{overflow-x:clip}
       </div>
       <div class="nds-magoi" id="ndsMaGoi" hidden></div>
       <div class="nds-stage" id="ndsStage">
-        <video id="ndsVideo" playsinline muted hidden></video>
+        <!-- `webkit-playsinline` + `autoplay` là BẮT BUỘC cho iOS, không chỉ `playsinline`:
+             Safari trên iPhone tự đưa <video> vào TOÀN MÀN HÌNH khi play nếu thiếu thuộc tính
+             tiền tố cũ. Lúc đó khung camera phủ hết màn, nút "Chụp" (position:fixed) và hàng zoom
+             nằm dưới lớp toàn màn hình nên coi như mất — đúng hiện tượng user báo 21/08/2026. -->
+        <video id="ndsVideo" playsinline webkit-playsinline autoplay muted hidden></video>
         <img id="ndsShot" alt="Ảnh tem đã chụp" hidden>
         <div class="nds-empty" id="ndsEmpty">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -2563,7 +2578,14 @@ body.side-anim{overflow-x:clip}
       <!-- Dòng trạng thái là chỗ DUY NHẤT nói tình hình máy in: rảnh / đang in đợt của ai / máy trạm
            tắt / báo lỗi. Bản cũ ghi cứng "sẽ mở hộp thoại in của Windows" — vừa sai (giờ in thẳng),
            vừa làm người dùng chờ nhầm một hộp thoại không bao giờ hiện. -->
-      <span class="hint" id="prTrangThai">Đang hỏi máy in của kho…</span>
+      <!-- Hai thứ luôn nhìn thấy ở chân pop-up:
+           · chip TÌNH TRẠNG MÁY IN, tự làm mới mỗi 5 giây khi pop-up đang mở (sự cố 21/08/2026: máy
+             hết giấy mà không có chỗ nào báo, người dùng bấm ép in 4 lần);
+           · TÊN THIẾT BỊ, để dòng "đợt tem của ai" đọc được (trước là `may-oth9uh70@hasaki.vn`). -->
+      <span class="badge" id="prMayChip" title="Tình trạng máy in tem của kho">Máy in: đang hỏi…</span>
+      <button type="button" class="fcg" id="prTenMay" onclick="ndsDatTenMay()"
+        title="Tên thiết bị này — hiện trong hàng đợi in để biết đợt tem của ai">Thiết bị: …</button>
+      <span class="hint" id="prTrangThai"></span>
       <span class="sp"></span>
       <button id="prBtnLui" style="display:none" onclick="prInLui()" title="Chỉ dùng khi không gửi được tới máy in của kho: in bằng hộp thoại in của máy đang cầm">In bằng máy này</button>
       <button onclick="prXoaHet()">Xoá hết</button>
@@ -9891,7 +9913,16 @@ async function ndsCam(){
   }catch(e){
     toast('Không mở được camera (' + (e.name||e.message) + '). Dùng nút "Chọn ảnh" thay thế.','err'); return;
   }
-  v.srcObject = NDS.stream; ndsLop('camera'); await v.play().catch(function(){});
+  v.srcObject = NDS.stream; ndsLop('camera');
+  /* LƯỚI ĐỠ CHO iOS: nếu Safari vẫn cố đưa video vào toàn màn hình (bản cũ, hoặc người dùng chạm
+     nhầm), thoát ra ngay — để trong khung thì mới thấy nút "Chụp" và hàng zoom. */
+  if (!v.__ktFull){
+    v.__ktFull = 1;
+    v.addEventListener('webkitbeginfullscreen', function(){
+      try{ if (v.webkitExitFullscreen) v.webkitExitFullscreen(); }catch(e){}
+    });
+  }
+  await v.play().catch(function(){});
   ndsHienChup(true);
   document.getElementById('ndsBtnCam').textContent='Tắt camera';
   ndsDungZoom();
@@ -10142,6 +10173,50 @@ function ndsEmail(){
   m='may-'+Math.random().toString(36).slice(2,10)+'@hasaki.vn';
   try{ localStorage.setItem('nds-mail',m); }catch(e){}
   return m;
+}
+/* ══════════════════════════════════════════════════════════════════════════════════════════════
+ * TÊN THIẾT BỊ — thay cho `may-il4k27q4@hasaki.vn`
+ * ----------------------------------------------------------------------------------------------
+ * Hàng đợi in ghi "ai gửi đợt này" để người ra lấy tem biết khúc nào của mình. Nhưng danh tính đang
+ * dùng là một chuỗi tự sinh (`may-oth9uh70@hasaki.vn`) — với người đọc thì nó vô nghĩa hoàn toàn.
+ *
+ * Trình duyệt cho biết được gì: `navigator.userAgentData.getHighEntropyValues(['model'])` (Chrome/Edge
+ * trên Android) trả về MÃ máy — Xiaomi 13 ra `2211133C`, không phải tên thương mại; iOS thì Apple
+ * KHÔNG cho biết model, chỉ "iPhone". Nên không có cách nào tự đoán ra đúng chữ "Xiaomi 13".
+ * Vì vậy: đoán một cái tên tạm cho khỏi trống, rồi để người dùng ĐẶT TÊN một lần (nhớ trong máy).
+ * Tên người tự đặt luôn đúng hơn mọi phép đoán, và chỉ phải đặt một lần cho mỗi máy.
+ * ══════════════════════════════════════════════════════════════════════════════════════════════ */
+var NDS_TEN_KEY = 'nds-ten-may';
+/** Tên đoán được từ trình duyệt — dùng làm mặc định khi người dùng chưa đặt tên. */
+function ndsTenDoan(){
+  var ua = String(navigator.userAgent || '');
+  var m = ua.match(/Android\s+([0-9.]+);\s*([^;)]+)/);
+  if (m){
+    var may = String(m[2] || '').replace(/\s*Build\/.*$/i, '').trim();
+    if (may && !/^wv$/i.test(may)) return may;                 // mã máy (vd 2211133C) — vẫn hơn "may-xxxx"
+    return 'Android ' + m[1];
+  }
+  if (/iPad/i.test(ua)) return 'iPad';
+  if (/iPhone/i.test(ua)) return 'iPhone';                     // Apple không cho biết model
+  if (/Windows/i.test(ua)) return 'PC Windows';
+  if (/Macintosh/i.test(ua)) return 'Mac';
+  return 'Thiết bị lạ';
+}
+/** Tên thiết bị đang dùng: người tự đặt > tên đoán. */
+function ndsTenMay(){
+  var t = '';
+  try{ t = String(localStorage.getItem(NDS_TEN_KEY) || '').trim(); }catch(e){}
+  return t || ndsTenDoan();
+}
+/** Hỏi tên máy (một lần là xong, sửa lại lúc nào cũng được). */
+function ndsDatTenMay(){
+  var cu = ndsTenMay();
+  var t = window.prompt('Tên thiết bị này (hiện trong hàng đợi in để biết đợt tem của ai):', cu);
+  if (t === null) return;
+  t = String(t).replace(/\s+/g, ' ').trim().slice(0, 24);
+  try{ if (t) localStorage.setItem(NDS_TEN_KEY, t); else localStorage.removeItem(NDS_TEN_KEY); }catch(e){}
+  toast(t ? ('Thiết bị này tên là "' + t + '".') : 'Đã bỏ tên tự đặt — dùng lại tên máy đoán được.', 'ok');
+  if (typeof prVeTenMay === 'function') prVeTenMay();
 }
 function ndsBusy(on,chu){
   var st=document.getElementById('ndsStage'), cu=document.getElementById('ndsBusyBox');
@@ -11584,6 +11659,7 @@ function prDong(){
   m.classList.remove('show');
   document.body.classList.remove('prm-open');
   setTimeout(function(){ m.style.display = 'none'; }, 200);
+  prNhipMayIn(false);            // đóng pop-up là ngừng hỏi tình trạng máy in (khỏi gọi GAS vô ích)
   prSyncBar();
 }
 /** Vẽ bảng danh sách + phần xem trước. Dựng lại cả bảng mỗi lượt (danh sách tối đa 200 dòng). */
@@ -11722,8 +11798,10 @@ function prInLui(){
   prTrangThaiHtml('Đang mở hộp thoại in của máy này — chọn máy in tem rồi bấm In.', 'warn');
   prInTrinhDuyet(ds, PR_TEM.theoMau(ds));
 }
-/** Email thành tên gọn: "nam@hasaki..." -> "nam". Đủ biết của ai, không phơi cả địa chỉ lên màn hình. */
-function prTenNguoi(s){ var t = String(s || '').trim(); var i = t.indexOf('@'); return i > 0 ? t.slice(0, i) : (t || 'người khác'); }
+/** Tên hiển thị của người/máy gửi đợt in. Từ 21/08/2026 dashboard gửi thẳng TÊN THIẾT BỊ nên phần
+ *  lớn đã đọc được ngay; vẫn cắt đuôi "@..." để mấy đợt cũ trong hàng đợi (email) không phơi cả địa
+ *  chỉ lên màn hình. */
+function prTenNguoi(s){ var t = String(s || '').trim(); var i = t.indexOf('@'); return i > 0 ? t.slice(0, i) : (t || 'máy khác'); }
 /* BA trạng thái, không phải hai — và đừng gộp lại.
  *   · `prAgentChet`  : nhịp tim cũ hơn 60 giây → máy trạm CHẮC CHẮN đang tắt agent (bình thường agent
  *                      hỏi hàng đợi mỗi ~1-2 giây).
@@ -11737,6 +11815,11 @@ function prAgentChuaRo(kq){ var t = Number(kq && kq.agentTre); return !(t >= 0);
 function prNguyCap(kq){ return (prAgentChet(kq) || prAgentChuaRo(kq)) ? 'warn' : ''; }
 /** Một câu tả đúng tình hình chờ: máy trạm có bật không, trước mình còn đợt của ai. */
 function prMoTaCho(kq){
+  /* Máy in đang chặn thì đây là điều DUY NHẤT cần nói — và phải nói kèm việc phải làm, chứ không chỉ
+     mô tả. Nói rõ "không cần bấm lại" vì đúng chỗ này người dùng đã bấm ép in 4 lần (21/08/2026). */
+  var may = kq && kq.may;
+  if (may && may.co && !may.ro && may.chan)
+    return '<b>' + esc(may.chu) + '</b> — xử lý xong là tem tự in, không cần bấm lại.';
   if (prAgentChet(kq)) return 'Nhưng <b>máy trạm đang tắt agent in tem</b> — lệnh nằm trong hàng đợi, sẽ in khi máy bật lại.';
   if (prAgentChuaRo(kq)) return 'Đang chờ máy in nhận lệnh…';
   var truoc = Number(kq.truoc) || 0;
@@ -11745,11 +11828,55 @@ function prMoTaCho(kq){
   return 'Trước bạn còn <b>' + truoc + ' đợt</b> (' + nf(Number(kq.temTruoc) || 0) + ' tem) của ' +
     esc(prTenNguoi(ai)) + ' — chờ đợt đó xong.';
 }
+/* ── TÌNH TRẠNG MÁY IN THEO THỜI GIAN THỰC ───────────────────────────────────────────────────────
+ * Sự cố 21/08/2026: máy in hết giấy, dashboard không báo gì, người dùng bấm ép in 4 lần; lắp cuộn
+ * decal mới vẫn không ra tem, phải mở nắp máy rồi đóng lại mới in — và chỉ ra 3/5 con.
+ * Gốc của sự im lặng: agent gửi byte qua spooler, `WritePrinter` trả OK ngay khi SPOOLER nhận, hoàn
+ * toàn không liên quan tới việc máy in có giấy. Nay agent đi HỎI máy in (Get-Printer + WMI + queue)
+ * mỗi ~10 giây và gửi kèm mỗi lượt hỏi việc; chip này hiển thị nguyên văn, kèm TUỔI của số liệu —
+ * một chip "sẵn sàng" đọc từ 3 phút trước thì vô giá trị, phải nói rõ là cũ. */
+function prMayChip(may){
+  var el = document.getElementById('prMayChip');
+  if (!el) return;
+  var lop = 'badge ', chu;
+  if (!may || !may.co){ lop += 'b-pend'; chu = 'Máy in: chưa rõ (máy trạm chưa báo)'; }
+  else if (may.ro){ lop += 'b-pend'; chu = 'Máy in: số liệu cũ ' + Math.round(may.tre / 1000) + 's — máy trạm có thể đã tắt'; }
+  else if (may.chan){ lop += 'b-bad'; chu = 'Máy in: ' + may.chu; }
+  else if (may.canh){ lop += 'b-warn'; chu = 'Máy in: ' + may.chu; }
+  else { lop += 'b-ok'; chu = 'Máy in: ' + may.chu; }
+  el.className = lop;
+  el.textContent = chu;
+  el.title = may && may.co ? ('đọc cách đây ' + Math.round((may.tre || 0) / 1000) + ' giây' +
+    (may.job > 0 ? ' · ' + may.job + ' việc trong queue' : '')) : 'chưa có số liệu nào từ máy trạm';
+}
+function prVeTenMay(){
+  var b = document.getElementById('prTenMay');
+  if (b) b.textContent = 'Thiết bị: ' + ndsTenMay();
+}
+/** Tự làm mới tình trạng máy in trong lúc pop-up đang mở (5 giây/lượt, dừng khi đóng pop-up). */
+var PR_DONG_HO = null;
+function prNhipMayIn(bat){
+  if (PR_DONG_HO){ clearInterval(PR_DONG_HO); PR_DONG_HO = null; }
+  if (!bat) return;
+  PR_DONG_HO = setInterval(async function(){
+    var md = document.getElementById('prmodal');
+    if (!md || !md.classList.contains('show')){ prNhipMayIn(false); return; }
+    try{
+      var kq = await prGoiGas({ action: 'pr_hangdoi' });
+      if (kq && kq.status === 'success') prMayChip(kq.may);
+    }catch(e){}
+  }, 5000);
+}
+
 /** Mở pop-up là hỏi ngay hàng đợi: dòng trạng thái nói thật ngay từ đầu chứ không hứa suông. */
 async function prHoiHangDoi(){
-  prTrangThaiHtml('Đang hỏi máy in của kho…');
+  prTrangThaiHtml('');
+  prVeTenMay();
+  prMayChip(null);
+  prNhipMayIn(true);
   var kq = null;
   try{ kq = await prGoiGas({ action: 'pr_hangdoi' }); }catch(e){}
+  if (kq && kq.status === 'success') prMayChip(kq.may);
   if (!kq || kq.status !== 'success'){
     prTrangThaiHtml('Chưa hỏi được hàng đợi in — vẫn bấm <b>Xác nhận in</b> được; nếu gửi thất bại sẽ có nút in bằng máy này.', 'warn');
     return;
@@ -11791,7 +11918,10 @@ async function prGuiHangDoi(ds, tong, tBam){
      nghĩa; còn mất mạng thì bấm lại là được. Nói sai loại là đẩy người dùng đi sai đường. */
   var kq;
   try{
-    kq = await prGoiGas({ action: 'pr_them', nguoi: ndsEmail(), dong: JSON.stringify(dong) });
+    /* `nguoi` = TÊN THIẾT BỊ (vd "Xiaomi 13"), không phải chuỗi `may-xxxx@hasaki.vn` tự sinh: dòng
+       này để người ra lấy tem đọc, mà chuỗi tự sinh thì không nói lên điều gì. Danh tính kỹ thuật
+       (hạn mức AI) vẫn là `ndsEmail()`, gửi riêng ở `may`. */
+    kq = await prGoiGas({ action: 'pr_them', nguoi: ndsTenMay(), may: ndsEmail(), dong: JSON.stringify(dong) });
   }catch(e){
     return { ok: false, mang: true, loi: 'Không gọi được hàng đợi in (' + String((e && e.message) || e) + ')' };
   }
@@ -11819,6 +11949,10 @@ async function prTheoDoi(id, tong, tBam){
     var kq = null;
     try{ kq = await prGoiGas({ action: 'pr_trangthai', id: id }); }catch(e){}
     if (!kq || kq.status !== 'success') continue;
+    prMayChip(kq.may);
+    /* Máy in đang chặn (hết giấy...) thì ĐỪNG bỏ cuộc sau 2 phút: người dùng còn đi lấy cuộn decal.
+       Cứ chờ tới 6 phút, và dòng trạng thái nói rõ đang mắc gì. */
+    if (kq.may && kq.may.co && !kq.may.ro && kq.may.chan) HAN = Math.max(HAN, 360000);
     if (kq.trangThai === 'xong'){
       prTrangThaiHtml('✓ Đã in xong <b>' + nf(tong) + ' tem</b> — mất ' + giay() + ' giây.', 'ok');
       toast('Máy in kho đã in xong ' + nf(tong) + ' tem (' + giay() + 's).', 'ok');
