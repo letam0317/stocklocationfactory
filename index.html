@@ -8403,13 +8403,17 @@ var NDS_ENGINE = (function(){
     }
     _nhanKey = nhan; _nhanCm = cm;
     _nhanNho = { nhanG:nhanG, tong:tong, hn:theoHo(nhanG.spec), w:w,
-      /* ⚠ ĐÃ THỬ VÀ LÙI LẠI 20/08/2026: "mã hàng đã ở rổ MÃ thì đừng tính là mã màu nữa". Nghe hợp lý
-         nhưng bộ đối chứng 30 lượt OCR thật bắt ngay 1 lượt XẤU HƠN (tem vải Rib NKT189): rổ màu của
-         tem có `nkt189 · cm40 · tn114-tn006b · 165`; bỏ mấy mảnh trùng rổ MÃ đi thì chỉ còn **165**
-         (lấy từ "NET 165 KG") làm bằng chứng mã màu — nó chẳng khớp dòng nào ⇒ SINH xung đột mã màu
-         GIẢ cho CẢ HAI biến thể White/Navy, 97% tụt còn 80% và thứ tự đảo lộn. Chính mấy mảnh mã
-         "trùng" đó đang GIỮ cho cơ chế xung đột khỏi bắn bừa. Đừng làm lại. */
-      mm:(nhan.color||[]).filter(raDangMaMau) };
+      /* MÃ MÀU CỦA TEM — chỉ nhận mảnh mà DANH MỤC THẬT CÓ dùng làm màu (`cm.mauVung`, dựng lúc dựng
+         chỉ mục). Đây là bản vá đúng cho một lỗi đã cắn hai lần:
+           · tem "5000 M" ⇒ `5000` vào rổ màu ⇒ xung đột mã màu giả (5b.14);
+           · tem dây kéo SAB ⇒ `sab-255lk3557-2` và `no.3` vào rổ màu ⇒ dòng ĐÚNG (có mã màu thật
+             PD00695MIM) bị trừ 18%, nhường hạng 1 cho dòng KHÔNG có mã màu nào (soát 30 tem).
+         ⚠ ĐÃ THỬ VÀ LÙI LẠI cách khác: "mảnh nào ở rổ MÃ thì đừng tính là mã màu" — bộ đối chứng bắt
+         ngay 1 lượt xấu hơn (tem NKT189: bỏ hết mảnh trùng rổ mã thì chỉ còn `165` lấy từ "NET 165
+         KG" làm bằng chứng, sinh xung đột giả cho cả hai biến thể). Lọc theo TỪ VỰNG MÀU CỦA DANH MỤC
+         thì cả hai ca đều đúng: `tn114-tn006b` có thật trong rổ màu của dòng nên được giữ, còn `165`
+         và `sab-255lk3557-2` thì không. */
+      mm:(nhan.color||[]).filter(function(t){ return raDangMaMau(t) && (!cm || !cm.mauVung || cm.mauVung[t]); }) };
     return _nhanNho;
   }
   /* CÓ RA DÁNG MÃ MÀU KHÔNG? (thêm 20/08/2026 — sự cố tem Lenio F0-1588)
@@ -8534,6 +8538,11 @@ var NDS_ENGINE = (function(){
   /* Chữ ký nháy chỉ nhận khi ĐỨNG RIÊNG (neo khoảng trắng hai đầu) — không thì nó cắn vào giữa mã
      dài "HKM-DET.TT.10-163" (đoạn "det.tt") rồi làm mất bằng chứng định danh. */
   var RE_KY_NHAY = /(^|\s)[a-z]{1,3}(?:\.[a-z]{1,3}){1,3}\.?(?=\s|$)/gi;   // NG.T.H · N.T.H
+  /* Dòng và nhãn ĐỊA CHỈ (thêm 20/08/2026 — soát 30 tem thật: 20/30 tem có màu rác `tan` lấy từ
+     "ADD: LOT 24, TÂN THỚI HIỆP IP"). Dựng bằng new RegExp + fromCharCode để không có ký tự thoát
+     nào cho công cụ soạn ăn mất. */
+  var RE_DONG = new RegExp('[' + String.fromCharCode(10) + String.fromCharCode(13) + ']+');
+  var RE_DIACHI = new RegExp('(?:^|[^a-z])(?:address|add|dia chi|dia-chi)[ .:]', 'i');
   function chuanChuoiTem(text){
     var s = String(text == null ? '' : text);
     s = s.replace(RE_NGAY, ' ');
@@ -8547,6 +8556,17 @@ var NDS_ENGINE = (function(){
       if (s === truoc) break;
     }
     s = s.replace(RE_KY_NHAY, '$1 ');
+    /* CẮT ĐOẠN ĐỊA CHỈ (thêm 20/08/2026 — soát 30 tem thật). Mọi tem của mấy NCC này đều in địa chỉ
+       nhà máy: "ADD: LOT 24, TAN THOI HIEP IP, DIST 12, HCMC". Bỏ dấu thì "TÂN" thành `tan` — TRÙNG
+       từ màu tiếng Anh trong TU_MAU ⇒ **20/30 tem thật** có một màu rác `tan` trong rổ MÀU, kéo tụt
+       điểm vai màu (điểm vai = (max+trung bình)/2 nên một mảnh không khớp làm loãng trung bình của
+       MỌI ứng viên) và là một nguồn xung đột mã màu giả. Địa chỉ không bao giờ là bằng chứng định
+       danh, nên cắt từ nhãn ADD/ADDRESS tới hết dòng. Cắt tới HẾT DÒNG chứ không cắt cả chuỗi: tem
+       thường in địa chỉ trên một dòng riêng, phần sau đó vẫn có thể là số lô/PO. */
+    /* Cắt phần sau nhãn ĐỊA CHỈ trên TỪNG DÒNG. Viết bằng String.fromCharCode + lớp [^a-z] thay vì
+       escape regex: bộ soạn từng ăn mất dấu gạch chéo của  và 
+, làm regex vỡ im lặng. */
+    s = s.split(RE_DONG).map(function(d){ var k = d.search(RE_DIACHI); return k < 0 ? d : d.slice(0, k); }).join(' ');
     s = s.replace(/(\d)\s*ln\b/gi, '$1l');        // 16LN -> 16l (cỡ nút ghi kiểu khác)
     return s.replace(/\s+/g, ' ').trim();
   }
@@ -8658,7 +8678,7 @@ var NDS_ENGINE = (function(){
    * trên, nên không có bản sao nào để lệch nhau.
    */
   function dungChiMucViec(ds){
-    var idx = Object.create(null), tuVung = [], i = 0, pha = 0;
+    var idx = Object.create(null), tuVung = [], mauVung = Object.create(null), i = 0, pha = 0;
     var viec = { tong: ds.length, xong: false, cm: null,
       tienDo: function(){ return ds.length ? i/ds.length : 1; },
       buoc: function(n){
@@ -8699,6 +8719,9 @@ var NDS_ENGINE = (function(){
         var o = idx[t]; if (!o) { o = idx[t] = []; tuVung.push(t); }
         if (o[o.length-1]!==i) o.push(i);
       }
+      /* TỪ VỰNG MÃ MÀU của danh mục (thêm 20/08/2026): mảnh nào từng đứng ở rổ MÀU của một dòng nào
+         đó thì mới được coi là "mã màu" khi xét XUNG ĐỘT. Xem ghi chú ở `mm` trong chuanBiNhan. */
+      for (var mv=0; mv<b.color.length; mv++) mauVung[b.color[mv]] = 1;
       var sk = String(ds[i].sku).toLowerCase();
       if (!idx[sk]) { idx[sk]=[i]; tuVung.push(sk); } else idx[sk].push(i);
      }
@@ -8741,7 +8764,7 @@ var NDS_ENGINE = (function(){
     }
     dsIdf.sort(function(a,b){ return a-b; });
     var idfGiua = dsIdf.length ? dsIdf[dsIdf.length>>1] : 1;
-    return { idx:idx, tuVung:tuVung, ds:ds, gram:gram, loiIdx:loiIdx, tuNgan:tuNgan, theoSku:theoSku,
+    return { idx:idx, tuVung:tuVung, mauVung:mauVung, ds:ds, gram:gram, loiIdx:loiIdx, tuNgan:tuNgan, theoSku:theoSku,
       idf:idf, idfGiua:idfGiua, soDong:N };
     }
     return viec;
