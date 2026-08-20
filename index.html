@@ -7889,6 +7889,31 @@ var NDS_ENGINE = (function(){
   ).split(' ');
   var BO_TU = Object.create(null); TU_BO.forEach(function(t){ BO_TU[t]=1; });
   var LA_MAU = Object.create(null); TU_MAU.forEach(function(t){ LA_MAU[t]=1; });
+  /* MÀU TIẾNG VIỆT ↔ TIẾNG ANH (thêm 20/08/2026, yêu cầu user).
+   * Sự cố: thẻ mẫu ghi "Màu sắc: ĐEN", tên hàng WMS ghi "…/Black/Size XL" ⇒ rổ màu hai bên không có
+   * một chữ nào chung ⇒ màu (20% trọng số) đóng góp 0 cho CẢ dòng đúng lẫn dòng sai, nên "Coconut
+   * Milk" và "Black" cùng 61% — máy không có cách nào biết cái nào là đen.
+   * Cách nối: lúc DỰNG CHỈ MỤC, rổ màu của mỗi dòng được thêm luôn từ đồng nghĩa (dòng ghi "black"
+   * thì có thêm "den" và ngược lại). Chọn phía DANH MỤC chứ không phải phía tem vì:
+   *   · điểm mỗi vai = (max + trung bình)/2 trên các mảnh CỦA TEM — thêm mảnh vào tem là làm loãng
+   *     trung bình, thêm vào rổ của dòng thì chỉ có thể làm `khopTot` CAO HƠN, không bao giờ thấp đi;
+   *   · dựng một lần, không tốn gì mỗi lượt tra.
+   * "xanh" cố ý map sang CẢ blue lẫn green: tiếng Việt nhập nhằng thật, và khớp được chữ "xanh" vốn
+   * chỉ là bằng chứng yếu (mã màu/mã hàng mới là thứ quyết định). */
+  /* ⚠ MỘT CHIỀU ANH → VIỆT, KHÔNG LÀM NGƯỢC. Bản đầu nối hai chiều và bộ đối chứng 30 lượt OCR
+   * thật bắt ngay: nhà cung cấp **"Trang Nhã"** — bỏ dấu thành `trang`, TRÙNG ĐÚNG chữ "trắng" —
+   * nên MỌI dòng của NCC đó được cộng thêm màu `white`, và biến thể Navy tự nhận mình là trắng, đè
+   * luôn biến thể White đúng (97% → thứ tự đảo). Tên riêng tiếng Việt trùng từ màu là chuyện thường
+   * (Trang · Hồng · Ngọc · Cam), còn từ màu TIẾNG ANH thì gần như không bao giờ là tên NCC ⇒ chỉ nối
+   * chiều `black → den`, `white → trang`. Ca thật của user (tem ghi "ĐEN", tên hàng ghi "Black") nằm
+   * đúng chiều này. Chiều ngược (tem tiếng Anh, tên hàng tiếng Việt) chấp nhận bỏ — hiếm hơn nhiều
+   * và không đáng đổi bằng một lỗi âm thầm. */
+  var CAP_MAU = [['black','den'],['white','trang'],['red','do'],['yellow','vang'],['purple','tim'],
+    ['brown','nau'],['grey','xam'],['gray','xam'],['pink','hong'],['orange','cam'],['beige','be'],
+    ['cream','kem'],['silver','bac'],['copper','dong'],['blue','lam'],['green','luc'],['olive','reu'],
+    ['ivory','nguavoi'],['mint','ngoc']];
+  var DONG_NGHIA_MAU = Object.create(null);
+  CAP_MAU.forEach(function(c){ (DONG_NGHIA_MAU[c[0]] = DONG_NGHIA_MAU[c[0]] || []).push(c[1]); });
 
   /* ---------- 1. CHUẨN HOÁ ---------- */
   /* Dải dấu thanh/dấu phụ Unicode (U+0300–U+036F) dựng bằng fromCharCode: viết thẳng ký tự dấu
@@ -8373,6 +8398,12 @@ var NDS_ENGINE = (function(){
     }
     _nhanKey = nhan; _nhanCm = cm;
     _nhanNho = { nhanG:nhanG, tong:tong, hn:theoHo(nhanG.spec), w:w,
+      /* ⚠ ĐÃ THỬ VÀ LÙI LẠI 20/08/2026: "mã hàng đã ở rổ MÃ thì đừng tính là mã màu nữa". Nghe hợp lý
+         nhưng bộ đối chứng 30 lượt OCR thật bắt ngay 1 lượt XẤU HƠN (tem vải Rib NKT189): rổ màu của
+         tem có `nkt189 · cm40 · tn114-tn006b · 165`; bỏ mấy mảnh trùng rổ MÃ đi thì chỉ còn **165**
+         (lấy từ "NET 165 KG") làm bằng chứng mã màu — nó chẳng khớp dòng nào ⇒ SINH xung đột mã màu
+         GIẢ cho CẢ HAI biến thể White/Navy, 97% tụt còn 80% và thứ tự đảo lộn. Chính mấy mảnh mã
+         "trùng" đó đang GIỮ cho cơ chế xung đột khỏi bắn bừa. Đừng làm lại. */
       mm:(nhan.color||[]).filter(raDangMaMau) };
     return _nhanNho;
   }
@@ -8638,6 +8669,19 @@ var NDS_ENGINE = (function(){
      var het = i + n; if (het > ds.length) het = ds.length;
      for (; i<het; i++){
       var b = bocTen(ds[i].pn); ds[i]._b = b;
+      /* NỐI MÀU VIỆT ↔ ANH ngay tại đây (20/08/2026): dòng ghi "Black" thì rổ màu có thêm "den",
+         dòng ghi "Đen" thì có thêm "black". Thêm vào rổ CỦA DÒNG (không phải của tem) nên chỉ có thể
+         làm khớp CAO HƠN, không làm loãng trung bình của tem — xem ghi chú ở DONG_NGHIA_MAU.
+         Thêm cả vào `all` để bước CHỌN ỨNG VIÊN (trần 500 dòng) cũng nhìn thấy dòng đó; từ màu không
+         có chữ số nên không bao giờ bị luật cứng "CÓ MÃ" nhận nhầm là mã hàng. */
+      for (var dm=0, mc=b.color.length; dm<mc; dm++){
+        var dsDn = DONG_NGHIA_MAU[b.color[dm]];
+        if (!dsDn) continue;
+        for (var dn=0; dn<dsDn.length; dn++){
+          if (b.color.indexOf(dsDn[dn])<0) b.color.push(dsDn[dn]);
+          if (b.all.indexOf(dsDn[dn])<0) b.all.push(dsDn[dn]);
+        }
+      }
       /* Đơn vị + khoá mặt hàng: tính MỘT LẦN ở đây (5.600 SKU ≈ vài ms) để mỗi lượt đối soát chỉ
          việc so `q`, không phải bóc lại chuỗi. */
       ds[i]._dv = donVi(ds[i].pn); ds[i]._k = khoaHang(ds[i].pn);
@@ -9134,7 +9178,13 @@ var NDS_ENGINE = (function(){
   /* SỐ ĐO thì KHÔNG phải mã, dù cũng "chữ lẫn số": 10mm · 38cm · tex27 · 24l · 20x58mm. Thiếu
      bảng chặn này thì "10mm" được nâng lên vai MÃ (nặng 45%) và mọi SKU nào có 10mm cũng thành
      "khớp mã" — đo thật 19/08/2026: 3 SKU sai chen vào Top 5 với 74–81%. */
-  var RE_KHONG_LA_MA = /^(?:[0-9]+(?:\.[0-9]+)?(?:mm|cm|dm|m|gsm|inch|in|yard|yds|l|d|kg|g|pcs)|(?:tex|text|tkt|tk|ne|nm|dtex)[0-9]+(?:\.[0-9]+)?|[0-9]+x[0-9]+(?:mm|cm)?|#[0-9]+)$/;
+  /* Thêm 20/08/2026 — sự cố thẻ mẫu CMTS07: TỈ LỆ CHẤT LIỆU cũng "chữ lẫn số" nên RE_CODE nhận
+     "60%cotton" / "40%poly" / "100%polyester" vào rổ MÃ (nặng 45%). Hậu quả đo được: mọi dòng chứa
+     "60% Cotton" đều được đánh dấu CÓ MÃ, nên luật cứng "CÓ MÃ" mất sạch sức phân biệt — một
+     "Áo Mẫu FT/CMPO0015" 44% (ACTIVE) leo lên hạng 1, đè 16 dòng mang ĐÚNG mã CMTS07 (61%, tồn 0).
+     Chất liệu là THÔNG SỐ, không phải định danh: cả tem lẫn tên hàng WMS đều bóc bằng hàm này nên
+     đưa về rổ thông số thì hai bên vẫn khớp nhau. */
+  var RE_KHONG_LA_MA = /^(?:[0-9]+(?:\.[0-9]+)?(?:mm|cm|dm|m|gsm|inch|in|yard|yds|l|d|kg|g|pcs)|(?:tex|text|tkt|tk|ne|nm|dtex)[0-9]+(?:\.[0-9]+)?|[0-9]+x[0-9]+(?:mm|cm)?|#[0-9]+|[0-9]+(?:[.,][0-9]+)?%.*)$/;
   /* "Ra dáng mã" xét trên MỘT token đã chuẩn hoá (RE_CODE xét trên cả câu). */
   function laMaHinhDang(t){
     if (!t || t.length < 4 || RE_KHONG_LA_MA.test(t)) return false;
