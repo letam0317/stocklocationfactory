@@ -345,7 +345,9 @@ body.an-chan #pcbar{bottom:16px}
 @media(max-width:640px){
   .mfilters.kkmf{padding:8px 12px}
   .kkmf .fld.q{order:-2;flex:1 1 0;min-width:0}   /* basis 0: co lại để đứng CÙNG HÀNG với nút Bộ lọc */
-  .mfbtn{display:inline-flex;order:-1;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:999px;
+  /* 40px (không phải 32px): đây là nút DUY NHẤT mở bộ lọc trên điện thoại, đo được 32px là dưới
+     chuẩn chạm — cùng ngưỡng ngón tay đã chốt cho ô nhập ở pop-up in tem. */
+  .mfbtn{display:inline-flex;order:-1;align-items:center;gap:6px;height:40px;padding:0 14px;border-radius:999px;
     border:1px solid var(--border);background:var(--surface);color:var(--ink2);font-size:12px;font-weight:650;font-family:inherit;cursor:pointer;flex:0 0 auto;
     transition:border-color .15s var(--ease),box-shadow .15s var(--ease)}
   .mfbtn:active{transform:scale(.96)}
@@ -841,6 +843,57 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
      nén nowrap + tên SP giữ bẻ dòng, bảng rộng cuộn ngang ngay trong modalbody */
   #abnmodal .mtbl td{white-space:nowrap;padding:6px 8px}
   #abnmodal .mtbl .pn{white-space:normal;min-width:170px;max-width:230px}
+  /* Nút đóng pop-up: 24px chữ + padding 4px = vùng chạm 22px, dưới chuẩn ngón tay. Chỉ nới trong
+     .modalhd (× của sheet bộ lọc `.mfsh` giữ nguyên vì nó nằm trong hàng chữ, nới là vỡ hàng). */
+  .modalhd .mclose{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:0}
+  /* ===== Pop-up "Tồn tại vị trí" trên ĐIỆN THOẠI = THẺ, KHÔNG PHẢI BẢNG BÓP (20/08/2026) =====
+     ĐO THẬT trước khi sửa (qc-tvt-mobile.mjs, máy 390×844): bảng 10 cột `width:100%` bóp cột
+     ProductName còn **90px** ⇒ tên vải 90 ký tự vỡ **10 dòng**, kéo mỗi hàng cao **195px** trong khi
+     3 cột nhìn thấy chỉ dùng 1-3 dòng — người dùng thấy hàng loạt hàng TRẮNG, và 7/10 cột (SL, trạng
+     thái, tên hàng…) nằm ngoài màn phải kéo ngang mới tới.
+     Cách chữa dùng lại NGUYÊN khuôn `#prmodal` đã chốt cùng ngày: tr → grid, thead ẩn, nhãn bằng
+     `::before`. Khác một điểm: nhắm theo CLASS `tv*` do `tvtmRender` gắn, không theo `nth-child`.
+     Bố cục 4 hàng (đo được ~120px/thẻ, thay cho 195px):
+       hàng 1  UID (thứ người đi kho dò mắt tìm)      · SL dồn phải
+       hàng 2  mã vị trí dạng chip                    · trạng thái
+       hàng 3  tên sản phẩm, kẹp 2 dòng
+       hàng 4  SKU · kho · cập nhật (chữ nhỏ mờ)
+     Cột "Group UID" ẩn hẳn: cả danh sách này ĐỊNH NGHĨA là UID chưa khai báo group nên ô nào cũng
+     là "0" — giữ lại chỉ tốn chỗ (cùng lẽ với .col-kho/.col-tot ở đầu khối này). */
+  #tvtmodal .modalbody{overflow-x:hidden;padding:0 10px 12px}
+  #tvtmodal .mtbl{display:block;font-size:13px}
+  #tvtmodal .mtbl thead{display:none}
+  #tvtmodal .mtbl tbody{display:block}
+  #tvtmodal .mtbl tr{position:relative;display:grid;
+    grid-template-columns:minmax(0,auto) minmax(0,1fr) minmax(0,auto);
+    grid-template-areas:"uid uid sl" "loc loc st" "pn pn pn" "sku wh upd";
+    gap:3px 8px;align-items:baseline;padding:10px 12px 10px 40px;margin:0 0 8px;
+    border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:var(--shadow)}
+  #tvtmodal .mtbl tbody tr:hover{background:var(--surface)}
+  #tvtmodal .mtbl td{display:block;border:0;padding:0;white-space:normal;min-width:0}
+  /* Ô tick rời khỏi luồng grid, neo góc trên trái — ngón tay chạm 40px mà không ăn cột nào */
+  #tvtmodal .mtbl td.pcc{position:absolute;left:0;top:4px;width:40px;height:40px;
+    display:flex;align-items:center;justify-content:center}
+  #tvtmodal .mtbl td.pcc input{width:19px;height:19px}
+  #tvtmodal .mtbl td.tvuid{grid-area:uid;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
+  #tvtmodal .mtbl td.tvsl{grid-area:sl;justify-self:end;text-align:right !important;
+    font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+  #tvtmodal .mtbl td.tvsl::before{content:'SL ';color:var(--muted);font-size:10px;font-weight:650}
+  /* Mã vị trí: chip monospace như pop-up Kiểm kê (.locchip) — nowrap để không bẻ theo dấu "-" */
+  #tvtmodal .mtbl td.tvloc{grid-area:loc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    font-size:12.5px;font-weight:650;font-family:var(--mono,ui-monospace,monospace)}
+  #tvtmodal .mtbl td.tvst{grid-area:st;justify-self:end;white-space:nowrap;font-size:11px;color:var(--ink2)}
+  #tvtmodal .mtbl td.tvpn{grid-area:pn;font-size:11.5px;line-height:1.45;color:var(--ink2);
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  #tvtmodal .mtbl td.tvsku{grid-area:sku;font-size:10.5px;color:var(--ink3);white-space:nowrap;font-variant-numeric:tabular-nums}
+  #tvtmodal .mtbl td.tvsku::before{content:'SKU ';color:var(--muted)}
+  /* Tên kho nowrap + ellipsis: "WH - MATERIAL - GARMENT" vỡ 3 dòng theo dấu "-" là bệnh cũ */
+  #tvtmodal .mtbl td.tvwh{grid-area:wh;font-size:10.5px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #tvtmodal .mtbl td.tvupd{grid-area:upd;justify-self:end;font-size:10.5px;color:var(--ink3);white-space:nowrap}
+  #tvtmodal .mtbl td.tvgrp{display:none}
+  /* Dòng thông báo ("Không có dòng phù hợp", "Hiển thị 500 / N dòng") trải hết thẻ */
+  #tvtmodal .mtbl td[colspan]{grid-column:1/-1;grid-row:1;text-align:center}
+  #tvtmodal .mtbl tr:has(td[colspan]){grid-template-areas:"a a a";padding:14px 12px;background:0;border:0;box-shadow:none}
 }
 
 /* ===== TAB 3: Tồn kho bất thường — thẻ chỉ số gọn + 2 chart cạnh nhau (theo kho | theo loại) ===== */
@@ -7170,10 +7223,15 @@ function tvtmRender(){
   for(var i=0;i<rows.length;i++){ var r=rows[i];
     sl+=r.qty; sku[r.sku]=1;
     if(out.length<cap){
+      /* Mỗi ô có CLASS RIÊNG (tv*) để CSS điện thoại xếp thẻ theo class chứ không theo `nth-child`:
+         dán nhãn bằng nth-child là thứ âm thầm sai ngày nào thêm/bớt cột (đã dính một lần ở pop-up
+         in tem — ô SKU bị gắn nhãn "ĐVT:"). Bảng máy tính không đổi gì. */
       out.push('<tr>'+pcCell(r.wh,r.sku,r.pn,0,tvtReason(r))+
-        '<td class="whn"><span class="dot" style="background:'+abnColor(r.wh)+'"></span>'+esc(r.wh)+'</td>'+
-        '<td>'+esc(r.loc)+'</td><td>'+esc(r.uid)+'</td><td>'+esc(r.sku)+'</td><td class="pn">'+esc(r.pn)+'</td>'+
-        '<td class="num">'+nf(r.qty)+'</td><td class="abncell0">'+esc(r.grp||'0')+'</td><td>'+esc(r.st||'—')+'</td><td>'+esc(r.upd||'—')+'</td></tr>');
+        '<td class="whn tvwh"><span class="dot" style="background:'+abnColor(r.wh)+'"></span>'+esc(r.wh)+'</td>'+
+        '<td class="tvloc">'+esc(r.loc)+'</td><td class="tvuid">'+esc(r.uid)+'</td>'+
+        '<td class="tvsku">'+esc(r.sku)+'</td><td class="pn tvpn">'+esc(r.pn)+'</td>'+
+        '<td class="num tvsl">'+nf(r.qty)+'</td><td class="abncell0 tvgrp">'+esc(r.grp||'0')+'</td>'+
+        '<td class="tvst">'+esc(r.st||'—')+'</td><td class="tvupd">'+esc(r.upd||'—')+'</td></tr>');
     }
   }
   if(rows.length>cap) out.push('<tr><td colspan="'+NCOL+'" class="empty">Hiển thị '+nf(cap)+' / '+nf(rows.length)+' dòng — dùng bộ lọc để thu hẹp.</td></tr>');
