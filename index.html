@@ -912,9 +912,27 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
 @media(max-width:900px){#prbar{bottom:138px}}
 body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
 /* Bảng danh sách in trong modal: dùng .mtbl có sẵn, chỉ thêm 2 ô nhập */
-#prBody input.prsl{width:64px;padding:5px 7px;font-family:inherit;font-size:12.5px;text-align:right;
+#prBody input.prsl{width:88px;padding:7px 10px;font-family:inherit;font-size:14px;text-align:right;
   border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
 #prBody input.prsl:focus{outline:2px solid var(--accent);outline-offset:1px}
+#prBody input.prsl:disabled{opacity:.55;cursor:not-allowed}
+/* Ô SỐ LƯỢNG NHIỀU GIÁ TRỊ (21/08/2026): mỗi số đã chốt là một CHIP, số đang gõ nằm trong ô, bấm "+"
+   là chốt thêm một cái nữa. Ba bịch 1.000 · 2.000 · 3.000 thì gõ ba lần, không phải nhớ cú pháp dấu
+   phẩy nào.
+   Chip tái dùng NGUYÊN khuôn `.nds-tag` của tab (popIn + nút × + focus ring) — lệ dự án: đã có khuôn
+   thì không dựng control trần mới. Chip xếp TRƯỚC ô nhập nên đọc từ trái sang phải là đúng thứ tự
+   sẽ in, và số vừa chốt luôn nằm sát ngay ô nhập. */
+#prBody .prslo{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:flex-end}
+#prBody .prchip{--cc:var(--accent);font-variant-numeric:tabular-nums;padding:4px 4px 4px 10px}
+/* Nút "+" phải ĐẬP VÀO MẮT (yêu cầu user): nền accent đặc, chữ trắng, có bóng — nó là thao tác chính
+   của ô này, không phải một dấu cộng mờ nhạt lẫn vào nền. Chỉ hiện khi trong ô ĐANG có số. */
+#prBody .prsladd{display:none;align-items:center;justify-content:center;width:32px;height:32px;flex:0 0 auto;
+  border:0;border-radius:9px;background:var(--accent);color:#fff;font-size:20px;font-weight:800;line-height:1;
+  cursor:pointer;font-family:inherit;box-shadow:0 2px 9px color-mix(in srgb,var(--accent) 42%,transparent);
+  animation:popIn .18s var(--ez-apple) both}
+#prBody .prsladd.hien{display:inline-flex}
+#prBody .prsladd:hover{filter:brightness(1.09)}
+#prBody .prsladd:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 /* COMBO mẫu tem: chỉ cần 3 dòng vì `.combo`/`.combo-menu`/`.combo-item` đã có sẵn (popIn + focus ring
    + hover accent). Mũi tên dùng đúng kiểu `.fccombo` của pop-up Dự báo. */
 #prmodal .prcb{max-width:210px}
@@ -980,7 +998,11 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
      rộng đúng bằng ô, chữ dài thì ngắt dòng trong mục. */
   #prmodal .prcb .combo-menu{width:auto;min-width:0;max-width:none;left:0;right:0}
   #prmodal .prcb .combo-item{white-space:normal;line-height:1.45}
-  #prBody input.prsl{width:58px;min-height:36px}
+  #prBody input.prsl{width:82px;min-height:42px;font-size:15px}
+  /* Ô Số lượng nay có thể mang nhiều chip → cho nó nhận hết bề rộng còn lại và xuống dòng được,
+     thay vì nhốt trong một ô hẹp căn phải. */
+  #prmodal .mtbl td:nth-child(2){justify-self:stretch}
+  #prBody .prsladd{width:36px;height:36px}
   #prBody .prdel{font-size:22px;padding:4px 8px}
   /* Hai ô "áp cho tất cả": nhãn dài chiếm nửa bề rộng nên ô chọn bị cắt mất chữ — xếp DỌC lại. */
   /* HAI Ô "ÁP CHO TẤT CẢ" GỘP MỘT HÀNG, NHÃN RÚT NGẮN.
@@ -2515,8 +2537,10 @@ body.side-anim{overflow-x:clip}
 <div id="prmodal" class="modal" onclick="if(event.target===this)prDong()">
   <div class="modalbox" style="max-width:1000px;width:100%">
     <div class="modalhd"><div>
-      <div class="mt">In tem SKU <span class="hint">(gõ nhiều số lượng cách nhau bằng dấu phẩy: 12, 14, 16 → 3 tem)</span></div>
-      <div class="mtsub" id="prSub"></div>
+      <!-- Tiêu đề để TRẦN (21/08/2026, yêu cầu user): bỏ câu hướng dẫn cú pháp dấu phẩy (nay đã có nút
+           "+" nên không cần dạy cú pháp) và bỏ dòng phụ "N SKU · N tem · N hàng giấy" — nút ở chân
+           pop-up đã ghi "Xác nhận in N tem", nói lại lần nữa chỉ là chữ. -->
+      <div class="mt">In tem SKU</div>
     </div><button class="mclose" onclick="prDong()">&times;</button></div>
     <!-- Bỏ ô "áp mẫu tem" (20/08/2026): chỉ còn một khổ tem đang dùng nên không có gì để chọn. -->
     <div class="mfilters" style="align-items:end">
@@ -3633,7 +3657,7 @@ var HOME_MUC=[
      thứ tự trong HOME_MUC (và do đó ở thanh bên) giữ nguyên để khỏi đổi thói tay của người đang dùng. */
   { g:'Công cụ kho', uuTien:true, mo:'Dùng ngay tại chỗ, không cần dữ liệu nền', items:[
     { t:'sku', ten:'Nhận diện SKU', cc:'var(--warn)', nhan:'Công cụ',
-      mo:'Chụp tem nhà cung cấp → máy bóc từ khoá → gợi ý SKU nội bộ khớp nhất; bấm thẻ là copy mã SKU và ghi vào sổ tay tem (lần sau khỏi gọi AI).',
+      mo:'Chụp tem nhà cung cấp → máy bóc từ khoá → gợi ý SKU nội bộ khớp nhất; bấm thẻ là copy mã SKU.',
       muc:['Chụp/chọn ảnh tem','Gợi ý SKU','Từ khoá bóc được','Sổ tay tem'] },
     { t:'cd', ten:'Chuyển đổi cân', cc:'var(--brand2,var(--accent))', nhan:'Công cụ',
       mo:'Chỉ trả về từ sản xuất chỉ cân được kg — công cụ quy ra mm theo mật độ cuộn nguyên, đã trừ khối lượng lõi.',
@@ -9513,24 +9537,34 @@ var NDS_ENGINE = (function(){
 
 /* ============================== TẦNG GIAO DIỆN ============================== */
 /* ==================================================================================================
- * SỔ TAY TEM — THƯ VIỆN TỰ HỌC, KHÔNG CẦN AI  (19/08/2026)
+ * SỔ TAY TEM — ĐÃ TẮT (21/08/2026, yêu cầu người dùng)
  * --------------------------------------------------------------------------------------------
- * AI chỉ làm ĐÚNG MỘT việc: biến pixel thành từ khoá (đo thật 3–7 giây + tốn hạn mức ngày). Nhưng
- * kho nguyên liệu nhập đi nhập lại đúng những mặt hàng đó, nên thứ đáng nhớ là KẾT LUẬN CỦA NGƯỜI:
- * "tem có chữ ký này (hoặc mã vạch này) = SKU kia". Nhớ rồi thì lần sau ra NGAY: 0 giây, 100%,
- * không mạng cũng chạy, và AI tụt xuống vai lưới đỡ cho tem LẠ lần đầu.
+ * Sổ tay từng ghi nhớ "tem có chữ ký này (hoặc mã vạch này) = SKU kia" mỗi khi người dùng BẤM một
+ * thẻ SKU gợi ý, để lần sau ra ngay mà không cần gọi AI.
  *
- * ⚠ Nói rõ để khỏi hiểu nhầm: Gemini KHÔNG học được gì từ ảnh mình gửi — mỗi lượt gọi là độc lập,
- *   gửi 1.000 tấm tem giống nhau thì tấm 1.001 vẫn tốn đúng ngần ấy giây. Cuốn sổ này là CỦA MÌNH:
- *   tra cứu, giải thích được ("lần trước tem này được chọn là SKU X"), và sửa/xoá được.
+ * VÌ SAO TẮT: đường ghi duy nhất của nó là cú bấm vào thẻ gợi ý — mà thẻ là một ô lớn trên điện
+ * thoại, rất dễ chạm lệch. Bấm nhầm một lần là sổ ghim SKU SAI ở 100% cho mọi lần gặp lại tem đó;
+ * cái giá của một cú chạm nhầm lớn hơn nhiều thứ nó tiết kiệm được. Người dùng chốt: bỏ.
  *
- * Khoá gồm 2 loại, tra cái nào trúng cũng được:
- *   · `bc:<mã vạch>`  — quét được từ tem (chắc chắn nhất, không phụ thuộc chữ đọc đúng hay sai)
- *   · `tk:<chữ ký>`   — NDS_ENGINE.chuKy(): các từ khoá ĐỊNH DANH (mã · thông số · màu) đã sắp xếp
+ * CÁCH TẮT (cố ý làm kiểu này chứ không xoá cả khối): `ndsSoNap` luôn trả sổ RỖNG và `ndsSoHoc`
+ * không ghi gì. Nhờ vậy mọi đường phụ thuộc tự tắt theo mà không phải mổ vào tầng xếp hạng —
+ * `ndsSoTra()` ra rỗng nên luật "ghim từ sổ tay" không bao giờ chạy, `daHoc` không bao giờ bật nên
+ * nhãn "từ sổ tay" và nút "quên ghi nhớ" không còn xuất hiện, `ndsSoDem()` = 0 nên nút "Xoá sổ tay"
+ * tự ẩn. Muốn bật lại thì bỏ hai chốt dưới đây — nhưng lúc đó phải đổi đường ghi thành một nút
+ * "Ghi nhớ tem này" bấm CÓ Ý, chứ không phải ăn theo cú bấm thẻ.
+ *
+ * DỮ LIỆU CŨ TRÊN MÁY cũng phải dọn: nếu chỉ chặn đường ghi mà vẫn đọc thì những ghi nhớ SAI đã có
+ * từ trước vẫn tiếp tục gợi ý sai — đúng cái người dùng muốn tránh.
  * ================================================================================================== */
 var NDS_SO_KEY='nds-so-v1', NDS_SO_TRAN=5000;
 var NDS_SO={ ds:null };
+var NDS_SO_TAT=true;                       // chốt: sổ tay đã tắt (xem ghi chú trên)
+/** Dọn một lần dữ liệu sổ tay còn sót trên máy này. */
+(function ndsSoDonMotLan(){
+  try{ if (NDS_SO_TAT && localStorage.getItem(NDS_SO_KEY)) localStorage.removeItem(NDS_SO_KEY); }catch(e){}
+})();
 function ndsSoNap(){
+  if (NDS_SO_TAT) return (NDS_SO.ds = {});
   if (NDS_SO.ds) return NDS_SO.ds;
   try{
     var o=JSON.parse(localStorage.getItem(NDS_SO_KEY)||'null');
@@ -9564,6 +9598,7 @@ function ndsSoTra(){
 }
 /** Ghi nhớ lựa chọn của người dùng cho MỌI khoá của tem đang xem. */
 function ndsSoHoc(sku, pn){
+  if (NDS_SO_TAT) return 0;                // đã tắt: bấm thẻ KHÔNG ghi nhớ gì nữa
   var ks=ndsSoKhoa(); if (!ks.length) return 0;
   var so=ndsSoNap(), gio=Date.now(), n=0;
   ks.forEach(function(k){
@@ -10203,7 +10238,7 @@ async function ndsDocTem(tuDong){
   if (!NDS.anh){ if(!tuDong) toast('Chưa có ảnh tem — bấm "Bật camera" rồi "Chụp", hoặc "Chọn ảnh".','warn'); return false; }
   var mail=ndsEmail(); if (!mail) return false;
   var luot=NDS.luot;                       // chốt lượt: hết hàm phải kiểm lại, kẻo ghi kết quả của ảnh cũ
-  NDS.dangDoc=true; ndsBusy(true, tuDong?'Không thấy mã vạch, chưa có trong sổ tay — đang nhờ AI đọc tem…':'Đang đọc tem bằng AI…');
+  NDS.dangDoc=true; ndsBusy(true, tuDong?'Không thấy mã vạch trên tem — đang nhờ AI đọc tem…':'Đang đọc tem bằng AI…');
   try{
     var a=await ndsNenSan(NDS_MAX_CANH);
     /* NONCE GIỮ NGUYÊN QUA MỌI LƯỢT THỬ LẠI — đây là điều kiện để thử lại mà KHÔNG tốn thêm lượt
@@ -10711,7 +10746,7 @@ function ndsTheKetQua(r, hang){
   if (r.status==='INACTIVE') nhan+='<span class="badge b-pend" title="Không còn tồn, không có hàng đang về">INACTIVE</span>';
   else if (!NDS.chiActive) nhan+='<span class="badge b-ok">ACTIVE</span>';
 
-  return '<div class="'+lop+'" role="button" tabindex="0" title="Bấm để xác nhận đúng SKU này — copy mã + ghi vào sổ tay tem"'+
+  return '<div class="'+lop+'" role="button" tabindex="0" title="Bấm để copy mã SKU này"'+
       ' onclick="ndsChonSku(\''+esc(r.sku)+'\')"'+
       ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();ndsChonSku(\''+esc(r.sku)+'\');}">'+
     '<div class="nds-chead"><span class="nds-rank">'+hang+'</span>'+
@@ -10808,14 +10843,12 @@ function ndsCopyDuPhong(sku,xong){
   try{ document.execCommand('copy'); xong(); }catch(e){ toast('Không copy được — mã là '+sku,'warn'); }
   ta.remove();
 }
-/* BẤM THẺ = XÁC NHẬN "đúng SKU này" (đổi 20/08/2026 theo yêu cầu).
-   Trước đây bấm thẻ là đổ SKU vào giỏ kiểm kê (PC.sel) rồi đi tiếp "Tạo lệnh kiểm kê". Nay đường
-   tạo lệnh CHỈ còn ở 2 tab Kiểm kê / Tồn kho bất thường (xem PC_TAB), nên ở đây bấm thẻ làm đúng
-   hai việc còn lại — và cả hai đều KHÔNG liên quan tới lệnh kiểm kê:
-     · GHI SỔ TAY: đây là lúc duy nhất máy biết chắc tem nào ứng với SKU nào (người vừa xác nhận),
-       nhờ vậy lần sau gặp lại tem đó ra ngay, không phải gọi AI. Bỏ mất chỗ này là bỏ luôn cách
-       tab này tự học.
-     · COPY MÃ SKU: thủ kho vẫn cần con số đó để dán sang WMS / gõ vào phiếu. */
+/* BẤM THẺ = CHỈ COPY MÃ SKU (21/08/2026).
+   Lịch sử ngắn của cú bấm này: ban đầu nó đổ SKU vào giỏ kiểm kê (bỏ 20/08), rồi nó vừa copy mã vừa
+   GHI SỔ TAY (bỏ 21/08). Nay chỉ còn một việc duy nhất: copy mã để dán sang WMS / gõ vào phiếu.
+   Vì sao bỏ ghi sổ tay: thẻ là một ô lớn, chạm lệch rất dễ; mà một cú bấm nhầm thì ghim SKU sai ở
+   100% cho mọi lần gặp lại tem đó. Một thao tác có hậu quả lâu dài không được nấp sau cú bấm mà
+   người dùng nghĩ chỉ là "xem/copy". */
 function ndsChonSku(sku){
   var r=null, pct=0;
   for (var i=0;i<NDS.ket.length;i++){
@@ -10828,12 +10861,8 @@ function ndsChonSku(sku){
   if (!r && NDS.ds) for (var k=0;k<NDS.ds.length;k++) if (String(NDS.ds[k].sku)===String(sku)) r=NDS.ds[k];
   if (!r){ toast('Không thấy SKU '+sku+' trong danh mục.','err'); return; }
   var dv=r.donVi||r.dv||'';
-  /* Học xong vẽ lại để thẻ hiện huy hiệu "đã học" ngay. */
-  var daHoc=ndsSoHoc(r.sku, r.pn);
   ndsCopyIm(String(r.sku));
-  toast('Đã copy mã SKU '+r.sku+(dv?(' (ĐVT '+dv+')'):'')+
-    (daHoc?' · đã ghi vào sổ tay — lần sau gặp tem này ra ngay, không cần AI':'')+'.','ok');
-  if (daHoc && NDS.tokens.length) ndsDoiSoat();
+  toast('Đã copy mã SKU '+r.sku+(dv?(' (ĐVT '+dv+')'):'')+'.','ok');
 }
 /* Copy KHÔNG toast (ndsChonSku tự nói một câu gộp cả copy lẫn sổ tay — hai toast liền nhau thì
    câu sau đè câu trước, người dùng chỉ thấy nửa việc). */
@@ -11364,6 +11393,74 @@ function prDatSl(sku, v){
 }
 /** SỐ LƯỢNG in trên tem (khác `sl` = số con tem). Để nguyên văn người gõ: có kho ghi "100 m", có
  *  kho ghi "100" — tem in đúng cái họ gõ, chỉ giới hạn độ dài cho khỏi tràn. */
+/* ── Ô SỐ LƯỢNG NHIỀU GIÁ TRỊ ─────────────────────────────────────────────────────────────────────
+ * Cùng một SKU nhưng hàng chia nhiều bịch số lượng khác nhau (1.000 · 2.000 · 3.000) → mỗi bịch một
+ * con tem. Cách nhập: gõ số rồi bấm **+**; số đã chốt biến thành một chip nằm TRƯỚC ô nhập, ô nhập
+ * nhảy về 0 để gõ tiếp. Chip nào sai thì bấm × ở chính nó.
+ * Vì sao không để người dùng tự gõ "1000, 2000, 3000": cú pháp dấu phẩy phải học, mà gõ trên điện
+ * thoại thì dấu phẩy còn nằm ở lớp bàn phím khác. Ô nhập vẫn HIỂU chuỗi có dấu phẩy (dán vào cũng
+ * được), nhưng đường chính là nút +.
+ * Nguồn dữ liệu duy nhất vẫn là `r.slHang` (chuỗi "1.000, 2.000, 3.000") — lõi `PR_TEM.tachSl` tách,
+ * `moRong` nở thành từng con tem. Không thêm trường mới nào để hai đầu không có gì lệch. */
+function prChipSl(r){
+  return PR_TEM.tachSl(r.slHang).map(function(x, i){
+    return '<span class="nds-tag prchip">' + esc(x) +
+      '<button type="button" class="x" data-s="' + esc(r.sku) + '" data-i="' + i + '"' +
+      ' title="Bỏ số lượng ' + esc(x) + '" onclick="prXoaChip(this)">&times;</button></span>';
+  }).join('');
+}
+/** Bật/tắt nút "+" theo cái đang gõ: có số (khác 0) thì nút hiện, trống thì ẩn. */
+function prHienCong(el){
+  var nut = el.parentNode && el.parentNode.querySelector('.prsladd');
+  if (!nut) return;
+  nut.classList.toggle('hien', prSoDangGo(el.value).length > 0);
+}
+/** Những số THẬT đang có trong ô (bỏ 0 và ô rỗng) — dùng cho cả nút + và lúc bấm In. */
+function prSoDangGo(v){
+  return PR_TEM.tachSl(v).filter(function(x){ return !/^0+$/.test(String(x).replace(/\./g, '')); });
+}
+/** Chốt cái đang gõ thành chip. Gọi từ nút "+", từ Enter, và từ lúc rời ô (không ai muốn mất con số
+ *  vừa đánh chỉ vì quên bấm +). */
+function prCam(el){
+  var sku = String(el.getAttribute('data-s') || ''), r = PR.sel[sku];
+  if (!r) return;
+  var them = prSoDangGo(el.value);
+  if (!them.length){ el.value = PR_TEM.tachSl(r.slHang).length ? '0' : ''; prHienCong(el); return; }
+  var moi = PR_TEM.tachSl(r.slHang).concat(them);
+  if (moi.length > PR_TRAN_SL){
+    moi = moi.slice(0, PR_TRAN_SL);
+    toast('Một SKU tối đa ' + PR_TRAN_SL + ' con tem một lượt.', 'warn');
+  }
+  r.slHang = moi.join(', ');
+  prLuu(); prSyncBar(); prVe();
+  /* Con trỏ về đúng ô vừa gõ: nhập ba bịch là ba lần gõ liền tay, không phải bấm chuột lại. */
+  var lai = document.querySelector('#prBody input.prsl-v[data-s="' + sku.replace(/["\\]/g, '') + '"]');
+  if (lai){ lai.focus(); lai.select(); }
+}
+function prXoaChip(btn){
+  var sku = String(btn.getAttribute('data-s') || ''), i = Number(btn.getAttribute('data-i'));
+  var r = PR.sel[sku]; if (!r) return;
+  var l = PR_TEM.tachSl(r.slHang);
+  if (!(i >= 0 && i < l.length)) return;
+  l.splice(i, 1);
+  r.slHang = l.join(', ');
+  prLuu(); prSyncBar(); prVe();
+}
+/** Chốt hết những ô còn số chưa bấm + (gọi ngay trước khi in). Trả về số dòng vừa chốt thêm. */
+function prCamHet(){
+  var n = 0;
+  var os = document.querySelectorAll('#prBody input.prsl-v');
+  for (var i = 0; i < os.length; i++){
+    var el = os[i], r = PR.sel[String(el.getAttribute('data-s') || '')];
+    if (!r) continue;
+    var them = prSoDangGo(el.value);
+    if (!them.length) continue;
+    r.slHang = PR_TEM.tachSl(r.slHang).concat(them).slice(0, PR_TRAN_SL).join(', ');
+    n++;
+  }
+  if (n){ prLuu(); prSyncBar(); prVe(); }
+  return n;
+}
 function prDatSlHang(sku, v){
   var r = PR.sel[String(sku)]; if (!r) return;
   r.slHang = prLamSachSl(v);
@@ -11502,25 +11599,30 @@ function prVe(){
     /* Thứ tự cột: SỐ TEM (số bản in) · SỐ LƯỢNG (con số IN TRÊN tem) · SKU · TÊN SẢN PHẨM.
        Hai con số này khác nhau hẳn nhau nên đứng cạnh nhau và có nhãn rõ ở thead — trước đây gộp
        một cột "Số tem" là chỗ dễ nhầm nhất. */
-    var nhieu = PR_TEM.tachSl(r.slHang).length > 1;      // 3 bịch khác số lượng -> 3 con tem
+    var dsSl = PR_TEM.tachSl(r.slHang);
+    var nhieu = dsSl.length > 1;                        // 3 bịch khác số lượng -> 3 con tem
     var soTem = PR_TEM.temCuaDong(r);
     return '<tr><td class="num"><input class="prsl" type="number" min="1" max="' + PR_TRAN_SL + '" step="1" value="' + soTem + '"' +
         (nhieu ? ' disabled' : '') +
         ' data-s="' + esc(r.sku) + '" onchange="prDatSl(this.getAttribute(\'data-s\'),this.value)" title="' +
         (nhieu ? 'Dòng này khai ' + soTem + ' số lượng nên ra đúng ' + soTem + ' con tem' : 'Số con tem sẽ in') + '"></td>' +
-      '<td class="num"><input class="prsl' + (nhieu ? ' co-ds' : '') + '" type="text" value="' + esc(r.slHang == null ? '' : r.slHang) + '"' +
-        ' data-s="' + esc(r.sku) + '" placeholder="—" oninput="prGoSo(this)" onchange="prDatSlHang(this.getAttribute(\'data-s\'),this.value)"' +
-        ' title="Con số IN TRÊN TEM. Nhiều bịch khác số lượng thì gõ cách nhau bằng dấu phẩy: 12, 14, 16 → 3 con tem"></td>' +
+      '<td class="num"><div class="prslo">' + prChipSl(r) +
+        '<input class="prsl prsl-v" type="text" inputmode="numeric" value="' + (dsSl.length ? '0' : '') + '"' +
+        ' data-s="' + esc(r.sku) + '" placeholder="—" oninput="prGoSo(this);prHienCong(this)"' +
+        ' onkeydown="if(event.key===\'Enter\'){event.preventDefault();prCam(this);}"' +
+        ' onchange="prCam(this)"' +
+        ' title="Con số IN TRÊN TEM. Mỗi bịch một số lượng: gõ số rồi bấm dấu +">' +
+        /* Nút "+" nằm NGAY SAU ô nhập (không phải ở đầu dòng): mắt vừa gõ số xong là thấy nó. */
+        '<button type="button" class="prsladd" tabindex="0" data-s="' + esc(r.sku) + '"' +
+        ' title="Thêm số lượng này thành một con tem riêng"' +
+        ' onclick="prCam(this.previousElementSibling)">+</button>' +
+        '</div></td>' +
       '<td><b>' + esc(r.sku) + '</b></td>' +
       '<td class="pn">' + esc(r.pn) + '</td>' +
       '<td><button class="prdel" data-s="' + esc(r.sku) + '" title="Bỏ SKU này khỏi danh sách in"' +
         ' onclick="prXoa(this.getAttribute(\'data-s\'))">&times;</button></td></tr>';
   }).join('') : '<tr><td colspan="5"><div class="state" style="padding:18px">Danh sách in đang trống.</div></td></tr>';
   var tong = prTongTem(), nhom = PR_TEM.theoMau(ds);
-  var ktSub = PR_TEM.khoTrang(nhom.thuTu.length ? nhom.thuTu[0] : PR_TEM.MAU_MAC_DINH);
-  document.getElementById('prSub').textContent = ds.length + ' SKU · ' + tong + ' tem · ' +
-    Math.ceil(tong / Math.max(1, ktSub.cot)) + ' hàng giấy (' + ktSub.cot + ' tem/hàng)' +
-    (nhom.thuTu.length > 1 ? ' · ' + nhom.thuTu.length + ' khổ tem khác nhau' : '');
   document.getElementById('prSum').innerHTML = nhom.thuTu.map(function(k){
     var mm = PR_TEM.mau(k);
     return '<span class="badge b-ok">' + esc(mm.ten) + ': ' + PR_TEM.tongTem(nhom.m[k]) + ' tem</span>';
@@ -11576,6 +11678,9 @@ function prMotHang(hang, maMau){
  * phản hồi" — chứ không im lặng coi như xong.
  */
 async function prIn(){
+  /* Chốt số đang gõ dở trước đã: bấm In mà mất con số vừa đánh (vì chưa bấm +) là kiểu mất mát người
+     dùng không tha thứ — và họ chỉ phát hiện khi tem đã ra thiếu. */
+  if (prCamHet()) toast('Đã chốt số lượng đang gõ vào danh sách in.', 'ok');
   var ds = prDs(), tong = prTongTem();
   if (!ds.length || tong < 1){ toast('Danh sách in đang trống.', 'warn'); return; }
   if (ds.length > PR_GAS_SKU){ toast('Một lệnh in tối đa ' + PR_GAS_SKU + ' SKU — hãy in thành nhiều lượt.', 'warn'); return; }
@@ -11659,7 +11764,10 @@ async function prHoiHangDoi(){
     return;
   }
   var cho = Number(kq.cho) || 0;
-  if (!cho){ prTrangThaiHtml('Máy in tem của kho <b>đang rảnh</b> — bấm Xác nhận in là tem ra, không có hộp thoại nào.', 'ok'); return; }
+  /* Máy in rảnh thì KHÔNG nói gì (21/08/2026, yêu cầu user): dòng trạng thái chỉ để dành cho lúc có
+     chuyện thật — đang chờ ai, máy trạm tắt, máy in báo lỗi. Trạng thái bình thường không cần một câu
+     trấn an, nhất là câu tự quảng cáo "không có hộp thoại nào". */
+  if (!cho){ prTrangThaiHtml('', ''); return; }
   var ai = (kq.dangIn && kq.dangIn.nguoi) ? kq.dangIn.nguoi : (kq.nguoiCho || '');
   prTrangThaiHtml('Máy in đang có <b>' + cho + ' đợt</b> (' + nf(Number(kq.temCho) || 0) + ' tem) của ' +
     esc(prTenNguoi(ai)) + ' — lệnh của bạn in ngay sau đó.', 'warn');
