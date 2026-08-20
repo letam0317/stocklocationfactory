@@ -880,6 +880,25 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
   font-size:12.5px;font-weight:650;flex-wrap:wrap;justify-content:center;row-gap:4px;max-width:94vw;animation:barIn .22s var(--ez-spring)}   /* C6: mobile hẹp pill tự wrap trong 94vw thay vì tràn 2 mép */
 #pcbar.hidden{display:none}
 @media(max-width:900px){#pcbar{bottom:84px}}   /* footbar wrap 2 dòng ở màn hẹp — nâng giỏ lên khỏi vùng đè */
+/* NÚT CHỤP NỔI DƯỚI MÀN HÌNH (20/08/2026, yêu cầu user): đứng đúng chỗ của thanh "Đã chọn N SKU"
+   để ngón tay khỏi phải rướn lên khung hình — chụp tem là thao tác một tay, cầm điện thoại thấp.
+   Dùng lại nguyên khuôn pill + barIn của #pcbar (luật tái dùng control của dự án), chỉ đổi màu:
+   CAM CỐ ĐỊNH ở mọi theme cho nổi, không ăn token accent (accent đổi theo 7 theme, có theme trùng
+   luôn màu nút → hết nổi bật). Đặt cạnh #pcbar trong DOM, NGOÀI mọi .vfade: `will-change` của các
+   view làm chính nó thành containing block của position:fixed (bẫy đã cắn với .date-pop). */
+#ndsChupbar{position:fixed;left:50%;bottom:58px;transform:translateX(-50%);z-index:111;display:flex;align-items:center;gap:8px;
+  animation:barIn .22s var(--ez-spring)}
+#ndsChupbar.hidden{display:none}
+@media(max-width:900px){#ndsChupbar{bottom:84px}}
+#ndsChupbar button{border:0;border-radius:999px;padding:13px 40px;font-size:15px;font-weight:750;cursor:pointer;
+  font-family:inherit;min-height:48px;background:#f57c00;color:#fff;box-shadow:var(--shadow-lg);
+  letter-spacing:.01em;transition:transform .16s var(--ez-apple),background .2s ease}
+#ndsChupbar button:hover{background:#e65100}
+#ndsChupbar button:active{transform:scale(.96)}
+#ndsChupbar button:focus-visible{outline:3px solid #ffe0b2;outline-offset:2px}
+/* Đang chụp thì nâng giỏ chọn lên, hai thanh không đè nhau (giỏ vẫn phải thấy được số SKU đã chọn) */
+body.nds-chup #pcbar{bottom:118px}
+@media(max-width:900px){body.nds-chup #pcbar{bottom:144px}}
 #pcbar b{color:var(--accent);font-variant-numeric:tabular-nums}
 #pcbar button{border:0;border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:650;cursor:pointer;font-family:inherit}
 #pcbar .go{background:var(--accent);color:var(--accent-text)} #pcbar .go:hover{background:var(--accent-hover)}
@@ -1717,6 +1736,8 @@ body.side-anim{overflow-x:clip}
 .nds-busy{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
   background:var(--overlay);color:#fff;font-size:12.5px;font-weight:650;animation:fadeIn .2s ease both}
 .nds-busy .spin{margin:0}
+/* Đồng hồ giây giờ là NỘI DUNG DUY NHẤT của hộp đọc (bỏ hết chữ 20/08/2026) nên cho to đúng tầm */
+.nds-busy #ndsDongHo{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
 
 /* Hàng zoom: 2 nút bước + thanh trượt + số. Nút bước để chỉnh nhanh bằng ngón cái khi một tay
    đang giữ tem; thanh trượt để chỉnh mịn. Tái dùng .kktab và .pg-chip, không chế control mới. */
@@ -2060,7 +2081,6 @@ body.side-anim{overflow-x:clip}
              ngoài. Mấy nút hành động với KẾT QUẢ (quét mã vạch · đọc lại bằng AI) vẫn ở dưới. -->
         <div class="nds-tools">
           <button type="button" class="ndsib" id="ndsBtnCam" onclick="ndsCam()">Bật camera</button>
-          <button type="button" class="ndsib chinh" id="ndsBtnChup" onclick="ndsChup()" hidden>Chụp</button>
           <label class="ndsib nds-file">Chọn ảnh
             <input type="file" accept="image/*" hidden onchange="ndsChonFile(this)"></label>
           <span class="sp"></span>
@@ -2085,25 +2105,6 @@ body.side-anim{overflow-x:clip}
         <button type="button" class="kktab" id="ndsBtnDoc" onclick="ndsDocTem()" disabled
           title="Nhờ AI đọc — dùng khi tem chữ nhỏ / nhoè / nghiêng mà OCR đọc lệch. Có tốn hạn mức ngày">Nhờ AI đọc</button>
       </div>
-      <!-- Ghi chú GẤP LẠI: trên điện thoại khối này nằm giữa ảnh và kết quả, để mở sẵn là đẩy
-           Top 3 xuống dưới màn hình — đúng thứ người dùng cần xem nhất. -->
-      <details class="nds-more" style="margin-top:8px">
-        <summary>Máy tự chạy thế nào? (mã vạch → sổ tay → OCR → AI)</summary>
-        <div class="pcdnote" style="margin-top:8px;background:color-mix(in srgb,var(--info) 10%,var(--surface));color:var(--ink2)">
-          <b>Chụp hoặc chọn ảnh là chạy ngay, không phải bấm gì thêm.</b> Máy đi từ rẻ tới đắt và dừng ngay khi
-          <b>đã lập được mã hàng có thật trong danh mục</b>:<br>
-          ① <b>mã vạch</b> (~0,1 giây, offline) → ② <b>sổ tay tem</b> (tem đã chọn lần trước, 0 giây) →
-          ③ <b>OCR của Google</b> (5–7 giây, <b>miễn phí</b>, không tốn hạn mức) → ④ chỉ khi vẫn chưa lập được
-          mã mới nhờ <b>AI</b> (tem chữ nhỏ / nhoè / nghiêng thì AI đọc khá hơn OCR).<br>
-          Cả OCR và AI đều chỉ trả <b>chữ đọc được</b>; việc xếp mảnh nào là mã / thông số / màu do máy này
-          làm, đối chiếu với chính danh mục SKU — mảnh nào danh mục không hề có (địa chỉ, số PO, ngày,
-          cân nặng) thì bỏ, khỏi làm loãng kết quả.<br>
-          Ảnh được thu nhỏ ngay trên máy (JPEG, cạnh dài 2000px cho OCR / 1400px cho AI) rồi gửi qua
-          <b>Apps Script</b>; <b>không lưu ảnh</b> ở bất kỳ đâu — bản OCR tạm trong Drive bị xoá ngay sau khi
-          lấy chữ. Mất mạng / hết hạn mức thì vẫn dùng được: quét mã vạch, gõ mảnh ở ô <b>Phần tử trên tem</b>,
-          hoặc dán chữ trên tem ở bước 3.
-        </div>
-      </details>
     </section>
 
     <!-- ---------- BƯỚC 2: SKU gợi ý — ĐẶT NGAY DƯỚI ẢNH vì đây là thứ người dùng cần;
@@ -2123,7 +2124,7 @@ body.side-anim{overflow-x:clip}
     <section class="panel" style="grid-column:1/-1">
       <h2>3 · Từ khoá nhận diện <span class="hint">(bấm × để bỏ từ khoá đọc nhầm)</span>
         <span class="pg-chip" id="ndsKwN" style="margin-left:auto">0 từ khoá</span></h2>
-      <div class="nds-tags" id="ndsTags"><div class="nds-tagempty">Chưa có từ khoá — chụp tem là máy tự đọc (mã vạch → sổ tay → OCR → AI), hoặc gõ tay bên dưới.</div></div>
+      <div class="nds-tags" id="ndsTags"><div class="nds-tagempty">Chưa có từ khoá — chụp tem, hoặc gõ tay bên dưới.</div></div>
       <div class="nds-addrow">
         <input id="ndsAdd" autocomplete="off" placeholder="Thêm từ khoá rồi Enter… (JC01262 · Tex 27 · 38cm · 345 · YKK)"
           onkeydown="if(event.key==='Enter'){event.preventDefault();ndsThemTay();}">
@@ -2308,6 +2309,11 @@ body.side-anim{overflow-x:clip}
 <div id="toast"></div>
 
 <!-- Giỏ SKU đã tick từ pop-up 2 tab (Kiểm kê + Tồn kho bất thường) — giữ nguyên khi chuyển tab/bộ lọc -->
+<!-- Nút CHỤP nổi: chỉ hiện khi camera đang bật (ndsCam/ndsTatCam bật-tắt). Nằm ngoài mọi view để
+     position:fixed neo đúng viewport. -->
+<div id="ndsChupbar" class="hidden">
+  <button type="button" id="ndsBtnChup" onclick="ndsChup()" title="Chụp tem đang trong khung">Chụp</button>
+</div>
 <div id="pcbar" class="hidden">
   <span>Đã chọn <b id="pcbarN">0</b> SKU</span>
   <button class="rm" onclick="pcPrevToggle()" title="Xem lại danh sách SKU đã chọn + lý do chọn">Xem</button>
@@ -3389,7 +3395,7 @@ var HOME_MUC=[
   ]},
   { g:'Công cụ kho', mo:'Dùng ngay tại chỗ, không cần dữ liệu nền', items:[
     { t:'sku', ten:'Nhận diện SKU', cc:'var(--warn)', nhan:'Công cụ',
-      mo:'Chụp tem nhà cung cấp → máy bóc từ khoá → gợi ý SKU nội bộ khớp nhất; chọn xong là vào thẳng giỏ tạo lệnh kiểm kê.',
+      mo:'Chụp tem nhà cung cấp → máy bóc từ khoá → gợi ý SKU nội bộ khớp nhất; bấm thẻ là copy mã SKU và ghi vào sổ tay tem (lần sau khỏi gọi AI).',
       muc:['Chụp/chọn ảnh tem','Gợi ý SKU','Từ khoá bóc được','Sổ tay tem'] },
     { t:'cd', ten:'Chuyển đổi cân', cc:'var(--brand2,var(--accent))', nhan:'Công cụ',
       mo:'Chỉ trả về từ sản xuất chỉ cân được kg — công cụ quy ra mm theo mật độ cuộn nguyên, đã trừ khối lượng lõi.',
@@ -3453,6 +3459,9 @@ function showTab(t){
   /* Về Tổng quan thì vẽ lại: số trên thẻ phải khớp thứ vừa xem xong (mở tab Kiểm kê rồi quay ra
      là thấy ngay số dòng kiểm kê), chứ không đứng im ở lần dựng đầu. */
   if(t==='home'){ homeRender(); homeNapNhe(); }
+  /* Thanh giỏ chọn chỉ được hiện ở tab Kiểm kê / Tồn kho bất thường (xem PC_TAB) — phải gọi lại sau
+     MỖI lần đổi tab, kể cả khi giỏ không đổi số lượng. */
+  if(typeof pcSyncBar==='function') pcSyncBar();
   capNhatThongTin();   // footer neo theo tab đang xem (số dòng đúng tab + cùng mốc cập nhật)
 }
 
@@ -6821,6 +6830,14 @@ document.addEventListener('click',function(e){ if(!e.target.closest('#tvtmFilter
    - Executed By: unique email từ lịch sử Counted by (2 sheet kiemke-*), kèm lựa chọn "— Để trống —". */
 var PC={sel:{}, whcode:null};       // sel: key "kho|sku" -> {wh,sku,pn,t}; t: 0=chưa rõ, 1=SKU, 2=SKU factory
 var PC_LIMIT=3000;                  // trần giỏ chọn — file import quá lớn dễ bị WMS từ chối / treo upload
+/* GIỎ CHỌN CHỈ SỐNG Ở 2 TAB (chốt 20/08/2026 theo yêu cầu): **Kiểm kê** và **Tồn kho bất thường**.
+   Vì sao khoá bằng danh sách chứ không xoá code ở các tab khác: giỏ là thứ dùng chung (sessionStorage,
+   thanh nổi #pcbar, modal tạo lệnh), nên chỗ duy nhất nói được "tab này có quyền hay không" là ĐÂY —
+   thêm tab mới sau này chỉ cần thêm một khoá, không phải đi tìm lại từng nút.
+   Hai đường vào giỏ đều bị khoá: `pcAdd` (tick từng dòng / gọi từ tab khác) và `pcSyncBar` (thanh nổi
+   + preview không hiện ngoài 2 tab, nên nút "Tạo lệnh kiểm kê" cũng không với tới được). */
+var PC_TAB={kk:1, abn:1};
+function pcTabChoPhep(){ return !!PC_TAB[(typeof TOPTAB!=='undefined')?TOPTAB:'']; }
 function pcKey(w,s){ return w+'|'+s; }
 function pcHas(w,s){ return !!PC.sel[pcKey(w,s)]; }
 function pcCount(){ return Object.keys(PC.sel).length; }
@@ -6856,6 +6873,7 @@ function pcPut(w,s,pn,t,src){
 }
 function pcAdd(w,s,pn,t,src){
   if(!w||!s) return;
+  if(!pcTabChoPhep()) return;        // ngoài 2 tab được phép thì không có đường nào vào giỏ
   if(!pcHas(w,s)&&pcCount()>=PC_LIMIT){ toast('Giỏ chọn tối đa '+nf(PC_LIMIT)+' SKU.','warn'); return; }
   pcPut(w,s,pn,t,src);
   pcSave(); pcSyncBar();
@@ -6878,11 +6896,13 @@ function pcBulk(items,on){
   pcSave(); pcSyncBar(); pcRefreshChecks();
 }
 function pcSyncBar(){
-  var n=pcCount();
+  var n=pcCount(), cho=pcTabChoPhep();
   document.getElementById('pcbarN').textContent=nf(n);
-  document.getElementById('pcbar').classList.toggle('hidden',!n);
+  /* Ngoài 2 tab được phép thì ẨN thanh giỏ — giỏ KHÔNG bị xoá, chỉ là không thao tác được ở đó:
+     người đang chọn dở ở tab Kiểm kê mà ghé tab khác rồi quay lại thì vẫn còn nguyên. */
+  document.getElementById('pcbar').classList.toggle('hidden',!n||!cho);
   var p=document.getElementById('pcprev');
-  if(p&&!p.classList.contains('hidden')){ if(!n) p.classList.add('hidden'); else pcPrevRender(); }   // preview mở -> luôn khớp giỏ
+  if(p&&!p.classList.contains('hidden')){ if(!n||!cho) p.classList.add('hidden'); else pcPrevRender(); }   // preview mở -> luôn khớp giỏ
 }
 /* ---------- Bảng preview giỏ chọn: SKU + lý do chọn, bỏ được từng dòng ---------- */
 function pcPrevToggle(force){
@@ -6988,6 +7008,9 @@ async function pcEmails(){
 
 /* ---------- Modal tạo lệnh ---------- */
 async function pcOpen(){
+  /* Khoá thứ hai của phạm vi (xem PC_TAB): thanh giỏ đã ẩn ngoài 2 tab, nhưng chặn thêm ở đây để
+     không có đường nào — phím tắt, gọi từ chỗ khác sau này — mở được modal tạo lệnh ở tab lạ. */
+  if(!pcTabChoPhep()){ toast('Lệnh kiểm kê chỉ tạo được ở tab Kiểm kê hoặc Tồn kho bất thường.','warn'); return; }
   if(!pcCount()){ toast('Chưa chọn SKU nào — tick chọn trong pop-up trước.','warn'); return; }
   document.getElementById('pcprev').classList.add('hidden');   // preview nổi trên modal -> đóng trước khi mở
   document.body.classList.add('pcm-open');                     // ẩn giỏ nổi khi modal tạo lệnh mở
@@ -8813,6 +8836,17 @@ var NDS_ENGINE = (function(){
           dvNhoThay = true;                                          // để thẻ nói được VÌ SAO đại diện là dòng tồn 0
         }
       }
+      /* ĐỊNH DANH THẮNG PHẠM VI (20/08/2026, yêu cầu user — ca thẻ mẫu SMPA01). Bộ lọc "chỉ ACTIVE"
+         là để khỏi gợi ý hàng chết, KHÔNG phải để che dòng mang ĐÚNG MÃ in trên tem. Ca thật: 2 SKU
+         mẫu mang đúng mã SMPA01 đều tồn 0 (mẫu may xong nằm đó, không ai nhập tồn) ⇒ bị loại sạch,
+         tab quay sang đưa 3 dòng chỉ khớp chữ chung "87%/13%/đen" ở 25-60%. Trả lời SAI mà trông tự
+         tin thì tệ hơn trả lời "có mã này nhưng đang tồn 0". Thẻ vẫn in huy hiệu INACTIVE nên người
+         đọc biết ngay. Chỉ mở khi nhóm KHÔNG còn dòng sống nào — nhóm nào còn hàng sống thì dòng
+         sống vẫn đại diện như cũ. */
+      if (chiActive && !hop.length){
+        var maChet = v.filter(function(x){ return x.coMa; });
+        if (maChet.length) hop = maChet;
+      }
       if (!hop.length) return;                                       // cả nhóm đã chết -> không gợi ý
       var dd = hop[0], diemMax = 0;
       for (var z=0; z<v.length; z++) if (v[z].diem>diemMax) diemMax = v[z].diem;
@@ -8848,8 +8882,16 @@ var NDS_ENGINE = (function(){
     function chetNhom(x){ return (x.song===undefined) ? (x.status==='INACTIVE') : !x.song; }
     function soSanh(a,b){
       if (a.laSku!==b.laSku) return a.laSku?-1:1;
+      /* `ma1/ma2` phải tính TỪ ĐÂY vì bậc ACTIVE bên dưới cũng bị ràng vào nó (đổi 20/08/2026). */
+      var ma1=a.coMa?0:1, ma2=b.coMa?0:1;
+      /* MẶT HÀNG còn sống trước — nhưng CHỈ khi hai bên CÙNG MỨC bằng chứng định danh, đúng cái
+         ngoặc đã dùng cho luật đóng gói ở 5b.9. Vì sao phải ràng: dòng mang ĐÚNG MÃ tem mà tồn 0
+         (hàng mẫu, hàng mới nhập chưa có PO, hàng vừa hết) từng bị MỌI dòng ACTIVE vượt lên trên —
+         đo được trên ca SMPA01: dòng 82% mang đúng mã nằm hạng 344/457, nhường hạng 1 cho dòng 25%
+         chỉ khớp chữ chung. Cùng mức có mã thì ACTIVE vẫn quyết (hai dòng cùng mã, cái còn tồn
+         đứng trước) ⇒ không đổi hành vi của mọi ca tem thường. */
       var sa=chetNhom(a)?1:0, sb=chetNhom(b)?1:0;
-      if (sa!==sb) return sa-sb;                          // MẶT HÀNG còn sống trước — luật cứng
+      if (ma1===ma2 && sa!==sb) return sa-sb;
       /* ═══ CÓ MÃ TEM — đứng NGAY SAU ACTIVE, TRÊN cả luật hàng đóng gói ═══
          Hễ có MỘT mã tem khớp tuyệt đối danh mục thì mọi SKU mang mã đó phải đứng trên mọi SKU
          KHÔNG mang, bất kể điểm. Sự cố sinh ra luật này (19/08/2026): tem in F9-5374 mà AI không
@@ -8863,7 +8905,6 @@ var NDS_ENGINE = (function(){
          theo lần tra trước".
          Nguyên tắc: ĐỊNH DANH thắng ĐÓNG GÓI. Mã hàng là bằng chứng tem này là hàng gì; cuộn/combo
          chỉ là cách hàng đó được đóng. Thà hiện bản cuộn ĐÚNG MÃ còn hơn hiện SKU SAI HÀNG. */
-      var ma1=a.coMa?0:1, ma2=b.coMa?0:1;
       /* HÀNG ĐÓNG GÓI (COMBO · "…/Cuộn 5000m" · "…/set" · "…/thùng") — CHỈ ĐƯỢC NÓI KHI HAI BÊN CÙNG
          MỨC BẰNG CHỨNG ĐỊNH DANH. Đây là chỗ sửa cốt lõi 19/08/2026 (chiều muộn).
          Ý nghĩa thật của luật này luôn là "GIỮA HAI DÒNG CỦA CÙNG MỘT MẶT HÀNG thì đừng gợi ý bản
@@ -9303,17 +9344,14 @@ function ndsCapNhatChan(ms){
   var el = document.getElementById('ndsFoot'); if (!el) return;
   if (typeof ms === 'number') NDS.msDoiSoat = ms;
   if (!NDS.ds){ el.innerHTML=''; return; }
-  var nA=0; for (var i=0;i<NDS.ds.length;i++) if (NDS.ds[i].status==='ACTIVE') nA++;
+  /* DÒNG CHÂN CHỈ CÒN NÚT (đổi 20/08/2026, yêu cầu user). Trước đây nó đọc cả một đoạn: "Danh mục
+     5.625 SKU kho nguyên liệu (4.297 ACTIVE / 1.328 INACTIVE) · nguồn … · tồn = tổng các kho … ·
+     đối soát 7ms · Sổ tay tem: N ghi nhớ …". Toàn là chuyện của người dựng hệ thống, không phải
+     việc của người đang đứng trước kệ; trên điện thoại nó chiếm 4-5 dòng ngay dưới Top 3.
+     Hai NÚT thì giữ — chúng là việc làm được, không phải thông báo. Số liệu vẫn còn nguyên trong
+     `NDS.ds` / `NDS.boRac` / `NDS.msDoiSoat` cho bộ test và cho lần cần chẩn đoán. */
   var nSo=ndsSoDem();
-  el.innerHTML = 'Danh mục: <b>' + nf(NDS.ds.length) + ' SKU</b> kho nguyên liệu (' + nf(nA) + ' ACTIVE / ' +
-    nf(NDS.ds.length - nA) + ' INACTIVE) · nguồn: ' + esc(NDS.nguon) +
-    ' · tồn = tổng các kho nguyên liệu · ĐVT lấy từ đoạn cuối tên hàng, gợi ý ưu tiên ACTIVE → NORMAL → đơn vị nhỏ nhất' +
-    (NDS.msDoiSoat!=null ? (' · đối soát ' + NDS.msDoiSoat + 'ms') : '') +
-    '<br><b>Sổ tay tem: ' + nf(nSo) + ' ghi nhớ</b> (tem đã học thì ra ngay, không gọi AI)' +
-    (NDS.boRac ? (' · đã bỏ <b>' + NDS.boRac + ' mảnh giấy tờ</b> không có trong danh mục (địa chỉ · số PO · ngày · cân nặng)') : '') +
-    ((NDS.maVach&&NDS.maVach.length) ? (' · mã vạch trên ảnh: <code>'+esc(NDS.maVach.join(', '))+'</code>') : '') +
-    (ndsCoMaVach() ? '' : ' · <i>trình duyệt này không đọc được mã vạch — dùng Edge/Chrome trên Android để có đường nhanh nhất</i>') +
-    ' &nbsp;<button type="button" class="fcg" onclick="ndsTaiLaiDanhMuc()">⟳ Tải lại danh mục</button>' +
+  el.innerHTML = '<button type="button" class="fcg" onclick="ndsTaiLaiDanhMuc()">⟳ Tải lại danh mục</button>' +
     (nSo ? ' &nbsp;<button type="button" class="fcg" onclick="ndsSoXoaHet()">Xoá sổ tay</button>' : '');
 }
 async function ndsTaiLaiDanhMuc(){
@@ -9359,7 +9397,7 @@ async function ndsCam(){
     toast('Không mở được camera (' + (e.name||e.message) + '). Dùng nút "Chọn ảnh" thay thế.','err'); return;
   }
   v.srcObject = NDS.stream; ndsLop('camera'); await v.play().catch(function(){});
-  document.getElementById('ndsBtnChup').hidden=false;
+  ndsHienChup(true);
   document.getElementById('ndsBtnCam').textContent='Tắt camera';
   ndsDungZoom();
 }
@@ -9415,10 +9453,16 @@ function ndsZoomBuoc(d){
   o.value = Math.min(Number(o.max), Math.max(Number(o.min), Number(o.value) + d));
   ndsDatZoom(o.value);
 }
+/** Bật/tắt thanh nút CHỤP nổi. MỘT chỗ duy nhất, gọi từ cả ndsCam và ndsTatCam — thêm chỗ thứ hai
+ *  là sinh ra trạng thái "camera tắt mà nút chụp còn nổi" (đúng bài học của ndsLop/ndsLuotMoi). */
+function ndsHienChup(on){
+  var b=document.getElementById('ndsChupbar'); if (b) b.classList.toggle('hidden', !on);
+  document.body.classList.toggle('nds-chup', !!on);
+}
 function ndsTatCam(){
   if (NDS.stream){ NDS.stream.getTracks().forEach(function(t){ t.stop(); }); NDS.stream=null; }
   var v=document.getElementById('ndsVideo'); if (v) v.srcObject=null;
-  var b=document.getElementById('ndsBtnChup'); if (b) b.hidden=true;
+  ndsHienChup(false);
   var c=document.getElementById('ndsBtnCam'); if (c) c.textContent='Bật camera';
   var zr=document.getElementById('ndsZoomRow'); if (zr) zr.hidden=true;
   if (v) v.style.transform='';
@@ -9613,7 +9657,12 @@ function ndsBusy(on,chu){
   if (!on) return;
   var d=document.createElement('div');
   d.id='ndsBusyBox'; d.className='nds-busy';
-  d.innerHTML='<div class="spin"></div><span>'+esc(chu||'Đang đọc tem…')+'</span> <b id="ndsDongHo">0,0s</b>';
+  /* CHỈ CÒN ĐỒNG HỒ GIÂY (đổi 20/08/2026, yêu cầu user). Trước đây hộp này còn đọc cả câu "đang
+     nhờ ai đọc": "AI không đọc được — đang thử OCR của Google (miễn phí)…", "Chưa lập được mã hàng
+     — đang đọc lại bằng OCR…". Người đứng trước kệ không cần biết máy đang gọi ai, chỉ cần biết
+     ĐANG CHẠY và ĐÃ BAO LÂU. Tham số `chu` giữ lại để mọi lời gọi cũ không phải sửa (và để lỡ sau
+     này muốn bật lại thì có sẵn chỗ), nhưng KHÔNG vẽ ra nữa. */
+  d.innerHTML='<div class="spin"></div><b id="ndsDongHo">0,0s</b>';
   st.appendChild(d);
   /* ĐỒNG HỒ GIÂY: đọc tem mất 4–8 giây và không có cách nào rút xuống 1–2 giây (3–4 giây là Google
      chuyển đổi/suy luận phía họ). Cái sửa được là CẢM GIÁC TREO MÁY: thấy số chạy thì biết máy đang
@@ -9623,8 +9672,8 @@ function ndsBusy(on,chu){
     var el=document.getElementById('ndsDongHo'); if (!el){ clearInterval(NDS.dongHo); NDS.dongHo=null; return; }
     var gy=(Date.now()-t0)/1000;
     el.textContent=gy.toFixed(1).replace('.',',')+'s';
+    /* Quá 12 giây thì ĐỔI MÀU thôi, không thêm chữ nào (cùng lý do như trên). */
     el.style.color = gy>12 ? 'var(--warn)' : '';
-    if (gy>12 && !el.dataset.nhac){ el.dataset.nhac='1'; el.title='Mạng đang yếu — ảnh đẩy lên chậm. Gõ mã in trên tem là ra ngay, không cần chờ.'; }
   },100);
 }
 /* ============================================================================================
@@ -9822,7 +9871,7 @@ function ndsVeTags(){
   var n=NDS.tokens.length;
   document.getElementById('ndsKwN').textContent = n+' từ khoá';
   if (!n){
-    el.innerHTML='<div class="nds-tagempty">Chưa có từ khoá — chụp tem là máy tự đọc (mã vạch → sổ tay → OCR → AI), hoặc gõ tay bên dưới.</div>';
+    el.innerHTML='<div class="nds-tagempty">Chưa có từ khoá — chụp tem, hoặc gõ tay bên dưới.</div>';
     return;
   }
   el.innerHTML=NDS.tokens.map(function(k,i){
@@ -10110,7 +10159,8 @@ function ndsToTrung(pn, khop){
  *   · .nds-sku to hơn, đậm hơn; .nds-pn to hơn và <mark> tô rõ hơn;
  *   · tồn · đơn vị lớn hơn · vì sao khớp — DỒN HẾT xuống MỘT dòng phụ chữ nhỏ, xám, gấp lại được;
  *   · bỏ hẳn 2 nút "Chọn SKU này" / "Copy mã" — mỗi thẻ 2 nút thì 3 thẻ thành 6 nút, lấn hết chỗ
- *     của chính thông tin cần đọc. Thay bằng: BẤM CẢ THẺ là chọn (role=button + Enter/Space).
+ *     của chính thông tin cần đọc. Thay bằng: BẤM CẢ THẺ là xác nhận (role=button + Enter/Space)
+ *     — copy mã + ghi sổ tay; từ 20/08/2026 KHÔNG còn đổ vào giỏ kiểm kê (xem PC_TAB).
  * Biến thể đơn vị vẫn bấm chọn được, nhưng phải chặn nổi bọt để không kích nhầm thẻ cha.
  */
 function ndsTheKetQua(r, hang){
@@ -10171,7 +10221,7 @@ function ndsTheKetQua(r, hang){
     if (nBt){
       ruot+='<div class="nds-alts">'+r.bienThe.map(function(x){
         return '<button type="button" class="kktab nds-alt" onclick="event.stopPropagation();ndsChonSku(\''+esc(x.sku)+'\')" '+
-          'title="Chọn SKU này thay cho SKU ở thẻ">'+esc(x.sku)+' · '+esc(x.donVi||'?')+
+          'title="Xác nhận đơn vị này thay cho SKU ở thẻ — copy mã + ghi vào sổ tay tem">'+esc(x.sku)+' · '+esc(x.donVi||'?')+
           (x.status==='INACTIVE'?' · <span class="badge b-pend">INACTIVE</span>':'')+' · '+nf(x.qty)+'</button>';
       }).join('')+'</div>';
     }
@@ -10188,7 +10238,7 @@ function ndsTheKetQua(r, hang){
   if (r.status==='INACTIVE') nhan+='<span class="badge b-pend" title="Không còn tồn, không có hàng đang về">INACTIVE</span>';
   else if (!NDS.chiActive) nhan+='<span class="badge b-ok">ACTIVE</span>';
 
-  return '<div class="'+lop+'" role="button" tabindex="0" title="Bấm để chọn SKU này"'+
+  return '<div class="'+lop+'" role="button" tabindex="0" title="Bấm để xác nhận đúng SKU này — copy mã + ghi vào sổ tay tem"'+
       ' onclick="ndsChonSku(\''+esc(r.sku)+'\')"'+
       ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();ndsChonSku(\''+esc(r.sku)+'\');}">'+
     '<div class="nds-chead"><span class="nds-rank">'+hang+'</span>'+
@@ -10263,8 +10313,14 @@ function ndsCopyDuPhong(sku,xong){
   try{ document.execCommand('copy'); xong(); }catch(e){ toast('Không copy được — mã là '+sku,'warn'); }
   ta.remove();
 }
-/* "Chọn SKU này" = đưa vào ĐÚNG cái giỏ mà tab Kiểm kê / Tồn kho bất thường đang dùng (PC.sel),
-   nên bấm xong là dùng ngay nút "Tạo lệnh kiểm kê" ở thanh giỏ, không cần bước trung gian nào. */
+/* BẤM THẺ = XÁC NHẬN "đúng SKU này" (đổi 20/08/2026 theo yêu cầu).
+   Trước đây bấm thẻ là đổ SKU vào giỏ kiểm kê (PC.sel) rồi đi tiếp "Tạo lệnh kiểm kê". Nay đường
+   tạo lệnh CHỈ còn ở 2 tab Kiểm kê / Tồn kho bất thường (xem PC_TAB), nên ở đây bấm thẻ làm đúng
+   hai việc còn lại — và cả hai đều KHÔNG liên quan tới lệnh kiểm kê:
+     · GHI SỔ TAY: đây là lúc duy nhất máy biết chắc tem nào ứng với SKU nào (người vừa xác nhận),
+       nhờ vậy lần sau gặp lại tem đó ra ngay, không phải gọi AI. Bỏ mất chỗ này là bỏ luôn cách
+       tab này tự học.
+     · COPY MÃ SKU: thủ kho vẫn cần con số đó để dán sang WMS / gõ vào phiếu. */
 function ndsChonSku(sku){
   var r=null, pct=0;
   for (var i=0;i<NDS.ket.length;i++){
@@ -10277,19 +10333,19 @@ function ndsChonSku(sku){
   if (!r && NDS.ds) for (var k=0;k<NDS.ds.length;k++) if (String(NDS.ds[k].sku)===String(sku)) r=NDS.ds[k];
   if (!r){ toast('Không thấy SKU '+sku+' trong danh mục.','err'); return; }
   var dv=r.donVi||r.dv||'';
-  var tuKhoa=NDS.tokens.slice(0,5).map(function(x){ return x.t; }).join(' ');
-  var lyDo='Nhận diện tem: '+tuKhoa+(pct?(' ('+pct+'%)'):'')+(dv?(' · ĐVT '+dv):'');
-  pcAdd(NDS_KHO, String(r.sku), r.pn, 2, lyDo);
-  /* HỌC: đây là lúc DUY NHẤT ta biết chắc tem nào ứng với SKU nào — vì người vừa xác nhận. Ghi vào
-     sổ tay để lần sau khỏi gọi AI. Học xong vẽ lại để thẻ hiện huy hiệu "đã học" ngay. */
+  /* Học xong vẽ lại để thẻ hiện huy hiệu "đã học" ngay. */
   var daHoc=ndsSoHoc(r.sku, r.pn);
-  toast('Đã thêm SKU '+r.sku+(dv?(' (ĐVT '+dv+')'):'')+' vào giỏ kiểm kê ('+nf(pcCount())+' SKU)'+
+  ndsCopyIm(String(r.sku));
+  toast('Đã copy mã SKU '+r.sku+(dv?(' (ĐVT '+dv+')'):'')+
     (daHoc?' · đã ghi vào sổ tay — lần sau gặp tem này ra ngay, không cần AI':'')+'.','ok');
   if (daHoc && NDS.tokens.length) ndsDoiSoat();
 }
-/* Kho ghi vào giỏ: tem NCC chỉ có ở kho nguyên liệu; Warehouse Code thật vẫn do modal "Tạo lệnh
-   kiểm kê" chọn, ở đây chỉ cần một nhãn kho đúng để nhóm dòng trong giỏ. */
-var NDS_KHO='WH - MATERIAL - MTG';
+/* Copy KHÔNG toast (ndsChonSku tự nói một câu gộp cả copy lẫn sổ tay — hai toast liền nhau thì
+   câu sau đè câu trước, người dùng chỉ thấy nửa việc). */
+function ndsCopyIm(sku){
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(sku).then(null,function(){ ndsCopyDuPhong(sku,function(){}); });
+  else ndsCopyDuPhong(sku,function(){});
+}
 
 /* ---------- 6. VÒNG ĐỜI TAB ---------- */
 async function ndsLoad(){
