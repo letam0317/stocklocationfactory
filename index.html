@@ -2508,7 +2508,7 @@ body.side-anim{overflow-x:clip}
           onchange="prApSl(this.value)" title="Gõ số rồi rời ô: mọi dòng in cùng số tem này"></div>
       <div class="fld"><label>Áp SỐ LƯỢNG cho tất cả</label>
         <input id="prSlhAll" class="prsl" type="text" style="width:120px" placeholder="số in trên tem"
-          onchange="prApSlHang(this.value)" title="Con số này IN TRÊN TEM (không in chữ &quot;Số lượng&quot;)"></div>
+          oninput="prGoSo(this)" onchange="prApSlHang(this.value)" title="Con số này IN TRÊN TEM (không in chữ &quot;Số lượng&quot;)"></div>
     </div>
     <div class="msum" id="prSum"></div>
     <!-- 4 cột theo đúng thứ tự người dùng chốt 20/08/2026: Số tem · Số lượng · SKU · Tên sản phẩm.
@@ -2519,8 +2519,12 @@ body.side-anim{overflow-x:clip}
       <th class="num">Số tem</th><th class="num">Số lượng</th><th>SKU</th><th class="pn">Tên sản phẩm</th><th></th>
     </tr></thead><tbody id="prBody"></tbody></table></div>
     <div class="prfoot">
-      <span class="hint" id="prTrangThai">Bấm <b>In</b> sẽ mở hộp thoại in của Windows — chọn máy in, khổ giấy đã đặt sẵn theo mẫu tem.</span>
+      <!-- Dòng trạng thái là chỗ DUY NHẤT nói tình hình máy in: rảnh / đang in đợt của ai / máy trạm
+           tắt / báo lỗi. Bản cũ ghi cứng "sẽ mở hộp thoại in của Windows" — vừa sai (giờ in thẳng),
+           vừa làm người dùng chờ nhầm một hộp thoại không bao giờ hiện. -->
+      <span class="hint" id="prTrangThai">Đang hỏi máy in của kho…</span>
       <span class="sp"></span>
+      <button id="prBtnLui" style="display:none" onclick="prInLui()" title="Chỉ dùng khi không gửi được tới máy in của kho: in bằng hộp thoại in của máy đang cầm">In bằng máy này</button>
       <button onclick="prXoaHet()">Xoá hết</button>
       <button class="primary" id="prBtnIn" onclick="prIn()">Xác nhận in</button>
     </div>
@@ -11228,6 +11232,11 @@ var PR_TEM = (function(){
  *  lượng, và sống ở tab Nhận diện SKU. Trộn hai giỏ là trộn hai luật khác nhau.
  * ═══════════════════════════════════════════════════════════════════════════════════════════════ */
 var PR_KEY = 'pr-tem-v1', PR_TRAN_DONG = 200, PR_TRAN_TEM = 2000, PR_TRAN_SL = 200;
+/* Trần của MỘT LỆNH IN ở phía hàng đợi (Apps Script PR_TRAN_DONG/PR_TRAN_TEM). Khác trần của giỏ ở
+   trên: giỏ chứa 200 SKU nhưng một lệnh chỉ gửi được 40. Chặn ngay tại đây để người dùng biết TRƯỚC
+   khi bấm — bị chối SAU khi bấm là lúc họ đã tưởng tem đang ra khỏi máy in.
+   `prHoiHangDoi` cập nhật lại hai số này theo đúng con số máy chủ đang dùng. */
+var PR_GAS_SKU = 40, PR_GAS_TEM = 400;
 var PR = { sel: {}, nguoi: '', dotKhac: false };   // sel: sku -> {sku, pn, slHang, mau, sl}
 /* `nguoi` = ai gửi đợt in (điền bởi tầng hàng đợi); `dotKhac` = hàng đợi đang có đợt của người khác
    -> lúc đó mới cần in tem phân cách. */
@@ -11303,13 +11312,57 @@ function prDatSl(sku, v){
  *  kho ghi "100" — tem in đúng cái họ gõ, chỉ giới hạn độ dài cho khỏi tràn. */
 function prDatSlHang(sku, v){
   var r = PR.sel[String(sku)]; if (!r) return;
-  r.slHang = String(v == null ? '' : v).trim().slice(0, 12);
+  r.slHang = prSoCham(String(v == null ? '' : v).trim()).slice(0, 16);
   prLuu(); prVe();
 }
 function prApSlHang(v){
-  var t = String(v == null ? '' : v).trim().slice(0, 12);
+  var t = prSoCham(String(v == null ? '' : v).trim()).slice(0, 16);
   prDs().forEach(function(r){ r.slHang = t; });
   prLuu(); prVe();
+}
+/* ── DẤU CHẤM NGĂN CÁCH NGHÌN ────────────────────────────────────────────────────────────────────
+ * Số in trên tem là 2.500.000 mm hay 100.000 mm. Không có dấu ngăn cách thì đếm số 0 bằng mắt là
+ * sai — mà tem sai số lượng thì cả cuộn vải đi sai chỗ. Nên vừa gõ tới hàng nghìn là tự chèn dấu
+ * chấm, đúng cách kho vẫn viết tay.
+ * Hai điều phải giữ:
+ *   · PHẦN CHỮ đứng sau vẫn nguyên văn (có kho gõ "100000 m") vì đó là thứ IN LÊN tem;
+ *   · CON TRỎ không nhảy về cuối khi dấu chấm chen vào giữa — nên đếm theo SỐ CHỮ SỐ trước con trỏ
+ *     rồi đặt lại đúng chỗ đó, chứ không đặt theo vị trí ký tự (dấu chấm làm lệch 1 nhịp).
+ * ─────────────────────────────────────────────────────────────────────────────────────────────── */
+function prSoCham(s){
+  var t = String(s == null ? '' : s);
+  var i = 0;
+  while (i < t.length && t.charAt(i) === ' ') i++;
+  var so = '', j = i;
+  while (j < t.length){
+    var c = t.charAt(j);
+    if (c >= '0' && c <= '9'){ so += c; j++; continue; }
+    if (c === '.' || c === ','){ j++; continue; }     // dấu ngăn cách cũ: bỏ để đặt lại cho đúng
+    break;
+  }
+  if (!so) return t;
+  so = so.replace(/^0+(?=[0-9])/, '');                // "007" -> "7", nhưng "0" vẫn là "0"
+  var ra = '';
+  for (var k = 0; k < so.length; k++){
+    if (k > 0 && (so.length - k) % 3 === 0) ra += '.';
+    ra += so.charAt(k);
+  }
+  return t.slice(0, i) + ra + t.slice(j);
+}
+/** Gõ tới đâu chấm tới đó, giữ nguyên chỗ con trỏ. */
+function prGoSo(el){
+  var vt = (el.selectionStart == null) ? el.value.length : el.selectionStart;
+  var demSo = el.value.slice(0, vt).replace(/[^0-9]/g, '').length;
+  var moi = prSoCham(el.value);
+  if (moi === el.value) return;
+  el.value = moi;
+  var pos = 0, d = 0;
+  while (pos < moi.length && d < demSo){
+    var c = moi.charAt(pos);
+    if (c >= '0' && c <= '9') d++;
+    pos++;
+  }
+  try{ el.setSelectionRange(pos, pos); }catch(e){}
 }
 function prDatMau(sku, m){
   var r = PR.sel[String(sku)]; if (!r) return;
@@ -11361,6 +11414,8 @@ function prMo(){
   m.style.display = 'flex';
   requestAnimationFrame(function(){ m.classList.add('show'); });
   prVe();
+  prLui(false);
+  prHoiHangDoi();          // mở pop-up là hỏi ngay: máy in kho sống chưa, có ai đang in trước mình
 }
 function prDong(){
   var m = document.getElementById('prmodal');
@@ -11385,7 +11440,7 @@ function prVe(){
     return '<tr><td class="num"><input class="prsl" type="number" min="1" max="' + PR_TRAN_SL + '" step="1" value="' + (Number(r.sl) || 1) + '"' +
         ' data-s="' + esc(r.sku) + '" onchange="prDatSl(this.getAttribute(\'data-s\'),this.value)" title="Số con tem sẽ in"></td>' +
       '<td class="num"><input class="prsl" type="text" value="' + esc(r.slHang == null ? '' : r.slHang) + '"' +
-        ' data-s="' + esc(r.sku) + '" placeholder="—" onchange="prDatSlHang(this.getAttribute(\'data-s\'),this.value)"' +
+        ' data-s="' + esc(r.sku) + '" placeholder="—" oninput="prGoSo(this)" onchange="prDatSlHang(this.getAttribute(\'data-s\'),this.value)"' +
         ' title="Con số này IN TRÊN TEM (không in chữ Số lượng)"></td>' +
       '<td><b>' + esc(r.sku) + '</b></td>' +
       '<td class="pn">' + esc(r.pn) + '</td>' +
@@ -11454,7 +11509,8 @@ function prMotHang(hang, maMau){
 async function prIn(){
   var ds = prDs(), tong = prTongTem();
   if (!ds.length || tong < 1){ toast('Danh sách in đang trống.', 'warn'); return; }
-  if (tong > PR_TRAN_TEM){ toast('Một lượt in tối đa ' + nf(PR_TRAN_TEM) + ' tem — hãy chia nhỏ.', 'warn'); return; }
+  if (ds.length > PR_GAS_SKU){ toast('Một lệnh in tối đa ' + PR_GAS_SKU + ' SKU — hãy in thành nhiều lượt.', 'warn'); return; }
+  if (tong > PR_GAS_TEM){ toast('Một lệnh in tối đa ' + nf(PR_GAS_TEM) + ' con tem — hãy in thành nhiều lượt.', 'warn'); return; }
   var nhom = PR_TEM.theoMau(ds);
   if (nhom.thuTu.length > 1){
     toast('Danh sách đang có ' + nhom.thuTu.length + ' khổ tem khác nhau. Hãy áp một mẫu cho tất cả, hoặc in từng khổ một lượt.', 'warn');
@@ -11467,52 +11523,132 @@ async function prIn(){
   btn.disabled = true;
   var chuCu = btn.textContent;
   btn.textContent = 'Đang gửi tới máy in…';
-  var ok = await prGuiHangDoi(ds, tong);
+  prLui(false);
+  /* Đồng hồ đếm từ LÚC BẤM, không phải từ lúc Apps Script trả lời: người bấm cảm nhận độ trễ
+     từ đầu ngón tay của họ, nên số giây báo ra phải là số giây họ thật sự chờ. */
+  var kq = await prGuiHangDoi(ds, tong, Date.now());
   btn.disabled = false;
   btn.textContent = chuCu;
-  if (ok) return;                                   // gửi được -> xong, trạng thái tự cập nhật
-  /* ĐƯỜNG LÙI: in qua hộp thoại của Windows */
-  prTrangThaiHtml('Không gửi được tới máy in kho — mở hộp thoại in của máy này thay thế.', 'warn');
-  prInTrinhDuyet(ds, nhom);
+  if (kq.ok) return;                                // gửi được -> xong, trạng thái tự cập nhật
+  /* KHÔNG tự mở hộp thoại in nữa. Bấm "Xác nhận in" là IN. Không in được thì nói thẳng lý do, và chỉ
+     HIỆN THÊM một nút để in bằng máy đang cầm — có chủ ý, chứ không bị đẩy vào bước lưu/chọn máy in. */
+  prTrangThaiHtml('✗ ' + esc(kq.loi || 'Không gửi được tới máy in của kho') +
+    (kq.mang ? '. Kiểm tra mạng rồi bấm lại — hoặc in tạm bằng máy này.' : '.'), 'err');
+  toast(kq.loi || 'Không gửi được lệnh in.', 'err');
+  prLui(true);
+}
+/** Nút "In bằng máy này": chỉ hiện khi đường chính hỏng. Mặc định ẩn. */
+function prLui(hien){
+  var b = document.getElementById('prBtnLui');
+  if (b) b.style.display = hien ? '' : 'none';
+}
+function prInLui(){
+  var ds = prDs();
+  if (!ds.length) return;
+  prTrangThaiHtml('Đang mở hộp thoại in của máy này — chọn máy in tem rồi bấm In.', 'warn');
+  prInTrinhDuyet(ds, PR_TEM.theoMau(ds));
+}
+/** Email thành tên gọn: "nam@hasaki..." -> "nam". Đủ biết của ai, không phơi cả địa chỉ lên màn hình. */
+function prTenNguoi(s){ var t = String(s || '').trim(); var i = t.indexOf('@'); return i > 0 ? t.slice(0, i) : (t || 'người khác'); }
+/** Agent chưa gọi `pr_lay` quá 60 giây = máy trạm tắt (bình thường agent hỏi mỗi ~6 giây). */
+function prAgentChet(kq){ var t = Number(kq && kq.agentTre); return !(t >= 0) || t > 60000; }
+function prNguyCap(kq){ return prAgentChet(kq) ? 'warn' : ''; }
+/** Một câu tả đúng tình hình chờ: máy trạm có bật không, trước mình còn đợt của ai. */
+function prMoTaCho(kq){
+  if (prAgentChet(kq)) return 'Nhưng <b>máy trạm đang tắt agent in tem</b> — lệnh nằm trong hàng đợi, sẽ in khi máy bật lại.';
+  var truoc = Number(kq.truoc) || 0;
+  if (!truoc) return 'Máy in đang rảnh — tem ra ngay.';
+  var ai = (kq.dangIn && kq.dangIn.nguoi) ? kq.dangIn.nguoi : (kq.nguoiTruoc || '');
+  return 'Trước bạn còn <b>' + truoc + ' đợt</b> (' + nf(Number(kq.temTruoc) || 0) + ' tem) của ' +
+    esc(prTenNguoi(ai)) + ' — chờ đợt đó xong.';
+}
+/** Mở pop-up là hỏi ngay hàng đợi: dòng trạng thái nói thật ngay từ đầu chứ không hứa suông. */
+async function prHoiHangDoi(){
+  prTrangThaiHtml('Đang hỏi máy in của kho…');
+  var kq = null;
+  try{ kq = await prGoiGas({ action: 'pr_hangdoi' }); }catch(e){}
+  if (!kq || kq.status !== 'success'){
+    prTrangThaiHtml('Chưa hỏi được hàng đợi in — vẫn bấm <b>Xác nhận in</b> được; nếu gửi thất bại sẽ có nút in bằng máy này.', 'warn');
+    return;
+  }
+  if (Number(kq.tranSku) > 0) PR_GAS_SKU = Number(kq.tranSku);
+  if (Number(kq.tranTem) > 0) PR_GAS_TEM = Number(kq.tranTem);
+  if (prAgentChet(kq)){
+    prTrangThaiHtml('⚠ <b>Máy trạm đang tắt agent in tem.</b> Gửi vẫn được — tem sẽ ra khi máy bật lại.', 'warn');
+    prLui(true);
+    return;
+  }
+  var cho = Number(kq.cho) || 0;
+  if (!cho){ prTrangThaiHtml('Máy in tem của kho <b>đang rảnh</b> — bấm Xác nhận in là tem ra, không có hộp thoại nào.', 'ok'); return; }
+  var ai = (kq.dangIn && kq.dangIn.nguoi) ? kq.dangIn.nguoi : (kq.nguoiCho || '');
+  prTrangThaiHtml('Máy in đang có <b>' + cho + ' đợt</b> (' + nf(Number(kq.temCho) || 0) + ' tem) của ' +
+    esc(prTenNguoi(ai)) + ' — lệnh của bạn in ngay sau đó.', 'warn');
 }
 
 /** Gửi lệnh vào hàng đợi (GAS `pr_them`) rồi theo dõi tới khi agent báo xong. */
-async function prGuiHangDoi(ds, tong){
+async function prGuiHangDoi(ds, tong, tBam){
+  /* GỬI KÈM TÊN SẢN PHẨM. Hai lý do, cả hai đều đã đo được:
+       · tốc độ — agent khỏi phải tra Sheet: SKU nào không có trong danh mục trong máy thì mỗi lệnh
+         mất thêm ~0,6s chỉ để hỏi tên (đo 20/08/2026);
+       · đúng cái người dùng đã thấy — tên in ra là tên hiện trong pop-up lúc họ bấm, không phải tên
+         đọc lại từ Sheet vào một thời điểm khác. */
   var dong = ds.map(function(r){
-    return { sku: String(r.sku), sl: Math.max(1, Number(r.sl) || 1), slHang: String(r.slHang || ''), mau: r.mau || PR_TEM.MAU_MAC_DINH };
+    return { sku: String(r.sku), sl: Math.max(1, Number(r.sl) || 1), slHang: String(r.slHang || ''),
+      mau: r.mau || PR_TEM.MAU_MAC_DINH, pn: String(r.pn || '').slice(0, 140) };
   });
+  /* Phân biệt HAI loại thất bại là bắt buộc: hàng đợi CHỐI (quá trần, sai dữ liệu) thì bấm lại vô
+     nghĩa; còn mất mạng thì bấm lại là được. Nói sai loại là đẩy người dùng đi sai đường. */
+  var kq;
   try{
-    var kq = await prGoiGas({ action: 'pr_them', nguoi: ndsEmail(), dong: JSON.stringify(dong) });
-    if (!kq || kq.status !== 'success' || !kq.id) throw new Error((kq && kq.message) || 'GAS không nhận lệnh');
-    if (kq.trung){ prTrangThaiHtml('Lệnh này vừa gửi rồi — không gửi lại để tránh in trùng.', 'warn'); return true; }
-    prTrangThaiHtml('Đã gửi <b>' + nf(tong) + ' tem</b> tới máy in của kho (lệnh <code>' + esc(kq.id) + '</code>). Đang chờ máy in…');
-    prTheoDoi(kq.id, tong);
-    return true;
+    kq = await prGoiGas({ action: 'pr_them', nguoi: ndsEmail(), dong: JSON.stringify(dong) });
   }catch(e){
-    return false;
+    return { ok: false, mang: true, loi: 'Không gọi được hàng đợi in (' + String((e && e.message) || e) + ')' };
   }
+  if (!kq || kq.status !== 'success' || !kq.id){
+    return { ok: false, mang: false, loi: (kq && kq.message) || 'Hàng đợi không nhận lệnh' };
+  }
+  if (kq.trung){ prTrangThaiHtml('Lệnh này vừa gửi rồi — không gửi lại để tránh in trùng.', 'warn'); return { ok: true }; }
+  prTrangThaiHtml('Đã gửi <b>' + nf(tong) + ' tem</b> tới máy in của kho. ' + prMoTaCho(kq), prNguyCap(kq));
+  prTheoDoi(kq.id, tong, tBam || Date.now());
+  return { ok: true };
 }
 /** Hỏi lại trạng thái lệnh: 20 lượt, mỗi 3 giây — đủ cho một đợt tem vài chục con. */
-async function prTheoDoi(id, tong){
-  for (var i = 0; i < 20; i++){
-    await new Promise(function(r){ setTimeout(r, 3000); });
+/** Hỏi lại trạng thái lệnh cho tới khi máy in báo xong.
+ *  NHỊP DÀY Ở ĐẦU rồi giãn dần: mươi giây đầu là lúc người bấm còn đứng nhìn màn hình ("tem ra
+ *  chưa?"), sau đó họ đã đi tới máy in. Đo 20/08/2026: `pr_trangthai` mất ~1,1s và KHÔNG mở Sheet
+ *  nữa, nên hỏi mỗi 700ms trong giai đoạn đầu là hỏi gần như liên tục mà vẫn nhẹ.
+ *  Có ĐẾM GIÂY trong dòng trạng thái: một dòng chữ đứng im là thứ làm người ta tưởng máy treo — mà
+ *  đây đúng là chỗ đã bị phàn nàn "sao lâu vậy". Đếm giây cũng là cách tự đo: người dùng đọc được
+ *  ngay đường in hôm nay nhanh chậm bao nhiêu. */
+async function prTheoDoi(id, tong, tBam){
+  var t0 = tBam || Date.now(), HAN = 120000;
+  var giay = function(){ return Math.round((Date.now() - t0) / 1000); };
+  while (Date.now() - t0 < HAN){
+    await new Promise(function(r){ setTimeout(r, Date.now() - t0 < 12000 ? 700 : 2500); });
     var kq = null;
     try{ kq = await prGoiGas({ action: 'pr_trangthai', id: id }); }catch(e){}
     if (!kq || kq.status !== 'success') continue;
-    if (kq.trangThai === 'dang_in'){ prTrangThaiHtml('Máy in đã nhận lệnh — đang in <b>' + nf(tong) + ' tem</b>…'); continue; }
     if (kq.trangThai === 'xong'){
-      prTrangThaiHtml('✓ Đã in xong <b>' + nf(tong) + ' tem</b>.', 'ok');
-      toast('Máy in kho đã in xong ' + nf(tong) + ' tem.', 'ok');
+      prTrangThaiHtml('✓ Đã in xong <b>' + nf(tong) + ' tem</b> — mất ' + giay() + ' giây.', 'ok');
+      toast('Máy in kho đã in xong ' + nf(tong) + ' tem (' + giay() + 's).', 'ok');
       return;
     }
     if (kq.trangThai === 'loi'){
       prTrangThaiHtml('✗ Máy in báo lỗi: ' + esc(kq.ghiChu || 'không rõ') + '. Lệnh vẫn còn trong hàng đợi để in lại.', 'err');
       toast('Máy in kho báo lỗi — xem dòng trạng thái trong bảng in.', 'err');
+      prLui(true);
       return;
     }
+    /* Đang chờ: nói RÕ chờ ai, kèm số giây đã trôi. */
+    var mt = (kq.trangThai === 'dang_in')
+      ? ('Máy in đang chạy đợt của bạn — <b>' + nf(tong) + ' tem</b>…')
+      : ('Đang chờ. ' + prMoTaCho(kq));
+    prTrangThaiHtml(mt + ' <span class="muted">(' + giay() + 's)</span>', prNguyCap(kq));
   }
-  prTrangThaiHtml('Chưa thấy máy in phản hồi sau 1 phút — có thể máy trạm chưa bật agent in tem. Lệnh vẫn nằm trong hàng đợi.', 'warn');
+  prTrangThaiHtml('Chưa thấy máy in phản hồi sau 2 phút — lệnh vẫn nằm trong hàng đợi và sẽ in khi máy trạm bật agent. Cần tem ngay thì in bằng máy này.', 'warn');
+  prLui(true);
 }
+
 /** Gọi GAS cho hàng đợi in — bản gọn của `ndsGoiGas`: không chạm giao diện "đang đọc tem", thử lại
  *  2 lượt vì chặng 2 của Apps Script thỉnh thoảng trả HTML dù script đã chạy xong (hồ sơ sự cố GAS
  *  12/08/2026). Lệnh in là thứ KHÔNG được gửi hai lần, nên phía GAS còn chốt chống trùng 5 giây. */
