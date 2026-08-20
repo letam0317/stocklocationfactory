@@ -915,8 +915,15 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
 #prBody input.prsl{width:64px;padding:5px 7px;font-family:inherit;font-size:12.5px;text-align:right;
   border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
 #prBody input.prsl:focus{outline:2px solid var(--accent);outline-offset:1px}
-#prBody select.prmau{padding:5px 7px;font-family:inherit;font-size:12px;border:1px solid var(--line);
-  border-radius:8px;background:var(--surface);color:var(--ink);max-width:190px}
+/* COMBO mẫu tem: chỉ cần 3 dòng vì `.combo`/`.combo-menu`/`.combo-item` đã có sẵn (popIn + focus ring
+   + hover accent). Mũi tên dùng đúng kiểu `.fccombo` của pop-up Dự báo. */
+#prmodal .prcb{max-width:210px}
+#prmodal .prcb input{cursor:pointer;padding:6px 26px 6px 10px;font-size:12px;text-overflow:ellipsis;min-height:32px}
+#prmodal .prcb::after{content:"";position:absolute;right:10px;top:50%;width:6px;height:6px;margin-top:-4px;
+  border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);transform:rotate(45deg);
+  pointer-events:none;transition:transform .2s var(--ease)}
+#prmodal .prcb.open::after{transform:rotate(-135deg);margin-top:-1px}
+#prmodal .prcb .combo-menu{width:max-content;min-width:100%;max-width:min(280px,86vw);max-height:240px;overflow:auto}
 #prBody .prdel{background:0;border:0;color:var(--ink3);cursor:pointer;font-size:17px;line-height:1;padding:2px 6px;border-radius:7px}
 #prBody .prdel:hover{color:var(--bad);background:var(--hover)}
 /* ĐIỆN THOẠI: BẢNG DANH SÁCH IN → THẺ (20/08/2026, ảnh báo lỗi từ máy thật).
@@ -954,7 +961,13 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
   #prmodal .mtbl td:nth-child(5)::before{content:'Số tem ';color:var(--muted)}
   #prmodal .mtbl td:nth-child(6){grid-area:del;justify-self:end}
   #prmodal .mtbl td[colspan]{grid-column:1/-1}
-  #prBody select.prmau{width:100%;max-width:none;min-height:36px}
+  #prmodal .prcb{max-width:none;width:100%}
+  #prmodal .prcb input{min-height:36px;font-size:12.5px}
+  /* Menu `width:max-content` rộng hơn ô ⇒ dù ĐANG ẨN (`visibility:hidden`) nó vẫn tính vào vùng cuộn
+     và sinh 62px kéo ngang trong modal (bộ test bắt được). Trên máy hẹp thì trả về khuôn gốc: menu
+     rộng đúng bằng ô, chữ dài thì ngắt dòng trong mục. */
+  #prmodal .prcb .combo-menu{width:auto;min-width:0;max-width:none;left:0;right:0}
+  #prmodal .prcb .combo-item{white-space:normal;line-height:1.45}
   #prBody input.prsl{width:58px;min-height:36px}
   #prBody .prdel{font-size:22px;padding:4px 8px}
   /* Hai ô "áp cho tất cả": nhãn dài chiếm nửa bề rộng nên ô chọn bị cắt mất chữ — xếp DỌC lại. */
@@ -975,6 +988,7 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
   #prmodal .modalbody{max-height:40vh}
   #prmodal .pr-xem{max-height:30vh;overflow:auto}
   #prmodal #prMauAll{width:100%;max-width:none}
+  #prmodal #prMauAll .prcb{width:100%}
   #prmodal #prSlAll{width:100%!important;text-align:center}
   #prmodal .prfoot{padding:12px}
   #prmodal .modalhd{padding:14px 12px 10px}
@@ -991,9 +1005,9 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
 #prsheet{display:none}
 .pr-xem{background:var(--surface2);border:1px dashed var(--line);border-radius:10px;padding:12px;
   display:flex;flex-wrap:wrap;gap:10px;max-height:320px;overflow:auto}
-.pr-tem{background:#fff;color:#000;border:1px solid #999;box-sizing:border-box;padding:1.5mm 2mm;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.6mm;overflow:hidden;
-  font-family:'Segoe UI',Arial,sans-serif}
+/* Con tem giờ LÀ một SVG: bỏ hết padding/flex của bản HTML cũ, để SVG lấp kín đúng khổ tem. */
+.pr-tem{background:#fff;color:#000;box-sizing:border-box;overflow:hidden;line-height:0}
+.pr-tem>svg{width:100%;height:100%;display:block}
 .pr-tem .pr-sku{font-size:5.2mm;font-weight:800;letter-spacing:.02em;line-height:1;font-variant-numeric:tabular-nums}
 .pr-tem .pr-sku-nho{font-size:4mm}
 .pr-tem .pr-sku-mini{font-size:2.4mm;font-weight:700}
@@ -2490,7 +2504,7 @@ body.side-anim{overflow-x:clip}
     </div><button class="mclose" onclick="prDong()">&times;</button></div>
     <div class="mfilters" style="align-items:end">
       <div class="fld"><label>Áp mẫu tem cho tất cả</label>
-        <select id="prMauAll" class="prmau" onchange="prApMau(this.value)"></select></div>
+        <div id="prMauAll" class="prcbwrap"></div></div>
       <div class="fld"><label>Áp số lượng cho tất cả</label>
         <input id="prSlAll" class="prsl" type="number" min="1" max="200" step="1" value="1" style="width:96px"
           onchange="prApSl(this.value)" title="Gõ số rồi rời ô: mọi dòng nhận số này"></input></div>
@@ -3335,6 +3349,7 @@ document.addEventListener('keydown',function(e){
   if(m && m.classList.contains('show')){ closeCat(); return; }
   var cm=document.getElementById('catmodal');
   if(cm && cm.classList.contains('show')){ closeCatWhModal(); return; }
+  if(document.querySelector('#prmodal .combo-menu.show')){ prCbDong(); return; }   // combo mẫu tem đóng TRƯỚC modal in
   if(document.querySelector('#kkmFilters .combo-menu.show')){ kkmCloseCombos(); return; }
   var kfx=document.getElementById('kkmFilters');   // sheet bộ lọc trên điện thoại đóng TRƯỚC pop-up Kiểm kê
   if(kfx && kfx.classList.contains('mf-xo')){ kkmFltThu(); return; }
@@ -3364,6 +3379,9 @@ document.addEventListener('click',function(e){
   if(combo && !combo.contains(e.target)) closeCat();
   var ngay=document.getElementById('plgNgayMenu');   // ô chọn Ngày của tab Planogram
   if(ngay && ngay.classList.contains('show') && !ngay.parentNode.contains(e.target)) plgDongNgay();
+  /* Combo mẫu tem trong modal In tem: bấm ra ngoài thì đóng — dùng CHÍNH handler chung này, không
+     dựng thêm listener riêng (mỗi listener rời là một chỗ có thể quên tháo). */
+  if(document.querySelector('#prmodal .combo-menu.show') && !(e.target.closest && e.target.closest('#prmodal .prcb'))) prCbDong();
 });
 
 /* ================= Đồng bộ WMS on-demand + cooldown 4h ================= */
@@ -10149,14 +10167,11 @@ async function ndsNhanVanBan(chu, nguon, j){
   NDS.rawDaTach=String(chu||'').trim();
   NDS.boRac=(b.bo||[]).length;
   ndsVeTags();
-  var ten = nguon==='ocr' ? 'OCR của Google' : 'AI';
-  if (!them && !NDS.tokens.length){
-    toast(ten+' đọc được chữ nhưng không mảnh nào có trong danh mục — kiểm lại ảnh, hoặc gõ mã trên tem.','warn');
-  } else {
-    toast(ten+' đọc được '+b.code.length+' mã · '+(b.spec.length+b.color.length)+' thông số/màu'+
-      (NDS.boRac?(' · bỏ '+NDS.boRac+' mảnh giấy tờ'):'')+
-      ((j&&j.ms)?(' · '+Math.round(j.ms/100)/10+'s'):'')+'.', b.code.length?'ok':'warn');
-  }
+  /* GỌN LẠI 20/08/2026 (yêu cầu user, nhắc lần 2): bỏ hẳn dòng đếm "N mã · N thông số/màu · bỏ N mảnh
+     giấy tờ · 4,7s". Thủ kho đứng trước kệ chỉ cần biết XONG hay CHƯA; số mảnh bóc được thì đã nằm ở
+     badge "N từ khoá" của bước 3 và ở chính mấy viên từ khoá bên dưới. */
+  if (!them && !NDS.tokens.length) toast('Chưa đọc được tem — chụp gần hơn, hoặc gõ mã trên tem.','warn');
+  else toast('Đã đọc xong tem.', b.code.length?'ok':'warn');
   await ndsDoiSoat();
 }
 async function ndsDocTem(tuDong){
@@ -10868,6 +10883,127 @@ var PR_TEM = (function(){
       '" preserveAspectRatio="none" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">' + rects + '</svg>';
   }
 
+  /* ---------- 1b. VẠCH DẠNG <rect> (để nhúng vào SVG của cả con tem) ----------
+   * `svg()` ở trên trả về một thẻ <svg> hoàn chỉnh — tiện cho HTML nhưng không nhúng được vào SVG
+   * lớn. Hàm này trả về ĐÚNG các <rect> + bề rộng, để `svgTem()` đặt vạch vào đúng chỗ trong tem.
+   * Bề rộng module tính theo DOT của đầu in (203 dpi = 8 dot/mm) và làm tròn về SỐ NGUYÊN dot:
+   * vạch lệch nửa dot là vạch bị nhoè một bên, máy quét đọc kém. */
+  function vachRect(txt, opt){
+    opt = opt || {};
+    var b = bit(txt); if (!b) return null;
+    /* ⚠ ĐƠN VỊ: hệ toạ độ của `svgTem` là DOT của đầu in, nên bề rộng một module cũng phải tính
+       bằng DOT. Bản đầu chia lại cho dotMm (ra mm) nên cả mã vạch co thành một khối bé xíu —
+       bắt được ngay ở ảnh xem trước đầu tiên. */
+    var dotMm = opt.dotMm || 8, modDot = Math.max(2, Math.round((opt.mm || 0.25) * dotMm));
+    var mm = modDot, cao = opt.cao || 9, x0 = opt.x || 0, y0 = opt.y || 0;
+    var i = 0, out = '';
+    while (i < b.length){
+      if (b[i] === '1'){
+        var j = i; while (j < b.length && b[j] === '1') j++;
+        out += '<rect x="' + (x0 + i * mm).toFixed(3) + '" y="' + y0 + '" width="' + ((j - i) * mm).toFixed(3) +
+          '" height="' + cao + '" fill="#000"/>';
+        i = j;
+      } else i++;
+    }
+    return { rects: out, rong: +(b.length * mm).toFixed(3), soModule: b.length, modMm: mm };
+  }
+
+  /* ---------- 1c. CỠ CHỮ TỰ PHỦ ĐẦY KHUNG (yêu cầu 20/08/2026) ----------
+   * Tên hàng dài ngắn khác nhau rất nhiều (từ 30 tới 150 ký tự), mà tem thì cùng một khổ. Nếu chọn
+   * một cỡ chữ cố định thì tên ngắn để trống nửa tem, tên dài lại tràn. Nên: tìm cỡ chữ LỚN NHẤT
+   * mà vẫn xếp đủ trong vùng cho phép.
+   *   số ký tự mỗi dòng  n(s) = W / (s × 0,55)      (0,55 = bề rộng trung bình một ký tự Arial)
+   *   số dòng            d(s) = số dòng thực khi bẻ chữ với n(s)
+   *   điều kiện          d(s) × s × 1,22 ≤ H
+   * Duyệt từ cỡ lớn xuống, lấy cỡ đầu tiên vừa — rẻ và không bao giờ tràn.
+   * CHỈ tên hàng mới co giãn; mã SKU · mã vạch · dòng chân giữ cỡ CỐ ĐỊNH (người dùng chốt vậy, và
+   * đó cũng là ba thứ phải nhận ra tức thì nên không được thay đổi giữa các tem). */
+  /* Bẻ dòng tên hàng. Chỗ ngắt hợp lệ KHÔNG chỉ là khoảng trắng mà còn là dấu "/" — PRODUCTNAME của
+     WMS là chuỗi phần tử ghép bằng "/" và có những mẩu dài hơn cả dòng ("Lycra/None/Deep"), bẻ theo
+     khoảng trắng thôi thì ra "Lycra/None/D" + "eep", đọc rất khó. Ngắt sau "/" KHÔNG thêm/bớt ký tự
+     nào nên tên vẫn nguyên văn. Từ nào vẫn dài quá thì mới cắt cứng. */
+  function beDong(txt, soKyTu){
+    var t = String(txt == null ? '' : txt);
+    var manh = t.match(/[^\s\/]*[\/\s]|[^\s\/]+$/g) || [];
+    var dong = [], cur = '';
+    for (var i = 0; i < manh.length; i++){
+      var w = manh[i];
+      while (w.replace(/\s+$/, '').length > soKyTu){       // mẩu dài hơn cả dòng -> cắt cứng
+        if (cur.trim()) { dong.push(cur.replace(/\s+$/, '')); cur = ''; }
+        dong.push(w.slice(0, soKyTu)); w = w.slice(soKyTu);
+      }
+      if ((cur + w).replace(/\s+$/, '').length > soKyTu){
+        if (cur.trim()) dong.push(cur.replace(/\s+$/, ''));
+        cur = w;
+      } else cur += w;
+    }
+    if (cur.trim()) dong.push(cur.replace(/\s+$/, ''));
+    return dong;
+  }
+  function coChuVua(txt, W, H, coMax, coMin){
+    coMax = coMax || 34; coMin = coMin || 7;
+    for (var s = coMax; s >= coMin; s--){
+      var n = Math.floor(W / (s * 0.55));
+      if (n < 4) continue;
+      var d = beDong(txt, n);
+      if (d.length * s * 1.22 <= H) return { co: s, dong: d };
+    }
+    var nMin = Math.max(4, Math.floor(W / (coMin * 0.55)));
+    return { co: coMin, dong: beDong(txt, nMin).slice(0, Math.max(1, Math.floor(H / (coMin * 1.22)))) };
+  }
+
+  /* ---------- 1d. MỘT CON TEM = MỘT SVG (nguồn DUY NHẤT, 20/08/2026) ----------
+   * Vì sao đổi từ HTML sang SVG: bản xem trước trong pop-up phải giống bản in **100%** (yêu cầu của
+   * người dùng sau khi soi tem thật). Trước đây pop-up dựng bằng HTML/CSS còn máy in nhận TSPL +
+   * bitmap render riêng — hai đường dựng khác nhau thì không có cách nào giống nhau được.
+   * Nay CHỈ CÓ MỘT hàm: `svgTem()`. Pop-up nhúng thẳng SVG này; agent in tem render đúng SVG này
+   * thành ảnh rồi gửi máy in. Kể cả mã vạch cũng nằm trong SVG (không nhờ lệnh BARCODE của máy in
+   * nữa) — đổi lại module vạch được ghim về số nguyên dot để không mất độ nét.
+   * Toạ độ tính bằng DOT của đầu in để ảnh render ra khớp từng điểm với giấy.
+   */
+  function svgTem(d, mauK, opt){
+    opt = opt || {};
+    var m = mau(mauK), dotMm = opt.dotMm || 8;
+    var W = Math.round(m.w * dotMm), H = Math.round(m.h * dotMm);
+    var le = Math.round(1.6 * dotMm);                       // lề trong khung
+    var coSku = opt.coSku || 22, coChan = opt.coChan || 12; // CỐ ĐỊNH theo yêu cầu
+    var caoVach = opt.caoVach || Math.round(8 * dotMm) / 1; // 8mm
+    var y = le;
+    var o = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H +
+      '" shape-rendering="crispEdges" font-family="Arial, Helvetica, sans-serif">' +
+      '<rect width="' + W + '" height="' + H + '" fill="#fff"/>' +
+      '<rect x="1" y="1" width="' + (W - 2) + '" height="' + (H - 2) + '" fill="none" stroke="#000" stroke-width="2"/>';
+    /* ① MÃ VẠCH + MÃ SKU trên cùng */
+    var v = vachRect(String(d.sku), { mm: 0.25, dotMm: dotMm, cao: caoVach, x: le, y: y });
+    if (v) { o += v.rects; y += caoVach + Math.round(0.6 * dotMm); }
+    o += '<text x="' + le + '" y="' + (y + coSku) + '" font-size="' + coSku + '" font-weight="bold" letter-spacing="0.5">' +
+      escXml(d.sku) + '</text>';
+    y += coSku + Math.round(0.8 * dotMm);
+    /* ② TÊN HÀNG — nguyên văn, cỡ chữ tự phủ đầy chỗ còn lại */
+    var hChan = coChan + Math.round(1.6 * dotMm);
+    var vungH = H - y - hChan - le, vungW = W - le * 2;
+    var fit = coChuVua(String(d.pn == null ? '' : d.pn), vungW, vungH, opt.coTenMax || 34, opt.coTenMin || 7);
+    for (var i = 0; i < fit.dong.length; i++){
+      o += '<text x="' + le + '" y="' + (y + fit.co + i * Math.round(fit.co * 1.22)) + '" font-size="' + fit.co + '">' +
+        escXml(fit.dong[i]) + '</text>';
+    }
+    /* ③ DÒNG CHÂN cố định ở đáy, canh giữa: ĐVT · ngày in */
+    var chan = [];
+    if (d.dv) chan.push('ĐVT: ' + d.dv);
+    if (d.ngay) chan.push(d.ngay);
+    var yc = H - le;
+    o += '<line x1="' + le + '" y1="' + (yc - coChan - 4) + '" x2="' + (W - le) + '" y2="' + (yc - coChan - 4) +
+      '" stroke="#000" stroke-width="1.5"/>';
+    o += '<text x="' + (W / 2) + '" y="' + (yc - 2) + '" font-size="' + coChan + '" font-weight="600" text-anchor="middle">' +
+      escXml(chan.join(' · ')) + '</text>';
+    return o + '</svg>';
+  }
+  function escXml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
   /* ---------- 2. MẪU TEM ----------
    * Khổ tem là thứ DUY NHẤT phải khớp với giấy đang lắp trong máy in, nên nó nằm ngay trong tên mẫu
    * để thủ kho chọn không cần đoán. Mỗi tem in ra ĐÚNG MỘT trang khổ đó (break-after:page) — đó là
@@ -10896,40 +11032,17 @@ var PR_TEM = (function(){
   /* KHỔ TEM đọc từ chính các form BarTender của kho (script `_DOC-MAY-IN.ps1` chạy trên máy cắm máy
      in, 20/08/2026) — nhưng khổ ĐANG DÙNG THẬT là 40×60 theo nhãn cuộn giấy, nên nó là mặc định. */
   var MAU = {
-    't40x60': { ten: 'Tem SKU 40 × 60 mm (2 tem/hàng — giấy đang lắp)', w: 40, h: 60, mm: 0.26, cao: 11,
-      /* Tem DỌC: mã SKU trên cùng cho dễ đọc khi tem đã dán, rồi mã vạch, rồi tên hàng nhiều dòng.
-         Khung viền mảnh như form gốc (`Box 1`) để mắt bắt được rìa tem khi 2 tem nằm sát nhau. */
-      /* BỐ CỤC CHỐT 20/08/2026 (người dùng quyết, sau khi soi tem in thử thật):
-           ① MÃ SKU + MÃ VẠCH ở TRÊN CÙNG — thứ phải quét/đọc được ngay, không phải tìm;
-           ② TÊN HÀNG nguyên văn ở giữa, chiếm hết chỗ còn lại;
-           ③ ĐVT + NGÀY IN gộp MỘT dòng, CHÔN CỨNG ở đáy và canh giữa (margin-top:auto) — nhờ vậy
-              tên hàng dài hay ngắn thì dòng chân vẫn nằm đúng một chỗ, tem nào cũng giống tem nào. */
-      ve: function(d, esc){
-        return '<div class="pr-khung">' +
-          '<div class="pr-sku">' + esc(d.sku) + '</div>' +
-          svg(d.sku, { mm: 0.26, cao: 10 }) +
-          /* TÊN HÀNG IN NGUYÊN VĂN — "có sao ghi vậy". Không cắt, không rút gọn: thủ kho đối chiếu
-             tem với tên trong WMS nên chữ phải khớp từng ký tự. */
-          '<div class="pr-pn pr-pn5">' + esc(d.pn) + '</div>' +
-          '<div class="pr-chan">' + (d.dv ? 'ĐVT: ' + esc(d.dv) : '') + (d.dv && d.ngay ? ' · ' : '') + (d.ngay ? esc(d.ngay) : '') + '</div>' +
-          '</div>';
-      } },
-    't42x62': { ten: 'Tem SKU 42,5 × 62 mm (form sku.btw)', w: 42.5, h: 62, mm: 0.26, cao: 11,
-      ve: function(d, esc){ return MAU.t40x60.ve(d, esc); } },
-    't46x76': { ten: 'Tem lớn 46 × 76 mm (TSC PE200)', w: 46, h: 76, mm: 0.28, cao: 12,
-      ve: function(d, esc){ return MAU.t40x60.ve(d, esc); } },
-    't42x25': { ten: 'Tem ngang 42 × 25 mm (Zebra ZT230)', w: 42, h: 25, mm: 0.24, cao: 8,
-      ve: function(d, esc){
-        return '<div class="pr-sku pr-sku-nho">' + esc(d.sku) + '</div>' +
-          svg(d.sku, { mm: 0.24, cao: 8 }) +
-          '<div class="pr-pn">' + esc(cat(d.pn, 44)) + '</div>';
-      } },
-    't22x13': { ten: 'Tem mini 21,6 × 12,7 mm (chỉ mã)', w: 21.6, h: 12.7, mm: 0.15, cao: 5,
-      /* Khổ này quá nhỏ cho mã vạch dài: SKU 9 chữ số cần 134 module. Ở 0,15mm/module là 20,1mm —
-         vừa đúng bề rộng tem, không còn chỗ cho lề. Nên chỉ in mã vạch + số, không tên hàng. */
-      ve: function(d, esc){
-        return '<div class="pr-sku pr-sku-mini">' + esc(d.sku) + '</div>' + svg(d.sku, { mm: 0.15, cao: 5 });
-      } }
+    /* `ve(d)` giờ trả về SVG của cả con tem (xem svgTem ở mục 1d) — pop-up và máy in dùng chung. */
+    't40x60': { ten: 'Tem SKU 40 × 60 mm (2 tem/hàng — giấy đang lắp)', w: 40, h: 60,
+      mm: 0.25, cao: 10, ve: function(d){ return svgTem(d, 't40x60'); } },
+    't42x62': { ten: 'Tem SKU 42,5 × 62 mm (form sku.btw)', w: 42.5, h: 62,
+      mm: 0.25, cao: 10, ve: function(d){ return svgTem(d, 't42x62'); } },
+    't46x76': { ten: 'Tem lớn 46 × 76 mm (TSC PE200)', w: 46, h: 76,
+      mm: 0.26, cao: 11, ve: function(d){ return svgTem(d, 't46x76'); } },
+    't42x25': { ten: 'Tem ngang 42 × 25 mm (Zebra ZT230)', w: 42, h: 25,
+      mm: 0.22, cao: 6, ve: function(d){ return svgTem(d, 't42x25', { coSku: 16, coChan: 10, caoVach: 40, coTenMax: 14 }); } },
+    't22x13': { ten: 'Tem mini 21,6 × 12,7 mm (chỉ mã)', w: 21.6, h: 12.7,
+      mm: 0.15, cao: 5, ve: function(d){ return svgTem(d, 't22x13', { coSku: 11, coChan: 8, caoVach: 26, coTenMax: 8, coTenMin: 6 }); } }
   };
   var MAU_MAC_DINH = 't40x60';
   function mau(k){ return MAU[k] || MAU[MAU_MAC_DINH]; }
@@ -10965,7 +11078,8 @@ var PR_TEM = (function(){
     return { m: m, thuTu: thuTu };
   }
   return { maHoa: maHoa, bit: bit, svg: svg, MAU: MAU, MAU_MAC_DINH: MAU_MAC_DINH, mau: mau,
-    tongTem: tongTem, theoMau: theoMau, cat: cat, GIAY: GIAY, khoTrang: khoTrang, chiaHang: chiaHang };
+    tongTem: tongTem, theoMau: theoMau, cat: cat, GIAY: GIAY, khoTrang: khoTrang, chiaHang: chiaHang,
+    svgTem: svgTem, vachRect: vachRect, coChuVua: coChuVua, beDong: beDong };
 })();
 /*</PR-TEM>*/
 
@@ -11061,16 +11175,45 @@ function prDatMau(sku, m){
   r.mau = PR_TEM.MAU[m] ? m : PR_TEM.MAU_MAC_DINH;
   prLuu(); prVe();
 }
+/* COMBO MẪU TEM — dùng ĐÚNG khuôn `.combo` / `.combo-menu` (popIn + focus ring) của dự án, không phải
+ * `<select>` trần (lệ dự án: control mới phải tái dùng combo sẵn có — user đã nhắc 2 lần).
+ * `data-s` = SKU của dòng; KHÔNG có `data-s` nghĩa là ô "áp cho tất cả". */
+function prCbHtml(chon, sku){
+  var mac = PR_TEM.MAU[chon] ? chon : PR_TEM.MAU_MAC_DINH;
+  var items = Object.keys(PR_TEM.MAU).map(function(k){
+    return '<div class="combo-item' + (k === mac ? ' active' : '') + '" data-v="' + k + '" onclick="prCbChon(this)">' +
+      '<span class="nm">' + esc(PR_TEM.MAU[k].ten) + '</span></div>';
+  }).join('');
+  return '<div class="combo prcb"' + (sku ? (' data-s="' + esc(sku) + '"') : '') + '>' +
+    '<input readonly aria-label="Mẫu tem" value="' + esc(PR_TEM.MAU[mac].ten) + '" onclick="prCbMo(this)">' +
+    '<div class="combo-menu">' + items + '</div></div>';
+}
+function prCbDong(){
+  document.querySelectorAll('#prmodal .prcb').forEach(function(c){
+    c.classList.remove('open'); var m = c.querySelector('.combo-menu'); if (m) m.classList.remove('show');
+  });
+}
+function prCbMo(inp){
+  var c = inp.closest('.prcb'), m = c.querySelector('.combo-menu'), dangMo = m.classList.contains('show');
+  prCbDong();
+  if (!dangMo){ m.classList.add('show'); c.classList.add('open'); }
+}
+function prCbChon(it){
+  var c = it.closest('.prcb'), v = it.getAttribute('data-v'), sku = c.getAttribute('data-s');
+  prCbDong();
+  if (sku) prDatMau(sku, v); else prApMau(v);
+}
 function prApMau(m){ prDs().forEach(function(r){ r.mau = PR_TEM.MAU[m] ? m : PR_TEM.MAU_MAC_DINH; }); prLuu(); prVe(); }
 function prApSl(v){ prDs().forEach(function(r){ r.sl = Math.max(1, Math.min(PR_TRAN_SL, Math.round(Number(v) || 1))); }); prLuu(); prSyncBar(); prVe(); }
 function prMo(){
   if (!prSo()){ toast('Chưa chọn SKU nào — bấm nút "＋ Tem" trên thẻ gợi ý.', 'warn'); return; }
-  var sel = document.getElementById('prMauAll');
-  if (sel && !sel.options.length){
-    Object.keys(PR_TEM.MAU).forEach(function(k){
-      var o = document.createElement('option'); o.value = k; o.textContent = PR_TEM.MAU[k].ten; sel.appendChild(o);
-    });
-    sel.value = PR_TEM.MAU_MAC_DINH;
+  var oAll = document.getElementById('prMauAll');
+  if (oAll){
+    /* Ô "áp cho tất cả" hiện mẫu của dòng đầu khi cả danh sách cùng khổ — nói đúng trạng thái thật
+       thay vì luôn hiện mẫu mặc định. */
+    var ds0 = prDs(), chung = ds0.length ? ds0[0].mau : PR_TEM.MAU_MAC_DINH;
+    if (ds0.some(function(r){ return r.mau !== chung; })) chung = PR_TEM.MAU_MAC_DINH;
+    oAll.innerHTML = prCbHtml(chung, '');
   }
   document.body.classList.add('prm-open');
   var m = document.getElementById('prmodal');
@@ -11098,7 +11241,7 @@ function prVe(){
     return '<tr><td><b>' + esc(r.sku) + '</b></td>' +
       '<td class="pn">' + esc(PR_TEM.cat(r.pn, 110)) + '</td>' +
       '<td>' + esc(r.dv || '—') + '</td>' +
-      '<td><select class="prmau" data-s="' + esc(r.sku) + '" onchange="prDatMau(this.getAttribute(\'data-s\'),this.value)">' + mauOpt(r.mau) + '</select></td>' +
+      '<td>' + prCbHtml(r.mau, r.sku) + '</td>' +
       '<td class="num"><input class="prsl" type="number" min="1" max="' + PR_TRAN_SL + '" step="1" value="' + (Number(r.sl) || 1) + '"' +
         ' data-s="' + esc(r.sku) + '" onchange="prDatSl(this.getAttribute(\'data-s\'),this.value)"></td>' +
       '<td><button class="prdel" data-s="' + esc(r.sku) + '" title="Bỏ SKU này khỏi danh sách in"' +
@@ -11134,7 +11277,9 @@ function prVe(){
 function prMotTem(r){
   var m = PR_TEM.mau(r.mau);
   var d = { sku: r.sku, pn: r.pn, dv: r.dv, ngay: new Date().toLocaleDateString('vi-VN') };
-  return '<div class="pr-tem" style="width:' + m.w + 'mm;height:' + m.h + 'mm">' + m.ve(d, esc) + '</div>';
+  /* SVG của con tem được nhúng NGUYÊN VẸN và chỉ định cỡ bằng mm — nhờ vậy thứ hiện trong pop-up là
+     ĐÚNG cái mà agent in tem gửi cho máy in (cùng một hàm `svgTem`, xem lõi PR_TEM mục 1d). */
+  return '<div class="pr-tem" style="width:' + m.w + 'mm;height:' + m.h + 'mm">' + m.ve(d) + '</div>';
 }
 /**
  * HTML của MỘT HÀNG GIẤY = một trang in. Giấy đang lắp là decal **2 tem/hàng** (40×60mm mỗi tem),
