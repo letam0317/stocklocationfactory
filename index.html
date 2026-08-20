@@ -11550,12 +11550,21 @@ function prInLui(){
 }
 /** Email thành tên gọn: "nam@hasaki..." -> "nam". Đủ biết của ai, không phơi cả địa chỉ lên màn hình. */
 function prTenNguoi(s){ var t = String(s || '').trim(); var i = t.indexOf('@'); return i > 0 ? t.slice(0, i) : (t || 'người khác'); }
-/** Agent chưa gọi `pr_lay` quá 60 giây = máy trạm tắt (bình thường agent hỏi mỗi ~6 giây). */
-function prAgentChet(kq){ var t = Number(kq && kq.agentTre); return !(t >= 0) || t > 60000; }
-function prNguyCap(kq){ return prAgentChet(kq) ? 'warn' : ''; }
+/* BA trạng thái, không phải hai — và đừng gộp lại.
+ *   · `prAgentChet`  : nhịp tim cũ hơn 60 giây → máy trạm CHẮC CHẮN đang tắt agent (bình thường agent
+ *                      hỏi hàng đợi mỗi ~1-2 giây).
+ *   · `prAgentChuaRo`: chưa đọc được nhịp tim (-1). Có thể máy trạm chưa bao giờ bật agent, mà cũng có
+ *                      thể chỉ là một lượt đọc lệch — đo 20/08/2026 thấy nó chớp lên rồi hết ngay.
+ *   Vì sao tách: nói "máy trạm đang tắt" trong khi máy vẫn chạy là báo động sai, và người dùng chỉ cần
+ *   bị lừa một lần là lần sau họ thôi đọc dòng trạng thái. Chưa rõ thì nói là chưa rõ, rồi để
+ *   `prTheoDoi` phán xử bằng chuyện thật: 25 giây mà lệnh vẫn chưa ai nhặt thì mới kết luận. */
+function prAgentChet(kq){ var t = Number(kq && kq.agentTre); return t > 60000; }
+function prAgentChuaRo(kq){ var t = Number(kq && kq.agentTre); return !(t >= 0); }
+function prNguyCap(kq){ return (prAgentChet(kq) || prAgentChuaRo(kq)) ? 'warn' : ''; }
 /** Một câu tả đúng tình hình chờ: máy trạm có bật không, trước mình còn đợt của ai. */
 function prMoTaCho(kq){
   if (prAgentChet(kq)) return 'Nhưng <b>máy trạm đang tắt agent in tem</b> — lệnh nằm trong hàng đợi, sẽ in khi máy bật lại.';
+  if (prAgentChuaRo(kq)) return 'Đang chờ máy in nhận lệnh…';
   var truoc = Number(kq.truoc) || 0;
   if (!truoc) return 'Máy in đang rảnh — tem ra ngay.';
   var ai = (kq.dangIn && kq.dangIn.nguoi) ? kq.dangIn.nguoi : (kq.nguoiTruoc || '');
@@ -11573,8 +11582,10 @@ async function prHoiHangDoi(){
   }
   if (Number(kq.tranSku) > 0) PR_GAS_SKU = Number(kq.tranSku);
   if (Number(kq.tranTem) > 0) PR_GAS_TEM = Number(kq.tranTem);
-  if (prAgentChet(kq)){
-    prTrangThaiHtml('⚠ <b>Máy trạm đang tắt agent in tem.</b> Gửi vẫn được — tem sẽ ra khi máy bật lại.', 'warn');
+  if (prAgentChet(kq) || prAgentChuaRo(kq)){
+    prTrangThaiHtml(prAgentChet(kq)
+      ? '⚠ <b>Máy trạm đang tắt agent in tem.</b> Gửi vẫn được — tem sẽ ra khi máy bật lại.'
+      : '⚠ <b>Chưa thấy máy in của kho phản hồi.</b> Gửi vẫn được — nếu 25 giây nữa không ai nhặt lệnh thì đúng là máy trạm chưa bật agent.', 'warn');
     prLui(true);
     return;
   }
@@ -11640,9 +11651,15 @@ async function prTheoDoi(id, tong, tBam){
       return;
     }
     /* Đang chờ: nói RÕ chờ ai, kèm số giây đã trôi. */
+    /* PHÁN XỬ BẰNG CHUYỆN THẬT: quá 25 giây mà chưa ai nhặt lệnh thì agent chắc chắn không trực —
+       kết luận này đáng tin hơn mọi cách đọc nhịp tim, vì nó đo đúng cái người dùng đang cần. */
+    var lau = Date.now() - t0 > 25000;
     var mt = (kq.trangThai === 'dang_in')
       ? ('Máy in đang chạy đợt của bạn — <b>' + nf(tong) + ' tem</b>…')
-      : ('Đang chờ. ' + prMoTaCho(kq));
+      : (lau && !Number(kq.truoc)
+        ? 'Chưa ai nhặt lệnh sau ' + giay() + ' giây — <b>máy trạm chưa bật agent in tem</b>. Lệnh vẫn nằm trong hàng đợi, hoặc in tạm bằng máy này.'
+        : 'Đang chờ. ' + prMoTaCho(kq));
+    if (lau && kq.trangThai === 'cho' && !Number(kq.truoc)) prLui(true);
     prTrangThaiHtml(mt + ' <span class="muted">(' + giay() + 's)</span>', prNguyCap(kq));
   }
   prTrangThaiHtml('Chưa thấy máy in phản hồi sau 2 phút — lệnh vẫn nằm trong hàng đợi và sẽ in khi máy trạm bật agent. Cần tem ngay thì in bằng máy này.', 'warn');
