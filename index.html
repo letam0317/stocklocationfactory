@@ -894,7 +894,59 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
   /* Dòng thông báo ("Không có dòng phù hợp", "Hiển thị 500 / N dòng") trải hết thẻ */
   #tvtmodal .mtbl td[colspan]{grid-column:1/-1;grid-row:1;text-align:center}
   #tvtmodal .mtbl tr:has(td[colspan]){grid-template-areas:"a a a";padding:14px 12px;background:0;border:0;box-shadow:none}
+  /* ===== Pop-up "Tồn kho bất thường" trên ĐIỆN THOẠI = THẺ (20/08/2026) =====
+     Thống nhất với #prmodal / #tvtmodal thay cho đường cuộn ngang 13 cột trước đây.
+     KHÁC #tvtmodal một điểm CÓ LÝ DO: ở đây số ô MỖI DÒNG KHÔNG CỐ ĐỊNH — 6 cột loại bất thường
+     (ABN_TYPES) mà mỗi SKU thường chỉ vướng 1-2 loại, 4-5 ô còn lại là số 0. `grid-template-areas`
+     đòi đúng số ô nên không dùng được ⇒ dùng `flex-wrap` + `order`, ô nào không có thì hàng tự khép.
+     BỎ PHẦN DƯ (cùng lẽ với việc bỏ ô email ở tab Nhận diện SKU): ô giá trị 0 KHÔNG mang tin —
+     `.abncell0` ẩn hẳn, nên thẻ chỉ hiện đúng loại mà SKU này thật sự vướng. Trước đây 13 cột ×
+     phần lớn là "0" ngốn hết bề ngang. Nhãn loại lấy từ `data-lb` nên số không bao giờ mồ côi. */
+  #abnmodal .modalbody{overflow-x:hidden;padding:0 10px 12px}
+  #abnmodal .mtbl{display:block;font-size:13px}
+  #abnmodal .mtbl thead{display:none}
+  #abnmodal .mtbl tbody{display:block}
+  #abnmodal .mtbl tr{position:relative;display:flex;flex-wrap:wrap;align-items:baseline;gap:3px 10px;
+    padding:10px 12px 10px 40px;margin:0 0 8px;
+    border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:var(--shadow)}
+  #abnmodal .mtbl tbody tr:hover{background:var(--surface)}
+  /* Ghi đè rule `#abnmodal .mtbl td{white-space:nowrap}` ở trên: trong thẻ thì chữ phải được ngắt dòng */
+  #abnmodal .mtbl td{display:block;border:0;padding:0;white-space:normal;min-width:0}
+  #abnmodal .mtbl td.pcc{position:absolute;left:0;top:4px;width:40px;height:40px;
+    display:flex;align-items:center;justify-content:center}
+  #abnmodal .mtbl td.absku{order:1;flex:1 1 auto;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
+  #abnmodal .mtbl td.abtot{order:2;margin-left:auto;text-align:right !important;white-space:nowrap;
+    font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+  /* Nhãn "Tồn" là BẮT BUỘC, không phải trang trí: trên bảng thì tiêu đề cột nói hộ, còn trong thẻ
+     thì thead đã ẩn ⇒ con số thành MỒ CÔI. Ảnh chụp máy mô phỏng cho thấy đúng vậy: góc phải thẻ
+     hiện số "0" trần không ai biết là gì. Bộ đo đã được bổ sung luật bắt số mồ côi. */
+  #abnmodal .mtbl td.abtot::before{content:attr(data-lb) ' ';color:var(--muted);font-size:10px;font-weight:650}
+  #abnmodal .mtbl td.abpn{order:3;flex:1 1 100%;font-size:11.5px;line-height:1.45;color:var(--ink2);
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  /* Hàng chip: các loại bất thường >0. Nền nhạt để tách khỏi phần chữ, màu chữ giữ theo loại
+     (style inline của renderer) nên nhìn là biết loại nào. */
+  #abnmodal .mtbl td.abty{order:4;white-space:nowrap;font-size:11px;
+    background:var(--surface2);border-radius:999px;padding:2px 9px}
+  #abnmodal .mtbl td.abty::before{content:attr(data-lb) ' ';color:var(--muted);font-weight:650}
+  #abnmodal .mtbl td.abav{order:5;white-space:nowrap;font-size:10.5px;color:var(--ink3);font-variant-numeric:tabular-nums}
+  #abnmodal .mtbl td.abav::before{content:attr(data-lb) ' ';color:var(--muted)}
+  #abnmodal .mtbl td.abwh{order:6;flex:1 1 auto;font-size:10.5px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #abnmodal .mtbl td.abcat{order:7;font-size:10.5px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  /* BỎ DƯ: ô loại = 0 không mang tin nào cả */
+  #abnmodal .mtbl td.abncell0{display:none}
+  #abnmodal .mtbl td[colspan]{flex:1 1 100%;text-align:center}
+  #abnmodal .mtbl tr:has(td[colspan]){padding:14px 12px;background:0;border:0;box-shadow:none}
+  /* Ô TICK: hộp kiểm gốc chỉ 15px, trình duyệt không nới được — nhưng CẢ Ô .pcc là 40px và có
+     bộ bắt chạm riêng (xem listener `.pcc` trong JS) nên vùng bấm thật là 40px.
+     Nới hộp lên 22px để nhìn thấy rõ chỗ phải chạm. */
+  /* KHÔNG khoá vào `.mtbl`: bảng của pop-up Kiểm kê dựng bằng `<table>` trần trong `.kkwrap`,
+     không mang class .mtbl — bản đầu nhắm `.mtbl th.pcc` nên ô "chọn tất cả" ở đó vẫn 34px và bộ
+     đo bắt được. Nhắm theo `.pcc` trong modal là phủ hết mọi pop-up. */
+  .modal td.pcc input,.modal th.pcc input{width:22px;height:22px}
+  /* Ô tick (kể cả ô "chọn tất cả" ở hàng tiêu đề) phải đủ 40px — cả ô bấm được, xem pcCellTap */
+  .modal td.pcc,.modal th.pcc{min-width:40px;height:40px}
 }
+
 
 /* ===== TAB 3: Tồn kho bất thường — thẻ chỉ số gọn + 2 chart cạnh nhau (theo kho | theo loại) ===== */
 .abntiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(136px,1fr));gap:8px;margin:4px 0 12px}
@@ -2267,6 +2319,24 @@ body.side-anim{overflow-x:clip}
 .cd-step.tong .v{color:var(--accent);font-size:13px}
 @media(max-width:430px){ .cd-step{flex-wrap:wrap} .cd-step .v{width:100%;text-align:right} }
 
+
+/* ===== SÀN CỠ CHỮ TRÊN ĐIỆN THOẠI (20/08/2026) ==================================================
+ * ⚠ KHỐI NÀY PHẢI NẰM CUỐI CÙNG TRONG <style>. Bản đầu đặt nó ở giữa tệp và KHÔNG ăn: mấy rule gốc
+ * (`.hm-t .k small` ở ~1947, `.pg-legbox .lb-t` ở ~1649) đứng SAU nó, cùng độ ưu tiên nên thắng —
+ * đúng cái bẫy đã ghi ở khối `.prfoot` phía trên. Bộ đo bắt được vì nó đọc cỡ chữ ĐÃ TÍNH, không
+ * đọc CSS: sửa mà không ăn thì vẫn đỏ. Thêm selector mới thì thêm vào đây, đừng rải giữa tệp.
+ *
+ * Danh sách dưới đây do `qc-mobile-toan-du-an.mjs` gom lại (2 dashboard × 4 máy): các nhãn siêu nhỏ
+ * 8,5-9,5px. Trên màn 24" đó là mật độ thông tin đẹp; trên điện thoại cầm tay là chữ phải nhíu mắt —
+ * mà chúng toàn là NHÃN (đơn vị, mốc thời gian, chú giải), tức thứ quyết định con số bên cạnh có
+ * nghĩa gì. Nâng sàn 10,5px CHỈ trên điện thoại, bản máy tính không đụng.
+ * Liệt kê TƯỜNG MINH theo selector bộ đo trả về, KHÔNG quét rộng: quét rộng sẽ thổi cả chip/badge
+ * lên và vỡ hàng. `.phseg span` giữ 10px vì là số nằm TRONG thân cột biểu đồ mảnh — to hơn thì bị cắt. */
+@media(max-width:768px){
+  .hm-t .k small,.kkstrip .t,.phd,.phl,.hdate,.hdelta,.combo-head,.pg-dbadge .u,
+  .pg-legbox .lb-t,.pg-vthist b,.phy b,.mfilters label,.pcdfoot .fld2 label,.fcfact span{font-size:10.5px}
+  .phseg span{font-size:10px}
+}
 </style>
 </head>
 <body>
@@ -6892,10 +6962,14 @@ function abnmRender(){
   for(var i=0;i<rows.length;i++){ var r=rows[i];
     sums.in_stock+=r.in_stock; sums.available+=r.available; ABN_TYPES.forEach(function(t){ sums[t.k]+=r[t.k]; });
     if(out.length<cap){
-      var tds=ABN_TYPES.map(function(t){ var v=r[t.k]; return v>0?('<td class="num" style="color:'+t.c+';font-weight:700">'+nf(v)+'</td>'):'<td class="num abncell0">0</td>'; }).join('');
-      out.push('<tr>'+pcCell(r.wh,r.sku,r.pn,0,abnReason(r))+'<td class="whn"><span class="dot" style="background:'+abnColor(r.wh)+'"></span>'+esc(r.wh)+'</td>'+
-        '<td>'+esc(r.sku)+'</td><td class="pn">'+esc(r.pn)+'</td><td>'+(r.cat?esc(r.cat):'—')+'</td>'+
-        '<td class="num">'+nf(r.in_stock)+'</td><td class="num">'+nf(r.available)+'</td>'+tds+'</tr>');
+      /* `data-lb` + class `ab*` để bố cục THẺ trên điện thoại đọc được ô nào là ô nào mà không phải
+         dựa `nth-child` (số cột loại đổi theo ABN_TYPES). Bảng máy tính không đổi gì. */
+      var tds=ABN_TYPES.map(function(t){ var v=r[t.k];
+        return v>0?('<td class="num abty" data-lb="'+esc(t.lb)+'" style="color:'+t.c+';font-weight:700">'+nf(v)+'</td>')
+                  :('<td class="num abncell0 abty" data-lb="'+esc(t.lb)+'">0</td>'); }).join('');
+      out.push('<tr>'+pcCell(r.wh,r.sku,r.pn,0,abnReason(r))+'<td class="whn abwh"><span class="dot" style="background:'+abnColor(r.wh)+'"></span>'+esc(r.wh)+'</td>'+
+        '<td class="absku">'+esc(r.sku)+'</td><td class="pn abpn">'+esc(r.pn)+'</td><td class="abcat">'+(r.cat?esc(r.cat):'—')+'</td>'+
+        '<td class="num abtot" data-lb="Tồn">'+nf(r.in_stock)+'</td><td class="num abav" data-lb="Available">'+nf(r.available)+'</td>'+tds+'</tr>');
     }
   }
   if(rows.length>cap) out.push('<tr><td colspan="'+NCOL+'" class="empty">Hiển thị '+nf(cap)+' / '+nf(rows.length)+' dòng — dùng bộ lọc để thu hẹp.</td></tr>');
@@ -7385,6 +7459,28 @@ function pcRowChange(e){
 document.getElementById('abnmBody').addEventListener('change',pcRowChange);
 document.getElementById('kkmBody').addEventListener('change',pcRowChange);
 document.getElementById('tvtmBody').addEventListener('change',pcRowChange);
+/* VÙNG CHẠM THẬT CHO Ô TICK (20/08/2026 — bộ đo qc-mobile-toan-du-an bắt được).
+   Hộp kiểm gốc của trình duyệt chỉ 15-22px và KHÔNG nới được bằng CSS: có nới ô `.pcc` lên 40px thì
+   cũng chỉ là 40px khoảng trắng, chạm vào lề vẫn không ăn — nghĩa là "đã sửa" trên CSS mà ngón tay
+   vẫn trượt. Nên bắt chạm ở CHÍNH Ô: bấm đâu trong ô 40px cũng lật hộp kiểm.
+   `e.target!==inp` để không lật hai lần khi chạm đúng vào hộp (trình duyệt đã tự lật rồi), và bắn
+   `change` để đi qua đúng `pcRowChange` ở trên chứ không nhân bản logic giỏ ra đây. */
+function pcCellTap(e){
+  var o=e.target.closest&&e.target.closest('td.pcc,th.pcc'); if(!o) return;
+  /* Phủ cả `th.pcc` (ô "chọn tất cả"): nó nằm trong thead — NGOÀI tbody — nên phải gắn listener ở
+     GỐC modal, không phải ở #...Body như bản đầu. Bộ đo bắt được đúng chỗ này: mọi ô tick trong
+     bảng đã 40px mà riêng ô chọn-tất-cả còn 34px. */
+  var inp=o.querySelector('input.pcr,input.pcall'); if(!inp||e.target===inp) return;
+  inp.checked=!inp.checked;
+  inp.dispatchEvent(new Event('change',{bubbles:true}));
+}
+['abnmodal','kkmodal','tvtmodal'].forEach(function(id){
+  var el=document.getElementById(id); if(el) el.addEventListener('click',pcCellTap);
+});
+/* Cờ khai báo cho bộ đo (qc-mobile-toan-du-an): "ô .pcc ở trang này BẤM ĐƯỢC". Nhờ cờ này bộ đo mới
+   dám tính vùng chạm theo Ô 40px thay vì theo hộp kiểm 22px — không có cờ thì nó tính theo hộp và
+   báo đỏ, đúng như phải vậy. Đổi cách bắt chạm thì nhớ đổi/ bỏ cờ, đừng để bộ đo tin nhầm. */
+document.body.dataset.pccTap='1';
 /* Chọn tất cả pop-up BẤT THƯỜNG: thead tĩnh ngoài tbody -> gắn thẳng; tập = toàn bộ dòng ĐANG LỌC */
 document.querySelector('#abnmodal .pcall').addEventListener('change',function(){
   var rows=abnmRowsWith(null,abnmState(),abnmQval()).map(function(r){ return {wh:r.wh,sku:r.sku,pn:r.pn,_t:0,src:abnReason(r)}; });
