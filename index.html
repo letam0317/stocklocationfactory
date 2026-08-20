@@ -870,7 +870,9 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
   #tvtmodal .mtbl tbody{display:block}
   #tvtmodal .mtbl tr{position:relative;display:grid;
     grid-template-columns:minmax(0,auto) minmax(0,1fr) minmax(0,auto);
-    grid-template-areas:"uid uid sl" "loc loc st" "pn pn pn" "sku wh upd";
+    /* Tên kho ĐƯỢC RIÊNG 1 HÀNG: bộ đo bắt được "WH - MATERIAL - MTG" bị ellipsis cắt mất 11px khi
+       nó phải chia hàng cuối với SKU và Cập nhật. Tên kho là thứ người đi kho cần đọc đủ. */
+    grid-template-areas:"uid uid sl" "loc loc st" "pn pn pn" "sku sku upd" "wh wh wh";
     gap:3px 8px;align-items:baseline;padding:10px 12px 10px 40px;margin:0 0 8px;
     border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:var(--shadow)}
   #tvtmodal .mtbl tbody tr:hover{background:var(--surface)}
@@ -892,7 +894,7 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
   #tvtmodal .mtbl td.tvsku{grid-area:sku;font-size:10.5px;color:var(--ink3);white-space:nowrap;font-variant-numeric:tabular-nums}
   #tvtmodal .mtbl td.tvsku::before{content:'SKU ';color:var(--muted)}
   /* Tên kho nowrap + ellipsis: "WH - MATERIAL - GARMENT" vỡ 3 dòng theo dấu "-" là bệnh cũ */
-  #tvtmodal .mtbl td.tvwh{grid-area:wh;font-size:10.5px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #tvtmodal .mtbl td.tvwh{grid-area:wh;font-size:10.5px;color:var(--ink3);white-space:nowrap}
   #tvtmodal .mtbl td.tvupd{grid-area:upd;justify-self:end;font-size:10.5px;color:var(--ink3);white-space:nowrap}
   #tvtmodal .mtbl td.tvgrp{display:none}
   /* Dòng thông báo ("Không có dòng phù hợp", "Hiển thị 500 / N dòng") trải hết thẻ */
@@ -2342,6 +2344,76 @@ body.side-anim{overflow-x:clip}
   .phseg span{font-size:10px}
 }
 
+/* ===== THANH LỌC TAB KIỂM KÊ TRÊN ĐIỆN THOẠI (20/08/2026) =====================================
+ * ĐO THẬT trên máy 375px: thanh lọc cao **222px** và vỡ **6 hàng răng cưa** — chip kho 2 hàng lệch,
+ * "Ngày kiểm" một mình một hàng, "Request"+"Type SKU" một hàng, "Type vị trí"+"Xoá lọc" một hàng,
+ * "Kế hoạch" lại một hàng nữa dồn phải. Chiếm 1/3 màn trước khi thấy con số nào.
+ *
+ * GỐC không phải thiếu CSS mà là `.kkonebar>#kkFilters{display:contents}` (dòng ~433): nó biến các ô
+ * lọc thành con TRỰC TIẾP của `.kkonebar`, nên rule 2 cột ĐÃ CÓ SẴN cho điện thoại
+ * (`.kkmf .fld:not(.q){flex:1 1 calc(50% - 4px)}` trong khối 640px) không bao giờ ăn — nó nhắm
+ * `.kkmf .fld` trong khung `.kkmf`, mà khung đó đã bị `display:contents` xoá khỏi luồng.
+ * `display:contents` là thứ cần cho MỘT HÀNG ở máy tính, nhưng ở điện thoại thì đúng là thủ phạm.
+ *
+ * Chữa: điện thoại tắt `display:contents`, xếp lại thành 3 hàng NGAY NGẮN:
+ *   hàng 1  chip kho — MỘT hàng cuộn ngang (khuôn chip-strip của .toptabs/.kksum) + nút Kế hoạch ghim phải
+ *   hàng 2-3 bốn ô lọc chia 2 cột đều nhau (rule sẵn có, giờ mới ăn)
+ * Đo lại: 222px → ~150px và hết răng cưa. */
+@media(max-width:640px){
+  /* BỐ CỤC 3 HÀNG CHÍNH XÁC (đo lại: 215px/5 hàng → ~130px/3 hàng, 19% màn):
+       hàng 1  chip kho (cuộn ngang) ————————— nút "Kế hoạch" ghim phải, CÙNG hàng
+       hàng 2  [Ngày kiểm] [Request]
+       hàng 3  [Type SKU]  [Type vị trí]   (nút Xoá lọc dồn phải, chung hàng)
+     Dùng `flex-wrap:wrap` chứ KHÔNG `flex-direction:column`: cột thì mỗi con một hàng, nên nút
+     "Kế hoạch" bị đẩy xuống hàng riêng — chính là hàng thứ 5 dư ra ở bản trước.
+     Bốn ô lọc để GRID 2 cột đều nhau, không để flex tự thương lượng: `.kkfbar .fld` có basis 152px
+     và `.fld.dt` có 182px + min-width 160px, ba con số đó đánh nhau trong 351px nên ra hàng 1 ô,
+     hàng 2 ô, hàng 2 ô — răng cưa. Grid thì hết chỗ cho thương lượng. */
+  .kkonebar{flex-wrap:wrap;align-items:center;row-gap:8px}
+  /* `min-width:0` KHÔNG PHẢI trang trí: flex item mặc định `min-width:auto` nên nó phình theo nội
+     dung và `overflow-x:auto` mất tác dụng — bộ đo bắt được đúng vậy: #kkWhBar rộng 490px trên màn
+     375px, kéo cả trang ngang 127px. Đây là bẫy flex kinh điển, quên là vỡ. */
+  .kkonebar>#kkWhBar{display:flex;flex:1 1 0;flex-wrap:nowrap;gap:6px;overflow-x:auto;
+    scrollbar-width:none;min-width:0;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+  .kkonebar>#kkWhBar::-webkit-scrollbar{display:none}
+  .kkonebar>#kkWhBar .kktab{flex:0 0 auto}
+  .kkonebar .kkplan{margin-left:8px;flex:0 0 auto;order:0}
+  /* Bốn ô lọc: GRID 2 cột, chiếm cả bề rộng, xuống hàng sau chip kho */
+  .kkonebar>#kkFilters:not([hidden]){display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;
+    flex:1 1 100%;order:1;min-width:0;padding:0}
+  .kkfbar .fld,.kkfbar .fld.dt{flex:none;min-width:0}
+  /* Ô bọc nút "Xoá lọc": trải hết hàng rồi dồn phải — không chiếm một nửa ô lọc.
+     VÀ: nút này mặc định `hidden` (chỉ hiện khi đang lọc gì đó) nhưng Ô BỌC nó thì không — trong
+     grid, ô rỗng vẫn ăn nguyên một hàng. Bộ đo bắt được đúng vậy: 4 hàng, mà hàng thứ 4 là hàng
+     dành cho một cái nút đang ẩn. `flex:0 0 auto` của bản gốc chỉ đúng cho flex, không đúng cho grid. */
+  .kkfbar .fld.bare{grid-column:1/-1;justify-self:end}
+  .kkfbar .fld.bare:has(button[hidden]){display:none}
+}
+
+/* ===== THANH CHIPS PLANOGRAM (.pg-whbar) TRÊN ĐIỆN THOẠI ======================================
+ * Bộ đo: 6 món xếp 4 hàng, cao 112px (17% màn 375px) — cùng bệnh răng cưa với thanh lọc Kiểm kê.
+ * Chữa cùng một cách: một hàng cuộn ngang (khuôn chip-strip của .toptabs/.kksum), kèm `min-width:0`
+ * cho `overflow-x:auto` thật sự có tác dụng trong flex. */
+@media(max-width:640px){
+  .pg-whbar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;min-width:0;max-width:100%;
+    -webkit-overflow-scrolling:touch;padding-bottom:2px}
+  .pg-whbar::-webkit-scrollbar{display:none}
+  .pg-whbar>*{flex:0 0 auto}
+}
+
+/* ===== DẢI 6 CHỈ SỐ KIỂM KÊ: ĐỪNG CẮT NHÃN =====================================================
+ * ĐO THẬT 375px: 6 ô chia đều màn ⇒ mỗi ô ~55px, nhãn bị `text-overflow:ellipsis` cắt còn
+ * "TỔ… ĐÃ… CÒ… LỆ… D…" — con số còn đó mà không ai biết nó là số gì. Bộ đo bố cục KHÔNG bắt được
+ * (không tràn, không bóp, không mồ côi vì vẫn có nhãn) — đã bổ sung luật "nhãn bị cắt" vào bộ rà.
+ * Chữa: dải này CUỘN NGANG (`.kksum` của dự án vốn đã đi đường này), mỗi ô có bề rộng tối thiểu đủ
+ * chứa nhãn dài nhất; không bóp nữa nên không cần ellipsis. */
+@media(max-width:768px){
+  .kkstrip{overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .kkstrip::-webkit-scrollbar{display:none}
+  .kkstrip .ks{flex:0 0 auto;min-width:104px}
+  .kkstrip .t{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25}
+}
+
 /* ===== NÚT CHÚ THÍCH "!" SAU TIÊU ĐỀ (20/08/2026 — người dùng chốt) =============================
  * VÌ SAO: mỗi tab trước đây mở đầu bằng một đoạn `<p class="sub">` giảng giải chỉ số đọc từ đâu, lọc
  * theo luật gì. Đọc một lần là biết, nhưng nó chiếm 2-3 dòng đầu MÀN HÌNH mỗi lần vào tab — trên
@@ -2357,12 +2429,16 @@ body.side-anim{overflow-x:clip}
  *     `:focus-visible` lo phần bàn phím, `:focus` lo phần chạm (xem khối @media(hover:none) dưới).
  * `data-tip` là VĂN BẢN THUẦN: `content:attr()` không dựng được thẻ, nên nội dung phải bỏ hết <b>,
  * <code>, <br>. Chỗ nào cần link bấm được thì KHÔNG dùng nút này (vd .pcsteps). */
+/* NHỎ · MỜ · ĂN THEO CỠ CHỮ CỦA TIÊU ĐỀ. Bản đầu là nút 20-26px có viền dày, nền riêng — nhìn ra
+   một cái nút bấm to ngang tiêu đề, đúng như người dùng nhận xét "quá to và thô".
+   Nay: đường kính 1.15em (tự co theo tiêu đề nó bám vào), viền mảnh, chữ mờ 0.55 → rõ khi rê vào.
+   `cursor:help` để con trỏ nói trước rằng đây là chú thích, không phải nút thao tác. */
 .h2tip{position:relative;display:inline-flex;align-items:center;justify-content:center;
-  width:20px;height:20px;min-width:20px;margin-left:7px;padding:0;vertical-align:2px;
-  border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--ink3);
-  font-family:inherit;font-size:12px;font-weight:800;line-height:1;cursor:help;
-  transition:border-color .15s var(--ease),color .15s var(--ease),background .15s var(--ease)}
-.h2tip:hover,.h2tip:focus-visible{border-color:var(--accent);color:var(--accent);background:var(--hover);outline:0}
+  width:1.15em;height:1.15em;min-width:1.15em;margin-left:.4em;padding:0;vertical-align:.06em;
+  border:1px solid var(--border);border-radius:999px;background:0;color:var(--ink3);
+  font-family:inherit;font-size:.72em;font-weight:700;font-style:normal;line-height:1;cursor:help;
+  opacity:.75;transition:opacity .15s var(--ease),color .15s var(--ease),border-color .15s var(--ease)}
+.h2tip:hover,.h2tip:focus-visible{opacity:1;color:var(--accent);border-color:var(--accent);outline:0}
 /* NEO MÉP TRÁI, không canh giữa: hai nút đang dùng đều nằm sát lề trái trang (sau tiêu đề trang và
    sau <h2>). Canh giữa thì bong bóng 420px trổ ra ngoài mép trái màn hình và MẤT MẤY CHỮ ĐẦU — ảnh
    chụp bắt được đúng lỗi này, số đo bề rộng thì không thấy (rộng vẫn đủ, chỉ là nằm sai chỗ).
@@ -2388,7 +2464,10 @@ body.side-anim{overflow-x:clip}
 @media(hover:none){
   /* Máy cảm ứng: không có "rê chuột" nên CHẠM để hiện, chạm ra ngoài (mất focus) thì ẩn.
      Nút to hơn cho ngón tay, và bong bóng bám mép trái khung cho khỏi tràn ở màn hẹp. */
-  .h2tip{width:26px;height:26px;min-width:26px;font-size:13px}
+  /* KHÔNG đóng cứng 26px như bản đầu: đóng cứng là nó không còn ăn theo cỡ chữ của tiêu đề nữa và
+     phình ra thành một cái nút to ngang chữ — đúng nhận xét "quá to và thô". Giữ hệ em, chỉ nhích
+     nhẹ cho ngón tay. Đây là chú thích, không phải control thao tác, nên KHÔNG áp ngưỡng 40px. */
+  .h2tip{width:1.3em;height:1.3em;min-width:1.3em;font-size:.8em}
   /* MÁY CẢM ỨNG: bong bóng thành DẢI ĐÁY MÀN thay vì bong bóng neo theo nút.
      Vì sao không neo theo nút: `width:max-content` neo mép trái thì nút nào nằm giữa/phải màn 360px
      là bong bóng trổ ra ngoài, mà CSS thuần không biết nút đang ở đâu để tự lật chiều.
@@ -2413,12 +2492,7 @@ body.side-anim{overflow-x:clip}
 <div id="sideBackdrop" aria-hidden="true"></div>
 <div class="wrap">
 <header class="hdr">
-  <!-- Nút "!" NGAY SAU TIÊU ĐỀ (người dùng chốt 20/08/2026): mỗi tab trước đây mở đầu bằng một đoạn
-       `<p class="sub">` giảng giải chỉ số đọc từ đâu, lọc theo luật gì — đọc một lần là biết nhưng
-       chiếm 2-3 dòng đầu màn hình MỖI LẦN vào tab. Nay gom hết vào đây: rê chuột vào thì hiện, rê ra
-       thì ẩn. Nội dung đổi theo tab trong showTab(); tab không có gì để nói thì nút tự ẩn.
-       Mẫu để theo là tab "Nhận diện SKU" — nó không có khối giảng giải nào, vào là thấy ô nhập ngay. -->
-  <div class="hgrow"><h1 class="brand-title" id="brandTitle"></h1><button type="button" class="h2tip" id="tabTip" hidden aria-label="Chú thích về hạng mục đang xem">!</button></div>
+  <div class="hgrow"><h1 class="brand-title" id="brandTitle"></h1></div>
   <div class="settings" id="settingsWrap">
     <button id="btnSettings" title="Cài đặt hiển thị &amp; dữ liệu" aria-label="Mở cài đặt"><span class="bars"></span></button>
     <div class="settings-pop hidden" id="settingsPop">
@@ -2469,20 +2543,20 @@ body.side-anim{overflow-x:clip}
   </div>
   <div class="grid2 even">
     <section class="panel">
-      <h2>Kiểm kê theo SKU <span class="hint">(Type: SKU · SKU Factory)</span> <span class="kkscope" id="kkScope-sku" hidden></span></h2>
+      <h2>Kiểm kê theo SKU<span class="h2tip-slot" data-tip-key="kk"></span> <span class="hint">(Type: SKU · SKU Factory)</span> <span class="kkscope" id="kkScope-sku" hidden></span></h2>
       <div class="kkstrip" id="kkStrip-sku"></div>
       <div id="kkStatus-sku"></div>
-      <div class="kkdhead">Đã kiểm theo ngày <span class="hint">(Counted date · so với lần kiểm gần trước)</span> <span class="lg" id="kkLegend-sku"></span></div>
+      <div class="kkdhead">Đã kiểm theo ngày <span class="lg" id="kkLegend-sku"></span></div>
       <div class="kkdaily" id="kkHist-sku"></div>
     </section>
     <section class="panel">
       <h2>Kiểm kê theo mã vị trí <span class="hint">(Type: Location · Full Location · Full Location Factory)</span> <span class="kkscope" id="kkScope-loc" hidden></span></h2>
       <div class="kkstrip" id="kkStrip-loc"></div>
       <div id="kkStatus-loc"></div>
-      <div class="kkdhead">Đã kiểm theo ngày <span class="hint">(Counted date · so với lần kiểm gần trước)</span> <span class="lg" id="kkLegend-loc"></span></div>
+      <div class="kkdhead">Đã kiểm theo ngày <span class="lg" id="kkLegend-loc"></span></div>
       <div class="kkdaily" id="kkHist-loc"></div>
     </section>
-    <section class="panel span2"><h2>Tiến độ theo kho <span class="hint">(SKU + mã vị trí · bấm thẻ kho để lọc toàn tab theo kho đó)</span></h2><div class="whlist" id="kkWhList"></div></section>
+    <section class="panel span2"><h2>Tiến độ theo kho</h2><div class="whlist" id="kkWhList"></div></section>
   </div>
 </div>
 
@@ -2597,7 +2671,7 @@ body.side-anim{overflow-x:clip}
 
     <!-- ---------- BƯỚC 3: từ khoá (công cụ sửa) ---------- -->
     <section class="panel" style="grid-column:1/-1">
-      <h2>3 · Từ khoá nhận diện <span class="hint">(bấm × để bỏ từ khoá đọc nhầm)</span>
+      <h2>3 · Từ khoá nhận diện
         <span class="pg-chip" id="ndsKwN" style="margin-left:auto">0 từ khoá</span></h2>
       <div class="nds-tags" id="ndsTags"><div class="nds-tagempty">Chưa có từ khoá — chụp tem, hoặc gõ tay bên dưới.</div></div>
       <div class="nds-addrow">
@@ -2620,7 +2694,7 @@ body.side-anim{overflow-x:clip}
   <div class="cd-grid">
     <!-- ---------- BƯỚC 1: số liệu cân ---------- -->
     <section class="panel">
-      <h2>1 · Số liệu cân <span class="hint">gõ số kiểu nào cũng được — 2.500.000 · 2,500,000 · 2500000</span></h2>
+      <h2>1 · Số liệu cân<span class="h2tip-slot" data-tip-key="cd"></span></h2>
 
       <div class="cd-f dau">
         <label>Quy cách cuộn nguyên <span class="hint">chiều dài 1 cuộn còn nguyên kiện</span></label>
@@ -3497,7 +3571,7 @@ function render(groups,whDiv){
   var html=
     '<section class="cards">'+
     '<div class="card c1"><div class="k">'+nf(gSh)+'</div><div class="l">SKU đã lên kệ</div></div>'+
-    '<div class="card c2"><div class="k">'+nf(gPe)+'</div><div class="l">SKU còn cần lên kệ</div></div>'+
+    '<div class="card c2"><div class="k">'+nf(gPe)+'</div><div class="l">SKU còn cần lên kệ'+tipMuc(TIP.stock)+'</div></div>'+
     '<div class="card c3"><div class="k">'+rate.toFixed(1)+'%</div><div class="l">Tỷ lệ đã lên kệ</div></div>'+
     '<div class="card c4"><div class="k">'+whKeys.length+'</div><div class="l">Kho (warehouse)</div></div>'+
     '<div class="card c5"><div class="k">'+groups.length+'</div><div class="l">Nhóm Kho × Cate</div></div>'+
@@ -3508,10 +3582,10 @@ function render(groups,whDiv){
     '<div class="ratebar" title="Đã lên kệ '+rate.toFixed(1)+'% · còn lại '+(100-rate).toFixed(1)+'%"><div class="ratef" data-w="'+rate.toFixed(1)+'"></div>'+
     '<div class="ratefr" data-w="'+(100-rate).toFixed(1)+'"></div></div></div>'+
     '<div class="grid2">'+
-    '<section class="panel span2"><h2>SKU đã lên kệ theo ngày <span class="hint">(số in trực tiếp trên cột · ngày trống vẫn chừa chỗ trên trục thời gian)</span> <span class="lg"><span class="sw" style="background:linear-gradient(180deg,#60a5fa,#2563eb)"></span>Mastige<span class="sw" style="background:linear-gradient(180deg,#2dd4bf,#0d9488);margin-left:6px"></span>Garment</span></h2>'+
+    '<section class="panel span2"><h2>SKU đã lên kệ theo ngày <span class="lg"><span class="sw" style="background:linear-gradient(180deg,#60a5fa,#2563eb)"></span>Mastige<span class="sw" style="background:linear-gradient(180deg,#2dd4bf,#0d9488);margin-left:6px"></span>Garment</span></h2>'+
     '<div class="phwrap"><div id="histwrap"></div><aside class="phside" id="histside"></aside></div></section>'+
-    '<section class="panel"><h2>Category theo số SKU đã lên kệ <span class="hint">('+cats.length+' category — bấm dòng: phân bổ theo kho · bấm số SKU: từng SKU)</span> <span class="lg"><span class="sw sh"></span>đã lên kệ<span class="sw pe" style="margin-left:6px"></span>chưa lên kệ</span></h2><div class="catwrap">'+bars+'</div></section>'+
-    '<section class="panel"><h2>Tiến độ lên kệ theo Warehouse <span class="hint">(bấm thẻ kho để xem chi tiết SKU · cột nhỏ = xu hướng 5 ngày)</span></h2><div class="whlist">'+whchips+'</div></section>'+
+    '<section class="panel"><h2>Category theo số SKU đã lên kệ <span class="hint">('+cats.length+' category)</span> <span class="lg"><span class="sw sh"></span>đã lên kệ<span class="sw pe" style="margin-left:6px"></span>chưa lên kệ</span></h2><div class="catwrap">'+bars+'</div></section>'+
+    '<section class="panel"><h2>Tiến độ lên kệ theo Warehouse</h2><div class="whlist">'+whchips+'</div></section>'+
     '</div>';
   document.getElementById('content').innerHTML=html;
   renderHistory();   // container #histwrap + sparkline thẻ kho vừa được tạo — đổ nếu lịch sử đã về
@@ -3959,8 +4033,8 @@ var HOME_MUC=[
 function homeMucList(it){ return typeof it.muc==='function'?it.muc():(it.muc||[]); }
 function homeRender(){
   var el=document.getElementById('viewHome'); if(!el) return;
-  /* Đoạn "Chọn hạng mục cần làm…" đã chuyển vào nút "!" sau tiêu đề (TAB_TIP.home) — bảng chọn tự
-     nói lên nó là bảng chọn, không cần một dòng dạy cách bấm nằm chắn trước nó. */
+  /* Đoạn "Chọn hạng mục cần làm…" ĐÃ BỎ HẲN, không chuyển đi đâu: bảng chọn tự nói lên nó là bảng
+     chọn, một dòng dạy cách bấm nằm chắn trước nó là đúng thứ cần bỏ. */
   var html='<section class="panel"><div class="hm-grid">';
   /* Nhóm có `uuTien` vẽ TRƯỚC (sort ổn định nên các nhóm còn lại giữ nguyên thứ tự khai báo). */
   HOME_MUC.slice().sort(function(a,b){ return (b.uuTien?1:0)-(a.uuTien?1:0); }).forEach(function(grp){
@@ -3990,18 +4064,33 @@ function homeNapNhe(){
   if(!ABN.ok) abnNapTong('abngv_home').then(function(ok){ if(ok&&TOPTAB==='home') homeRender(); });
   if(!TVT.ok) tvtLoad().then(function(){ if(TOPTAB==='home') homeRender(); });
 }
-/* Chú thích của từng hạng mục — hiện qua nút "!" sau tiêu đề, KHÔNG còn nằm chắn đầu tab.
-   VĂN BẢN THUẦN, không thẻ HTML: nút dùng `content:attr(data-tip)` nên <b>/<code>/<br> sẽ hiện ra
-   nguyên dạng chữ. Tab nào không có gì phải nói (Planogram, Nhận diện SKU) thì KHÔNG khai — nút tự ẩn,
-   đúng lệ của tab Nhận diện SKU: vào là làm việc ngay. */
-var TAB_TIP={
-  home:'Chọn hạng mục cần làm. Vào rồi vẫn đổi hạng mục ở thanh bên (nút góc trên trái hoặc Ctrl+B), '+
-    'hoặc quay lại đây bằng mục Tổng quan.',
+/* ---------- NÚT CHÚ THÍCH `i` — ĐẶT CẠNH CHÍNH THỨ NÓ GIẢI THÍCH -------------------------------
+ * Bản đầu (20/08/2026) dán một nút "!" to cạnh TÊN DỰ ÁN ở header. Sai hai điểm, người dùng chỉ ra
+ * và tra cứu quy ước thì đúng là sai:
+ *   · VỊ TRÍ — nguyên tắc PROXIMITY: nút chú thích phải sát thứ nó nói tới, nếu không người đọc hiểu
+ *     đó là chú thích CHUNG của cả trang. Dán cạnh tên dự án là mời hiểu sai đúng kiểu đó
+ *     (NN/g "Why So Many Info Tips Are Bad"; Carbon: definition tooltip đặt TRÊN NHÃN của phần tử).
+ *   · KÝ HIỆU — quy ước phân vai rõ: `i` = thông tin bổ trợ, biết thêm thì tốt; `?` = trợ giúp, trả
+ *     lời "cái này là gì"; `!` = thứ BẮT BUỘC phải biết trước khi làm tiếp, tức mang sắc thái cảnh
+ *     báo. Chú thích ở đây thuộc loại thứ nhất, nên dùng `i`. Đổi lại thành `!` thì sửa đúng 1 chỗ:
+ *     hằng TIP_KYHIEU dưới đây.
+ * Kích cỡ: nhỏ, mờ, ăn theo cỡ chữ của tiêu đề — không phải nút bấm có viền dày cạnh tiêu đề.
+ * Dùng: tipMuc('câu chú thích') → chuỗi HTML, nhét ngay sau chữ của tiêu đề/nhãn. */
+var TIP_KYHIEU='i';
+function tipMuc(txt,lop){
+  if(!txt) return '';
+  return '<button type="button" class="h2tip'+(lop?' '+lop:'')+'" aria-label="Chú thích: '+esc(txt).slice(0,120)+
+    '" data-tip="'+esc(txt)+'">'+TIP_KYHIEU+'</button>';
+}
+/* Câu chú thích của từng mục — VĂN BẢN THUẦN (content:attr không dựng được thẻ).
+   Tab "Tổng quan" KHÔNG có: bảng chọn hạng mục tự nói lên nó là bảng chọn, thêm một câu dạy cách bấm
+   là đúng thứ vừa bỏ đi. Planogram / Nhận diện SKU cũng không có. */
+var TIP={
   stock:'"Đã lên kệ" = SKU có vị trí thực (khác F0-A0 / F00-A00). "Còn cần lên kệ" = SKU đang nằm ở '+
     'bãi chờ F0-A0 / F00-A00.',
-  kk:'Kiểm kê THẬT từ phiếu physical-count của WMS (Type: SKU và Location). "Kế hoạch chờ push" là '+
-    'lệnh kiểm kê tạo từ dashboard, còn nằm ở sổ kế hoạch WMS trước khi thành phiếu — '+
-    'Pending = chờ push, Processing = đã push.',
+  kk:'Kiểm kê THẬT từ phiếu physical-count của WMS. "Kế hoạch chờ push" là lệnh kiểm kê tạo từ '+
+    'dashboard, còn nằm ở sổ kế hoạch WMS trước khi thành phiếu — Pending = chờ push, '+
+    'Processing = đã push.',
   abn:'Chỉ số "bất thường" đọc từ báo cáo stock-inventory-beta: chỉ lấy SKU có Product Type = Normal '+
     'và có ít nhất 1 loại lớn hơn 0 — Conflict, UID Temp, Not Found, Unsuitable product, Committed, '+
     'Committed Outbound.',
@@ -4009,12 +4098,14 @@ var TAB_TIP={
     'trả về kho thì không còn nguyên kiện nhà cung cấp — chỉ cân được chứ không đo được mm. '+
     'Nhập số cân và quy cách, máy trừ lõi rồi quy ra mm.'
 };
-/* Gán bằng setAttribute (không nối vào HTML) để khỏi phải lo thoát dấu ngoặc kép trong câu. */
-function tabTipVe(t){
-  var b=document.getElementById('tabTip'); if(!b) return;
-  var tip=TAB_TIP[t]||'';
-  if(tip){ b.setAttribute('data-tip',tip); b.hidden=false; }
-  else { b.removeAttribute('data-tip'); b.hidden=true; }
+/* Markup TĨNH không gọi được tipMuc() nên chỗ nào cần thì đặt sẵn <span class="h2tip-slot"
+   data-tip-key="..."> rồi hàm này đổ nút vào lúc trang khởi động. Một chỗ khai câu chú thích (TIP),
+   hai đường dùng (markup tĩnh + renderer JS) — không nhân bản câu chữ ra hai nơi rồi lệch nhau. */
+function tipDoSlot(){
+  document.querySelectorAll('.h2tip-slot[data-tip-key]').forEach(function(el){
+    var k=el.getAttribute('data-tip-key');
+    el.outerHTML=tipMuc(TIP[k]||'');
+  });
 }
 function showTab(t){
   var MAP={home:'viewHome',stock:'viewStock',kk:'viewKK',abn:'viewAbn',plg:'viewPlg',sku:'viewNds',cd:'viewCd'};
@@ -4029,7 +4120,6 @@ function showTab(t){
   document.getElementById('ttPlg').classList.toggle('active',t==='plg');
   document.getElementById('ttSku').classList.toggle('active',t==='sku');
   document.getElementById('ttCd').classList.toggle('active',t==='cd');
-  tabTipVe(t);
   /* 2 tab "Công cụ kho" không có thanh chân trang (xem body.an-chan trong CSS) */
   document.body.classList.toggle('an-chan', t==='sku'||t==='cd');
   if(t!=='sku') ndsRoiTab();   // rời tab thì tắt camera (đèn camera sáng vô cớ + hao pin)
@@ -6880,7 +6970,7 @@ function abnRender(){
   var tot=_so.tot, cnt=_so.cnt, byWh=_so.byWh, nSku=_so.nSku, nWh=_so.nWh;
 
   var tiles='<div class="abntile tot" onclick="abnOpenAll()" title="Xem tất cả SKU bất thường">'+
-      '<div class="k">'+nf(nSku)+'</div><div class="l">SKU bất thường</div><div class="s">Product Type = Normal · '+nf(nWh)+' kho</div></div>'+
+      '<div class="k">'+nf(nSku)+'</div><div class="l">SKU bất thường'+tipMuc(TIP.abn)+'</div><div class="s">Product Type = Normal · '+nf(nWh)+' kho</div></div>'+
     ABN_TYPES.map(function(t){
       return '<div class="abntile" style="--cc:'+t.c+'" onclick="abnOpenType(\''+t.k+'\')" title="Xem SKU có '+t.lb+'">'+
         '<div class="k">'+nf(tot[t.k])+'</div><div class="l">'+t.lb+'</div><div class="s">'+nf(cnt[t.k])+' SKU</div></div>';
@@ -6914,8 +7004,8 @@ function abnRender(){
   }).join('');
 
   html+='<div class="grid2 abn2">'+
-    '<section class="panel"><h2>Theo kho <span class="hint">(độ dài = tổng SL · màu = loại · bấm để xem SKU)</span> <span class="lg abnlegend">'+legend+'</span></h2><div class="abnchart">'+whBars+'</div></section>'+
-    '<section class="panel"><h2>Theo loại <span class="hint">(bấm để xem SKU)</span></h2><div class="abnchart">'+typeBars+'</div></section>'+
+    '<section class="panel"><h2>Theo kho <span class="lg abnlegend">'+legend+'</span></h2><div class="abnchart">'+whBars+'</div></section>'+
+    '<section class="panel"><h2>Theo loại</h2><div class="abnchart">'+typeBars+'</div></section>'+
   '</div>';
   cont.innerHTML=html;
   requestAnimationFrame(function(){ requestAnimationFrame(function(){
@@ -7219,10 +7309,9 @@ function tvtGiaiThich(){
     'trừ vị trí '+TVT_BO_QUA.join(', ')+' và trạng thái Adjustment - shipped '+
     '(UID đã xuất theo phiếu điều chỉnh, bản ghi chỉ còn treo vị trí cũ).';
 }
-/* Nút "!" dựng bằng chuỗi nên phải thoát dấu ngoặc kép trong thuộc tính — esc() lo việc đó. */
-function tvtTipBtn(){
-  return '<button type="button" class="h2tip" aria-label="Chú thích mục Tồn tại vị trí" data-tip="'+esc(tvtGiaiThich())+'">!</button>';
-}
+/* Đi qua tipMuc() chứ KHÔNG tự dựng nút: bản trước hardcode dấu "!" ở đây nên sau khi cả dự án đổi
+   sang `i` thì riêng mục này còn "!" — một ký hiệu, phải chỉ có MỘT chỗ quyết định (TIP_KYHIEU). */
+function tvtTipBtn(){ return tipMuc(tvtGiaiThich()); }
 function tvtRender(){
   var el=document.getElementById('tvtWrap'); if(!el) return;
   if(!TVT.ok){
@@ -7281,8 +7370,8 @@ function tvtRender(){
   }).join('');
   el.innerHTML='<section class="panel">'+head+tiles+'</section>'+
     '<div class="grid2 abn2">'+
-      '<section class="panel"><h2>Theo vị trí <span class="hint">(số UID sai chỗ · bấm để xem danh sách)</span></h2><div class="abnchart">'+locBars+'</div></section>'+
-      '<section class="panel"><h2>Theo kho <span class="hint">(bấm để xem danh sách)</span></h2><div class="abnchart">'+whBars+'</div></section>'+
+      '<section class="panel"><h2>Theo vị trí</h2><div class="abnchart">'+locBars+'</div></section>'+
+      '<section class="panel"><h2>Theo kho</h2><div class="abnchart">'+whBars+'</div></section>'+
     '</div>';
   requestAnimationFrame(function(){ requestAnimationFrame(function(){
     el.querySelectorAll('.abnfill').forEach(function(f){ f.style.width=f.getAttribute('data-w')+'%'; });
@@ -12436,6 +12525,7 @@ prSyncBar();          // thanh "Chờ in N SKU" — ẩn khi danh sách rỗng h
 
 /* Mở trang = vào Tổng quan. `loadData()` VẪN chạy ngay như cũ (nó nuôi cả tab Trạng thái lưu trữ
    lẫn chế độ tô màu kho của Planogram) — chỉ khác là màn hình đầu tiên hiện bảng chọn hạng mục. */
+tipDoSlot();
 showTab('home');
 loadData();
 </script>
