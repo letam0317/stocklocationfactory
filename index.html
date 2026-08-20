@@ -1669,7 +1669,7 @@ body.side-anim{overflow-x:clip}
    `object-fit:contain` co lại nên trông như méo), còn `.nds-empty` phủ đè lên trên.
    CHỮA: khung KHÔNG flex nữa — mọi lớp đều `position:absolute;inset:0` xếp CHỒNG lên nhau, và khai
    thẳng `[hidden]{display:none!important}` trong phạm vi khung để `hidden` luôn thắng. */
-.nds-stage{position:relative;aspect-ratio:4/3;width:100%;border:1px solid var(--line);border-radius:12px;
+.nds-stage{position:relative;margin-top:9px;aspect-ratio:4/3;width:100%;border:1px solid var(--line);border-radius:12px;
   background:var(--surface2);overflow:hidden;isolation:isolate}
 .nds-stage>*{position:absolute;inset:0}
 /* ⚠ LUẬT CHUNG CHO CẢ TAB, đừng gỡ: mọi khai báo `display` bằng selector class (0-1-0 trở lên)
@@ -1728,7 +1728,10 @@ body.side-anim{overflow-x:clip}
 
 /* Ô gõ mã: hàng riêng, nhãn rõ, ô nhập to — đây là đường nhanh & chắc nhất nên không nhét
    lẫn vào đám nút. Dùng lại đúng kiểu ô nhập của .nds-addrow để không chế control mới. */
-.nds-marow{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+/* Ô "Phần tử trên tem" ĐỨNG TRÊN KHUNG CAMERA (chuyển 20/08/2026, yêu cầu user): mở tab là thấy ô
+   nhập trước, khung hình sau. Vì vậy khoảng cách trên siết còn 2px (nó dán ngay dưới tiêu đề bước 1)
+   và khoảng thở với khung nằm ở `#ndsStage{margin-top}` — một chỗ duy nhất, khỏi cộng dồn margin. */
+.nds-marow{display:flex;gap:8px;align-items:center;margin-top:2px;flex-wrap:wrap}
 .nds-marow label{font-size:12px;font-weight:700;color:var(--ink2);white-space:nowrap}
 .nds-marow input{flex:1;min-width:150px;height:34px;border:1px solid var(--border);border-radius:8px;
   background:var(--surface);color:var(--ink);padding:0 11px;font-size:13px;font-family:inherit;outline:none;
@@ -1809,12 +1812,16 @@ body.side-anim{overflow-x:clip}
 .nds-fill{height:100%;border-radius:99px;width:0;background:var(--cc,var(--brand2));transition:width .9s var(--ease)}
 /* Tên hàng là thứ thứ HAI phải đọc; phần trùng khớp tô đậm hơn để mắt bắt ngay chỗ giống tem */
 .nds-pn{font-size:13.5px;line-height:1.62;color:var(--ink);word-break:break-word;font-weight:500}
+/* TÔ TRÙNG KHỚP (đổi 20/08/2026 theo yêu cầu user): `<span class="highlight-match">` với bộ màu cố
+   định thay cho <mark> ăn token theme. Màu nền ĐỤC nên đọc được trên cả 7 theme sáng/tối; vẫn khai
+   thêm .nds-pn mark để bản HTML cũ đang mở trong tab khác không mất tô. */
+.highlight-match{background-color:#ffe0b2;color:#e65100;font-weight:bold;border-radius:2px;padding:0 2px}
 .nds-pn mark{background:color-mix(in srgb,var(--good) 34%,transparent);color:var(--ink);border-radius:3px;
   padding:0 3px;font-weight:800;box-shadow:0 0 0 1px color-mix(in srgb,var(--good) 30%,transparent)}
 /* Mọi thứ còn lại (tồn · lệch · biến thể · vì sao khớp) đều HẠ XUỐNG một bậc: nhỏ, xám, một dòng */
 /* Ghi chú "tem in đúng mã này / từ sổ tay / lệch …" nằm ngay trên HÀNG ĐẦU cùng SKU + tồn (không
    còn dòng phụ riêng), nên hai lớp này phải tự đứng được chứ không núp trong .nds-sub như trước. */
-.nds-lech{font-size:11.5px;color:var(--bad);font-weight:650}
+.nds-lech{font-size:11.5px;color:var(--bad);font-weight:650;white-space:nowrap}
 .nds-ok{font-size:11.5px;color:var(--good);font-weight:650}
 .nds-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:9px}
 .nds-why{font-size:11px;color:var(--ink3);margin-top:7px;line-height:1.6}
@@ -1829,8 +1836,18 @@ body.side-anim{overflow-x:clip}
 .nds-more{margin-top:6px}
 .nds-more>summary{cursor:pointer;font-size:11px;font-weight:600;color:var(--ink3);list-style:none;padding:3px 0}
 .nds-more>summary::-webkit-details-marker{display:none}
-.nds-more>summary::before{content:'▸ ';color:var(--ink3)}
-.nds-more[open]>summary::before{content:'▾ '}
+/* DÒNG THÔNG TIN CỦA THẺ = MỘT HÀNG (đổi 20/08/2026, yêu cầu user): "N từ khoá khớp · N đơn vị khác"
+   bên trái, nhãn cảnh báo "lệch …" bên phải — trước đây nhãn lệch nằm trên hàng đầu cùng SKU, máy
+   hẹp thì nó tự xuống dòng và chừa một dải trống. Mũi tên ▸ chuyển sang ::before của .nds-sumt để
+   summary chỉ còn ĐÚNG 2 flex item, nhờ vậy space-between không xé mũi tên khỏi chữ. */
+.nds-more>summary{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.nds-sumt::before{content:'▸ ';color:var(--ink3)}
+.nds-more[open]>summary .nds-sumt::before{content:'▾ '}
+.nds-sumt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Thẻ không có gì để gấp lại (không biến thể, không từ khoá khớp) mà vẫn có nhãn lệch: dùng cùng
+   một khuôn hàng, để 2 kiểu thẻ không lệch nhịp nhau. */
+.nds-inline{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px;
+  font-size:11px;font-weight:600;color:var(--ink3);padding:3px 0}
 .nds-more>summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
 
 /* ============================================================================================
@@ -2014,6 +2031,20 @@ body.side-anim{overflow-x:clip}
     <!-- ---------- BƯỚC 1: ảnh tem ---------- -->
     <section class="panel">
       <h2>1 · Ảnh tem nhà cung cấp <span class="hint">(chụp bằng camera sau hoặc chọn ảnh có sẵn)</span></h2>
+      <!-- Ô GÕ MÃ — đường chắc chắn nhất và nhanh nhất. Sự cố thật 19/08/2026: tem in F9-5374
+           (mã CÓ trong danh mục) nhưng AI không đọc ra, máy trả về SKU khác mã. Mã hàng luôn in to
+           rõ trên tem NCC, gõ 7 ký tự là xong.
+           CHUYỂN LÊN TRÊN KHUNG CAMERA 20/08/2026 (yêu cầu user): mở tab là thấy ô nhập trước, khung
+           hình sau — đường "gõ mảnh đọc được" không cần camera, không cần mạng, không tốn hạn mức,
+           nên nó phải là thứ đập vào mắt đầu tiên chứ không nằm dưới khung + 3 nút. -->
+      <div class="nds-marow">
+        <label for="ndsMa">Phần tử trên tem</label>
+        <input id="ndsMa" autocomplete="off" spellcheck="false" placeholder="Gõ mảnh đọc được: 8916123 V9B11 29-all"
+          oninput="ndsMaGo(this.value)"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();ndsTraMa();}">
+        <button type="button" class="kktab nds-go" onclick="ndsTraMa()">Tra</button>
+      </div>
+      <div class="nds-magoi" id="ndsMaGoi" hidden></div>
       <div class="nds-stage" id="ndsStage">
         <video id="ndsVideo" playsinline muted hidden></video>
         <img id="ndsShot" alt="Ảnh tem đã chụp" hidden>
@@ -2054,19 +2085,6 @@ body.side-anim{overflow-x:clip}
         <button type="button" class="kktab" id="ndsBtnDoc" onclick="ndsDocTem()" disabled
           title="Nhờ AI đọc — dùng khi tem chữ nhỏ / nhoè / nghiêng mà OCR đọc lệch. Có tốn hạn mức ngày">Nhờ AI đọc</button>
       </div>
-      <!-- Ô GÕ MÃ — đường chắc chắn nhất và nhanh nhất. Sự cố thật 19/08/2026: tem in F9-5374
-           (mã CÓ trong danh mục) nhưng AI không đọc ra, máy trả về SKU khác mã. Mã hàng luôn in to
-           rõ trên tem NCC, gõ 7 ký tự là xong — nên nó phải nằm NGAY ĐÂY, không bắt cuộn xuống
-           bước 3 tìm ô "thêm từ khoá". -->
-      <div class="nds-marow">
-        <label for="ndsMa">Phần tử trên tem</label>
-        <input id="ndsMa" autocomplete="off" spellcheck="false" placeholder="Gõ mảnh đọc được: 8916123 V9B11 29-all"
-          oninput="ndsMaGo(this.value)"
-          onkeydown="if(event.key==='Enter'){event.preventDefault();ndsTraMa();}">
-        <button type="button" class="kktab nds-go" onclick="ndsTraMa()">Tra</button>
-      </div>
-      <div class="nds-magoi" id="ndsMaGoi" hidden></div>
-
       <!-- Ghi chú GẤP LẠI: trên điện thoại khối này nằm giữa ảnh và kết quả, để mở sẵn là đẩy
            Top 3 xuống dưới màn hình — đúng thứ người dùng cần xem nhất. -->
       <details class="nds-more" style="margin-top:8px">
@@ -10046,7 +10064,14 @@ async function ndsDoiSoat(){
 function ndsMauHang(pct){ return pct>=75?'top':(pct>=50?'mid':'low'); }
 /** Tô đậm trong PRODUCTNAME những đoạn khớp với từ khoá tem. */
 function ndsToTrung(pn, khop){
-  var ds=[]; ['code','spec','color','brand'].forEach(function(v){ (khop[v]||[]).forEach(function(t){ if(t.length>=2) ds.push(t); }); });
+  var ds=[], da=Object.create(null);
+  var them=function(t){ t=String(t==null?'':t); if (t.length<2 || da[t]) return; da[t]=1; ds.push(t); };
+  ['code','spec','color','brand'].forEach(function(v){ (khop[v]||[]).forEach(them); });
+  /* TÔ CẢ TỪ KHOÁ ĐÃ QUÉT (`NDS.tokens`), không chỉ mảnh mà dòng này khớp được (mở rộng 20/08/2026,
+     yêu cầu user). Vì sao đáng: thủ kho so tem với tên hàng bằng MẮT — mảnh nào trên tem cũng có
+     trong tên thì phải nhìn thấy nó sáng lên, kể cả khi cơ chế khớp mờ của lõi không nhận nó vào
+     `khop` (khác vai, hoặc trùng một phần). Chỉ tô khi khớp NGUYÊN VĂN nên không tô oan. */
+  try{ ((window.NDS && NDS.tokens) || []).forEach(function(k){ if (k) them(k.t); }); }catch(e){ /* gọi ngoài trang (test lõi) thì bỏ qua */ }
   ds.sort(function(a,b){ return b.length-a.length; });
   var goc=String(pn), phang=NDS_ENGINE.boDau(goc).toLowerCase();
   var danh=new Array(goc.length).fill(0);
@@ -10062,13 +10087,21 @@ function ndsToTrung(pn, khop){
       }
     });
   });
+  /* NỐI HAI ĐOẠN TÔ CÁCH NHAU ĐÚNG MỘT KÝ TỰ NGĂN (`_` `/` `-` khoảng trắng): tên WMS ghép phần tử
+     bằng mấy ký tự đó, nên "8846295_YKK" bị vẽ thành hai vệt sáng kẹp một khe tối — đọc lấm chấm.
+     Chỉ nối khi CẢ HAI bên đã được tô, nên không tô oan thêm chữ nào của tên hàng. */
+  for (var z=1;z<goc.length-1;z++){
+    if (!danh[z] && danh[z-1] && danh[z+1] && !/[0-9a-zA-Z]/.test(goc[z])) danh[z]=1;
+  }
   var out='', dang=false;
+  /* `<span class="highlight-match">` thay `<mark>` (20/08/2026, yêu cầu user) — bộ màu cố định trong
+     CSS, không ăn theo token theme. */
   for (var i=0;i<goc.length;i++){
-    if (danh[i] && !dang){ out+='<mark>'; dang=true; }
-    if (!danh[i] && dang){ out+='</mark>'; dang=false; }
+    if (danh[i] && !dang){ out+='<span class="highlight-match">'; dang=true; }
+    if (!danh[i] && dang){ out+='</span>'; dang=false; }
     out+=esc(goc[i]);
   }
-  if (dang) out+='</mark>';
+  if (dang) out+='</span>';
   return out;
 }
 /* THẺ GỢI Ý — RÚT TỚI LÕI (sửa lần 2, 19/08/2026).
@@ -10103,10 +10136,22 @@ function ndsTheKetQua(r, hang){
     ' <button type="button" class="fcg nds-quen" onclick="event.stopPropagation();ndsSoQuen()"'+
     ' title="Tem này từng được chốt sang SKU khác — gỡ ghi nhớ để máy đối soát lại từ đầu">quên ghi nhớ này</button>';
   else if (r.laSku) canh='<span class="nds-ok">tem in đúng mã này</span>';
-  else if (r.xungDot.length){
+  /* ĐẠI DIỆN LÀ BẢN ĐƠN VỊ NHỎ CÓ TỒN 0 (vá 20/08/2026): thẻ vẫn in huy hiệu INACTIVE nên phải nói
+     ngay VÌ SAO nó đứng đầu, không thì thủ kho thấy "tồn 0" rồi bỏ qua đúng cái SKU cần đếm. */
+  else if (r.dvNhoThay){
+    var goc=(r.bienThe||[]).filter(function(x){ return x.status!=='INACTIVE'; })[0];
+    canh='<span class="nds-ok" title="Kiểm kê đếm bằng đơn vị nhỏ nhất; cả mặt hàng này chỉ còn bản đóng gói có tồn">'+
+      'đếm theo '+esc(dvNhan||'đơn vị nhỏ')+(goc?(' · tồn ở bản '+esc(goc.donVi||goc.dv||'?')):'')+'</span>';
+  }
+  /* NHÃN "lệch …" KHÔNG còn ở hàng đầu (đổi 20/08/2026, yêu cầu user): nó xuống dòng thông tin,
+     nằm CÙNG HÀNG với "N từ khoá khớp · N đơn vị khác" (xem `.nds-more>summary` / `.nds-inline`).
+     Vì sao: hàng đầu đã có hạng · SKU · tồn · ghi chú · % — thêm nhãn lệch là máy hẹp phải xuống
+     dòng, chừa một dải trống bên phải. Dòng thông tin thì đang trống hẳn nửa phải. */
+  var canhLech='';
+  if (r.xungDot.length){
     var ten={ cm:'chiều dài', mm:'kích thước', gsm:'định lượng', tex:'chi số Tex', tkt:'chi số Tkt',
       co:'cỡ', l:'cỡ nút', ty:'tỉ lệ sợi', mamau:'mã màu' };
-    canh='<span class="nds-lech">lệch '+r.xungDot.map(function(h){ return esc(ten[h]||h); }).join(', ')+'</span>';
+    canhLech='<span class="nds-lech">lệch '+r.xungDot.map(function(h){ return esc(ten[h]||h); }).join(', ')+'</span>';
   }
   var ton='<span class="nds-ton">Tồn '+nf(r.qty)+(dvNhan?(' '+esc(dvNhan)):'')+'</span>';
   /* GHI CHÚ CŨNG LÊN HÀNG ĐẦU (yêu cầu 19/08/2026). Hàng đầu giờ là TOÀN BỘ phần "đọc nhanh":
@@ -10131,7 +10176,11 @@ function ndsTheKetQua(r, hang){
       }).join('')+'</div>';
     }
     if (chipKhop.length) ruot+='<div class="nds-meta">'+chipKhop.join('')+'</div>';
-    chiTiet='<details class="nds-more" onclick="event.stopPropagation()"><summary>'+tom.join(' · ')+'</summary>'+ruot+'</details>';
+    chiTiet='<details class="nds-more" onclick="event.stopPropagation()"><summary><span class="nds-sumt">'+
+      tom.join(' · ')+'</span>'+canhLech+'</summary>'+ruot+'</details>';
+  } else if (canhLech){
+    /* Không có gì để gấp lại mà vẫn có nhãn lệch: dùng cùng khuôn hàng để 2 kiểu thẻ không lệch nhịp. */
+    chiTiet='<div class="nds-inline"><span></span>'+canhLech+'</div>';
   }
 
   var nhan='';
@@ -10186,28 +10235,15 @@ function ndsVeKetQua(ms, themInactive){
       'chất liệu · màu) — hàng trăm SKU giống nhau ở mấy chữ đó, nên <b>đừng chọn vội</b>. '+
       'Gõ mã in trên tem (vd <code>F9-5374</code>) vào ô <b>Mã trên tem</b> ở bước 1 là ra đúng ngay.'+
       ' <button type="button" class="kktab nds-alt" onclick="ndsTroMa()">Nhập mã</button></div>';
-  } else {
-    /* ĐÃ khớp mã nhưng CÁC GỢI Ý CHỈ KHÁC NHAU Ở MÀU / THÔNG SỐ — phải nói ra, đừng để con số 91%
-       của hạng 1 trông như một kết luận. Đo thật 19/08/2026: tem chữ nhỏ thì máy đọc "345" thành
-       "145", "Đen-580-AA" thành "Ben-380-AA" ⇒ ra ĐÚNG mã nhưng SAI biến thể màu, mà điểm vẫn cao.
-       Mã hàng đọc lệch thì đã có cảnh báo "chưa khớp mã" ở trên; còn màu đọc lệch thì chỉ có mắt
-       người phân biệt được — nên việc của máy ở đây là thu hẹp còn mấy dòng cùng mã rồi MỜI CHỌN. */
-    var dsMa=NDS.ket.filter(function(r){ return r.coMa && r.khop && (r.khop.code||[]).length; });
-    var maChung=null;
-    if (dsMa.length>=2){
-      (dsMa[0].khop.code||[]).forEach(function(t){
-        if (maChung) return;
-        var duHet=dsMa.every(function(r){ return (r.khop.code||[]).indexOf(t)>=0; });
-        if (duHet) maChung=t;
-      });
-    }
-    if (maChung){
-      canh='<div class="pcdnote" style="margin-bottom:10px;background:color-mix(in srgb,var(--info) 12%,var(--surface));color:var(--ink2)">'+
-        '<b>'+dsMa.length+' gợi ý dưới đây đều mang đúng mã <code>'+esc(maChung)+'</code></b> — chỉ khác nhau ở '+
-        '<b>màu / thông số</b>. Chữ màu trên tem thường in nhỏ nên máy dễ đọc lệch (<code>345</code>↔<code>145</code>, '+
-        '<code>580</code>↔<code>380</code>), vì vậy máy KHÔNG tự chốt: nhìn tem rồi chọn đúng dòng.</div>';
-    }
   }
+  /* BỎ HẲN 20/08/2026 (yêu cầu user): dải "N gợi ý dưới đây đều mang đúng mã X — chỉ khác nhau ở
+     màu / thông số…". Nó chiếm 3 dòng chữ ngay trên Top 3 (trên điện thoại là đẩy hẳn thẻ #1 xuống
+     dưới màn hình) để nói một việc mà bản thân 3 thẻ đã nói rõ hơn: cùng mã thì phần tô
+     `.highlight-match` của cả 3 thẻ giống nhau, chỗ khác nhau nằm ở đúng chữ màu/thông số không
+     được tô. `canh` vì vậy chỉ còn đúng một trường hợp (CHƯA khớp được mã nào) — không khớp thì
+     rỗng, và `canh + thẻ` không chừa khoảng trống nào.
+     Đừng "khôi phục cho chắc": việc phân biệt màu vốn là việc của mắt người, dải chữ đó không thêm
+     dữ kiện nào mà chỉ dịch Top 3 xuống. */
   c.innerHTML=canh+NDS.ket.map(function(r,i){ return ndsTheKetQua(r,i+1); }).join('');
   ndsCapNhatChan(ms);
 }
