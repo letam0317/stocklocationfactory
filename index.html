@@ -689,6 +689,10 @@ code{background:var(--surface2);padding:1px 7px;border-radius:6px;font-size:12px
 }
 .modal.show{opacity:1}
 .modalbox{background:var(--surface);border-radius:18px;width:min(1280px,96vw);max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);will-change:transform,opacity;transform:translateZ(0)}
+/* `dvh` = chiều cao vùng THẤY ĐƯỢC: bàn phím ảo mở thì `vh` KHÔNG đổi (nó là khung lớn) nên pop-up
+   vẫn cao 90% màn và tràn xuống dưới bàn phím. Khai riêng một dòng để trình duyệt không hiểu `dvh`
+   thì bỏ đúng dòng này và giữ nguyên 90vh ở trên. */
+.modalbox{max-height:90dvh}
 .modal.show .modalbox{animation:sheetIn .38s var(--ez-apple)}   /* rơi vào + nảy nhẹ rồi đậu — bê từ kiemsoatkho */
 /* .modal.stash + .modalhd .hdl + .mback (nút "Quay lại") đã GỠ 31/07/2026 cùng modal chi tiết phiếu:
    dashboard không còn pop-up lồng pop-up nên không cần cơ chế tạm ẩn pop-up mẹ / nút quay lại. */
@@ -922,7 +926,10 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
    Chip tái dùng NGUYÊN khuôn `.nds-tag` của tab (popIn + nút × + focus ring) — lệ dự án: đã có khuôn
    thì không dựng control trần mới. Chip xếp TRƯỚC ô nhập nên đọc từ trái sang phải là đúng thứ tự
    sẽ in, và số vừa chốt luôn nằm sát ngay ô nhập. */
-#prBody .prslo{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:flex-end}
+/* Ô Số lượng = HAI DÒNG: `.prchips` (chip đã chốt) ở trên, `.prgo` (ô nhập + nút +) ở dưới.
+   Chip không bao giờ được chen ngang hàng với ô nhập — ô nhập là chỗ tay đang gõ. */
+#prBody .prchips{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;margin-bottom:6px}
+#prBody .prgo{display:flex;gap:8px;align-items:center;justify-content:flex-end}
 #prBody .prchip{--cc:var(--accent);font-variant-numeric:tabular-nums;padding:4px 4px 4px 10px}
 /* Nút "+" phải ĐẬP VÀO MẮT (yêu cầu user): nền accent đặc, chữ trắng, có bóng — nó là thao tác chính
    của ô này, không phải một dấu cộng mờ nhạt lẫn vào nền. Chỉ hiện khi trong ô ĐANG có số. */
@@ -969,18 +976,26 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
   #prmodal .mtbl{display:block;font-size:13px}
   #prmodal .mtbl thead{display:none}
   #prmodal .mtbl tbody{display:block}
-  #prmodal .mtbl tr{display:grid;grid-template-columns:1fr auto;
-    grid-template-areas:"sku del" "pn pn" "tem sl";
-    gap:8px 10px;align-items:center;padding:11px 12px;margin:0 0 9px;
+  /* BA CỘT (siết 21/08/2026 theo đặc tả user, sau khi xem video quay máy thật):
+       · cột 1 = 82px CHÔN CỨNG cho "Số tem" — nó chỉ nhận 1-2 chữ số, không có lý gì chiếm nửa thẻ;
+       · cột 2 co giãn + cột 3 auto = phần của "Số lượng" (555 · 1.200 · 12.500) và nút xoá.
+     Hàng SKU trải hai cột đầu để không bị bóp vào 82px. */
+  #prmodal .mtbl tr{display:grid;grid-template-columns:82px minmax(0,1fr) auto;
+    grid-template-areas:"sku sku del" "pn pn pn" "tem sl sl";
+    gap:8px 10px;align-items:start;padding:11px 12px;margin:0 0 9px;
     border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:var(--shadow)}
   #prmodal .mtbl tbody tr:hover{background:var(--surface)}
   #prmodal .mtbl td{display:block;border:0;padding:0;white-space:normal}
-  /* ô 1 = SỐ TEM (số bản in) */
-  #prmodal .mtbl td:nth-child(1){grid-area:tem;white-space:nowrap;font-size:12px;color:var(--ink3)}
-  #prmodal .mtbl td:nth-child(1)::before{content:'Số tem ';color:var(--muted)}
-  /* ô 2 = SỐ LƯỢNG (con số in TRÊN tem) — nhãn phải có, vì một ô số trơ trọi thì không ai đoán được */
-  #prmodal .mtbl td:nth-child(2){grid-area:sl;justify-self:end;white-space:nowrap;font-size:12px;color:var(--ink3)}
-  #prmodal .mtbl td:nth-child(2)::before{content:'Số lượng ';color:var(--muted)}
+  /* ô 1 = SỐ TEM: nhãn TRÊN, ô nhập DƯỚI, số canh giữa. Rộng đúng 82px của cột, không co giãn. */
+  #prmodal .mtbl td:nth-child(1){grid-area:tem;font-size:11px;color:var(--ink3);min-width:0}
+  #prmodal .mtbl td:nth-child(1)::before{content:'Số tem';color:var(--muted);display:block;margin-bottom:4px}
+  #prmodal .mtbl td:nth-child(1) input.prsl{width:100%;text-align:center;font-size:16px;padding:9px 4px}
+  /* ô 2 = SỐ LƯỢNG: ăn hết phần còn lại; ô nhập cao ≥44px, chữ to và đậm — đây là con số người dùng
+     phải đọc lại để chắc không gõ nhầm số 0 nào. */
+  #prmodal .mtbl td:nth-child(2){grid-area:sl;font-size:11px;color:var(--ink3);min-width:0}
+  #prmodal .mtbl td:nth-child(2)::before{content:'Số lượng';color:var(--muted);display:block;margin-bottom:4px;text-align:right}
+  #prmodal .mtbl td:nth-child(2) input.prsl{flex:1;min-width:0;width:auto;min-height:44px;
+    font-size:19px;font-weight:700;padding:8px 12px}
   /* ô 3 = SKU: đứng đầu thẻ, cỡ chữ lớn nhất — đây là thứ người dùng dò mắt tìm */
   #prmodal .mtbl td:nth-child(3){grid-area:sku;font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
   /* ô 4 = TÊN SẢN PHẨM */
@@ -998,11 +1013,8 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
      rộng đúng bằng ô, chữ dài thì ngắt dòng trong mục. */
   #prmodal .prcb .combo-menu{width:auto;min-width:0;max-width:none;left:0;right:0}
   #prmodal .prcb .combo-item{white-space:normal;line-height:1.45}
-  #prBody input.prsl{width:82px;min-height:42px;font-size:15px}
-  /* Ô Số lượng nay có thể mang nhiều chip → cho nó nhận hết bề rộng còn lại và xuống dòng được,
-     thay vì nhốt trong một ô hẹp căn phải. */
-  #prmodal .mtbl td:nth-child(2){justify-self:stretch}
-  #prBody .prsladd{width:36px;height:36px}
+  #prBody input.prsl{min-height:42px;font-size:15px}
+  #prBody .prsladd{width:44px;height:44px;flex:0 0 44px;font-size:22px}
   #prBody .prdel{font-size:22px;padding:4px 8px}
   /* Hai ô "áp cho tất cả": nhãn dài chiếm nửa bề rộng nên ô chọn bị cắt mất chữ — xếp DỌC lại. */
   /* HAI Ô "ÁP CHO TẤT CẢ" GỘP MỘT HÀNG, NHÃN RÚT NGẮN.
@@ -1025,6 +1037,9 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
   /* Chiều cao ĐOÁN ĐƯỢC cho hai vùng cuộn: danh sách thẻ và khung xem trước 1:1 (3 con tem cỡ thật
      chiếm gần hết màn hình nếu để tự do). Nút "In" ở chân modal vì vậy luôn nhìn thấy. */
   #prmodal .modalbody{max-height:40vh}
+  /* Cùng lý do `dvh` như `.modalbox`: bàn phím mở thì phần danh sách phải co lại, không thì nút
+     "Xác nhận in" bị đẩy xuống dưới bàn phím. */
+  #prmodal .modalbody{max-height:min(40vh,46dvh)}
   #prmodal .pr-xem{max-height:30vh;overflow:auto}
   #prmodal #prMauAll{width:100%;max-width:none}
   #prmodal #prMauAll .prcb{width:100%}
@@ -11484,6 +11499,33 @@ function prChipSl(r){
       ' title="Bỏ số lượng ' + esc(x) + '" onclick="prXoaChip(this)">&times;</button></span>';
   }).join('');
 }
+/* ── BÀN PHÍM ẢO ─────────────────────────────────────────────────────────────────────────────────
+ * Trên điện thoại, bàn phím số bật lên ăn ~50% chiều cao màn. Ô đang gõ (và nút "Xác nhận in") rất
+ * dễ nằm HẲN dưới bàn phím, mà người dùng thì không biết là phải cuộn — họ chỉ thấy giao diện giật
+ * cục rồi mất nút (video 21/08/2026).
+ * Hai việc: khi focus thì cuộn ô đó vào giữa vùng còn thấy được; và nghe `visualViewport` để lúc bàn
+ * phím vừa mở (chiều cao vùng thấy được đổi) thì cuộn lại một lần nữa — chỉ nghe khi pop-up đang mở.
+ * ─────────────────────────────────────────────────────────────────────────────────────────────── */
+function prCuonVao(el){
+  if (!el) return;
+  PR_O_DANG_GO = el;
+  /* Chờ bàn phím dựng xong mới cuộn: cuộn trước lúc nó mở thì vị trí tính ra sai. */
+  setTimeout(function(){
+    try{ el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }catch(e){ try{ el.scrollIntoView(); }catch(e2){} }
+  }, 300);
+}
+var PR_O_DANG_GO = null, PR_NGHE_VV = false;
+function prNgheBanPhim(){
+  if (PR_NGHE_VV || !window.visualViewport) return;
+  PR_NGHE_VV = true;
+  window.visualViewport.addEventListener('resize', function(){
+    var md = document.getElementById('prmodal');
+    if (!md || !md.classList.contains('show')) return;
+    var el = PR_O_DANG_GO;
+    if (!el || !document.body.contains(el) || document.activeElement !== el) return;
+    try{ el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }catch(e){}
+  });
+}
 /** Bật/tắt nút "+" theo cái đang gõ: có số (khác 0) thì nút hiện, trống thì ẩn. */
 function prHienCong(el){
   var nut = el.parentNode && el.parentNode.querySelector('.prsladd');
@@ -11678,13 +11720,19 @@ function prVe(){
     var dsSl = PR_TEM.tachSl(r.slHang);
     var nhieu = dsSl.length > 1;                        // 3 bịch khác số lượng -> 3 con tem
     var soTem = PR_TEM.temCuaDong(r);
-    return '<tr><td class="num"><input class="prsl" type="number" min="1" max="' + PR_TRAN_SL + '" step="1" value="' + soTem + '"' +
-        (nhieu ? ' disabled' : '') +
+    return '<tr><td class="num prtem"><input class="prsl prsl-t" type="number" inputmode="numeric" min="1" max="' + PR_TRAN_SL + '" step="1" value="' + soTem + '"' +
+        (nhieu ? ' disabled' : '') + ' onfocus="prCuonVao(this)"' +
         ' data-s="' + esc(r.sku) + '" onchange="prDatSl(this.getAttribute(\'data-s\'),this.value)" title="' +
         (nhieu ? 'Dòng này khai ' + soTem + ' số lượng nên ra đúng ' + soTem + ' con tem' : 'Số con tem sẽ in') + '"></td>' +
-      '<td class="num"><div class="prslo">' + prChipSl(r) +
+      /* HAI DÒNG trong ô Số lượng: chip đã chốt ở TRÊN, ô nhập + nút "+" ở DƯỚI.
+         Bản trước để chip nằm CÙNG HÀNG với ô nhập nên vừa thêm 2-3 chip là ô nhập bị bóp dẹt rồi
+         rớt dòng méo mó — mà ô nhập chính là chỗ tay đang gõ, không được co lại (video 21/08/2026). */
+      '<td class="num prslo">' +
+        (dsSl.length ? '<div class="prchips">' + prChipSl(r) + '</div>' : '') +
+        '<div class="prgo">' +
         '<input class="prsl prsl-v" type="text" inputmode="numeric" value="' + (dsSl.length ? '0' : '') + '"' +
         ' data-s="' + esc(r.sku) + '" placeholder="—" oninput="prGoSo(this);prHienCong(this)"' +
+        ' onfocus="prCuonVao(this)"' +
         ' onkeydown="if(event.key===\'Enter\'){event.preventDefault();prCam(this);}"' +
         ' onchange="prCam(this)"' +
         ' title="Con số IN TRÊN TEM. Mỗi bịch một số lượng: gõ số rồi bấm dấu +">' +
@@ -11874,6 +11922,7 @@ async function prHoiHangDoi(){
   prVeTenMay();
   prMayChip(null);
   prNhipMayIn(true);
+  prNgheBanPhim();
   var kq = null;
   try{ kq = await prGoiGas({ action: 'pr_hangdoi' }); }catch(e){}
   if (kq && kq.status === 'success') prMayChip(kq.may);
