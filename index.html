@@ -927,15 +927,21 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
 #prBody .prdel{background:0;border:0;color:var(--ink3);cursor:pointer;font-size:17px;line-height:1;padding:2px 6px;border-radius:7px}
 #prBody .prdel:hover{color:var(--bad);background:var(--hover)}
 /* ĐIỆN THOẠI: BẢNG DANH SÁCH IN → THẺ (20/08/2026, ảnh báo lỗi từ máy thật).
-   Triệu chứng: `<table>` 6 cột bị bóp trong màn 390px — cột "Tên sản phẩm" co còn MỘT ký tự, chữ
-   xếp dọc thành "T ê n s ả n p h…", các dòng bị cắt và phải kéo ngang mới đọc được.
-   Đây đúng bài học đã ghi ở pop-up chi tiết phiếu Kiểm kê: **trên điện thoại thì mỗi dòng là một THẺ,
-   đừng ép bảng co**. Làm bằng CSS THUẦN (không sửa JS/markup của khối in) nên không đụng gì tới đường
-   dựng bảng: `thead` ẩn, mỗi `<tr>` thành lưới 3 cột và các `<td>` xếp theo `grid-area`:
-       [ SKU ........... số tem · × ]
-       [ tên hàng (ngắt dòng, 3 dòng) ]
-       [ ĐVT ......... mẫu tem (full) ]
-   Nhãn cột được trả lại bằng `::before` (ĐVT / Số tem) vì `thead` đã ẩn. */
+   Triệu chứng ban đầu: `<table>` bị bóp trong màn 390px — cột "Tên sản phẩm" co còn MỘT ký tự, chữ
+   xếp dọc thành "T ê n s ả n p h…". Bài học đã ghi ở pop-up chi tiết phiếu Kiểm kê: **trên điện thoại
+   mỗi dòng là một THẺ, đừng ép bảng co**.
+
+   VÁ LẦN HAI (ảnh chụp 16:59 cùng ngày): bảng đã rút từ 6 cột xuống 5 ô nhưng khối CSS này vẫn đánh
+   số theo bảng cũ, nên nhãn `::before` dán sai chỗ — ô SKU bị gắn nhãn **"ĐVT: 422424151"**, còn ô
+   Số lượng thì mất nhãn, chỉ còn một dấu "—" lơ lửng không ai hiểu là gì. Nhãn gắn theo `nth-child`
+   là thứ **âm thầm sai** khi số cột đổi; nên từ nay mỗi ô ghi rõ nó là ô nào ở comment bên cạnh.
+
+   Năm ô hiện tại, theo đúng thứ tự trong `prVe`:
+       1 Số tem · 2 Số lượng · 3 SKU · 4 Tên sản phẩm · 5 nút xoá
+   Thẻ xếp theo thứ tự ĐỌC (không phải thứ tự cột): mã trước, tên sau, hai con số cuối.
+       [ SKU ................... × ]
+       [ tên hàng (2 dòng)        ]
+       [ Số tem: n .. Số lượng: m ]  */
 /* NGƯỠNG 900px, KHÔNG PHẢI 640px (siết 20/08/2026 sau khi user báo "vẫn hiển thị như cũ"): điện thoại
    bật "Trang máy tính" thì viewport CSS thành **~980px** nên mọi quy tắc 640px KHÔNG ăn, mà màn hình
    thật vẫn chỉ 390px. Ngưỡng chốt **1000px** để phủ luôn ca đó; máy bàn thật (≥1024px) vẫn được bảng.
@@ -945,22 +951,28 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
   #prmodal .mtbl{display:block;font-size:13px}
   #prmodal .mtbl thead{display:none}
   #prmodal .mtbl tbody{display:block}
-  #prmodal .mtbl tr{display:grid;grid-template-columns:1fr auto auto;
-    grid-template-areas:"sku sl del" "pn pn pn" "dv mau mau";
-    gap:7px 9px;align-items:center;padding:11px 12px;margin:0 0 9px;
+  #prmodal .mtbl tr{display:grid;grid-template-columns:1fr auto;
+    grid-template-areas:"sku del" "pn pn" "tem sl";
+    gap:8px 10px;align-items:center;padding:11px 12px;margin:0 0 9px;
     border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:var(--shadow)}
   #prmodal .mtbl tbody tr:hover{background:var(--surface)}
   #prmodal .mtbl td{display:block;border:0;padding:0;white-space:normal}
-  #prmodal .mtbl td:nth-child(1){grid-area:sku;font-size:15px;font-variant-numeric:tabular-nums}
-  #prmodal .mtbl td:nth-child(2){grid-area:pn;min-width:0;color:var(--ink2);font-size:12px;line-height:1.5;
+  /* ô 1 = SỐ TEM (số bản in) */
+  #prmodal .mtbl td:nth-child(1){grid-area:tem;white-space:nowrap;font-size:12px;color:var(--ink3)}
+  #prmodal .mtbl td:nth-child(1)::before{content:'Số tem ';color:var(--muted)}
+  /* ô 2 = SỐ LƯỢNG (con số in TRÊN tem) — nhãn phải có, vì một ô số trơ trọi thì không ai đoán được */
+  #prmodal .mtbl td:nth-child(2){grid-area:sl;justify-self:end;white-space:nowrap;font-size:12px;color:var(--ink3)}
+  #prmodal .mtbl td:nth-child(2)::before{content:'Số lượng ';color:var(--muted)}
+  /* ô 3 = SKU: đứng đầu thẻ, cỡ chữ lớn nhất — đây là thứ người dùng dò mắt tìm */
+  #prmodal .mtbl td:nth-child(3){grid-area:sku;font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
+  /* ô 4 = TÊN SẢN PHẨM */
+  #prmodal .mtbl td:nth-child(4){grid-area:pn;min-width:0;color:var(--ink2);font-size:12px;line-height:1.5;
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-  #prmodal .mtbl td:nth-child(3){grid-area:dv;font-size:12px;color:var(--ink3);white-space:nowrap}
-  #prmodal .mtbl td:nth-child(3)::before{content:'ĐVT: ';color:var(--muted)}
-  #prmodal .mtbl td:nth-child(4){grid-area:mau;min-width:0}
-  #prmodal .mtbl td:nth-child(5){grid-area:sl;justify-self:end;white-space:nowrap;font-size:12px;color:var(--ink3)}
-  #prmodal .mtbl td:nth-child(5)::before{content:'Số tem ';color:var(--muted)}
-  #prmodal .mtbl td:nth-child(6){grid-area:del;justify-self:end}
+  /* ô 5 = nút xoá: đẩy hẳn sang góc trên phải, XA hai ô số để không bấm nhầm lúc sửa số */
+  #prmodal .mtbl td:nth-child(5){grid-area:del;justify-self:end;align-self:start}
   #prmodal .mtbl td[colspan]{grid-column:1/-1}
+  /* Ô số lượng dạng danh sách ("12, 14, 16") cần rộng hơn ô một số */
+  #prBody input.prsl.co-ds{width:112px;text-align:left}
   #prmodal .prcb{max-width:none;width:100%}
   #prmodal .prcb input{min-height:36px;font-size:12.5px}
   /* Menu `width:max-content` rộng hơn ô ⇒ dù ĐANG ẨN (`visibility:hidden`) nó vẫn tính vào vùng cuộn
@@ -977,12 +989,17 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
      "ÁP MẪU TEM CHO TẤT CẢ" rút thành "MẪU"/"SL" bằng `font-size:0` + `::before` (đổi chữ hiển thị mà
      KHÔNG sửa markup — khối in đang được lượt khác sửa, càng ít chạm càng tốt).
      `.mfilters .fld` đóng cứng `height:32px`; giữ nguyên chiều cao đó nhưng nới lên 36px cho ngón tay. */
-  #prmodal .mfilters{padding:0 12px 10px;gap:8px;grid-template-columns:1fr 104px}
+  /* Ô 1 là "áp SỐ TEM", ô 2 là "áp SỐ LƯỢNG" — bản trước ghi 'MẪU'/'SL' (nhãn của bảng cũ còn sót,
+     ảnh 16:59 cho thấy ô số tem bị gọi là MẪU và ô số lượng bị cắt còn "số in trê"). Chia đôi bề
+     rộng để cả hai ô đủ chỗ hiện chữ gợi ý. */
+  #prmodal .mfilters{padding:0 12px 10px;gap:8px;grid-template-columns:auto 1fr}
   #prmodal .mfilters .fld{height:36px;padding:0 6px 0 10px;border-radius:999px}
   #prmodal .mfilters .fld label{font-size:0;padding-right:8px;margin-right:8px;letter-spacing:0}
   #prmodal .mfilters .fld label::before{font-size:9.5px;font-weight:750;letter-spacing:.06em;color:var(--muted)}
-  #prmodal .mfilters .fld:nth-child(1) label::before{content:'MẪU'}
-  #prmodal .mfilters .fld:nth-child(2) label::before{content:'SL'}
+  #prmodal .mfilters .fld:nth-child(1) label::before{content:'SỐ TEM'}
+  #prmodal .mfilters .fld:nth-child(2) label::before{content:'SỐ LƯỢNG'}
+  #prmodal .mfilters #prSlAll{width:56px}
+  #prmodal .mfilters #prSlhAll{width:100%;max-width:none}
   /* Chiều cao ĐOÁN ĐƯỢC cho hai vùng cuộn: danh sách thẻ và khung xem trước 1:1 (3 con tem cỡ thật
      chiếm gần hết màn hình nếu để tự do). Nút "In" ở chân modal vì vậy luôn nhìn thấy. */
   #prmodal .modalbody{max-height:40vh}
@@ -2498,7 +2515,7 @@ body.side-anim{overflow-x:clip}
 <div id="prmodal" class="modal" onclick="if(event.target===this)prDong()">
   <div class="modalbox" style="max-width:1000px;width:100%">
     <div class="modalhd"><div>
-      <div class="mt">In tem SKU <span class="hint">(số tem cần in · số lượng in trên tem)</span></div>
+      <div class="mt">In tem SKU <span class="hint">(gõ nhiều số lượng cách nhau bằng dấu phẩy: 12, 14, 16 → 3 tem)</span></div>
       <div class="mtsub" id="prSub"></div>
     </div><button class="mclose" onclick="prDong()">&times;</button></div>
     <!-- Bỏ ô "áp mẫu tem" (20/08/2026): chỉ còn một khổ tem đang dùng nên không có gì để chọn. -->
@@ -2507,7 +2524,7 @@ body.side-anim{overflow-x:clip}
         <input id="prSlAll" class="prsl" type="number" min="1" max="200" step="1" value="1" style="width:96px"
           onchange="prApSl(this.value)" title="Gõ số rồi rời ô: mọi dòng in cùng số tem này"></div>
       <div class="fld"><label>Áp SỐ LƯỢNG cho tất cả</label>
-        <input id="prSlhAll" class="prsl" type="text" style="width:120px" placeholder="số in trên tem"
+        <input id="prSlhAll" class="prsl" type="text" style="width:150px" placeholder="vd 1.200 hoặc 12, 14, 16"
           oninput="prGoSo(this)" onchange="prApSlHang(this.value)" title="Con số này IN TRÊN TEM (không in chữ &quot;Số lượng&quot;)"></div>
     </div>
     <div class="msum" id="prSum"></div>
@@ -11191,11 +11208,44 @@ var PR_TEM = (function(){
   }
 
   /* ---------- 3. TÍNH TOÁN TRÊN DANH SÁCH CHỜ ---------- */
+  /** Tách ô "Số lượng" thành DANH SÁCH. Nhu cầu thật của kho (chốt 20/08/2026): cùng một SKU nhưng
+   *  hàng chia thành nhiều bịch số lượng khác nhau — SKU A có 3 bịch 12 · 14 · 16 thì phải ra 3 con
+   *  tem cùng SKU mà khác số lượng, chứ không phải 3 con tem giống nhau.
+   *  Người dùng gõ "12, 14, 16" (phẩy, chấm phẩy, gạch chéo hay khoảng trắng đều được). Dấu CHẤM là
+   *  dấu ngăn cách hàng nghìn của chính con số nên KHÔNG được coi là dấu tách danh sách — "1.200" là
+   *  một hai trăm, không phải hai số. */
+  function tachSl(v){
+    var t = String(v == null ? '' : v).trim();
+    if (!t) return [];
+    return t.split(/[,;\/\n\t ]+/).map(function(x){ return String(x).trim(); })
+      .filter(function(x){ return x !== '' && /[0-9]/.test(x); });
+  }
+  /** Số con tem của MỘT dòng: nhiều số lượng → mỗi số một con tem; một số lượng → in `sl` bản. */
+  function temCuaDong(r){
+    var l = tachSl(r && r.slHang);
+    return l.length > 1 ? l.length : Math.max(0, Number(r && r.sl) || 0);
+  }
   /** Tổng số CON TEM sẽ ra khỏi máy in (không phải số dòng) — con số duy nhất đáng cảnh báo. */
   function tongTem(ds){
     var n = 0;
-    (ds || []).forEach(function(r){ n += Math.max(0, Number(r.sl) || 0); });
+    (ds || []).forEach(function(r){ n += temCuaDong(r); });
     return n;
+  }
+  /** NỞ danh sách chờ thành từng con tem — mỗi phần tử của kết quả là một con tem sẽ ra giấy.
+   *  Đặt ở LÕI (không phải ở dashboard hay ở agent) vì cả hai đầu đều phải nở y hệt nhau: lệch một
+   *  chỗ là số tem đếm trên màn hình khác số tem ra khỏi máy in. */
+  function moRong(ds){
+    var ra = [];
+    (ds || []).forEach(function(r){
+      var l = tachSl(r.slHang);
+      if (l.length > 1){
+        l.forEach(function(x){ ra.push({ sku: r.sku, pn: r.pn, slHang: x, mau: r.mau }); });
+        return;
+      }
+      var n = Math.max(0, Number(r.sl) || 0);
+      for (var i = 0; i < n; i++) ra.push({ sku: r.sku, pn: r.pn, slHang: l.length ? l[0] : (r.slHang || ''), mau: r.mau });
+    });
+    return ra;
   }
   /** Gom theo mẫu tem: mỗi mẫu là một khổ giấy khác nhau, in lẫn nhau trong một lượt là ra sai khổ. */
   function theoMau(ds){
@@ -11209,6 +11259,7 @@ var PR_TEM = (function(){
   }
   return { maHoa: maHoa, bit: bit, svg: svg, MAU: MAU, MAU_MAC_DINH: MAU_MAC_DINH, mau: mau,
     tongTem: tongTem, theoMau: theoMau, cat: cat, GIAY: GIAY, khoTrang: khoTrang, chiaHang: chiaHang,
+    tachSl: tachSl, temCuaDong: temCuaDong, moRong: moRong,
     svgTem: svgTem, vachRect: vachRect, coChuVua: coChuVua, beDong: beDong,
     soGon: soGon, ngayTem: ngayTem, svgTemDot: svgTemDot };
 })();
@@ -11303,6 +11354,9 @@ function prXoa(sku){
 }
 function prDatSl(sku, v){
   var r = PR.sel[String(sku)]; if (!r) return;
+  /* Dòng đã khai nhiều số lượng thì SỐ TEM do danh sách đó quyết định (3 bịch = 3 tem) — sửa tay ở
+     đây chỉ tạo ra hai con số chỏi nhau. */
+  if (PR_TEM.tachSl(r.slHang).length > 1){ prVe(); return; }
   var n = Math.round(Number(v) || 0);
   if (n < 1) n = 1;
   if (n > PR_TRAN_SL){ n = PR_TRAN_SL; toast('Mỗi SKU in tối đa ' + PR_TRAN_SL + ' tem một lượt.', 'warn'); }
@@ -11312,13 +11366,25 @@ function prDatSl(sku, v){
  *  kho ghi "100" — tem in đúng cái họ gõ, chỉ giới hạn độ dài cho khỏi tràn. */
 function prDatSlHang(sku, v){
   var r = PR.sel[String(sku)]; if (!r) return;
-  r.slHang = prSoCham(String(v == null ? '' : v).trim()).slice(0, 16);
-  prLuu(); prVe();
+  r.slHang = prLamSachSl(v);
+  prLuu(); prSyncBar(); prVe();
 }
 function prApSlHang(v){
-  var t = prSoCham(String(v == null ? '' : v).trim()).slice(0, 16);
+  var t = prLamSachSl(v);
   prDs().forEach(function(r){ r.slHang = t; });
-  prLuu(); prVe();
+  prLuu(); prSyncBar(); prVe();
+}
+/** Làm sạch ô Số lượng: chấm hàng nghìn cho từng số, và chặn trần theo SỐ PHẦN TỬ (mỗi phần tử là
+ *  một con tem) chứ không phải theo độ dài chuỗi — trần 16 ký tự của bản cũ sẽ cắt mất bịch thứ ba. */
+function prLamSachSl(v){
+  var t = prSoCham(String(v == null ? '' : v).trim());
+  var l = PR_TEM.tachSl(t);
+  if (l.length > PR_TRAN_SL){
+    l = l.slice(0, PR_TRAN_SL);
+    toast('Một SKU tối đa ' + PR_TRAN_SL + ' con tem một lượt.', 'warn');
+    return l.join(', ');
+  }
+  return l.length > 1 ? l.join(', ') : t.slice(0, 16);
 }
 /* ── DẤU CHẤM NGĂN CÁCH NGHÌN ────────────────────────────────────────────────────────────────────
  * Số in trên tem là 2.500.000 mm hay 100.000 mm. Không có dấu ngăn cách thì đếm số 0 bằng mắt là
@@ -11329,25 +11395,24 @@ function prApSlHang(v){
  *   · CON TRỎ không nhảy về cuối khi dấu chấm chen vào giữa — nên đếm theo SỐ CHỮ SỐ trước con trỏ
  *     rồi đặt lại đúng chỗ đó, chứ không đặt theo vị trí ký tự (dấu chấm làm lệch 1 nhịp).
  * ─────────────────────────────────────────────────────────────────────────────────────────────── */
-function prSoCham(s){
-  var t = String(s == null ? '' : s);
-  var i = 0;
-  while (i < t.length && t.charAt(i) === ' ') i++;
-  var so = '', j = i;
-  while (j < t.length){
-    var c = t.charAt(j);
-    if (c >= '0' && c <= '9'){ so += c; j++; continue; }
-    if (c === '.' || c === ','){ j++; continue; }     // dấu ngăn cách cũ: bỏ để đặt lại cho đúng
-    break;
-  }
-  if (!so) return t;
-  so = so.replace(/^0+(?=[0-9])/, '');                // "007" -> "7", nhưng "0" vẫn là "0"
+function prChamMot(so){
+  so = String(so).replace(/^0+(?=[0-9])/, '');        // "007" -> "7", nhưng "0" vẫn là "0"
   var ra = '';
   for (var k = 0; k < so.length; k++){
     if (k > 0 && (so.length - k) % 3 === 0) ra += '.';
     ra += so.charAt(k);
   }
-  return t.slice(0, i) + ra + t.slice(j);
+  return ra;
+}
+/** Chấm hàng nghìn cho MỌI số trong ô — vì ô "Số lượng" có thể là một số ("1.200") hoặc một DANH
+ *  SÁCH ("12, 14, 16" = ba bịch, ba con tem). Dấu CHẤM thuộc về con số (ngăn cách hàng nghìn) nên
+ *  được gộp lại rồi đặt lại cho đúng; dấu phẩy / khoảng trắng là ngăn cách danh sách nên giữ nguyên
+ *  vị trí người gõ. Bản trước gộp cả dấu phẩy vào con số nên "12, 14" biến thành "1.214" — đúng chỗ
+ *  làm tính năng nhiều số lượng không dùng được. */
+function prSoCham(s){
+  return String(s == null ? '' : s).replace(/[0-9][0-9.]*/g, function(m){
+    return prChamMot(m.replace(/\./g, ''));
+  });
 }
 /** Gõ tới đâu chấm tới đó, giữ nguyên chỗ con trỏ. */
 function prGoSo(el){
@@ -11437,11 +11502,15 @@ function prVe(){
     /* Thứ tự cột: SỐ TEM (số bản in) · SỐ LƯỢNG (con số IN TRÊN tem) · SKU · TÊN SẢN PHẨM.
        Hai con số này khác nhau hẳn nhau nên đứng cạnh nhau và có nhãn rõ ở thead — trước đây gộp
        một cột "Số tem" là chỗ dễ nhầm nhất. */
-    return '<tr><td class="num"><input class="prsl" type="number" min="1" max="' + PR_TRAN_SL + '" step="1" value="' + (Number(r.sl) || 1) + '"' +
-        ' data-s="' + esc(r.sku) + '" onchange="prDatSl(this.getAttribute(\'data-s\'),this.value)" title="Số con tem sẽ in"></td>' +
-      '<td class="num"><input class="prsl" type="text" value="' + esc(r.slHang == null ? '' : r.slHang) + '"' +
+    var nhieu = PR_TEM.tachSl(r.slHang).length > 1;      // 3 bịch khác số lượng -> 3 con tem
+    var soTem = PR_TEM.temCuaDong(r);
+    return '<tr><td class="num"><input class="prsl" type="number" min="1" max="' + PR_TRAN_SL + '" step="1" value="' + soTem + '"' +
+        (nhieu ? ' disabled' : '') +
+        ' data-s="' + esc(r.sku) + '" onchange="prDatSl(this.getAttribute(\'data-s\'),this.value)" title="' +
+        (nhieu ? 'Dòng này khai ' + soTem + ' số lượng nên ra đúng ' + soTem + ' con tem' : 'Số con tem sẽ in') + '"></td>' +
+      '<td class="num"><input class="prsl' + (nhieu ? ' co-ds' : '') + '" type="text" value="' + esc(r.slHang == null ? '' : r.slHang) + '"' +
         ' data-s="' + esc(r.sku) + '" placeholder="—" oninput="prGoSo(this)" onchange="prDatSlHang(this.getAttribute(\'data-s\'),this.value)"' +
-        ' title="Con số này IN TRÊN TEM (không in chữ Số lượng)"></td>' +
+        ' title="Con số IN TRÊN TEM. Nhiều bịch khác số lượng thì gõ cách nhau bằng dấu phẩy: 12, 14, 16 → 3 con tem"></td>' +
       '<td><b>' + esc(r.sku) + '</b></td>' +
       '<td class="pn">' + esc(r.pn) + '</td>' +
       '<td><button class="prdel" data-s="' + esc(r.sku) + '" title="Bỏ SKU này khỏi danh sách in"' +
@@ -11604,7 +11673,10 @@ async function prGuiHangDoi(ds, tong, tBam){
        · đúng cái người dùng đã thấy — tên in ra là tên hiện trong pop-up lúc họ bấm, không phải tên
          đọc lại từ Sheet vào một thời điểm khác. */
   var dong = ds.map(function(r){
-    return { sku: String(r.sku), sl: Math.max(1, Number(r.sl) || 1), slHang: String(r.slHang || ''),
+    /* `sl` gửi đi là SỐ TEM THẬT của dòng (`temCuaDong`), không phải con số trong ô: dòng khai nhiều
+       số lượng thì số tem do danh sách quyết định. Gửi sai con này thì hàng đợi báo "1 tem" trong khi
+       máy in nhả 3 — và trần số tem cũng gác sai. */
+    return { sku: String(r.sku), sl: PR_TEM.temCuaDong(r), slHang: String(r.slHang || ''),
       mau: r.mau || PR_TEM.MAU_MAC_DINH, pn: String(r.pn || '').slice(0, 140) };
   });
   /* Phân biệt HAI loại thất bại là bắt buộc: hàng đợi CHỐI (quá trần, sai dữ liệu) thì bấm lại vô
@@ -11698,11 +11770,9 @@ function prTrangThaiHtml(html, kieu){
 function prInTrinhDuyet(ds, nhom){
   var kt = PR_TEM.khoTrang(nhom.thuTu[0]);
   document.getElementById('prPage').textContent = '@page{size:' + kt.w + 'mm ' + kt.h + 'mm;margin:0}';
-  var conTem = [];
-  ds.forEach(function(r){
-    var n = Math.max(1, Number(r.sl) || 1);
-    for (var i = 0; i < n; i++) conTem.push(r);
-  });
+  /* Nở bằng `PR_TEM.moRong` — CÙNG hàm agent dùng, nên số tem trên màn hình và số tem ra khỏi máy in
+     không có đường nào lệch nhau (kể cả dòng khai nhiều số lượng). */
+  var conTem = PR_TEM.moRong(ds);
   if (PR.dotKhac){
     conTem.unshift({ _dot: true, nguoi: PR.nguoi || ndsEmail(), luc: fmtTime(Date.now()),
       soTem: conTem.length, soSku: ds.length, mau: nhom.thuTu[0] });
