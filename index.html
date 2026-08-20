@@ -492,8 +492,14 @@ code{background:var(--surface2);padding:1px 7px;border-radius:6px;font-size:12px
 .chip{background:color-mix(in srgb,var(--accent) 12%,var(--surface));color:var(--brand);border-radius:999px;padding:4px 13px;font-weight:600;font-size:12px}
 /* Nút Tải lại dữ liệu dùng nguyên kiểu .dropdown-action-btn (kiemsoatkho); cooldown = disabled mờ */
 
-/* Toast thông báo kết quả đồng bộ WMS */
-#toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,16px);background:#111827;color:#fff;padding:12px 20px;border-radius:12px;
+/* Toast thông báo (đồng bộ WMS · OCR đọc được N từ khoá · chọn SKU…).
+   LÊN ĐẦU MÀN HÌNH 20/08/2026 (yêu cầu user): trước đây nó neo `bottom:28px`, tức nằm ĐÚNG CHỖ nút
+   "Chụp" nổi vừa dời xuống đáy — mỗi lần đọc xong tem là toast che mất nút chụp trong 6 giây, đúng
+   lúc thủ kho muốn chụp lại. Trên đầu thì không đè nút bấm nào (thanh tiêu đề chỉ là chữ), và đó
+   cũng là chỗ mọi thông báo của Android xuất hiện nên không phải học lại.
+   `env(safe-area-inset-top)` để không lọt dưới tai thỏ / thanh trạng thái của iPhone. */
+#toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top,0px));transform:translate(-50%,-16px);
+  background:#111827;color:#fff;padding:12px 20px;border-radius:12px;
   font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);opacity:0;pointer-events:none;z-index:200;max-width:92vw;text-align:center;
   transition:opacity .25s var(--ease),transform .25s var(--ease)}
 #toast.show{opacity:1;transform:translate(-50%,0)}
