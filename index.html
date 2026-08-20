@@ -929,7 +929,11 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
        [ tên hàng (ngắt dòng, 3 dòng) ]
        [ ĐVT ......... mẫu tem (full) ]
    Nhãn cột được trả lại bằng `::before` (ĐVT / Số tem) vì `thead` đã ẩn. */
-@media(max-width:640px){
+/* NGƯỠNG 900px, KHÔNG PHẢI 640px (siết 20/08/2026 sau khi user báo "vẫn hiển thị như cũ"): điện thoại
+   bật "Trang máy tính" thì viewport CSS thành **~980px** nên mọi quy tắc 640px KHÔNG ăn, mà màn hình
+   thật vẫn chỉ 390px. Ngưỡng chốt **1000px** để phủ luôn ca đó; máy bàn thật (≥1024px) vẫn được bảng.
+   Bảng 6 cột dưới 1000px vốn cũng chật, nên bố cục thẻ ở đó không mất gì. */
+@media(max-width:1000px){
   #prmodal .modalbody{overflow-x:hidden;padding:0 12px 14px}
   #prmodal .mtbl{display:block;font-size:13px}
   #prmodal .mtbl thead{display:none}
@@ -3582,7 +3586,10 @@ var HOME_MUC=[
       muc:['Sơ đồ mặt bằng','Định danh kho','Trạng thái vệ sinh','Danh sách vị trí'],
       so:function(){ return (typeof PLG!=='undefined'&&PLG.ok)?{k:nf(Object.keys(PLG.by).length),l:'ô mặt bằng'}:null; } }
   ]},
-  { g:'Công cụ kho', mo:'Dùng ngay tại chỗ, không cần dữ liệu nền', items:[
+  /* `uuTien` — nhóm này lên HÀNG ĐẦU của trang Tổng quan (yêu cầu user 20/08/2026): hai công cụ dùng
+     ngay tại chỗ, không cần dữ liệu nền, nên là thứ hay chọn nhất. Chỉ đổi thứ tự VẼ ở homeRender;
+     thứ tự trong HOME_MUC (và do đó ở thanh bên) giữ nguyên để khỏi đổi thói tay của người đang dùng. */
+  { g:'Công cụ kho', uuTien:true, mo:'Dùng ngay tại chỗ, không cần dữ liệu nền', items:[
     { t:'sku', ten:'Nhận diện SKU', cc:'var(--warn)', nhan:'Công cụ',
       mo:'Chụp tem nhà cung cấp → máy bóc từ khoá → gợi ý SKU nội bộ khớp nhất; bấm thẻ là copy mã SKU và ghi vào sổ tay tem (lần sau khỏi gọi AI).',
       muc:['Chụp/chọn ảnh tem','Gợi ý SKU','Từ khoá bóc được','Sổ tay tem'] },
@@ -3597,7 +3604,8 @@ function homeRender(){
   var html='<p class="sub"><span class="muted">Chọn hạng mục cần làm. Vào rồi vẫn đổi tab được ở '+
     '<b>thanh bên</b> (nút góc trên trái hoặc <kbd>Ctrl</kbd>+<kbd>B</kbd>), hoặc quay lại đây bằng mục <b>Tổng quan</b>.</span></p>';
   html+='<section class="panel"><div class="hm-grid">';
-  HOME_MUC.forEach(function(grp){
+  /* Nhóm có `uuTien` vẽ TRƯỚC (sort ổn định nên các nhóm còn lại giữ nguyên thứ tự khai báo). */
+  HOME_MUC.slice().sort(function(a,b){ return (b.uuTien?1:0)-(a.uuTien?1:0); }).forEach(function(grp){
     html+='<div class="hm-h">'+esc(grp.g)+(grp.mo?' <span class="hint">'+esc(grp.mo)+'</span>':'')+'</div>';
     grp.items.forEach(function(it){
       var s=null; try{ s=it.so?it.so():null; }catch(e){ s=null; }   // số liệu chỉ là điểm cộng — hỏng thì thẻ vẫn phải hiện
@@ -10877,8 +10885,14 @@ var PR_TEM = (function(){
      tràn qua khe sang tem phải — đúng hiện tượng "nửa dữ liệu ở tem trái, nửa ở tem phải".
      ⇒ Từ nay: `w`/`h` của MẪU là kích thước MỘT CON TEM; số cột và khe dọc khai ở `GIAY`; còn khổ
      TRANG (thứ đi vào @page và vào lệnh SIZE của TSPL) do `khoTrang()` tính ra.
-     ⚠ `khe` = 2mm là số PHỎNG, chưa đo bằng thước. Tem in lệch ngang thì sửa đúng một con số này. */
-  var GIAY = { soCot: 2, khe: 2 };
+     SỐ ĐO THẬT (người dùng đo bằng thước, chốt 20/08/2026):
+       · một con tem: rộng 40mm × dài 60mm
+       · khe DỌC giữa tem trái/phải: 2mm  -> nằm trong vùng in, chỉ là khoảng trắng
+       · khe NGANG giữa hai hàng tem: 3mm -> đây là con số máy in DÒ để biết hết một nhãn (lệnh GAP)
+     Lần in thử đầu khai GAP 2mm (phỏng) trong khi khe thật 3mm — lệch 1mm mỗi hàng, tích luỹ vài
+     hàng là máy in mất đồng bộ và in đè sang tem bên dưới. Nên `kheNgang` phải nằm ở đây, cạnh
+     `khe`, để agent in tem lấy đúng một nguồn. */
+  var GIAY = { soCot: 2, khe: 2, kheNgang: 3 };
   /* KHỔ TEM đọc từ chính các form BarTender của kho (script `_DOC-MAY-IN.ps1` chạy trên máy cắm máy
      in, 20/08/2026) — nhưng khổ ĐANG DÙNG THẬT là 40×60 theo nhãn cuộn giấy, nên nó là mặc định. */
   var MAU = {
