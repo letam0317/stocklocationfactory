@@ -11441,21 +11441,108 @@ function prMotHang(hang, maMau){
  * Máy in nào / khổ giấy nào là do người dùng chọn trong hộp thoại của Windows — trình duyệt không
  * có API liệt kê máy in, nên "chọn máy in ngay trong trang" là việc của bước 2 (cần cầu nối ở máy).
  */
-function prIn(){
+/**
+ * XÁC NHẬN IN — hai đường, tự chọn theo tình hình:
+ *   ① GỬI TỚI MÁY IN TEM CỦA KHO (mặc định): ghi một lệnh vào hàng đợi trên Sheet qua GAS, agent ở
+ *      máy trạm nhận rồi in ra TSC PE200. Người bấm chỉ cần có mạng — 4G cũng được, không cần cùng
+ *      mạng với máy in, không phải chạm vào máy nào.
+ *   ② IN QUA TRÌNH DUYỆT (đường lùi): nếu gửi hàng đợi thất bại (mất mạng, GAS lỗi) thì mở hộp thoại
+ *      in của Windows như trước. Thà in được bằng tay còn hơn không in được.
+ * Trạng thái lệnh được hỏi lại vài lượt để nói cho người bấm biết "đã in xong" hay "máy in không
+ * phản hồi" — chứ không im lặng coi như xong.
+ */
+async function prIn(){
   var ds = prDs(), tong = prTongTem();
   if (!ds.length || tong < 1){ toast('Danh sách in đang trống.', 'warn'); return; }
   if (tong > PR_TRAN_TEM){ toast('Một lượt in tối đa ' + nf(PR_TRAN_TEM) + ' tem — hãy chia nhỏ.', 'warn'); return; }
   var nhom = PR_TEM.theoMau(ds);
-  /* MỖI KHỔ TEM MỘT LƯỢT IN: @page chỉ nhận MỘT khổ, in lẫn 2 khổ trong một lượt là ra sai giấy.
-     Nói thẳng ra cho người dùng chứ không im lặng in bừa. */
   if (nhom.thuTu.length > 1){
     toast('Danh sách đang có ' + nhom.thuTu.length + ' khổ tem khác nhau. Hãy áp một mẫu cho tất cả, hoặc in từng khổ một lượt.', 'warn');
     return;
   }
   /* XÁC NHẬN khi số tem lớn: giấy tem là vật tư thật, in nhầm 500 con là mất 500 con. */
   if (tong > 30 && !confirm('In ' + tong + ' con tem cho ' + ds.length + ' SKU?')) return;
-  /* @page nhận khổ của MỘT HÀNG GIẤY (2 tem + khe), không phải khổ một con tem — xem ghi chú GIAY
-     trong lõi PR_TEM. Khai sai chỗ này chính là lỗi "một tem in đè lên cả hai tem" của lần in thử. */
+
+  var btn = document.getElementById('prBtnIn');
+  btn.disabled = true;
+  var chuCu = btn.textContent;
+  btn.textContent = 'Đang gửi tới máy in…';
+  var ok = await prGuiHangDoi(ds, tong);
+  btn.disabled = false;
+  btn.textContent = chuCu;
+  if (ok) return;                                   // gửi được -> xong, trạng thái tự cập nhật
+  /* ĐƯỜNG LÙI: in qua hộp thoại của Windows */
+  prTrangThaiHtml('Không gửi được tới máy in kho — mở hộp thoại in của máy này thay thế.', 'warn');
+  prInTrinhDuyet(ds, nhom);
+}
+
+/** Gửi lệnh vào hàng đợi (GAS `pr_them`) rồi theo dõi tới khi agent báo xong. */
+async function prGuiHangDoi(ds, tong){
+  var dong = ds.map(function(r){
+    return { sku: String(r.sku), sl: Math.max(1, Number(r.sl) || 1), slHang: String(r.slHang || ''), mau: r.mau || PR_TEM.MAU_MAC_DINH };
+  });
+  try{
+    var kq = await prGoiGas({ action: 'pr_them', nguoi: ndsEmail(), dong: JSON.stringify(dong) });
+    if (!kq || kq.status !== 'success' || !kq.id) throw new Error((kq && kq.message) || 'GAS không nhận lệnh');
+    if (kq.trung){ prTrangThaiHtml('Lệnh này vừa gửi rồi — không gửi lại để tránh in trùng.', 'warn'); return true; }
+    prTrangThaiHtml('Đã gửi <b>' + nf(tong) + ' tem</b> tới máy in của kho (lệnh <code>' + esc(kq.id) + '</code>). Đang chờ máy in…');
+    prTheoDoi(kq.id, tong);
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+/** Hỏi lại trạng thái lệnh: 20 lượt, mỗi 3 giây — đủ cho một đợt tem vài chục con. */
+async function prTheoDoi(id, tong){
+  for (var i = 0; i < 20; i++){
+    await new Promise(function(r){ setTimeout(r, 3000); });
+    var kq = null;
+    try{ kq = await prGoiGas({ action: 'pr_trangthai', id: id }); }catch(e){}
+    if (!kq || kq.status !== 'success') continue;
+    if (kq.trangThai === 'dang_in'){ prTrangThaiHtml('Máy in đã nhận lệnh — đang in <b>' + nf(tong) + ' tem</b>…'); continue; }
+    if (kq.trangThai === 'xong'){
+      prTrangThaiHtml('✓ Đã in xong <b>' + nf(tong) + ' tem</b>.', 'ok');
+      toast('Máy in kho đã in xong ' + nf(tong) + ' tem.', 'ok');
+      return;
+    }
+    if (kq.trangThai === 'loi'){
+      prTrangThaiHtml('✗ Máy in báo lỗi: ' + esc(kq.ghiChu || 'không rõ') + '. Lệnh vẫn còn trong hàng đợi để in lại.', 'err');
+      toast('Máy in kho báo lỗi — xem dòng trạng thái trong bảng in.', 'err');
+      return;
+    }
+  }
+  prTrangThaiHtml('Chưa thấy máy in phản hồi sau 1 phút — có thể máy trạm chưa bật agent in tem. Lệnh vẫn nằm trong hàng đợi.', 'warn');
+}
+/** Gọi GAS cho hàng đợi in — bản gọn của `ndsGoiGas`: không chạm giao diện "đang đọc tem", thử lại
+ *  2 lượt vì chặng 2 của Apps Script thỉnh thoảng trả HTML dù script đã chạy xong (hồ sơ sự cố GAS
+ *  12/08/2026). Lệnh in là thứ KHÔNG được gửi hai lần, nên phía GAS còn chốt chống trùng 5 giây. */
+async function prGoiGas(body){
+  var cuoi = '';
+  for (var i = 0; i < 2; i++){
+    if (i) await new Promise(function(r){ setTimeout(r, 900); });
+    var txt = '';
+    try{
+      var r = await fetch(APPSCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(body) });
+      txt = await r.text();
+    }catch(e){ cuoi = String(e && e.message || e); continue; }
+    var t = String(txt || '').trim();
+    if (t.charAt(0) === '{' || t.charAt(0) === '['){
+      try{ return JSON.parse(t); }catch(e){ cuoi = 'phản hồi không phải JSON'; continue; }
+    }
+    cuoi = /^<!DOCTYPE|^<html/i.test(t) ? 'Apps Script trả về trang HTML' : ('phản hồi lạ: ' + t.slice(0, 60));
+  }
+  throw new Error(cuoi || 'không gọi được Apps Script');
+}
+function prTrangThaiHtml(html, kieu){
+  var el = document.getElementById('prTrangThai');
+  if (!el) return;
+  el.innerHTML = html;
+  el.style.color = kieu === 'err' ? 'var(--bad)' : (kieu === 'ok' ? 'var(--good)' : (kieu === 'warn' ? 'var(--warn)' : ''));
+}
+
+/** Đường lùi: dựng tem vào #prsheet rồi gọi hộp thoại in của Windows (như bản trước). */
+function prInTrinhDuyet(ds, nhom){
   var kt = PR_TEM.khoTrang(nhom.thuTu[0]);
   document.getElementById('prPage').textContent = '@page{size:' + kt.w + 'mm ' + kt.h + 'mm;margin:0}';
   var conTem = [];
@@ -11463,19 +11550,13 @@ function prIn(){
     var n = Math.max(1, Number(r.sl) || 1);
     for (var i = 0; i < n; i++) conTem.push(r);
   });
-  /* TEM THÔNG BÁO ĐỢT IN: chỉ chèn khi máy in đang là chỗ dùng chung của NHIỀU người (hàng đợi có
-     đợt của người khác chờ, xem PR.dotKhac do tầng hàng đợi đặt). In một mình thì không tốn thêm
-     tem nào — người dùng đã nói rõ chuyện lãng phí tem. */
   if (PR.dotKhac){
     conTem.unshift({ _dot: true, nguoi: PR.nguoi || ndsEmail(), luc: fmtTime(Date.now()),
-      soTem: tong, soSku: ds.length });
+      soTem: conTem.length, soSku: ds.length, mau: nhom.thuTu[0] });
   }
   var hang = PR_TEM.chiaHang(conTem, nhom.thuTu[0]);
   document.getElementById('prsheet').innerHTML = hang.map(function(h){ return prMotHang(h, nhom.thuTu[0]); }).join('');
   document.body.classList.add('in-tem');
-  /* Dọn sau khi hộp thoại in đóng (in xong hoặc bấm Huỷ): giữ #prsheet đầy tem thì lần in sau của
-     TRANG KHÁC (vd bảng kiểm kê) cũng ra tem. `afterprint` không phải trình duyệt nào cũng bắn, nên
-     có thêm một lượt dọn chậm làm lưới an toàn. */
   var don = function(){
     document.body.classList.remove('in-tem');
     document.getElementById('prsheet').innerHTML = '';
@@ -11483,9 +11564,6 @@ function prIn(){
   };
   window.addEventListener('afterprint', don);
   setTimeout(don, 60000);
-  document.getElementById('prTrangThai').innerHTML = 'Đã gửi <b>' + nf(tong) + ' tem</b> = <b>' + nf(hang.length) +
-    ' hàng giấy</b> sang hộp thoại in — chọn máy in ở đó. Khổ một hàng: <b>' + kt.w + '×' + kt.h + 'mm</b> (' +
-    kt.cot + ' tem ' + kt.tem.w + '×' + kt.tem.h + 'mm, khe ' + kt.khe + 'mm).';
   setTimeout(function(){ window.print(); }, 60);
 }
 
