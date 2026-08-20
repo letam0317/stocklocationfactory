@@ -2763,10 +2763,7 @@ body.side-anim{overflow-x:clip}
         <button type="button" class="kktab" onclick="cdXoaLo()" title="Xoá tổng kg + số cuộn của lô này, GIỮ quy cách/lõi/cuộn nguyên cho lô sau">Lô tiếp theo</button>
         <button type="button" class="kktab" onclick="cdXoaHet()" title="Xoá sạch mọi ô, kể cả quy cách đã lưu">Xoá hết</button>
       </div>
-      <div class="pcdnote" style="background:color-mix(in srgb,var(--info) 10%,var(--surface));color:var(--ink2)">
-        <b>Quy cách · lõi · cuộn nguyên được ghi nhớ trên máy này</b> — lô sau chỉ cần gõ lại
-        <b>tổng kg</b> và <b>số cuộn</b>. Bấm “Lô tiếp theo” là xoá đúng 2 ô đó.
-      </div>
+      
     </section>
 
     <!-- ---------- BƯỚC 2: kết quả ---------- -->
@@ -2781,19 +2778,7 @@ body.side-anim{overflow-x:clip}
 
       <details class="nds-more" style="margin-top:12px">
         <summary>Máy suy ra bằng cách nào? (và ví dụ 10kg / 10 cuộn)</summary>
-        <div class="pcdnote" style="margin-top:8px;background:color-mix(in srgb,var(--info) 10%,var(--surface));color:var(--ink2)">
-          <b>Cuộn nguyên là cái thước.</b> Nó cho biết 1 gram chỉ dài bao nhiêu mm, từ đó
-          cân bao nhiêu cũng quy ra được mm:<br>
-          <code>tổng mm = (tổng gram − số cuộn × gram lõi) × quy cách mm ÷ gram CHỈ của cuộn nguyên</code><br><br>
-          <b>Ví dụ:</b> lô 10 kg · 10 cuộn · lõi 50 gr · cuộn nguyên 5,000,000 mm nặng 120 gr (cân cả lõi)
-          ⇒ chỉ trong cuộn nguyên chỉ còn 70 gr ⇒ 1 gram chỉ = 71,429 mm. Trừ 10 lõi (500 gr) còn
-          9,500 gr chỉ ⇒ <b>678,571,429 mm</b>.<br>
-          Nếu 120 gr là <i>riêng phần chỉ</i> thì 1 gram = 41,667 mm ⇒ 395,833,333 mm — <b>lệch 1,7 lần</b>.<br>
-          <b>Chốt 19/08/2026:</b> cuộn nguyên ở kho mình cân <b>cả lõi + chỉ</b> — cứ để nguyên nút
-          <b>cân cả lõi</b>, chỉ đổi sang “chỉ riêng chỉ” khi lấy số từ bảng quy cách nhà cung cấp.<br><br>
-          <b>Máy tự soi vô lý:</b> 10 cuộn <i>còn nguyên</i> chỉ cân 10 × 120 gr = 1,2 kg, không
-          thể ra 10 kg — gặp trưỡng hợp này máy vẫn tính nhưng dán cờ đỏ để đi cân/đếm lại.
-        </div>
+        
       </details>
     </section>
   </div>
@@ -4096,7 +4081,13 @@ var TIP={
     'Committed Outbound.',
   cd:'Cuộn chỉ mua về theo quy cách 2.500.000 / 3.000.000 / 5.000.000 mm. Đưa vào sản xuất dùng dở, '+
     'trả về kho thì không còn nguyên kiện nhà cung cấp — chỉ cân được chứ không đo được mm. '+
-    'Nhập số cân và quy cách, máy trừ lõi rồi quy ra mm.'
+    'Nhập số cân và quy cách, máy trừ lõi rồi quy ra mm. '+
+    /* Gộp từ 2 dải .pcdnote đã bỏ khỏi màn (21/08/2026): chúng là giảng giải THƯỜNG TRỰC, hiện mọi
+       lúc dù người dùng chưa nhập gì. Mấy dải .pcdnote CÒN LẠI trong tab này thì GIỮ, vì đó là cảnh
+       báo/kết luận theo SỐ VỪA NHẬP ("lô này gần như còn nguyên…") — hiện đúng lúc cần, không phải
+       văn chắn màn. */
+    'Cuộn nguyên là cái thước: nó cho biết 1 gram chỉ dài bao nhiêu mm, từ đó suy ra chiều dài của lô '+
+    'cân được. Quy cách, lõi và cuộn nguyên được ghi nhớ trên máy này nên lô sau chỉ cần gõ lại số cân.'
 };
 /* Markup TĨNH không gọi được tipMuc() nên chỗ nào cần thì đặt sẵn <span class="h2tip-slot"
    data-tip-key="..."> rồi hàm này đổ nút vào lúc trang khởi động. Một chỗ khai câu chú thích (TIP),
@@ -4593,13 +4584,12 @@ function plgVeMap(g,T){
     '<div class="pg-maprow"><span class="pg-maphdr">Kho nguyên liệu (F0-KHO) — '+dsDay.length+' dãy kệ</span></div>'+
     '<div class="pg-wrap">'+legend+'<div class="pg-scroll"><div class="pg-fit" style="--pg-ar:'+plgTyLeKho(g).toFixed(4)+'">'+
       plgSvg(g,mode,theoDay)+'</div></div></div>'+
-    '<p class="pg-hint" style="margin:9px 2px 0">Bấm một ô để xem chi tiết vị trí, bấm nhãn dãy để soi riêng dãy đó &middot; '+
-      'sơ đồ bê nguyên hình học bản vẽ <code>MTG_zigzag</code> (đúng tỷ lệ, nét kẻ, khoảng cách thật) — cách đọc màu: '+
-      '<b>nền ô = trạng thái vệ sinh</b> (xanh đã vệ sinh · đỏ chưa vệ sinh · hổ phách lịch chưa duyệt · '+
-      'xám nét đứt là chưa khai báo lịch — nguồn: planogram WMS, tab <code>'+esc(PLG_TAB)+'</code>), '+
-      '<b>vạch màu mép trái = kho</b> đang giữ tồn ở ô đó, dùng chung bảng màu với các tab khác '+
-      '(nguồn: tồn theo mã vị trí của tab Trạng thái lưu trữ).</p>'+
     '</section>';
+  /* Đoạn 6 dòng "Bấm một ô… cách đọc màu: nền ô = trạng thái vệ sinh…" ĐÃ BỎ (21/08/2026).
+     Hai lý do, không phải chỉ vì "dài": (a) phần "cách đọc màu" TRÙNG với khối chú giải `.pg-legbox`
+     ngay bên cạnh — legend đã hiện đúng từng màu kèm số, đọc legend nhanh hơn đọc một đoạn văn tả
+     lại legend; (b) phần "bấm một ô / bấm nhãn dãy" là chỉ dẫn thao tác, cùng loài đã bỏ ở các tiêu
+     đề khác. Phần nguồn dữ liệu vẫn còn trong nút `i` cạnh chip nguồn (plgTipNguon). */
 }
 
 /* === CỘT PHẢI — panel "Vệ sinh" ============================================================
@@ -5055,14 +5045,23 @@ function plgVeFoot(T){
   var el=document.getElementById('plgFoot'); if(!el) return;
   el.innerHTML=
     '<div class="pg-srcbar">'+
-      '<span class="pg-chip">Kho nguyên liệu — F0-KHO &middot; WH-MATERIAL-MTG &amp; GARMENT</span>'+
+      '<span class="pg-chip">Kho nguyên liệu — F0-KHO &middot; WH-MATERIAL-MTG &amp; GARMENT'+tipMuc(plgTipNguon())+'</span>'+
       '<span class="pg-hint">'+nf(tong)+' vị trí'+(TAB_SYNC.plg?' &middot; cập nhật '+esc(fmtTime(TAB_SYNC.plg)):'')+'</span>'+
       '<button type="button" onclick="plgLamMoi(this)" title="Đọc lại tab '+esc(PLG_TAB)+' từ Google Sheet">Làm mới</button>'+
-    '</div>'+
-    '<p class="pg-hint" style="margin:0">Nguồn: <b>planogram WMS</b> — bộ <code>sync-vesinh-factory.mjs</code> ghi tab <code>'+esc(PLG_TAB)+'</code> theo cụm 8h40 '+
-      '(pop-up chi tiết ô đọc thêm <code>'+esc(PLG_TAB_YC)+'</code>'+
-      (PLG.yc.ok&&!PLG.yc.co?' — tab này CHƯA có trên Sheet vì kho nguyên liệu chưa phát yêu cầu vệ sinh nào':'')+'); '+
-      'sơ đồ dựng sẵn từ bản vẽ <code>MTG_zigzag</code> nên vị trí bị ngừng phát yêu cầu vẫn hiện trên hình.</p>';
+    '</div>';
+  /* Đoạn "Nguồn: planogram WMS — bộ sync-vesinh-factory.mjs ghi tab … MTG_zigzag …" ĐÃ RỜI KHỎI MÀN
+     (21/08/2026). Nó là chú thích nguồn dữ liệu, đúng loài đã dồn vào nút `i` ở các tab khác — sót
+     lại vì nó nằm ở CHÂN tab và mang class `pg-hint` chứ không phải `p.sub`, nên chốt chặn cũ (nhắm
+     theo class + chỉ soi 260px đầu tab) không thấy. Chốt chặn đã được viết lại cho không phụ thuộc
+     class lẫn vị trí. Nút `i` dán cạnh chip "Kho nguyên liệu" — tức cạnh chính cái nó nói về. */
+}
+/* VĂN BẢN THUẦN cho tooltip (content:attr không dựng được thẻ). Dựng động vì câu có nhắc tên tab và
+   có nhánh "tab YC chưa tồn tại" — sửa nguồn là chú thích tự đúng theo. */
+function plgTipNguon(){
+  return 'Nguồn: planogram WMS — bộ sync-vesinh-factory.mjs ghi tab ' + PLG_TAB + ' theo cụm 8h40. '+
+    'Pop-up chi tiết ô đọc thêm tab ' + PLG_TAB_YC +
+    (PLG.yc.ok && !PLG.yc.co ? ' (tab này CHƯA có trên Sheet vì kho nguyên liệu chưa phát yêu cầu vệ sinh nào)' : '') + '. ' +
+    'Sơ đồ dựng sẵn từ bản vẽ MTG_zigzag nên vị trí bị ngừng phát yêu cầu vẫn hiện trên hình.';
 }
 function plgLamMoi(btn){
   if(btn){ btn.disabled=true; btn.textContent='Đang tải…'; }
