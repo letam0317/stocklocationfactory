@@ -8769,12 +8769,32 @@ var NDS_ENGINE = (function(){
         if (a.laSku!==b.laSku) return a.laSku?-1:1;                  // tem in ĐÚNG SKU nội bộ -> đừng đổi
         var sa=(a.status==='INACTIVE')?1:0, sb=(b.status==='INACTIVE')?1:0;
         if (sa!==sb) return sa-sb;
-        var ca=((a.type==='COMBO')||a.gop)?1:0, cb=((b.type==='COMBO')||b.gop)?1:0;
+        var ca=(a.type==='COMBO')?1:0, cb=(b.type==='COMBO')?1:0;    // COMBO xuống trước tiên
         if (ca!==cb) return ca-cb;
+        var ga=a.gop?1:0, gb=b.gop?1:0;                              // rồi mới tới đơn vị GỘP
+        if (ga!==gb) return ga-gb;
         if (a.q!==b.q) return a.q-b.q;                               // ĐƠN VỊ NHỎ NHẤT
         return (Number(b.qty)||0)-(Number(a.qty)||0);
       });
       var hop = chiActive ? v.filter(function(x){ return x.status!=='INACTIVE'; }) : v;
+      /* CẢ NHÓM CHỈ CÒN BẢN GỘP → VẪN PHẢI GỢI Ý BẢN ĐƠN VỊ NHỎ (vá 20/08/2026, sự cố C2080 — xem
+         NHAN-DIEN-SKU.md 5b.10). Kiểm kê đếm bằng đơn vị NHỎ NHẤT, mà bản đơn vị nhỏ của một mặt
+         hàng thường mang tồn 0 (tồn được ghi hết vào bản cuộn, hoặc nó sống ở kho khác) ⇒ luật
+         "ACTIVE trước" chốt 19/08 lại che đúng cái SKU cần đếm. Chỉ mở ngoại lệ khi MỌI dòng còn
+         sống của nhóm đều là hàng đóng gói — tức không còn lựa chọn đếm được nào khác. Nhóm chết
+         hoàn toàn (không dòng nào sống) vẫn KHÔNG được gợi ý, y như cũ. */
+      var dvNhoThay = false;
+      var conSong = v.filter(function(x){ return x.status!=='INACTIVE'; });
+      if (conSong.length && conSong.every(function(x){ return x.gop || x.type==='COMBO'; })){
+        var nhoHon = v.filter(function(x){ return x.status==='INACTIVE' && x.type!=='COMBO' && !x.gop; });
+        /* v đã sắp nên nhoHon vào theo đơn vị nhỏ nhất trước. Lọc trùng vì ở chế độ "xem cả INACTIVE"
+           thì hop CHÍNH LÀ v (đã chứa mấy dòng này) — không lọc là đại diện đúng nhưng danh sách
+           biến thể mất một dòng. */
+        if (nhoHon.length){
+          hop = nhoHon.concat(hop.filter(function(x){ return nhoHon.indexOf(x)<0; }));
+          dvNhoThay = true;                                          // để thẻ nói được VÌ SAO đại diện là dòng tồn 0
+        }
+      }
       if (!hop.length) return;                                       // cả nhóm đã chết -> không gợi ý
       var dd = hop[0], diemMax = 0;
       for (var z=0; z<v.length; z++) if (v[z].diem>diemMax) diemMax = v[z].diem;
@@ -8783,6 +8803,9 @@ var NDS_ENGINE = (function(){
         return { sku:x.sku, pn:x.pn, donVi:x.donVi, dv:x.dv, status:x.status, qty:x.qty, q:x.q, gop:x.gop };
       });
       dd.viDonVi = dd.bienThe.some(function(x){ return x.q>dd.q; });
+      /* MẶT HÀNG còn sống hay không — không phải riêng dòng đại diện (dùng ở luật cứng ACTIVE). */
+      dd.song = v.some(function(x){ return x.status!=='INACTIVE'; });
+      dd.dvNhoThay = dvNhoThay && dd.status==='INACTIVE';
       got.push(dd);
     });
     /* THỨ TỰ XẾP HẠNG — ACTIVE/NORMAL là LUẬT CỨNG, đứng TRÊN điểm số (chốt 19/08/2026).
@@ -8800,10 +8823,15 @@ var NDS_ENGINE = (function(){
        Ngoại lệ duy nhất đứng trên tất cả: tem in THẲNG mã SKU nội bộ (laSku) — người ta dán mã nào
        thì trả mã đó, kể cả mã đó là combo. */
     got.sort(soSanh);
+    /* "Còn sống" tính theo CẢ MẶT HÀNG, không theo riêng dòng đại diện (vá 20/08/2026): khi cả nhóm
+       chỉ còn bản cuộn thì đại diện là bản đơn vị nhỏ đã chết — nếu xếp nó như SKU chết thì mọi dòng
+       ACTIVE khác, kể cả dòng 50% chỉ khớp một chữ chung, sẽ vượt lên trên nó. `song` do bước gom
+       biến thể đặt; dòng không đi qua bước đó (ghim thẳng từ sổ tay) thì đọc `status` như cũ. */
+    function chetNhom(x){ return (x.song===undefined) ? (x.status==='INACTIVE') : !x.song; }
     function soSanh(a,b){
       if (a.laSku!==b.laSku) return a.laSku?-1:1;
-      var sa=(a.status==='INACTIVE')?1:0, sb=(b.status==='INACTIVE')?1:0;
-      if (sa!==sb) return sa-sb;                          // ACTIVE trước — luật cứng
+      var sa=chetNhom(a)?1:0, sb=chetNhom(b)?1:0;
+      if (sa!==sb) return sa-sb;                          // MẶT HÀNG còn sống trước — luật cứng
       /* ═══ CÓ MÃ TEM — đứng NGAY SAU ACTIVE, TRÊN cả luật hàng đóng gói ═══
          Hễ có MỘT mã tem khớp tuyệt đối danh mục thì mọi SKU mang mã đó phải đứng trên mọi SKU
          KHÔNG mang, bất kể điểm. Sự cố sinh ra luật này (19/08/2026): tem in F9-5374 mà AI không
@@ -8836,7 +8864,16 @@ var NDS_ENGINE = (function(){
            Sổ tay lỡ học COMBO của cùng mặt hàng: cùng mức ⇒ COMBO vẫn xuống  ✓
            Sổ tay chốt SKU không mang mã: khác mức ⇒ đóng gói im, SỔ TAY quyết  ✓ */
       if (ma1===ma2){
-        var ga=((a.type==='COMBO')||a.gop)?1:0, gb=((b.type==='COMBO')||b.gop)?1:0;
+        /* HAI BẬC RIÊNG, COMBO TRƯỚC GỘP (vá 20/08/2026). Trước đó `(COMBO || gop)` bị gộp thành MỘT
+           bậc, nên khi hai dòng CÙNG là hàng đóng gói thì bậc này im hẳn và thứ tự rơi xuống TỒN —
+           tức COMBO tồn nhiều hơn thì COMBO lên #1, đúng thứ luật kho cấm. Ca thật đo được trên tem
+           C2080: 422266550 (Normal, "Cuộn 5000m", tồn 32) vs 422394068 ((Combo), cùng "Cuộn 5000m",
+           tồn 154 ở kho 1178) — hôm nay NORMAL thắng chỉ vì phạm vi danh mục chỉ thấy 12 của kho
+           1177; tồn đổi chiều một cái là COMBO chiếm hạng 1. `type==='COMBO'` là DỮ LIỆU của WMS,
+           `gop` là suy ra từ tên đơn vị, nên không được để chúng triệt tiêu nhau. */
+        var ca=(a.type==='COMBO')?1:0, cb=(b.type==='COMBO')?1:0;
+        if (ca!==cb) return ca-cb;
+        var ga=a.gop?1:0, gb=b.gop?1:0;
         if (ga!==gb) return ga-gb;
       }
       /* SỔ TAY (người đã tự tay xác nhận cho ĐÚNG tem này) đứng trên mọi suy đoán của máy. */
