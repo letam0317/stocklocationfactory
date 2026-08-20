@@ -919,6 +919,63 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
   border-radius:8px;background:var(--surface);color:var(--ink);max-width:190px}
 #prBody .prdel{background:0;border:0;color:var(--ink3);cursor:pointer;font-size:17px;line-height:1;padding:2px 6px;border-radius:7px}
 #prBody .prdel:hover{color:var(--bad);background:var(--hover)}
+/* ĐIỆN THOẠI: BẢNG DANH SÁCH IN → THẺ (20/08/2026, ảnh báo lỗi từ máy thật).
+   Triệu chứng: `<table>` 6 cột bị bóp trong màn 390px — cột "Tên sản phẩm" co còn MỘT ký tự, chữ
+   xếp dọc thành "T ê n s ả n p h…", các dòng bị cắt và phải kéo ngang mới đọc được.
+   Đây đúng bài học đã ghi ở pop-up chi tiết phiếu Kiểm kê: **trên điện thoại thì mỗi dòng là một THẺ,
+   đừng ép bảng co**. Làm bằng CSS THUẦN (không sửa JS/markup của khối in) nên không đụng gì tới đường
+   dựng bảng: `thead` ẩn, mỗi `<tr>` thành lưới 3 cột và các `<td>` xếp theo `grid-area`:
+       [ SKU ........... số tem · × ]
+       [ tên hàng (ngắt dòng, 3 dòng) ]
+       [ ĐVT ......... mẫu tem (full) ]
+   Nhãn cột được trả lại bằng `::before` (ĐVT / Số tem) vì `thead` đã ẩn. */
+@media(max-width:640px){
+  #prmodal .modalbody{overflow-x:hidden;padding:0 12px 14px}
+  #prmodal .mtbl{display:block;font-size:13px}
+  #prmodal .mtbl thead{display:none}
+  #prmodal .mtbl tbody{display:block}
+  #prmodal .mtbl tr{display:grid;grid-template-columns:1fr auto auto;
+    grid-template-areas:"sku sl del" "pn pn pn" "dv mau mau";
+    gap:7px 9px;align-items:center;padding:11px 12px;margin:0 0 9px;
+    border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:var(--shadow)}
+  #prmodal .mtbl tbody tr:hover{background:var(--surface)}
+  #prmodal .mtbl td{display:block;border:0;padding:0;white-space:normal}
+  #prmodal .mtbl td:nth-child(1){grid-area:sku;font-size:15px;font-variant-numeric:tabular-nums}
+  #prmodal .mtbl td:nth-child(2){grid-area:pn;min-width:0;color:var(--ink2);font-size:12px;line-height:1.5;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  #prmodal .mtbl td:nth-child(3){grid-area:dv;font-size:12px;color:var(--ink3);white-space:nowrap}
+  #prmodal .mtbl td:nth-child(3)::before{content:'ĐVT: ';color:var(--muted)}
+  #prmodal .mtbl td:nth-child(4){grid-area:mau;min-width:0}
+  #prmodal .mtbl td:nth-child(5){grid-area:sl;justify-self:end;white-space:nowrap;font-size:12px;color:var(--ink3)}
+  #prmodal .mtbl td:nth-child(5)::before{content:'Số tem ';color:var(--muted)}
+  #prmodal .mtbl td:nth-child(6){grid-area:del;justify-self:end}
+  #prmodal .mtbl td[colspan]{grid-column:1/-1}
+  #prBody select.prmau{width:100%;max-width:none;min-height:36px}
+  #prBody input.prsl{width:58px;min-height:36px}
+  #prBody .prdel{font-size:22px;padding:4px 8px}
+  /* Hai ô "áp cho tất cả": nhãn dài chiếm nửa bề rộng nên ô chọn bị cắt mất chữ — xếp DỌC lại. */
+  /* HAI Ô "ÁP CHO TẤT CẢ" GỘP MỘT HÀNG, NHÃN RÚT NGẮN.
+     Bản đầu xếp DỌC (nhãn trên, ô dưới) thì hết đè nhau nhưng ngốn 130px chiều dọc — trên màn 844px
+     chỉ còn thấy ĐÚNG MỘT thẻ trong danh sách. Nay: một hàng `1fr 104px`, nhãn dài
+     "ÁP MẪU TEM CHO TẤT CẢ" rút thành "MẪU"/"SL" bằng `font-size:0` + `::before` (đổi chữ hiển thị mà
+     KHÔNG sửa markup — khối in đang được lượt khác sửa, càng ít chạm càng tốt).
+     `.mfilters .fld` đóng cứng `height:32px`; giữ nguyên chiều cao đó nhưng nới lên 36px cho ngón tay. */
+  #prmodal .mfilters{padding:0 12px 10px;gap:8px;grid-template-columns:1fr 104px}
+  #prmodal .mfilters .fld{height:36px;padding:0 6px 0 10px;border-radius:999px}
+  #prmodal .mfilters .fld label{font-size:0;padding-right:8px;margin-right:8px;letter-spacing:0}
+  #prmodal .mfilters .fld label::before{font-size:9.5px;font-weight:750;letter-spacing:.06em;color:var(--muted)}
+  #prmodal .mfilters .fld:nth-child(1) label::before{content:'MẪU'}
+  #prmodal .mfilters .fld:nth-child(2) label::before{content:'SL'}
+  /* Chiều cao ĐOÁN ĐƯỢC cho hai vùng cuộn: danh sách thẻ và khung xem trước 1:1 (3 con tem cỡ thật
+     chiếm gần hết màn hình nếu để tự do). Nút "In" ở chân modal vì vậy luôn nhìn thấy. */
+  #prmodal .modalbody{max-height:40vh}
+  #prmodal .pr-xem{max-height:30vh;overflow:auto}
+  #prmodal #prMauAll{width:100%;max-width:none}
+  #prmodal #prSlAll{width:100%!important;text-align:center}
+  #prmodal .prfoot{padding:12px}
+  #prmodal .modalhd{padding:14px 12px 10px}
+  #prmodal .msum{padding:0 12px 8px}
+}
 .prfoot{display:flex;align-items:center;gap:10px;padding:14px 22px;border-top:1px solid var(--line);flex-wrap:wrap}
 .prfoot .sp{flex:1}
 .prfoot button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;
@@ -938,11 +995,19 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
 .pr-tem .pr-sku-mini{font-size:2.4mm;font-weight:700}
 .pr-tem .pr-pn{font-size:2.1mm;line-height:1.25;text-align:center;max-height:5.4mm;overflow:hidden}
 .pr-tem .pr-pn3{font-size:2.4mm;max-height:9mm}
-.pr-tem .pr-pn5{font-size:2.3mm;max-height:16mm;-webkit-line-clamp:6}
+/* Tên hàng in NGUYÊN VĂN nên phải chừa chỗ cho tên dài (90-150 ky tu la thuong): cỡ chữ 1,9mm,
+   dòng sát nhau, cho tới 11 dòng trong 22mm — hết chỗ thì cắt bằng overflow chứ không thêm "…",
+   vì "…" giữa tên hàng dễ bị đọc thành ký tự thật. */
+.pr-tem .pr-pn5{font-size:1.9mm;line-height:1.15;max-height:22mm;word-break:break-word}
 .pr-tem .pr-dv{font-size:2mm;color:#333}
-/* Khung viền mảnh của tem dọc (form gốc có object `Box 1`): giúp thấy rìa con tem khi in liền cuộn */
+/* Khung viền mảnh của tem dọc (form gốc có object `Box 1`): giúp thấy rìa con tem khi in liền cuộn.
+   `justify-content:flex-start` + dòng chân `margin-top:auto` = mã SKU/mã vạch dính đỉnh, dòng ĐVT
+   dính đáy, tên hàng nở ra ở giữa — đúng thứ tự người dùng chốt 20/08/2026. */
 .pr-tem .pr-khung{border:0.3mm solid #000;border-radius:0.8mm;width:100%;height:100%;box-sizing:border-box;
-  padding:1mm 1.2mm;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.7mm;overflow:hidden}
+  padding:1mm 1.2mm;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:0.6mm;overflow:hidden}
+/* Dòng chân CHÔN CỨNG ở đáy, canh giữa: ĐVT + ngày in gộp một dòng */
+.pr-tem .pr-chan{margin-top:auto;font-size:2mm;color:#000;text-align:center;white-space:nowrap;
+  border-top:0.2mm solid #000;padding-top:0.6mm;width:100%}
 /* MỘT HÀNG GIẤY = MỘT TRANG IN: 2 con tem nằm cạnh nhau, cách nhau đúng khe dọc của giấy.
    Ô trống (hàng cuối lẻ tem) vẫn chiếm chỗ để tem bên trái không bị đẩy lệch. */
 .pr-hang{display:flex;gap:0;align-items:flex-start}
@@ -1946,7 +2011,9 @@ body.side-anim{overflow-x:clip}
    bên trái, nhãn cảnh báo "lệch …" bên phải — trước đây nhãn lệch nằm trên hàng đầu cùng SKU, máy
    hẹp thì nó tự xuống dòng và chừa một dải trống. Mũi tên ▸ chuyển sang ::before của .nds-sumt để
    summary chỉ còn ĐÚNG 2 flex item, nhờ vậy space-between không xé mũi tên khỏi chữ. */
-.nds-more>summary{display:flex;justify-content:space-between;align-items:center;gap:8px}
+/* Hàng này nay giữ BA thứ (chữ tóm tắt · nhãn "lệch …" · nút "In tem") nên phải cho WRAP: máy hẹp mà
+   nhãn lệch dài ("lệch mã màu, chi số Tex") thì thà xuống dòng còn hơn đẩy nút ra khỏi thẻ. */
+.nds-more>summary{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
 .nds-sumt::before{content:'▸ ';color:var(--ink3)}
 .nds-more[open]>summary .nds-sumt::before{content:'▾ '}
 .nds-sumt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -10818,12 +10885,19 @@ var PR_TEM = (function(){
     't40x60': { ten: 'Tem SKU 40 × 60 mm (2 tem/hàng — giấy đang lắp)', w: 40, h: 60, mm: 0.26, cao: 11,
       /* Tem DỌC: mã SKU trên cùng cho dễ đọc khi tem đã dán, rồi mã vạch, rồi tên hàng nhiều dòng.
          Khung viền mảnh như form gốc (`Box 1`) để mắt bắt được rìa tem khi 2 tem nằm sát nhau. */
+      /* BỐ CỤC CHỐT 20/08/2026 (người dùng quyết, sau khi soi tem in thử thật):
+           ① MÃ SKU + MÃ VẠCH ở TRÊN CÙNG — thứ phải quét/đọc được ngay, không phải tìm;
+           ② TÊN HÀNG nguyên văn ở giữa, chiếm hết chỗ còn lại;
+           ③ ĐVT + NGÀY IN gộp MỘT dòng, CHÔN CỨNG ở đáy và canh giữa (margin-top:auto) — nhờ vậy
+              tên hàng dài hay ngắn thì dòng chân vẫn nằm đúng một chỗ, tem nào cũng giống tem nào. */
       ve: function(d, esc){
         return '<div class="pr-khung">' +
           '<div class="pr-sku">' + esc(d.sku) + '</div>' +
-          svg(d.sku, { mm: 0.26, cao: 11 }) +
-          '<div class="pr-pn pr-pn5">' + esc(cat(d.pn, 180)) + '</div>' +
-          '<div class="pr-dv">' + (d.dv ? 'ĐVT: ' + esc(d.dv) : '') + (d.dv && d.ngay ? ' · ' : '') + (d.ngay ? esc(d.ngay) : '') + '</div>' +
+          svg(d.sku, { mm: 0.26, cao: 10 }) +
+          /* TÊN HÀNG IN NGUYÊN VĂN — "có sao ghi vậy". Không cắt, không rút gọn: thủ kho đối chiếu
+             tem với tên trong WMS nên chữ phải khớp từng ký tự. */
+          '<div class="pr-pn pr-pn5">' + esc(d.pn) + '</div>' +
+          '<div class="pr-chan">' + (d.dv ? 'ĐVT: ' + esc(d.dv) : '') + (d.dv && d.ngay ? ' · ' : '') + (d.ngay ? esc(d.ngay) : '') + '</div>' +
           '</div>';
       } },
     't42x62': { ten: 'Tem SKU 42,5 × 62 mm (form sku.btw)', w: 42.5, h: 62, mm: 0.26, cao: 11,
