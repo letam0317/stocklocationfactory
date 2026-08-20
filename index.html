@@ -5045,7 +5045,10 @@ function plgVeFoot(T){
   var el=document.getElementById('plgFoot'); if(!el) return;
   el.innerHTML=
     '<div class="pg-srcbar">'+
-      '<span class="pg-chip">Kho nguyên liệu — F0-KHO &middot; WH-MATERIAL-MTG &amp; GARMENT'+tipMuc(plgTipNguon())+'</span>'+
+      /* Nút i để NGOÀI chip: nhét vào trong thì chip (white-space:nowrap) phình thêm ~22px và tràn mép
+         phải 11px trên màn 375px — bộ rà bắt được. Ngoài chip thì nó là một phần tử riêng, thanh
+         nguồn tự wrap được. */
+      '<span class="pg-chip">Kho nguyên liệu — F0-KHO &middot; WH-MATERIAL-MTG &amp; GARMENT</span>'+tipMuc(plgTipNguon())+
       '<span class="pg-hint">'+nf(tong)+' vị trí'+(TAB_SYNC.plg?' &middot; cập nhật '+esc(fmtTime(TAB_SYNC.plg)):'')+'</span>'+
       '<button type="button" onclick="plgLamMoi(this)" title="Đọc lại tab '+esc(PLG_TAB)+' từ Google Sheet">Làm mới</button>'+
     '</div>';
