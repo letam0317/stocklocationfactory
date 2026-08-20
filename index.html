@@ -928,7 +928,7 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
    sẽ in, và số vừa chốt luôn nằm sát ngay ô nhập. */
 /* Ô Số lượng = HAI DÒNG: `.prchips` (chip đã chốt) ở trên, `.prgo` (ô nhập + nút +) ở dưới.
    Chip không bao giờ được chen ngang hàng với ô nhập — ô nhập là chỗ tay đang gõ. */
-#prBody .prchips{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;margin-bottom:6px}
+#prBody .prchips{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;margin-top:7px}
 #prBody .prgo{display:flex;gap:8px;align-items:center;justify-content:flex-end}
 #prBody .prchip{--cc:var(--accent);font-variant-numeric:tabular-nums;padding:4px 4px 4px 10px}
 /* Nút "+" phải ĐẬP VÀO MẮT (yêu cầu user): nền accent đặc, chữ trắng, có bóng — nó là thao tác chính
@@ -988,7 +988,9 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
   #prmodal .mtbl td{display:block;border:0;padding:0;white-space:normal}
   /* ô 1 = SỐ TEM: nhãn TRÊN, ô nhập DƯỚI, số canh giữa. Rộng đúng 82px của cột, không co giãn. */
   #prmodal .mtbl td:nth-child(1){grid-area:tem;font-size:11px;color:var(--ink3);min-width:0}
-  #prmodal .mtbl td:nth-child(1)::before{content:'Số tem';color:var(--muted);display:block;margin-bottom:4px}
+  /* Nhãn căn BÌA TRÁI: ô này có class `num` (căn phải cho con số) nên nhãn thừa hưởng căn phải và
+     trôi sang bên phải cột 82px — phải khai lại rõ ràng. */
+  #prmodal .mtbl td:nth-child(1)::before{content:'Số tem';color:var(--muted);display:block;margin-bottom:4px;text-align:left}
   #prmodal .mtbl td:nth-child(1) input.prsl{width:100%;text-align:center;font-size:16px;padding:9px 4px}
   /* ô 2 = SỐ LƯỢNG: ăn hết phần còn lại; ô nhập cao ≥44px, chữ to và đậm — đây là con số người dùng
      phải đọc lại để chắc không gõ nhầm số 0 nào. */
@@ -1040,6 +1042,24 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
   /* Cùng lý do `dvh` như `.modalbox`: bàn phím mở thì phần danh sách phải co lại, không thì nút
      "Xác nhận in" bị đẩy xuống dưới bàn phím. */
   #prmodal .modalbody{max-height:min(40vh,46dvh)}
+  /* Chân pop-up trên điện thoại: TÌNH TRẠNG một dòng đầy, NÚT một dòng riêng — nút chính ăn hết phần
+     còn lại và cao 46px cho ngón tay. Bản trước 4 thứ chen một hàng rồi rớt dòng lộn xộn. */
+  /* ⚠ PHẢI có tiền tố `#prmodal`: khối @media này nằm TRƯỚC phần CSS gốc của `.prfoot` trong file, mà
+     hai rule cùng độ ưu tiên thì cái ĐỨNG SAU thắng — nên `.prfoot{align-items:stretch}` ở đây bị
+     `.prfoot{align-items:center}` phía dưới đè, và nút In co lại thành hai dòng chữ 126px (bộ test
+     bắt được). Thêm `#prmodal` là 1-2-0, thắng bất kể thứ tự. */
+  #prmodal .prfoot{flex-direction:column;align-items:stretch;gap:10px;padding:12px}
+  #prmodal .prfoot .prfl{justify-content:flex-start}
+  #prmodal .prfoot .prpill{width:100%;justify-content:flex-start;white-space:normal}
+  #prmodal .prfoot .prfr{width:100%;flex-wrap:wrap}
+  #prmodal .prfoot .prfr button{min-height:46px;padding:10px 14px}
+  #prmodal .prfoot .prfr button.primary{flex:1;font-size:14.5px}
+  /* Nút lùi "In bằng máy này" chỉ hiện khi đường chính hỏng — lúc đó BA nút chen một hàng 350px làm
+     nút chính co còn 126px và chữ rớt hai dòng (bộ test bắt được). Cho nó chiếm hẳn một dòng riêng
+     phía trên, hai nút thường xuyên vẫn rộng rãi. */
+  #prmodal .prfoot .prfr #prBtnLui{flex:0 0 100%;order:-1}
+  .modalhd{padding:14px 12px}
+  .prthiet{max-width:40vw}
   #prmodal .pr-xem{max-height:30vh;overflow:auto}
   #prmodal #prMauAll{width:100%;max-width:none}
   #prmodal #prMauAll .prcb{width:100%}
@@ -1048,11 +1068,43 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
   #prmodal .modalhd{padding:14px 12px 10px}
   #prmodal .msum{padding:0 12px 8px}
 }
-.prfoot{display:flex;align-items:center;gap:10px;padding:14px 22px;border-top:1px solid var(--line);flex-wrap:wrap}
+.prfoot{display:flex;align-items:center;gap:12px;padding:14px 22px;border-top:1px solid var(--line);flex-wrap:wrap}
+.prfoot .prfl{flex:1;min-width:0;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.prfoot .prfr{display:flex;align-items:center;gap:8px;flex:0 0 auto}
 .prfoot .sp{flex:1}
 .prfoot button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;
-  padding:9px 16px;font-size:13px;font-weight:650;cursor:pointer;font-family:inherit}
-.prfoot button.primary{background:var(--accent);color:var(--accent-text);border-color:transparent}
+  padding:10px 18px;font-size:13px;font-weight:650;cursor:pointer;font-family:inherit;
+  transition:background .15s var(--ease),border-color .15s var(--ease),transform .12s var(--ease)}
+.prfoot button:hover{background:var(--hover)}
+.prfoot button:active{transform:translateY(1px)}
+.prfoot button.phu{color:var(--ink2)}
+.prfoot button.phu:hover{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 40%,var(--line))}
+.prfoot button.primary{background:var(--accent);color:var(--accent-text);border-color:transparent;
+  padding:10px 22px;font-weight:750;box-shadow:0 2px 10px color-mix(in srgb,var(--accent) 34%,transparent)}
+.prfoot button.primary:hover{background:var(--accent);filter:brightness(1.07)}
+.prfoot button.primary:disabled{opacity:.5;box-shadow:none;cursor:not-allowed}
+/* TÌNH TRẠNG MÁY IN dạng "viên thuốc" có ĐÈN: một chấm màu nói trạng thái nhanh hơn mọi câu chữ, và
+   nó là thứ người dùng ngó vào trước khi bấm In. Bốn màu: xanh sẵn sàng · vàng cảnh báo · đỏ đang
+   chặn · xám chưa rõ. */
+.prpill{--pc:var(--muted);display:inline-flex;align-items:center;gap:8px;padding:7px 13px;border-radius:999px;
+  font-size:12px;font-weight:700;line-height:1.2;white-space:nowrap;
+  color:color-mix(in srgb,var(--pc) 72%,var(--text));
+  background:color-mix(in srgb,var(--pc) 13%,transparent);
+  border:1px solid color-mix(in srgb,var(--pc) 34%,transparent)}
+.prpill::before{content:'';width:9px;height:9px;border-radius:50%;background:var(--pc);flex:0 0 9px;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--pc) 22%,transparent)}
+.prpill.pp-ok{--pc:var(--good)} .prpill.pp-warn{--pc:var(--warn)}
+.prpill.pp-bad{--pc:var(--bad)} .prpill.pp-idk{--pc:var(--muted)}
+/* Đang chặn thì đèn NHÁY — người dùng đang định bấm In phải bị chặn mắt lại. */
+.prpill.pp-bad::before{animation:prNhay 1.15s var(--ease) infinite}
+@keyframes prNhay{0%,100%{opacity:1}50%{opacity:.25}}
+/* Đầu pop-up: tên thiết bị chôn cứng bìa phải, cạnh nút đóng. */
+.prhdr{display:flex;align-items:center;gap:10px;flex:0 0 auto}
+.prthiet{border:1px solid var(--line);background:var(--surface2);color:var(--ink2);border-radius:999px;
+  padding:6px 13px;font-size:11.5px;font-weight:650;cursor:pointer;font-family:inherit;max-width:46vw;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:.15s var(--ease)}
+.prthiet:hover{color:var(--ink);border-color:var(--accent)}
+.prthiet:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .prfoot button:disabled{opacity:.5;cursor:not-allowed}
 /* ---- Khung tem để in. Trên màn hình nó nằm trong modal (xem trước); lúc in thì @media print ẩn
    sạch phần còn lại của trang và chỉ để #prsheet ra giấy. ---- */
@@ -2571,7 +2623,15 @@ body.side-anim{overflow-x:clip}
            "+" nên không cần dạy cú pháp) và bỏ dòng phụ "N SKU · N tem · N hàng giấy" — nút ở chân
            pop-up đã ghi "Xác nhận in N tem", nói lại lần nữa chỉ là chữ. -->
       <div class="mt">In tem SKU</div>
-    </div><button class="mclose" onclick="prDong()">&times;</button></div>
+    </div>
+    <!-- TÊN THIẾT BỊ chôn cứng bìa phải TRÊN CÙNG, cùng hàng với tiêu đề: nó là "danh tính" của cái
+         máy đang bấm, không phải một điều khiển của việc in — để nó lẫn giữa mấy nút ở chân pop-up
+         thì vừa chật vừa dễ bấm nhầm. -->
+    <div class="prhdr">
+      <button type="button" class="prthiet" id="prTenMay" onclick="ndsDatTenMay()"
+        title="Tên thiết bị này — hiện trong hàng đợi in để biết đợt tem của ai. Bấm để đổi tên.">Thiết bị: …</button>
+      <button class="mclose" onclick="prDong()">&times;</button>
+    </div></div>
     <!-- Bỏ ô "áp mẫu tem" (20/08/2026): chỉ còn một khổ tem đang dùng nên không có gì để chọn. -->
     <div class="mfilters" style="align-items:end">
       <div class="fld"><label>Áp SỐ TEM cho tất cả</label>
@@ -2597,14 +2657,18 @@ body.side-anim{overflow-x:clip}
            · chip TÌNH TRẠNG MÁY IN, tự làm mới mỗi 5 giây khi pop-up đang mở (sự cố 21/08/2026: máy
              hết giấy mà không có chỗ nào báo, người dùng bấm ép in 4 lần);
            · TÊN THIẾT BỊ, để dòng "đợt tem của ai" đọc được (trước là `may-oth9uh70@hasaki.vn`). -->
-      <span class="badge" id="prMayChip" title="Tình trạng máy in tem của kho">Máy in: đang hỏi…</span>
-      <button type="button" class="fcg" id="prTenMay" onclick="ndsDatTenMay()"
-        title="Tên thiết bị này — hiện trong hàng đợi in để biết đợt tem của ai">Thiết bị: …</button>
-      <span class="hint" id="prTrangThai"></span>
-      <span class="sp"></span>
-      <button id="prBtnLui" style="display:none" onclick="prInLui()" title="Chỉ dùng khi không gửi được tới máy in của kho: in bằng hộp thoại in của máy đang cầm">In bằng máy này</button>
-      <button onclick="prXoaHet()">Xoá hết</button>
-      <button class="primary" id="prBtnIn" onclick="prIn()">Xác nhận in</button>
+      <!-- Chân pop-up chia HAI KHỐI: bên trái là TÌNH TRẠNG (đọc), bên phải là VIỆC LÀM (bấm).
+           Bản trước để 4 thứ cùng một hàng flex nên trên điện thoại chúng rớt dòng lộn xộn — đúng họ
+           lỗi với hàng nhập liệu vừa sửa. -->
+      <div class="prfl">
+        <span class="prpill pp-idk" id="prMayChip" title="Tình trạng máy in tem của kho">Máy in: đang hỏi…</span>
+        <span class="hint" id="prTrangThai"></span>
+      </div>
+      <div class="prfr">
+        <button id="prBtnLui" style="display:none" onclick="prInLui()" title="Chỉ dùng khi không gửi được tới máy in của kho: in bằng hộp thoại in của máy đang cầm">In bằng máy này</button>
+        <button class="phu" onclick="prXoaHet()">Xoá hết</button>
+        <button class="primary" id="prBtnIn" onclick="prIn()">Xác nhận in</button>
+      </div>
     </div>
   </div>
 </div>
@@ -11727,8 +11791,9 @@ function prVe(){
       /* HAI DÒNG trong ô Số lượng: chip đã chốt ở TRÊN, ô nhập + nút "+" ở DƯỚI.
          Bản trước để chip nằm CÙNG HÀNG với ô nhập nên vừa thêm 2-3 chip là ô nhập bị bóp dẹt rồi
          rớt dòng méo mó — mà ô nhập chính là chỗ tay đang gõ, không được co lại (video 21/08/2026). */
+      /* Ô nhập Ở TRÊN, số đã chốt Ở DƯỚI (đổi 21/08/2026 theo yêu cầu): tay đang gõ thì ô nhập phải
+         nằm đúng chỗ mắt đang nhìn, còn danh sách đã chốt là thứ đọc lại — nó ở dưới. */
       '<td class="num prslo">' +
-        (dsSl.length ? '<div class="prchips">' + prChipSl(r) + '</div>' : '') +
         '<div class="prgo">' +
         '<input class="prsl prsl-v" type="text" inputmode="numeric" value="' + (dsSl.length ? '0' : '') + '"' +
         ' data-s="' + esc(r.sku) + '" placeholder="—" oninput="prGoSo(this);prHienCong(this)"' +
@@ -11740,7 +11805,9 @@ function prVe(){
         '<button type="button" class="prsladd" tabindex="0" data-s="' + esc(r.sku) + '"' +
         ' title="Thêm số lượng này thành một con tem riêng"' +
         ' onclick="prCam(this.previousElementSibling)">+</button>' +
-        '</div></td>' +
+        '</div>' +
+        (dsSl.length ? '<div class="prchips">' + prChipSl(r) + '</div>' : '') +
+        '</td>' +
       '<td><b>' + esc(r.sku) + '</b></td>' +
       '<td class="pn">' + esc(r.pn) + '</td>' +
       '<td><button class="prdel" data-s="' + esc(r.sku) + '" title="Bỏ SKU này khỏi danh sách in"' +
@@ -11886,12 +11953,12 @@ function prMoTaCho(kq){
 function prMayChip(may){
   var el = document.getElementById('prMayChip');
   if (!el) return;
-  var lop = 'badge ', chu;
-  if (!may || !may.co){ lop += 'b-pend'; chu = 'Máy in: chưa rõ (máy trạm chưa báo)'; }
-  else if (may.ro){ lop += 'b-pend'; chu = 'Máy in: số liệu cũ ' + Math.round(may.tre / 1000) + 's — máy trạm có thể đã tắt'; }
-  else if (may.chan){ lop += 'b-bad'; chu = 'Máy in: ' + may.chu; }
-  else if (may.canh){ lop += 'b-warn'; chu = 'Máy in: ' + may.chu; }
-  else { lop += 'b-ok'; chu = 'Máy in: ' + may.chu; }
+  var lop = 'prpill ', chu;
+  if (!may || !may.co){ lop += 'pp-idk'; chu = 'Máy in: chưa rõ (máy trạm chưa báo)'; }
+  else if (may.ro){ lop += 'pp-idk'; chu = 'Máy in: số liệu cũ ' + Math.round(may.tre / 1000) + 's — máy trạm có thể đã tắt'; }
+  else if (may.chan){ lop += 'pp-bad'; chu = 'Máy in: ' + may.chu; }
+  else if (may.canh){ lop += 'pp-warn'; chu = 'Máy in: ' + may.chu; }
+  else { lop += 'pp-ok'; chu = 'Máy in: ' + may.chu; }
   el.className = lop;
   el.textContent = chu;
   el.title = may && may.co ? ('đọc cách đây ' + Math.round((may.tre || 0) / 1000) + ' giây' +
@@ -11901,7 +11968,11 @@ function prVeTenMay(){
   var b = document.getElementById('prTenMay');
   if (b) b.textContent = 'Thiết bị: ' + ndsTenMay();
 }
-/** Tự làm mới tình trạng máy in trong lúc pop-up đang mở (5 giây/lượt, dừng khi đóng pop-up). */
+/** Tự làm mới tình trạng máy in trong lúc pop-up đang mở.
+ *  NHỊP 900ms, không phải 5 giây (siết 21/08/2026: user báo tắt máy in 30 giây sau mới thấy đổi, bật
+ *  lại thì 120 giây). Mỗi lượt gọi Apps Script mất ~1,1s nên 900ms nghĩa là hỏi gần như liên tục —
+ *  chấp nhận được vì chỉ chạy khi pop-up đang mở, và chính lượt hỏi này cũng là tín hiệu để agent
+ *  chuyển sang đọc máy in mỗi 0,7 giây (xem cờ `xem` phía GAS). */
 var PR_DONG_HO = null;
 function prNhipMayIn(bat){
   if (PR_DONG_HO){ clearInterval(PR_DONG_HO); PR_DONG_HO = null; }
@@ -11913,7 +11984,7 @@ function prNhipMayIn(bat){
       var kq = await prGoiGas({ action: 'pr_hangdoi' });
       if (kq && kq.status === 'success') prMayChip(kq.may);
     }catch(e){}
-  }, 5000);
+  }, 900);
 }
 
 /** Mở pop-up là hỏi ngay hàng đợi: dòng trạng thái nói thật ngay từ đầu chứ không hứa suông. */
