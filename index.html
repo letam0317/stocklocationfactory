@@ -9387,7 +9387,11 @@ var NDS = { ds:null, cm:null, tokens:[], anh:null, maVach:[], loc:null, tuDong:f
   luot:0, huy:null, boRac:0, loiAI:'', dongHo:null };
 var NDS_TAB = 'SKU_MASTER';
 var NDS_CACHE = 'nds-master-v1';
-var NDS_CACHE_TTL = 12*60*60*1000;
+/* TTL 12 GIỜ → 2 GIỜ (20/08/2026). Vì sao: hôm nay danh mục được bổ sung kho MẪU lúc 11:16, thủ
+   kho quét thẻ mẫu lúc 13:18 vẫn thấy "Chưa khớp được MÃ HÀNG nào" — máy đang dùng bản cache nạp
+   từ sáng, mà 12 giờ thì phải tới tối mới hết hạn. TTL chỉ còn là lưới cuối: đường chính là SOÁT MỐC
+   ghi tab (ndsSoatMocDanhMuc) — hết cảnh phải bảo người dùng bấm "Tải lại danh mục". */
+var NDS_CACHE_TTL = 2*60*60*1000;
 var NDS_MAX_CANH = 1400;          // cạnh dài ảnh gửi AI (đủ đọc chữ nhỏ trên tem, ~200KB JPEG)
 /* OCR từng gửi 2000px với lý thuyết "OCR ăn theo độ nét từng nét chữ". ĐO THẬT 19/08/2026 trên cùng
    một tem: 2000px và 1400px cho ra CHỮ Y HỆT NHAU (thậm chí 1000px cũng đọc đúng), mà 2000px nặng
@@ -9445,7 +9449,13 @@ async function ndsTaiDanhMuc(batBuocMoi){
   try{
     if (!batBuocMoi){
       var c = ndsDocCache();
-      if (c){ NDS.nguon='bộ nhớ máy (' + fmtTime(c.at) + ')'; return ndsNapDs(c.rows); }
+      if (c){
+        NDS.cacheAt = c.at;
+        NDS.nguon='bộ nhớ máy (' + fmtTime(c.at) + ')';
+        var raC = ndsNapDs(c.rows);
+        ndsSoatMocDanhMuc();                    // dùng bản cũ NGAY, soát mốc ở nền (không bắt ai chờ)
+        return raC;
+      }
     }
     ndsTrangThai('<div class="spin"></div>Đang tải danh mục SKU nguyên liệu…');
     var resp = await gvizP(NDS_TAB, '&headers=1', 'ndsgv');
@@ -9460,9 +9470,33 @@ async function ndsTaiDanhMuc(batBuocMoi){
       ndsTrangThai('Chưa đọc được danh mục <code>' + NDS_TAB + '</code>. Kiểm tra mạng, hoặc chạy <code>node sync-sku-master.mjs</code> trên máy trạm để tạo tab.');
       return null;
     }
-    ndsLuuCache(rows); NDS.nguon='Google Sheet (vừa tải)';
+    ndsLuuCache(rows); NDS.cacheAt = Date.now(); NDS.nguon='Google Sheet (vừa tải)';
     return ndsNapDs(rows);
   } finally { NDS.dangTai=false; }
+}
+/* SOÁT MỐC GHI TAB — tự nạp lại khi danh mục trên Sheet đã đổi (20/08/2026).
+ * Sự cố: kho MẪU nhặt về 11:16, thủ kho quét 13:18 vẫn thấy "Chưa khớp được MÃ HÀNG nào" vì cache
+ * TTL 12 giờ. Bắt người dùng nhớ bấm "Tải lại danh mục" là không được — họ không có cách nào biết
+ * danh mục vừa đổi.
+ * Cách làm: dùng bản cache NGAY (không ai phải chờ), rồi hỏi mốc `LAST_SYNC_SKU_MASTER` ở NỀN bằng
+ * đúng đường JSONP mà chip giờ dữ liệu vẫn dùng (`action=lastSync`, không tốn hạn mức, không đụng
+ * WMS). Mốc mới hơn bản đang giữ ⇒ nạp lại + đối soát lại nếu đang có từ khoá trên màn hình.
+ * Đệm 60 giây: `apiAt` là đồng hồ của MÁY TRẠM còn `cache.at` là đồng hồ của điện thoại — lệch vài
+ * giây là chuyện thường, đừng vì thế mà tải lại vô ích. */
+function ndsSoatMocDanhMuc(){
+  if (NDS.dangSoatMoc || !NDS.cacheAt || typeof jsonpTs !== 'function') return;
+  NDS.dangSoatMoc = true;
+  try{
+    jsonpTs(NDS_TAB, 'ts_ndsmaster', function(ts){
+      if (!(ts > NDS.cacheAt + 60000)) return;         // chưa có bản mới -> im lặng, giữ nguyên
+      try{ localStorage.removeItem(NDS_CACHE); }catch(e){}
+      ndsTaiDanhMuc(true).then(function(ok){
+        if (!ok) return;
+        toast('Danh mục SKU vừa được cập nhật — đã nạp bản mới.','ok');
+        if (NDS.tokens && NDS.tokens.length) ndsDoiSoat();
+      });
+    });
+  }catch(e){ /* soát mốc là việc phụ: hỏng thì vẫn còn TTL 2 giờ */ }
 }
 /* Nhường luồng cho trình duyệt vẽ/nhận thao tác, rồi quay lại làm tiếp. MessageChannel không bị
    ghim sàn 4ms như setTimeout(0) nên rẻ hơn hẳn khi phải nhường vài chục lượt liền. */
