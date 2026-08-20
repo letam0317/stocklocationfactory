@@ -7750,8 +7750,17 @@ var NDS_ENGINE = (function(){
   /* Dải dấu thanh/dấu phụ Unicode (U+0300–U+036F) dựng bằng fromCharCode: viết thẳng ký tự dấu
      vào mã nguồn thì trình soạn thảo/công cụ nào chuẩn hoá NFC một cái là hỏng lặng lẽ. */
   var RE_DAU = new RegExp('[' + String.fromCharCode(0x300) + '-' + String.fromCharCode(0x36f) + ']', 'g');
+  /* KHÔNG cờ /g: `test()` của regex có /g nhớ lastIndex, gọi lần thứ hai trên cùng chuỗi lại trả
+     false — bẫy im lặng đúng kiểu làm hỏng cả chỉ mục mà không báo lỗi. */
+  var RE_NGOAI_ASCII = /[^\x00-\x7f]/;
   function boDau(s){
     s = String(s==null?'':s);
+    /* ĐƯỜNG NHANH: chuỗi TOÀN ASCII thì không có dấu nào để bỏ — mọi dấu thanh tiếng Việt, kể cả
+       đ/Đ, đều nằm ngoài ASCII, nên bản cũ cũng trả về đúng chuỗi này. Đo 20/08/2026 bằng
+       --cpu-prof: `boDau` ngốn 20,5% thời gian dựng chỉ mục, trong khi phần lớn mảnh tên hàng của
+       WMS là ASCII thuần ("Polyester", "None", "8846295", "mm", "Cuộn" thì không). Kết quả trả về
+       y hệt bản cũ, chỉ bỏ được normalize('NFD') + 3 lượt replace. */
+    if (!RE_NGOAI_ASCII.test(s)) return s;
     if (s.normalize) s = s.normalize('NFD').replace(RE_DAU,'');
     return s.replace(/đ/g,'d').replace(/Đ/g,'D');
   }
@@ -7785,7 +7794,20 @@ var NDS_ENGINE = (function(){
     t = t.replace(/\s+/g,'');
     return t;
   }
-  function loi(t){ return String(t).replace(/[^0-9a-z]/gi,''); }          // "f9-5284" -> "f95284"
+  /* "f9-5284" -> "f95284". NHỚ KẾT QUẢ: hàm này bị gọi hai kiểu đều rất nhiều lượt —
+     (1) trên TỪ KHOÁ trong `diemCap`/`tuGanGiong` (hàng trăm nghìn lượt một lượt đối soát),
+     (2) trên CẢ TÊN HÀNG trong `locDong` (5.610 tên × mỗi mảnh người gõ).
+     Đo 20/08/2026 bằng --cpu-prof: `loi` + chính regex của nó chiếm 5,4% bước tra. Hàm thuần nên
+     nhớ lại cho ra đúng con số cũ. */
+  var _loiNho = Object.create(null), _loiN = 0;
+  function loi(t){
+    var k = (typeof t === 'string') ? t : String(t);
+    var c = _loiNho[k];
+    if (c !== undefined) return c;
+    c = k.replace(/[^0-9a-z]/gi,'');
+    if (_loiN < 60000) { _loiNho[k] = c; _loiN++; }   // trần an toàn, khỏi phình vô hạn
+    return c;
+  }
 
   /* ---------- 2. BÓC TỪ KHOÁ THEO VAI ---------- */
   /* Thứ tự CÓ CHỦ Ý: rút THÔNG SỐ trước (mẫu chặt nhất) → MÃ → MÀU → còn lại là chữ/thương hiệu.
@@ -7918,6 +7940,11 @@ var NDS_ENGINE = (function(){
        Không có bước này thì 102 biến thể dây kéo 8846295 chỉ khác nhau mã màu chữ-số sẽ không bị
        cơ chế XUNG ĐỘT bắt (đo thật 18/08: 3 màu khác nhau cùng ~92%, chỉ mã màu toàn số mới bị bắt). */
     String(s).split('/').forEach(function(doan){
+      /* Đoạn KHÔNG có chữ số nào thì bước này chắc chắn không sinh ra token nào (dưới đây chỉ nhận
+         `t` có chứa số) — thoát trước cả `boDau` để khỏi chạy lại 8 mẫu thông số + mẫu mã trên đoạn
+         đó. Đo 20/08/2026: mỗi tên hàng có 6-8 đoạn, phần lớn là chữ thuần ("Polyester", "None",
+         "pcs"). Không đổi kết quả. */
+      if (!/\d/.test(doan)) return;
       var phang = boDau(doan).toLowerCase();
       var coTuMau = phang.split(/[^0-9a-z]+/).some(function(w){ return LA_MAU[w]; });
       if (!coTuMau) return;
@@ -8013,6 +8040,12 @@ var NDS_ENGINE = (function(){
   /** Điểm khớp tốt nhất của 1 từ khoá tem với 1 rổ từ khoá của SKU (0..1). */
   function khopTot(tok, ro){
     if (!ro || !ro.length) return 0;
+    /* ĐƯỜNG NHANH — KHỚP TUYỆT ĐỐI: `diemCap` cũng trả về 1 cho cặp giống nhau, nên một lượt
+       `indexOf` của máy thay được cả chuỗi lượt gọi hàm + tra bộ nhớ đệm 2 tầng cho các phần tử
+       ĐỨNG TRƯỚC cái khớp. Đo 20/08/2026 (--cpu-prof, 1.380 lượt tra): `khopTot` + `diemCap` ngốn
+       39% bước tra, mà phần lớn từ khoá đọc được đều khớp tuyệt đối vì `tuVanBan` đã lọc theo danh
+       mục trước. Không đổi một con số nào của kết quả. */
+    if (ro.indexOf(tok) >= 0) return 1;
     var best=0;
     for (var i=0;i<ro.length;i++){
       var v = diemCap(tok, ro[i]);
@@ -8414,8 +8447,36 @@ var NDS_ENGINE = (function(){
    * @param ds [{sku,pn,type,status,qty}]
    */
   function dungChiMuc(ds){
-    var idx = Object.create(null), tuVung = [];
-    for (var i=0;i<ds.length;i++){
+    var viec = dungChiMucViec(ds);
+    while (!viec.buoc(1e9)) { /* chạy một hơi — đường gọi cũ, không ai phải biết chuyện chia lô */ }
+    return viec.cm;
+  }
+  /**
+   * DỰNG CHỈ MỤC THEO LÔ — để không chặn luồng UI (20/08/2026).
+   * Vì sao: đo trong Edge thật, dựng chỉ mục 5.610 SKU mất 194ms trên PC nhưng **1.360ms khi bóp
+   * CPU 4×** và **2.205ms khi bóp 6×** (đúng tầm điện thoại thủ kho cầm ngoài kho) — cả trang đứng
+   * im suốt lúc đó, không cuộn được, bấm không phản hồi. Bước TRA thì chỉ 12ms nên tối ưu tra bao
+   * nhiêu cũng không cứu được cảm giác "trang treo" này.
+   * Cách dùng: gọi `buoc(n)` nhiều lần, mỗi lần xử tối đa `n` dòng rồi trả về false khi CHƯA xong.
+   * Khi trả về true thì `.cm` là chỉ mục hoàn chỉnh — **cùng một bản mã** với đường gọi một hơi ở
+   * trên, nên không có bản sao nào để lệch nhau.
+   */
+  function dungChiMucViec(ds){
+    var idx = Object.create(null), tuVung = [], i = 0, pha = 0;
+    var viec = { tong: ds.length, xong: false, cm: null,
+      tienDo: function(){ return ds.length ? i/ds.length : 1; },
+      buoc: function(n){
+        if (pha === 0){
+          loDong(n||600);
+          if (i >= ds.length) pha = 1;
+          return false;
+        }
+        if (pha === 1){ viec.cm = hoanTat(); viec.xong = true; pha = 2; }
+        return true;
+      } };
+    function loDong(n){
+     var het = i + n; if (het > ds.length) het = ds.length;
+     for (; i<het; i++){
       var b = bocTen(ds[i].pn); ds[i]._b = b;
       /* Đơn vị + khoá mặt hàng: tính MỘT LẦN ở đây (5.600 SKU ≈ vài ms) để mỗi lượt đối soát chỉ
          việc so `q`, không phải bóc lại chuỗi. */
@@ -8431,7 +8492,9 @@ var NDS_ENGINE = (function(){
       }
       var sk = String(ds[i].sku).toLowerCase();
       if (!idx[sk]) { idx[sk]=[i]; tuVung.push(sk); } else idx[sk].push(i);
+     }
     }
+    function hoanTat(){
     /* CHỈ MỤC 2-GRAM CỦA TỪ VỰNG — để bước tìm ứng viên khỏi quét tuyến tính cả 9.272 từ mỗi lượt.
        Vì sao 2-gram chứ không 3: một ký tự sai phá tối đa HAI 2-gram, mà từ dài ≥5 có ≥4 cái, nên
        mọi cặp mà Levenshtein-có-ngưỡng chấp nhận đều còn chung ít nhất một 2-gram ⇒ rút ngắn danh
@@ -8471,6 +8534,8 @@ var NDS_ENGINE = (function(){
     var idfGiua = dsIdf.length ? dsIdf[dsIdf.length>>1] : 1;
     return { idx:idx, tuVung:tuVung, ds:ds, gram:gram, loiIdx:loiIdx, tuNgan:tuNgan, theoSku:theoSku,
       idf:idf, idfGiua:idfGiua, soDong:N };
+    }
+    return viec;
   }
   /**
    * CHỮ KÝ của một tem — khoá tra "sổ tay tem" (thư viện tự học, xem NDS_SO ở tầng giao diện).
@@ -8517,6 +8582,31 @@ var NDS_ENGINE = (function(){
       if (tyLe(t,m)>=0.82) { daCo[m]=1; ra.push(m); }
     }
     return ra;
+  }
+  /** CÓ từ vựng nào gần giống `t` không — dừng ngay khi thấy cái đầu tiên.
+   *  Vì sao tách riêng: `tuVanBan` gọi để LỌC mảnh giấy tờ (chỉ cần biết có/không), mà một tem OCR
+   *  thật có cả chục mảnh không nằm trong danh mục ("inspector", số PO, địa chỉ) — mỗi mảnh như vậy
+   *  bản cũ phải so hết mọi ứng viên 2-gram rồi mới trả về mảng rỗng. Đo 20/08/2026: bước tách token
+   *  chiếm 40% một lượt tra sau khi bước chấm điểm đã nhanh lên. Không đổi kết quả: `coThat` chỉ
+   *  đọc `.length` của mảng đó. */
+  function coTuGanGiong(t, cm){
+    if (!cm.gram) return tuGanGiong(t, cm).length > 0;
+    var lt = loi(t), i, j, ds;
+    if (t.length>=4 && cm.loiIdx[lt] && cm.loiIdx[lt].length) return true;
+    var ung = Object.create(null);
+    for (i=0; i+2<=t.length; i++){
+      ds = cm.gram[t.substr(i,2)];
+      if (ds) for (j=0;j<ds.length;j++) ung[ds[j]] = 1;
+    }
+    for (i=0;i<cm.tuNgan.length;i++) ung[cm.tuNgan[i]] = 1;
+    var ks = Object.keys(ung);
+    for (i=0;i<ks.length;i++){
+      var m = cm.tuVung[ks[i]];
+      if (traiDaiHopNhau(t,m) && (m.indexOf(t)>=0 || t.indexOf(m)>=0)) return true;
+      if (t.length>=4 && loi(m)===lt) return true;
+      if (tyLe(t,m)>=0.82) return true;
+    }
+    return false;
   }
   /** Từ khoá tem -> danh sách chỉ số dòng ứng viên (khớp thẳng + fuzzy trên TỪ VỰNG, không phải trên bảng). */
   function ungVien(nhan, cm, tran){
@@ -8607,8 +8697,17 @@ var NDS_ENGINE = (function(){
        khoá, nên cắt là cắt mất dòng mang mã hàng mà chỉ khớp 1 từ. Nay ứng viên cân theo IDF (xem
        `ungVien`), thứ tự cắt đảo lại đúng chiều. Đo lại: **0/300 tem mô phỏng đổi Top 3** giữa trần
        4.000 và 1.200, và trên 30 lượt OCR thật thì Top-1/Top-3 y nguyên (80%/90%) tới cả trần 400.
-       Đổi lại: p95 thời gian đối soát 17,8ms → 14,6ms (đạt mốc <15ms), trung vị 7,0 → 6,6ms. */
-    var uv = phuLoc ? locKq.map(function(x){ return x.i; }) : ungVien(nhan, cm, opt.tranUngVien||1200);
+       Đổi lại: p95 thời gian đối soát 17,8ms → 14,6ms (đạt mốc <15ms), trung vị 7,0 → 6,6ms.
+
+       ⇒ HẠ TIẾP 1.200 → 500 (20/08/2026). Lý do là số đo trong TRÌNH DUYỆT THẬT, không phải Node:
+       Edge bóp CPU 4× (đúng tầm điện thoại thủ kho) cho p50 **70ms/lượt**, bóp 6× cho **111ms** —
+       tức mốc "<50ms" chỉ đạt trên PC, còn trên máy người dùng thật thì trượt. Đo lại trên 30 lượt
+       OCR thật + 400 tem mô phỏng: Top-1/Top-3 **y nguyên** ở mọi trần từ 1.200 xuống 150; thẻ hạng
+       2-3 (không phải đáp án) có đổi ở 19/430 lượt tại trần 400, 10/430 tại trần 600 — nên chọn 500
+       làm chỗ đứng, đủ rộng để không đụng vùng thẻ đổi nhiều mà vẫn cắt được hơn nửa việc chấm.
+       Nhúm dòng MANG ĐÚNG MÃ TEM vẫn được thêm vào sau bước này (xem TRAN_MA) nên trần không bao giờ
+       cắt mất bằng chứng định danh. */
+    var uv = phuLoc ? locKq.map(function(x){ return x.i; }) : ungVien(nhan, cm, opt.tranUngVien||500);
     if (opt.tat !== false){
       var gom = Object.create(null), coMa = false;
       (nhan.code||[]).forEach(function(t){
@@ -8862,7 +8961,7 @@ var NDS_ENGINE = (function(){
       if (cm.idx[t]) return true;                                    // có nguyên văn trong tên hàng
       var l = loi(t);
       if (l.length>=4 && cm.loiIdx && cm.loiIdx[l]) return true;      // chỉ khác dấu ngăn (v9b11 ~ v9-b11)
-      if (t.length>=5 && tuGanGiong(t, cm).length) return true;       // chịu lỗi OCR (jco1262 ~ jc01262)
+      if (t.length>=5 && coTuGanGiong(t, cm)) return true;            // chịu lỗi OCR (jco1262 ~ jc01262)
       return false;
     };
     VAI.forEach(function(v){
@@ -8884,7 +8983,7 @@ var NDS_ENGINE = (function(){
   function datCham(k){ KIEU_CHAM = (k === 'idf') ? 'idf' : 'vai'; _nhanKey = null; _nhanCm = null; return KIEU_CHAM; }
   function kieuCham(){ return KIEU_CHAM; }
   return { boDau:boDau, chuan:chuan, loi:loi, bocTen:bocTen, tuAI:tuAI, tuVanBan:tuVanBan, tyLe:tyLe, khopTot:khopTot, batIdf:batIdf,
-    diemMot:diemMot, dungChiMuc:dungChiMuc, timTop:timTop, donVi:donVi, khoaHang:khoaHang,
+    diemMot:diemMot, dungChiMuc:dungChiMuc, dungChiMucViec:dungChiMucViec, timTop:timTop, donVi:donVi, khoaHang:khoaHang,
     chuKy:chuKy, tachPhanTu:tachPhanTu, locDong:locDong, chuanManh:chuanManh, W:W, VAI:VAI, DV:DV,
     chamIdf:chamIdf, datCham:datCham, kieuCham:kieuCham, chuanChuoiTem:chuanChuoiTem, trongSoTu:trongSoTu };
 })();
@@ -9100,9 +9199,47 @@ async function ndsTaiDanhMuc(batBuocMoi){
     return ndsNapDs(rows);
   } finally { NDS.dangTai=false; }
 }
-function ndsNapDs(rows){
-  NDS.ds = rows;
-  NDS.cm = NDS_ENGINE.dungChiMuc(rows);
+/* Nhường luồng cho trình duyệt vẽ/nhận thao tác, rồi quay lại làm tiếp. MessageChannel không bị
+   ghim sàn 4ms như setTimeout(0) nên rẻ hơn hẳn khi phải nhường vài chục lượt liền. */
+var _ndsKenh = (typeof MessageChannel === 'function') ? new MessageChannel() : null, _ndsChoNhuong = [];
+if (_ndsKenh) _ndsKenh.port1.onmessage = function(){ var f = _ndsChoNhuong.shift(); if (f) f(); };
+function ndsNhuongLuong(){
+  return new Promise(function(r){
+    if (_ndsKenh){ _ndsChoNhuong.push(r); _ndsKenh.port2.postMessage(0); }
+    else setTimeout(r, 0);
+  });
+}
+/* DỰNG CHỈ MỤC THEO LÔ, NHƯỜNG LUỒNG GIỮA CÁC LÔ (20/08/2026).
+   Vì sao không gọi thẳng `dungChiMuc` như trước: đo trong Edge thật, bước này mất 194ms trên PC
+   nhưng **1,36s khi bóp CPU 4×** và **2,2s khi bóp 6×** — tức trên điện thoại thủ kho, cả trang
+   đứng im hơn hai giây ngay lúc mở tab (không cuộn được, bấm không ăn). Tổng thời gian tính toán
+   không giảm, nhưng luồng UI được thả ra giữa các lô nên trang vẫn cuộn/bấm được và có dòng tiến
+   độ để người dùng biết máy đang làm gì.
+   `await new Promise(r => setTimeout(r, 0))` chứ không phải requestAnimationFrame: tab có thể đang
+   ở chế độ nền (người dùng mở tab khác chờ), rAF sẽ ngủ luôn và danh mục không bao giờ dựng xong. */
+async function ndsNapDs(rows){
+  /* ⚠ BẪY ĐÃ CẮN NGAY LÚC VIẾT (bộ 92 ca bắt được): bản đầu gán `NDS.ds = rows` ở ĐÂY, trước khi
+     chỉ mục dựng xong. Nhưng `NDS.ds` chính là CỜ "danh mục đã sẵn sàng" mà `ndsDoiSoat` xem để
+     quyết định có phải chờ nạp hay không — nên một lượt đối soát chen vào giữa (ảnh vừa nhận diện
+     xong, hoặc người dùng gõ mảnh) thấy cờ đã bật mà `NDS.cm` còn null ⇒ không vẽ được thẻ nào.
+     Hồi chỉ mục dựng đồng bộ thì không có kẽ nào để chen; chia lô là mở ra kẽ đó. Gán CẢ HAI sau
+     khi xong. */
+  /* LÔ 200 DÒNG, nhường luồng sau MỖI lô. Ba cấu hình đã đo trong Edge thật (20/08/2026), cột đầu
+     là mức luồng UI bị giữ lâu nhất khi bóp CPU 4× / 6×:
+       lô 500, nhường mỗi 3 lô ......... 494ms / 848ms   (vẫn là "trang đứng")
+       ngân sách thời gian 30-40ms/lát .. 128ms / 158ms   nhưng tổng đội +36..59% vì nhường quá nhiều lượt
+       lô 200, nhường mỗi lô ...........  59ms / 122ms   tổng đội +25% (nhường bằng setTimeout)
+       lô 200 + nhường MessageChannel ..  73ms / 142ms   tổng KHÔNG đội   ← chọn cái này
+     Vì sao MessageChannel: `setTimeout(0)` bị trình duyệt ghim sàn ~4ms mỗi lượt, gần 30 lượt liền
+     là chỗ sinh ra 25% đội thêm ở dòng trên; MessageChannel nhường xong quay lại ngay.
+     Số cuối cùng đo được: bóp CPU 4× — cũ 1.188ms treo cả 1.179ms, mới 1.059ms mà treo dài nhất
+     73ms; bóp 6× — cũ 1.977/1.969, mới 1.942/142. */
+  var viec = NDS_ENGINE.dungChiMucViec(rows), n = 0;
+  while (!viec.buoc(200)){
+    if ((++n % 5) === 0) ndsTrangThai('<div class="spin"></div>Đang dựng chỉ mục danh mục… ' + Math.round(viec.tienDo()*100) + '%');
+    await ndsNhuongLuong();
+  }
+  NDS.cm = viec.cm; NDS.ds = rows;
   ndsCapNhatChan();
   return rows;
 }
