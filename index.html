@@ -922,9 +922,14 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
   font-family:'Segoe UI',Arial,sans-serif}
 .pr-tem .pr-sku{font-size:5.2mm;font-weight:800;letter-spacing:.02em;line-height:1;font-variant-numeric:tabular-nums}
 .pr-tem .pr-sku-nho{font-size:4mm}
+.pr-tem .pr-sku-mini{font-size:2.4mm;font-weight:700}
 .pr-tem .pr-pn{font-size:2.1mm;line-height:1.25;text-align:center;max-height:5.4mm;overflow:hidden}
 .pr-tem .pr-pn3{font-size:2.4mm;max-height:9mm}
+.pr-tem .pr-pn5{font-size:2.3mm;max-height:16mm;-webkit-line-clamp:6}
 .pr-tem .pr-dv{font-size:2mm;color:#333}
+/* Khung viền mảnh của tem dọc (form gốc có object `Box 1`): giúp thấy rìa con tem khi in liền cuộn */
+.pr-tem .pr-khung{border:0.3mm solid #000;border-radius:0.8mm;width:100%;height:100%;box-sizing:border-box;
+  padding:1mm 1.2mm;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.7mm;overflow:hidden}
 @media print{
   body.in-tem>*{display:none !important}
   body.in-tem #prsheet{display:block !important}
@@ -9221,6 +9226,35 @@ var NDS_ENGINE = (function(){
        chữ đọc từ TEM, không áp cho PRODUCTNAME (xem ghi chú ở chuanChuoiTem). */
     var b = bocTen(chuanChuoiTem(text)), nhan = { code:[], spec:[], color:[], brand:[] }, bo = [];
     var them = function(v,t){ if (t && nhan[v].indexOf(t)<0) nhan[v].push(t); };
+    /* ═══ SỬA CHÍNH TẢ MÃ THEO DANH MỤC (thêm 20/08/2026 — sự cố tem COATS astra C3185) ═══
+     * Sự cố: tem in "Col C3185" nhưng OCR trả về **dính liền** ("ColC3185") hoặc đọc lệch chữ
+     * ("COIC3185" — l thành I). Token thành `colc3185`, mà `cm.idx["colc3185"]` không có ⇒ luật cứng
+     * "CÓ MÃ" không bắn ⇒ tab rơi xuống chấm bằng chữ chung và đưa ra 3 cuộn chỉ astra khác màu ở
+     * 32%, kèm banner "Chưa khớp được MÃ HÀNG nào". `coTuGanGiong` chỉ GIỮ token lại chứ không SỬA
+     * nó, nên mọi bước sau vẫn tra bằng chuỗi sai.
+     * Nguyên tắc: **danh mục làm chứng, không đoán bừa** — chỉ đổi khi bản sửa CÓ THẬT trong chỉ mục:
+     *   (1) cắt tiền tố TOÀN CHỮ ≤4 ký tự (col · coi · color · art · ref · lot …) rồi tra lại;
+     *   (2) lệch ĐÚNG MỘT ký tự, cùng độ dài, và chỉ có DUY NHẤT một ứng viên (c3186 → c3185).
+     *       Có ≥2 ứng viên là mơ hồ ⇒ KHÔNG đổi, thà không khớp còn hơn khớp sai.
+     * Chỉ áp cho mảnh RA DÁNG MÃ, và chỉ khi bản gốc KHÔNG có nguyên văn trong danh mục. */
+    var suaMaTheoDanhMuc = function(t){
+      if (!cm || !cm.idx || cm.idx[t] || !laMaHinhDang(t)) return t;
+      for (var k=1; k<=4 && k < t.length-3; k++){
+        if (/[0-9]/.test(t.charAt(k-1))) break;                      // tiền tố phải TOÀN CHỮ
+        var con = t.slice(k);
+        if (cm.idx[con] && laMaHinhDang(con)) return con;
+      }
+      if (t.length < 5 || !cm.tuVung) return t;
+      var ungVien = null, dem = 0;
+      for (var i=0; i<cm.tuVung.length; i++){
+        var w = cm.tuVung[i];
+        if (w.length !== t.length || !laMaHinhDang(w)) continue;
+        var lech = 0;
+        for (var c=0; c<w.length && lech<2; c++) if (w.charAt(c) !== t.charAt(c)) lech++;
+        if (lech === 1){ if (++dem > 1) return t; ungVien = w; }      // mơ hồ -> giữ nguyên
+      }
+      return dem === 1 ? ungVien : t;
+    };
     var coThat = function(t){
       if (opt.giuHet || !cm || !cm.idx) return true;
       if (cm.idx[t]) return true;                                    // có nguyên văn trong tên hàng
@@ -9230,14 +9264,39 @@ var NDS_ENGINE = (function(){
       return false;
     };
     VAI.forEach(function(v){
-      (b[v]||[]).forEach(function(t){
+      (b[v]||[]).forEach(function(t0){
+        var t = (v === 'code') ? suaMaTheoDanhMuc(t0) : t0;           // chỉ sửa chính tả ở vai MÃ
         if (coThat(t)) them(v, t);
-        else if (bo.indexOf(t)<0) bo.push(t);
+        else if (bo.indexOf(t0)<0) bo.push(t0);
       });
     });
     napBangChung(nhan, cm);
     nhan.bo = bo;
     return nhan;
+  }
+
+  /** MÃ GẦN GIỐNG trong danh mục cho một mảnh đọc được — dùng cho lời mời "Ý bạn là…" khi tem đọc
+   *  lệch mà `suaMaTheoDanhMuc` không dám tự đổi (≥2 ứng viên). Trả mã CÓ THẬT, xếp theo số dòng. */
+  function maGanGiong(t, cm, tran){
+    t = chuan(String(t==null?'':t));
+    if (!t || !cm || !cm.idx || cm.idx[t] || !laMaHinhDang(t)) return [];
+    var ra = [];
+    for (var k=1; k<=4 && k < t.length-3; k++){
+      if (/[0-9]/.test(t.charAt(k-1))) break;
+      var con = t.slice(k);
+      if (cm.idx[con] && laMaHinhDang(con) && ra.indexOf(con)<0) ra.push(con);
+    }
+    if (t.length >= 5 && cm.tuVung){
+      for (var i=0; i<cm.tuVung.length; i++){
+        var w = cm.tuVung[i];
+        if (w.length !== t.length || !laMaHinhDang(w) || ra.indexOf(w)>=0) continue;
+        var lech = 0;
+        for (var c=0; c<w.length && lech<2; c++) if (w.charAt(c) !== t.charAt(c)) lech++;
+        if (lech === 1) ra.push(w);
+      }
+    }
+    ra.sort(function(a,b){ return (cm.idx[b]||[]).length - (cm.idx[a]||[]).length; });
+    return ra.slice(0, tran||4);
   }
 
   /** Bật/tắt trọng số IDF trong bản chấm THEO VAI — chỉ để đối chứng. */
@@ -9249,7 +9308,7 @@ var NDS_ENGINE = (function(){
   function kieuCham(){ return KIEU_CHAM; }
   return { boDau:boDau, chuan:chuan, loi:loi, bocTen:bocTen, tuAI:tuAI, tuVanBan:tuVanBan, tyLe:tyLe, khopTot:khopTot, batIdf:batIdf,
     diemMot:diemMot, dungChiMuc:dungChiMuc, dungChiMucViec:dungChiMucViec, timTop:timTop, donVi:donVi, khoaHang:khoaHang,
-    chuKy:chuKy, tachPhanTu:tachPhanTu, locDong:locDong, chuanManh:chuanManh, W:W, VAI:VAI, DV:DV,
+    chuKy:chuKy, tachPhanTu:tachPhanTu, locDong:locDong, chuanManh:chuanManh, maGanGiong:maGanGiong, W:W, VAI:VAI, DV:DV,
     chamIdf:chamIdf, datCham:datCham, kieuCham:kieuCham, chuanChuoiTem:chuanChuoiTem, trongSoTu:trongSoTu };
 })();
 /*</NDS-ENGINE>*/
@@ -10498,6 +10557,7 @@ function ndsVeKetQua(ms, themInactive){
       '<b>Chưa khớp được MÃ HÀNG nào.</b> Mấy gợi ý dưới đây chỉ dựa vào chữ chung (loại hàng · nhà cung cấp · '+
       'chất liệu · màu) — hàng trăm SKU giống nhau ở mấy chữ đó, nên <b>đừng chọn vội</b>. '+
       'Gõ mã in trên tem (vd <code>F9-5374</code>) vào ô <b>Mã trên tem</b> ở bước 1 là ra đúng ngay.'+
+      ndsMoiChonMa()+
       ' <button type="button" class="kktab nds-alt" onclick="ndsTroMa()">Nhập mã</button></div>';
   }
   /* BỎ HẲN 20/08/2026 (yêu cầu user): dải "N gợi ý dưới đây đều mang đúng mã X — chỉ khác nhau ở
@@ -10510,6 +10570,27 @@ function ndsVeKetQua(ms, themInactive){
      dữ kiện nào mà chỉ dịch Top 3 xuống. */
   c.innerHTML=canh+NDS.ket.map(function(r,i){ return ndsTheKetQua(r,i+1); }).join('');
   ndsCapNhatChan(ms);
+}
+/* "Ý BẠN LÀ…" — mời chọn mã CÓ THẬT gần giống mảnh vừa đọc (thêm 20/08/2026, sự cố tem C3185).
+ * Vì sao cần: tem in "Col C3185" mà OCR đọc lệch một số ("C3186") thì `suaMaTheoDanhMuc` KHÔNG dám
+ * tự đổi — danh mục có cả `c3185` và `c3184`, đoán bừa là chọn sai hàng. Nhưng bỏ mặc người dùng ở
+ * cái banner "chưa khớp mã" cũng vô ích: họ đang cầm tem, chỉ cần thấy 2-3 mã gần nhất là nhận ra
+ * ngay cái nào đúng. Bấm một cái là chạy đúng đường "Tra theo mã" sẵn có.
+ * Chỉ liệt mã CÓ THẬT trong danh mục (maGanGiong tra bằng chỉ mục), không bao giờ tự nghĩ ra mã. */
+function ndsMoiChonMa(){
+  if (!NDS.cm || !NDS_ENGINE.maGanGiong) return '';
+  var ds = [], da = Object.create(null);
+  (NDS.tokens||[]).forEach(function(k){
+    if (k.vai !== 'code' || NDS.cm.idx[k.t]) return;
+    NDS_ENGINE.maGanGiong(k.t, NDS.cm, 3).forEach(function(m){ if (!da[m]){ da[m]=1; ds.push(m); } });
+  });
+  if (!ds.length) return '';
+  return '<div class="nds-magoi" style="margin-top:8px"><b>Ý bạn là:</b>' + ds.slice(0,4).map(function(m){
+    /* Dấu nháy đơn viết bằng thực thể HTML `&#39;` — an toàn hơn escape lồng nhiều tầng. */
+    return '<button type="button" class="kktab nds-alt" onclick="ndsDungMa(&#39;'+esc(m)+'&#39;)" '+
+      'title="Mã này CÓ trong danh mục — bấm để tra">'+esc(m)+
+      ' <span class="nds-son">'+((NDS.cm.idx[m]||[]).length)+'</span></button>';
+  }).join('') + '</div>';
 }
 function ndsTroMa(){
   var o=document.getElementById('ndsMa'); if (!o) return;
@@ -10634,27 +10715,50 @@ var PR_TEM = (function(){
    * `d` = {sku, pn, dv, ton, ngay}
    */
   function cat(s, n){ s = String(s == null ? '' : s); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
+  /* KHỔ TEM = KHỔ GIẤY THẬT ĐANG LẮP, đọc ra từ chính các form BarTender của kho (20/08/2026 —
+     script `_DOC-MAY-IN.ps1` chạy trên máy DESKTOP-JE75K38, máy cắm 2 máy in tem qua USB):
+       · sku.btw + SKU_SAMPLE.btw (sửa 20/08/2026, in ra TSC PE200 · USB031)  -> 42,5 × 62 mm
+       · adult_us_noprice_backup10.btw (18/08/2026, TSC PE200)                -> 46   × 76 mm
+       · Barcode.btw (18/08/2026, Zebra ZT230 203dpi)                         -> 42   × 25 mm
+       · barcodetem4.btw (22/01/2026, TSC PE200)                              -> 21,6 × 12,7 mm
+     Ba khổ tôi tự nghĩ ra lúc dựng Bước 1 (50×30 · 70×40 · 40×20) đã BỎ: không khổ nào có giấy thật.
+     Mã vạch vẫn là **Code 128** — đúng cái template đang dùng (bóc từ sku.btw: object `Barcode 1`,
+     `Barcode 2`, kiểu `Code128`), dù tên form là "SKU-UPC-A-Them-2-so-00" (tên cũ để lại). */
   var MAU = {
-    't50x30': { ten: 'Tem kho 50 × 30 mm', w: 50, h: 30, mm: 0.26, cao: 9,
+    't42x62': { ten: 'Tem SKU 42,5 × 62 mm (TSC PE200)', w: 42.5, h: 62, mm: 0.26, cao: 11,
+      /* Tem DỌC: mã SKU trên cùng cho dễ đọc khi tem đã dán, rồi mã vạch, rồi tên hàng nhiều dòng.
+         Khung viền mảnh như form gốc (`Box 1`) để mắt bắt được rìa tem khi cuộn giấy in liền nhau. */
       ve: function(d, esc){
-        return '<div class="pr-sku">' + esc(d.sku) + '</div>' +
-          svg(d.sku, { mm: 0.26, cao: 9 }) +
-          '<div class="pr-pn">' + esc(cat(d.pn, 78)) + '</div>' +
-          (d.dv ? '<div class="pr-dv">ĐVT: ' + esc(d.dv) + '</div>' : '');
+        return '<div class="pr-khung">' +
+          '<div class="pr-sku">' + esc(d.sku) + '</div>' +
+          svg(d.sku, { mm: 0.26, cao: 11 }) +
+          '<div class="pr-pn pr-pn5">' + esc(cat(d.pn, 190)) + '</div>' +
+          '<div class="pr-dv">' + (d.dv ? 'ĐVT: ' + esc(d.dv) : '') + (d.dv && d.ngay ? ' · ' : '') + (d.ngay ? esc(d.ngay) : '') + '</div>' +
+          '</div>';
       } },
-    't70x40': { ten: 'Tem lớn 70 × 40 mm (có ngày in)', w: 70, h: 40, mm: 0.30, cao: 11,
+    't46x76': { ten: 'Tem lớn 46 × 76 mm (TSC PE200)', w: 46, h: 76, mm: 0.28, cao: 12,
       ve: function(d, esc){
-        return '<div class="pr-sku">' + esc(d.sku) + '</div>' +
-          svg(d.sku, { mm: 0.30, cao: 11 }) +
-          '<div class="pr-pn pr-pn3">' + esc(cat(d.pn, 150)) + '</div>' +
-          '<div class="pr-dv">' + (d.dv ? 'ĐVT: ' + esc(d.dv) + ' · ' : '') + 'in ' + esc(d.ngay || '') + '</div>';
+        return '<div class="pr-khung">' +
+          '<div class="pr-sku">' + esc(d.sku) + '</div>' +
+          svg(d.sku, { mm: 0.28, cao: 12 }) +
+          '<div class="pr-pn pr-pn5">' + esc(cat(d.pn, 260)) + '</div>' +
+          '<div class="pr-dv">' + (d.dv ? 'ĐVT: ' + esc(d.dv) : '') + (d.dv && d.ngay ? ' · ' : '') + (d.ngay ? esc(d.ngay) : '') + '</div>' +
+          '</div>';
       } },
-    't40x20': { ten: 'Tem nhỏ 40 × 20 mm (chỉ mã)', w: 40, h: 20, mm: 0.22, cao: 7,
+    't42x25': { ten: 'Tem ngang 42 × 25 mm (Zebra ZT230)', w: 42, h: 25, mm: 0.24, cao: 8,
       ve: function(d, esc){
-        return '<div class="pr-sku pr-sku-nho">' + esc(d.sku) + '</div>' + svg(d.sku, { mm: 0.22, cao: 7 });
+        return '<div class="pr-sku pr-sku-nho">' + esc(d.sku) + '</div>' +
+          svg(d.sku, { mm: 0.24, cao: 8 }) +
+          '<div class="pr-pn">' + esc(cat(d.pn, 44)) + '</div>';
+      } },
+    't22x13': { ten: 'Tem mini 21,6 × 12,7 mm (chỉ mã)', w: 21.6, h: 12.7, mm: 0.15, cao: 5,
+      /* Khổ này quá nhỏ cho mã vạch dài: SKU 9 chữ số cần 134 module. Ở 0,15mm/module là 20,1mm —
+         vừa đúng bề rộng tem, không còn chỗ cho lề. Nên chỉ in mã vạch + số, không tên hàng. */
+      ve: function(d, esc){
+        return '<div class="pr-sku pr-sku-mini">' + esc(d.sku) + '</div>' + svg(d.sku, { mm: 0.15, cao: 5 });
       } }
   };
-  var MAU_MAC_DINH = 't50x30';
+  var MAU_MAC_DINH = 't42x62';
   function mau(k){ return MAU[k] || MAU[MAU_MAC_DINH]; }
 
   /* ---------- 3. TÍNH TOÁN TRÊN DANH SÁCH CHỜ ---------- */
