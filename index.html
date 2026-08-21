@@ -9402,6 +9402,57 @@ var NDS_ENGINE = (function(){
     ra += s.slice(tu);
     return { maChu:maChu, catNhan:ra };
   }
+  /* ═══ SỬA CHÍNH TẢ MÃ THEO DANH MỤC (20/08/2026 — sự cố tem COATS astra C3185) ═══
+   * Sự cố: tem in "Col C3185" nhưng OCR trả về **dính liền** ("ColC3185") hoặc đọc lệch chữ
+   * ("COIC3185" — l thành I). Token thành `colc3185`, mà `cm.idx["colc3185"]` không có ⇒ luật cứng
+   * "CÓ MÃ" không bắn ⇒ tab rơi xuống chấm bằng chữ chung và đưa ra 3 cuộn chỉ astra khác màu ở
+   * 32%, kèm banner "Chưa khớp được MÃ HÀNG nào". `coTuGanGiong` chỉ GIỮ token lại chứ không SỬA
+   * nó, nên mọi bước sau vẫn tra bằng chuỗi sai.
+   * Nguyên tắc: **danh mục làm chứng, không đoán bừa** — chỉ đổi khi bản sửa CÓ THẬT trong chỉ mục,
+   * và chỉ khi có DUY NHẤT một ứng viên. Có ≥2 ứng viên là mơ hồ ⇒ KHÔNG đổi, thà không khớp còn
+   * hơn khớp sai. Bốn bậc, xếp từ RẺ và CHẮC tới ĐẮT và LỎNG hơn:
+   *   ① cắt tiền tố TOÀN CHỮ ≤4 ký tự (col · coi · color · art · ref · lot …) rồi tra lại;
+   *   ② dạng CHỊU LỖI OCR trùng nhau (`ocr()`: O↔0 · I/L↔1 · S↔5 · B↔8 · Z↔2 · G↔6) — tra chỉ mục
+   *      `ocrIdx`, một lượt tra, không quét gì;
+   *   ③ lệch ĐÚNG MỘT ký tự, CÙNG độ dài (c3186 → c3185);
+   *   ④ lệch ĐÚNG MỘT ký tự nhưng ±1 độ dài, tức THIẾU hoặc THỪA một ký tự (dài ≥6).
+   *
+   * ⚠ BẬC ② VÀ ④ THÊM 21/08/2026 — CHO CHỮ VIẾT TAY. Bộ lỗi mà bậc ③ lo là lỗi đọc chữ IN. Chữ
+   * VIẾT TAY sai khác kiểu: chữ O tay viết tròn hở nên bị đọc thành số 0 (và ngược lại, số 0 không
+   * gạch chéo thành chữ O) ở NHIỀU ký tự một lúc, và hay THIẾU/THỪA một ký tự vì viết dính. Đo
+   * thật trên thẻ mẫu CWHO0006 (12 cách đọc lệch): trước khi có ② + ④ thì chỉ 3/12 ra đúng SKU,
+   * sau đó 10/12 — xem NHAN-DIEN-SKU.md §5b.22.
+   */
+  function suaMaTheoDanhMuc(t, cm){
+    if (!cm || !cm.idx || cm.idx[t] || !laMaHinhDang(t)) return t;
+    /* ① tiền tố toàn chữ */
+    for (var k=1; k<=4 && k < t.length-3; k++){
+      if (/[0-9]/.test(t.charAt(k-1))) break;                      // tiền tố phải TOÀN CHỮ
+      var con = t.slice(k);
+      if (cm.idx[con] && laMaHinhDang(con)) return con;
+    }
+    if (t.length < 5) return t;
+    /* ② dạng chịu lỗi OCR trùng nhau — chỉ nhận khi trỏ tới DUY NHẤT một mã của danh mục */
+    if (cm.ocrIdx){
+      var dsOcr = cm.ocrIdx[ocr(t)];
+      if (dsOcr && dsOcr.length === 1 && dsOcr[0] !== t) return dsOcr[0];
+    }
+    if (!cm.tuVung) return t;
+    /* ③ lệch 1 ký tự, cùng độ dài · ④ lệch 1 ký tự, ±1 độ dài (thiếu/thừa, chỉ khi dài ≥6) */
+    var ungVien = null, dem = 0, choLech = t.length >= 6;
+    for (var i=0; i<cm.tuVung.length; i++){
+      var w = cm.tuVung[i], dl = w.length - t.length;
+      if (dl < -1 || dl > 1 || !laMaHinhDang(w)) continue;
+      if (dl !== 0 && !choLech) continue;
+      var lech;
+      if (dl === 0){
+        lech = 0;
+        for (var c=0; c<w.length && lech<2; c++) if (w.charAt(c) !== t.charAt(c)) lech++;
+      } else lech = khoangCach(w, t, 1);
+      if (lech === 1){ if (++dem > 1) return t; ungVien = w; }      // mơ hồ -> giữ nguyên
+    }
+    return dem === 1 ? ungVien : t;
+  }
   /** Giá trị thô của trường định danh → danh sách MÃ CHỦ đã chuẩn hoá. DANH MỤC LÀM CHỨNG: chỉ nhận
    *  mã có ĐÚNG NGUYÊN VĂN trong chỉ mục, vì luật "không mang mã chủ = không phải món này" quá mạnh
    *  để đặt lên một chuỗi có thể đọc lệch. Không nhận được thì lõi chấm y như trước. */
@@ -9409,7 +9460,13 @@ var NDS_ENGINE = (function(){
     var ra = [];
     if (!cm || !cm.idx) return ra;
     (dsGiaTri || []).forEach(function(gt){
-      bocTen(gt).code.forEach(function(t){
+      bocTen(gt).code.forEach(function(t0){
+        /* PHẢI đi qua đúng bộ sửa chính tả của vai MÃ (sửa 21/08/2026). Bản đầu tra thẳng `cm.idx[t]`
+           trên chuỗi THÔ, nên một ký tự đọc lệch là mã chủ RỖNG — trong khi rổ MÃ ở ngay dưới thì đã
+           được `suaMaTheoDanhMuc` chữa về đúng mã. Hậu quả đo được trên thẻ CWHO0006 giả lập chữ viết
+           tay: thẻ đọc thành "CWH00006" (chữ O thành số 0) ⇒ lõi BIẾT mã đúng nhưng luật mã chủ không
+           bắn ⇒ tụt về đường cũ và cuộn VẢI lại chiếm hạng 1 với 94%. */
+        var t = suaMaTheoDanhMuc(t0, cm);
         if (cm.idx[t] && laMaHinhDang(t) && ra.indexOf(t) < 0) ra.push(t);
       });
     });
@@ -9607,7 +9664,7 @@ var NDS_ENGINE = (function(){
        Vì sao 2-gram chứ không 3: một ký tự sai phá tối đa HAI 2-gram, mà từ dài ≥5 có ≥4 cái, nên
        mọi cặp mà Levenshtein-có-ngưỡng chấp nhận đều còn chung ít nhất một 2-gram ⇒ rút ngắn danh
        sách mà KHÔNG bỏ sót kết quả nào (3-gram thì "abcde" vs "abXde" mất sạch, sẽ sót). */
-    var gram = Object.create(null), loiIdx = Object.create(null), tuNgan = [];
+    var gram = Object.create(null), loiIdx = Object.create(null), ocrIdx = Object.create(null), tuNgan = [];
     for (var v=0; v<tuVung.length; v++){
       var w = tuVung[v];
       if (w.length < 2) { tuNgan.push(v); continue; }
@@ -9620,6 +9677,14 @@ var NDS_ENGINE = (function(){
       }
       var lw = loi(w);
       if (lw) (loiIdx[lw] || (loiIdx[lw]=[])).push(w);
+      /* CHỈ MỤC DẠNG CHỊU LỖI OCR — chỉ cho các từ RA DÁNG MÃ (thêm 21/08/2026, cho chữ viết tay).
+         `ocr()` quy O↔0 · I/L↔1 · S↔5 · B↔8 · Z↔2 · G↔6 về một dạng, nên "CWHOOOO6" và "CWHO0006"
+         gặp nhau bằng MỘT lượt tra thay vì quét cả bảng từ vựng. Chỉ nhận khi dạng đó trỏ tới DUY
+         NHẤT một mã (xem suaMaTheoDanhMuc bậc ②) — hai mã thật cùng dạng OCR là mơ hồ, không đổi. */
+      if (w.length >= 5 && laMaHinhDang(w)){
+        var ow = ocr(w);
+        if (ow){ var dso = ocrIdx[ow] || (ocrIdx[ow]=[]); if (dso.indexOf(w) < 0) dso.push(w); }
+      }
     }
     var theoSku = Object.create(null);
     for (var s2=0; s2<ds.length; s2++) if (theoSku[String(ds[s2].sku)]==null) theoSku[String(ds[s2].sku)] = s2;
@@ -9640,8 +9705,8 @@ var NDS_ENGINE = (function(){
     }
     dsIdf.sort(function(a,b){ return a-b; });
     var idfGiua = dsIdf.length ? dsIdf[dsIdf.length>>1] : 1;
-    return { idx:idx, tuVung:tuVung, mauVung:mauVung, ds:ds, gram:gram, loiIdx:loiIdx, tuNgan:tuNgan, theoSku:theoSku,
-      idf:idf, idfGiua:idfGiua, soDong:N };
+    return { idx:idx, tuVung:tuVung, mauVung:mauVung, ds:ds, gram:gram, loiIdx:loiIdx, ocrIdx:ocrIdx,
+      tuNgan:tuNgan, theoSku:theoSku, idf:idf, idfGiua:idfGiua, soDong:N };
     }
     return viec;
   }
@@ -10143,35 +10208,7 @@ var NDS_ENGINE = (function(){
     var tm = docTheMau(text);
     var b = bocTen(chuanChuoiTem(tm.catNhan)), nhan = { code:[], spec:[], color:[], brand:[] }, bo = [];
     var them = function(v,t){ if (t && nhan[v].indexOf(t)<0) nhan[v].push(t); };
-    /* ═══ SỬA CHÍNH TẢ MÃ THEO DANH MỤC (thêm 20/08/2026 — sự cố tem COATS astra C3185) ═══
-     * Sự cố: tem in "Col C3185" nhưng OCR trả về **dính liền** ("ColC3185") hoặc đọc lệch chữ
-     * ("COIC3185" — l thành I). Token thành `colc3185`, mà `cm.idx["colc3185"]` không có ⇒ luật cứng
-     * "CÓ MÃ" không bắn ⇒ tab rơi xuống chấm bằng chữ chung và đưa ra 3 cuộn chỉ astra khác màu ở
-     * 32%, kèm banner "Chưa khớp được MÃ HÀNG nào". `coTuGanGiong` chỉ GIỮ token lại chứ không SỬA
-     * nó, nên mọi bước sau vẫn tra bằng chuỗi sai.
-     * Nguyên tắc: **danh mục làm chứng, không đoán bừa** — chỉ đổi khi bản sửa CÓ THẬT trong chỉ mục:
-     *   (1) cắt tiền tố TOÀN CHỮ ≤4 ký tự (col · coi · color · art · ref · lot …) rồi tra lại;
-     *   (2) lệch ĐÚNG MỘT ký tự, cùng độ dài, và chỉ có DUY NHẤT một ứng viên (c3186 → c3185).
-     *       Có ≥2 ứng viên là mơ hồ ⇒ KHÔNG đổi, thà không khớp còn hơn khớp sai.
-     * Chỉ áp cho mảnh RA DÁNG MÃ, và chỉ khi bản gốc KHÔNG có nguyên văn trong danh mục. */
-    var suaMaTheoDanhMuc = function(t){
-      if (!cm || !cm.idx || cm.idx[t] || !laMaHinhDang(t)) return t;
-      for (var k=1; k<=4 && k < t.length-3; k++){
-        if (/[0-9]/.test(t.charAt(k-1))) break;                      // tiền tố phải TOÀN CHỮ
-        var con = t.slice(k);
-        if (cm.idx[con] && laMaHinhDang(con)) return con;
-      }
-      if (t.length < 5 || !cm.tuVung) return t;
-      var ungVien = null, dem = 0;
-      for (var i=0; i<cm.tuVung.length; i++){
-        var w = cm.tuVung[i];
-        if (w.length !== t.length || !laMaHinhDang(w)) continue;
-        var lech = 0;
-        for (var c=0; c<w.length && lech<2; c++) if (w.charAt(c) !== t.charAt(c)) lech++;
-        if (lech === 1){ if (++dem > 1) return t; ungVien = w; }      // mơ hồ -> giữ nguyên
-      }
-      return dem === 1 ? ungVien : t;
-    };
+    /* Sửa chính tả mã theo danh mục: dùng hàm chung suaMaTheoDanhMuc (xem mục 7b). */
     /* SỬA CHÍNH TẢ TỪ MÀU THEO DANH MỤC (thêm 20/08/2026, soát 30 tem thật).
      * Ca thật: tem in "Polyester **Riu** 16LN" — OCR đọc "Rêu" thành "Riu". `riu` không có trong danh
      * mục nên bị coi là chữ giấy tờ và BỎ ⇒ mất luôn bằng chứng màu ⇒ máy chọn biến thể "Hồng Đất"
@@ -10200,7 +10237,7 @@ var NDS_ENGINE = (function(){
     };
     VAI.forEach(function(v){
       (b[v]||[]).forEach(function(t0){
-        var t = (v === 'code') ? suaMaTheoDanhMuc(t0) : t0;            // sửa chính tả ở vai MÃ
+        var t = (v === 'code') ? suaMaTheoDanhMuc(t0, cm) : t0;        // sửa chính tả ở vai MÃ
         if (coThat(t)) { them(v, t); return; }
         /* CỨU MẢNH SẮP BỊ BỎ: sửa đúng 1 ký tự mà thành một TỪ MÀU CÓ THẬT trong danh mục thì đó là
            màu bị OCR đọc lệch ⇒ xếp vào vai MÀU (không phải vai gốc). Ca thật: tem in "Rêu" mà OCR
@@ -10396,7 +10433,7 @@ async function ndsThuMaVach(imLang){
 
 var NDS = { ds:null, cm:null, tokens:[], anh:null, maVach:[], loc:null, tuDong:false, zoom:1, zoomCung:false, mime:'image/jpeg', xoay:0, stream:null,
   chiActive:true, dangDoc:false, dangTai:false, ket:[], nguon:'', msDoiSoat:null, loadedOnce:false,
-  daBo:{}, rawDaTach:'',
+  daBo:{}, rawDaTach:'', theMau:null,
   /* MỘT LƯỢT QUÉT = MỘT TẤM TEM (xem ndsLuotMoi). `luot` tăng mỗi lần đặt ảnh mới / bấm Xoá hết;
      `huy` giữ AbortController của lượt gọi mạng đang bay để huỷ được khi có ảnh mới; `boRac` là số
      mảnh giấy tờ đã lọc bỏ; `loiAI` là lỗi của bậc AI để bậc OCR nói lại cho đủ. */
@@ -11374,6 +11411,12 @@ async function ndsDoiSoat(){
   /* MÃ CHỦ của thẻ mẫu (nhãn "Mã sản phẩm:") — phải đọc lại TỪ CHỮ THÔ vì badge đã mất ngữ cảnh
      nhãn. Chỉ giữ mã còn badge: thủ kho bấm × bỏ một mã đọc nhầm thì luật mã chủ tắt theo. */
   nhan.maChu=raw ? NDS_ENGINE.maChuTem(raw, NDS.cm).filter(function(t){ return nhan.code.indexOf(t)>=0; }) : [];
+  /* Ghi lại "tem này CÓ ô Mã sản phẩm hay không" để tầng vẽ cảnh báo được ca đọc KHÔNG RA mã đó —
+     xem khối `canh` trong ndsVeKetQua. `docTheMau` trả giá trị THÔ của trường định danh (chưa đối
+     chiếu danh mục), nên có chữ trong ô là biết ngay tem là biểu mẫu có khai mã. */
+  var tmRaw=raw ? NDS_ENGINE.docTheMau(raw) : null;
+  NDS.theMau={ coNhan:!!(tmRaw && (tmRaw.maChu||[]).some(function(s){ return String(s).replace(/[^0-9a-zA-Z]/g,'').length>=3; })),
+    maChu:(nhan.maChu||[]).slice(0) };
   var ghim=ndsSoTra();                 // sổ tay tem: tem/mã vạch này người đã chốt SKU rồi -> ghim
   var t0=(window.performance&&performance.now)?performance.now():Date.now();
   NDS.ket=NDS_ENGINE.timTop(nhan, NDS.cm, { soLuong:3, chiActive:NDS.chiActive, ghim:ghim, loc:NDS.loc });
@@ -11572,6 +11615,22 @@ function ndsVeKetQua(ms, themInactive){
       '<b>Chưa khớp được MÃ HÀNG nào.</b> Mấy gợi ý dưới đây chỉ dựa vào chữ chung (loại hàng · nhà cung cấp · '+
       'chất liệu · màu) — hàng trăm SKU giống nhau ở mấy chữ đó, nên <b>đừng chọn vội</b>. '+
       'Gõ mã in trên tem (vd <code>F9-5374</code>) vào ô <b>Mã trên tem</b> ở bước 1 là ra đúng ngay.'+
+      ndsMoiChonMa()+
+      ' <button type="button" class="kktab nds-alt" onclick="ndsTroMa()">Nhập mã</button></div>';
+  }
+  /* THẺ MẪU MÀ KHÔNG ĐỌC ĐƯỢC Ô "MÃ SẢN PHẨM" — rủi ro CÒN LẠI của luật mã chủ (21/08/2026).
+     Luật mã chủ chỉ bắn khi đọc được mã và mã đó CÓ THẬT trong danh mục. Không đọc được (ô để
+     trống, chữ viết tay quá xấu, đọc lệch ≥2 ký tự) thì lõi tụt về chấm bằng chữ chung — và trên
+     thẻ mẫu, "chữ chung" phần lớn là dòng **Thành phần vải**, tức tên NGUYÊN LIỆU. Đo được trên
+     thẻ CWHO0006: đúng lúc đó cuộn vải chiếm hạng 1 với 93%, mà banner cũ IM LẶNG vì nó chỉ xét
+     "có khớp mã nào không" — mà mã VẢI thì có khớp. Đây là ca duy nhất máy vẫn tự tin mà sai, nên
+     phải nói thẳng. */
+  if (!canh && NDS.theMau && NDS.theMau.coNhan && !(NDS.theMau.maChu||[]).length){
+    canh='<div class="pcdnote" style="margin-bottom:10px;background:color-mix(in srgb,var(--warn) 14%,var(--surface));color:var(--ink2)">'+
+      '<b>Đây là THẺ MẪU nhưng chưa đọc được ô "Mã sản phẩm".</b> Mấy gợi ý dưới đây đang dựa vào '+
+      'dòng <b>Thành phần vải</b> — mà dòng đó là tên <b>nguyên liệu</b> dùng để may cái mẫu, không '+
+      'phải món hàng đang cầm, nên rất dễ ra <b>cuộn vải</b> thay vì cái áo mẫu. Gõ mã sản phẩm '+
+      '(vd <code>CWHO0006</code>) vào ô <b>Mã trên tem</b> ở bước 1 là ra đúng ngay.'+
       ndsMoiChonMa()+
       ' <button type="button" class="kktab nds-alt" onclick="ndsTroMa()">Nhập mã</button></div>';
   }
