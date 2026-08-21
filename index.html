@@ -8689,6 +8689,12 @@ var NDS_ENGINE = (function(){
   /* Thứ tự CÓ CHỦ Ý: rút THÔNG SỐ trước (mẫu chặt nhất) → MÃ → MÀU → còn lại là chữ/thương hiệu.
      Rút xong thì xoá khỏi chuỗi để mẫu sau không nhặt lại nửa vời (vd "38cm" không thành mã "38"). */
   var RE_SPEC = [
+    /* CỠ ÁO ĐÃ DÁN NHÃN (szs · szxl · sz2xl, do RE_GHEP_CO ghép trong bocTen) — phải đứng ĐẦU vì
+       mẫu "số dính chữ l" (24L) và RE_CODE đều cắn được "2xl".
+       ⚠ Biên là KHOẢNG TRẮNG, không phải \b: RE_GHEP_CO luôn nhả ra mảnh có khoảng trắng hai đầu,
+       còn \b thì coi dấu gạch/chấm là biên — mã NCC "SZL-123" bị cắt thành "szl" + "123", tức mất
+       sạch bằng chứng định danh mà không một dấu hiệu nào. (Khoảng trắng dẫn đầu bị chuan() gọt.) */
+    { re:/(?:^|\s)sz(?:2xl|3xl|4xl|xxxl|xxl|xxs|xs|xl|free|s|m|l)(?=\s|$)/gi },
     { re:/\b(?:tex|text|tkt|tk|ne|nm|dtex)\s*[:.]?\s*(\d+(?:[.,]\d+)?)\b/gi,       // Tex 27 · Tkt 120 · Text 27
       sua:function(t){ t=t.replace(/^text/,'tex'); return /^(tex|tkt|tk|ne|nm|dtex)/.test(t)?t:('tex'+t); } },
     { re:/\b(\d+(?:[.,]\d+)?)\s*(cm|mm|gsm|inch|yard|yds)\b/gi },                  // 38.0 CM · 17mm · 170gsm
@@ -8797,11 +8803,33 @@ var NDS_ENGINE = (function(){
   var RE_GHEP_TILE = new RegExp('([0-9]+(?:[.,][0-9]+)?)[ ]*%[ ]*([a-zA-ZÀ-ỹ]{3,})', 'g');
   /* CỠ NÚT: "16LN" và "16L" là một (NCC ghi hai kiểu) — áp cho CẢ HAI phía trong bocTen. */
   var RE_CO_NUT = new RegExp('([0-9]+)[ ]*[lL][nN](?![a-zA-Z])', 'g');
+  /* ═══ CỠ ÁO CÓ NHÃN "SIZE" — dán nhãn `sz…` cho CẢ HAI phía (thêm 21/08/2026) ═══
+   * Sự cố: thẻ mẫu in "Size: S", tên hàng WMS ghi "…/Size S", mà CẢ HAI bên đều đánh rơi nó —
+   * "size" nằm trong TU_BO còn "S" chỉ 1 ký tự nên bị lọc ở vòng chữ. Hai bên rơi giống nhau nên
+   * không ai sai điểm, nhưng mất sạch khả năng tách các biến thể cỡ của CÙNG một mã (CWHO0006 có
+   * XS/S/M/L/XL cùng màu). Cỡ XS/XL/2XL thì may mắn ≥2 ký tự nên còn sống — tức hôm nay S/M/L bị
+   * đối xử khác XS/XL mà không có lý do gì.
+   * Cách làm: ghép nhãn + giá trị thành MỘT mảnh (`szs`, `szxl`) rồi để nó vào rổ THÔNG SỐ — rổ đó
+   * có cơ chế XUNG ĐỘT, nên tem cỡ S gặp dòng cỡ XL thì bị trừ, đúng việc của nó.
+   * ⚠ GIỮ LẠI mảnh cỡ TRẦN bên cạnh ("xl"): tem NCC KHÔNG có nhãn Size (in "20-52mm-XS") vẫn phải
+   *   khớp được với dòng ghi "Size XS" y như trước. Đây là THÊM mảnh, không lấy đi mảnh cũ.
+   * Chỉ nhận khi CÓ NHÃN: "S" trần trên tem gần như luôn là chữ khác, đoán là hại. */
+  var CO_AO = '2xl|3xl|4xl|xxxl|xxl|xxs|xs|xl|free|s|m|l';
+  /* Biên hai đầu loại luôn "._-": không thì một mã NCC kiểu "SZL-123" hay "F9-SZM.44" bị cắt đôi
+     (danh mục hôm nay không có mã nào chứa "sz", nhưng cái giá của việc đoán sai ở đây là mất sạch
+     bằng chứng định danh, im lặng). Nhãn thật luôn đứng sau khoảng trắng hoặc dấu "/". */
+  var RE_GHEP_CO = new RegExp('(^|[^0-9a-zA-Z._-])(?:size|sz)[ .:]*(' + CO_AO + ')(?![0-9a-zA-Z._-])', 'gi');
+  var RE_HO_CO = new RegExp('^sz(?:' + CO_AO + ')$');
   function bocTen(text){
     var ra = { code:[], spec:[], color:[], brand:[], all:[] };
-    var s = String(text==null?'':text).replace(RE_GHEP_TILE, '$1%$2').replace(RE_CO_NUT, '$1l');
+    var s = String(text==null?'':text).replace(RE_GHEP_TILE, '$1%$2').replace(RE_CO_NUT, '$1l')
+      .replace(RE_GHEP_CO, function(m, dau, co){ return dau + ' sz' + co.toLowerCase() + ' ' + co + ' '; });
     /* Chữ sau dấu "_" trong PRODUCTNAME là NHÀ CUNG CẤP: "F9-5284_Phong Việt" -> thương hiệu */
-    var ncc = s.match(/_\s*([^\/]+)/g);
+    /* Chặn ở hết DÒNG (thêm 21/08/2026): tên hàng WMS không bao giờ có xuống dòng nên phía danh
+       mục không đổi gì, còn phía TEM thì một tên có gạch dưới ("Women_Hoodie_Full-zip_Anti-UV")
+       trước đây nuốt luôn mọi trường phía sau cho tới dấu "/" đầu tiên — tức nửa tấm thẻ chui vào
+       rổ thương hiệu. */
+    var ncc = s.match(/_\s*([^\/\r\n]+)/g);
     if (ncc) ncc.forEach(function(m){
       boDau(m.replace(/^_\s*/,'')).toLowerCase().split(/[^0-9a-z]+/).forEach(function(w){
         if (w.length>=2 && !BO_TU[w]) ra.brand.push(w);
@@ -8960,6 +8988,7 @@ var NDS_ENGINE = (function(){
     if (/mm$/.test(t)) return 'mm';
     if (/gsm$/.test(t)) return 'gsm';
     if (/^#\d/.test(t)) return 'co';
+    if (RE_HO_CO.test(t)) return 'sz';                 // cỡ áo: szs · szxl (xem RE_GHEP_CO)
     if (/^\d+l$/.test(t)) return 'l';
     if (/^\d+[-\/]\d/.test(t)) return 'ty';
     return '';
@@ -9121,8 +9150,12 @@ var NDS_ENGINE = (function(){
         });
       });
     }
+    /* MÃ CHỦ (xem docTheMau) — khoá theo dạng CHỊU LỖI OCR để còn nhận ra nó SAU khi gonTu đã gộp
+       các biến thể trùng bản chất (f9-5284 / f95284 chỉ còn giữ một cái). */
+    var mcSet = Object.create(null), coChu = false;
+    (nhan.maChu||[]).forEach(function(t){ mcSet[ocr(t)] = 1; coChu = true; });
     _nhanKey = nhan; _nhanCm = cm;
-    _nhanNho = { nhanG:nhanG, tong:tong, hn:theoHo(nhanG.spec), w:w,
+    _nhanNho = { nhanG:nhanG, tong:tong, hn:theoHo(nhanG.spec), w:w, mcSet:mcSet, coChu:coChu,
       /* MÃ MÀU CỦA TEM — chỉ nhận mảnh mà DANH MỤC THẬT CÓ dùng làm màu (`cm.mauVung`, dựng lúc dựng
          chỉ mục). Đây là bản vá đúng cho một lỗi đã cắn hai lần:
            · tem "5000 M" ⇒ `5000` vào rổ màu ⇒ xung đột mã màu giả (5b.14);
@@ -9160,7 +9193,7 @@ var NDS_ENGINE = (function(){
     var diem=0, soKhop=0, soTu=0;
     VAI.forEach(function(v){
       var ds = nhanG[v]; if (!ds.length) return;
-      khop[v]=[]; var s=0, cao=0, tongW=0, wv=sn.w[v];
+      khop[v]=[]; var s=0, cao=0, caoChu=0, tongW=0, wv=sn.w[v];
       ds.forEach(function(t,iT){
         var x = khopTot(t, kho[v]);
         if (x < 0.6) { var y = 0.75*khopTot(t, kho.all); if (y>x) x=y; }   // sai rổ vẫn tính, có trừ
@@ -9169,6 +9202,7 @@ var NDS_ENGINE = (function(){
         var wt = wv ? wv[iT] : 1;
         s += x*wt; tongW += wt;
         soTu++; if (x>cao) cao=x;
+        if (v==='code' && sn.coChu && sn.mcSet[ocr(t)] && x>caoChu) caoChu=x;
         if (x>=0.6) { khop[v].push(t); soKhop++; }
       });
       var tb = tongW ? s/tongW : 0;
@@ -9179,7 +9213,12 @@ var NDS_ENGINE = (function(){
          · THÔNG SỐ / MÀU / LOẠI — trung bình thì phạt oan phần tem in thêm mà WMS không ghi, thuần
            max thì mất sức phân biệt. Lấy nửa max nửa trung bình. Phần MÂU THUẪN thật sự (tem 38cm
            mà tên 60cm) đã có cơ chế XUNG ĐỘT bên dưới trừ riêng, không dựa vào trung bình. */
-      chiTiet[v] = (v==='code') ? cao : (cao+tb)/2;
+      /* VAI MÃ: bình thường lấy mã khớp TỐT NHẤT (tem in nhiều mã — mã NCC, mã khách, số PO —
+         khớp được MỘT cái là đã định danh xong). NHƯNG khi tem có MÃ CHỦ (nhãn "Mã sản phẩm" của
+         thẻ mẫu) thì vai mã chấm THEO ĐÚNG mã đó: mã vải / mã phụ liệu in trên cùng tấm thẻ không
+         được quyền nói món hàng này là gì. Đây là chỗ chữa sự cố thẻ CWHO0006 — trước đây dòng VẢI
+         chỉ khớp mã vải vẫn được 1,00 y như dòng ĐÚNG khớp cả hai mã. */
+      chiTiet[v] = (v==='code') ? (sn.coChu ? caoChu : cao) : (cao+tb)/2;
       diem += (W[v]/tong) * chiTiet[v];
     });
     /* XUNG ĐỘT thông số / mã màu */
@@ -9263,6 +9302,122 @@ var NDS_ENGINE = (function(){
      nào cho công cụ soạn ăn mất. */
   var RE_DONG = new RegExp('[' + String.fromCharCode(10) + String.fromCharCode(13) + ']+');
   var RE_DIACHI = new RegExp('(?:^|[^a-z])(?:address|add|dia chi|dia-chi)[ .:]', 'i');
+  /* ═══════════════════════════════════════════════════════════════════════════════════════════════
+   *  THẺ MẪU LÀ BIỂU MẪU, KHÔNG PHẢI TÚI CHỮ (thêm 21/08/2026 — sự cố thẻ CWHO0006)
+   *  ---------------------------------------------------------------------------------------------
+   *  SỰ CỐ THẬT (ảnh thẻ do user gửi): "THẺ THÔNG TIN MẪU" của xưởng in 10 trường, trong đó có
+   *      Mã sản phẩm  : CWHO0006          ← ĐỊNH DANH của món đang cầm (một cái áo mẫu)
+   *      Thành phần vải: Vải Single Mesh/S130413 UZM Sheico/88% Re-Polyester, 12%Spandex/170 Gsm, 152cm
+   *  Dòng "Thành phần vải" là tên NGUYÊN LIỆU dùng để may cái mẫu đó — nó chép gần như NGUYÊN VĂN
+   *  PRODUCTNAME của một SKU VẢI có thật. Đọc cả thẻ như một túi chữ thì SKU vải khớp 5/6 phần tử và
+   *  THẮNG: đo được 422423807 (vải) **93%** đứng trên 422495218 (đúng — áo mẫu) **87%**, vì
+   *    · vai MÃ chấm theo mã khớp TỐT NHẤT ⇒ "khớp mã vải" ăn điểm y như "khớp cả mã vải lẫn mã áo";
+   *    · vai THÔNG SỐ thì dòng vải còn ĂN THÊM "152cm" (khổ vải) mà áo mẫu không có ⇒ PHẠT dòng đúng.
+   *  Nghĩa là thẻ càng ghi đầy đủ về nguyên liệu thì máy càng chắc chắn trả về nguyên liệu.
+   *
+   *  CÁCH CHỮA: đọc thẻ ĐÚNG NHƯ BIỂU MẪU, không như túi chữ.
+   *    ① Trường có nhãn ĐỊNH DANH ("Mã sản phẩm", "Mã hàng", "Style") cho ra MÃ CHỦ — mã nói món
+   *       hàng này LÀ GÌ. Mọi mã khác trên thẻ (mã vải, mã phụ liệu, số PO, số lô) chỉ là bằng chứng
+   *       phụ: dòng nào không mang mã chủ thì không phải món này, khớp bao nhiêu chữ cũng vậy.
+   *    ② CHỮ NHÃN bị cắt đi. Nó là chữ của BIỂU MẪU chứ không của món hàng, và nó gây hại thật:
+   *       nhãn "Màu sắc:" cho ra mảnh `sac`, rồi bước sửa chính tả màu theo danh mục đổi `sac` thành
+   *       `bac` (BẠC) — thẻ tự dựng ra một màu không hề có trên tem.
+   *
+   *  NGUYÊN TẮC GIỮ NGUYÊN — DANH MỤC LÀM CHỨNG: mã chủ chỉ được công nhận khi có ĐÚNG NGUYÊN VĂN
+   *  trong chỉ mục (`cm.idx`). Đọc lệch một ký tự, hoặc thẻ ghi mã chưa có trong danh mục, thì
+   *  `maChu` rỗng và lõi chấm y như trước — không có đường nào để tự tin sai.
+   * ═══════════════════════════════════════════════════════════════════════════════════════════════ */
+  /* Nhãn tiếng Việt phải khớp CẢ bản có dấu lẫn bản OCR làm mất dấu, nên mẫu được DỰNG từ bảng
+     nguyên âm chứ không viết thẳng "Mã sản phẩm" vào regex: viết thẳng thì chỉ khớp đúng một cách
+     viết, mà OCR trả về đủ kiểu (đúng dấu / mất dấu / sai dấu / chữ hoa). */
+  var _NGUYEN_AM = { a:'aáàảãạăắằẳẵặâấầẩẫậ', d:'dđ', e:'eéèẻẽẹêếềểễệ', i:'iíìỉĩị',
+    o:'oóòỏõọôốồổỗộơớờởỡợ', u:'uúùủũụưứừửữự', y:'yýỳỷỹỵ' };
+  function nguonNhan(s){
+    var ra = '';
+    for (var i=0;i<s.length;i++){
+      var c = s.charAt(i);
+      if (c === ' ') { ra += '\\s+'; continue; }
+      var v = _NGUYEN_AM[c];
+      ra += v ? ('[' + v + v.toUpperCase() + ']') : c;
+    }
+    return ra;
+  }
+  /* `viec:'ma'` = nhãn ĐỊNH DANH (giá trị của nó là mã chủ) · `viec:'bo'` = chỉ cắt chữ nhãn đi.
+     ⚠ KHÔNG đưa "size" vào đây: nhãn Size còn phải để nguyên cho RE_GHEP_CO ghép thành mảnh cỡ
+     (`szs`) — cắt nhãn đi là mất luôn cỡ, vì "S" trần chỉ 1 ký tự nên bị lọc. */
+  var NHAN_TEM = [
+    { viec:'ma', ten:['ma san pham','ma hang hoa','ma hang','ma sp','ma vat tu','ma mau',
+                      'style no','style','item code','art no'] },
+    { viec:'bo', ten:['loai mau','ten san pham','ten hang','thanh phan vai','thanh phan',
+                      'nguyen phu lieu','chat lieu','phu lieu','mau sac','nv may mau',
+                      'nguoi thuc hien','ngay thuc hien','ghi chu','so luong','don vi tinh',
+                      'don vi','nha cung cap'] }
+  ];
+  /* Nhãn phải đứng ĐẦU CHUỖI hoặc sau khoảng trắng/dấu ngăn, VÀ có dấu hai chấm theo sau. Đòi dấu
+     hai chấm là chốt an toàn: không có nó thì chữ "mã hàng" trong một câu bất kỳ cũng thành nhãn. */
+  var NHAN_MOC = (function(){
+    var ds = [];
+    NHAN_TEM.forEach(function(n){ n.ten.forEach(function(t){ ds.push({ viec:n.viec, ten:t }); }); });
+    return ds.map(function(x){
+      return { viec:x.viec, ten:x.ten,
+        re:new RegExp('(^|[\\s(,;|\\[])(' + nguonNhan(x.ten) + ')\\s*[:：]', 'gi') };
+    });
+  })();
+  /**
+   * Đọc tem dạng BIỂU MẪU: cắt chữ NHÃN khỏi chuỗi và lấy giá trị của (các) trường ĐỊNH DANH.
+   * @return { maChu:[chuỗi giá trị thô], catNhan:chuỗi đã bỏ chữ nhãn }
+   */
+  function docTheMau(text){
+    var s = String(text == null ? '' : text);
+    if (s.indexOf(':') < 0 && s.indexOf('：') < 0) return { maChu:[], catNhan:s };   // không phải biểu mẫu
+    var moc = [];
+    NHAN_MOC.forEach(function(n){
+      n.re.lastIndex = 0;
+      var m;
+      while ((m = n.re.exec(s))){
+        moc.push({ d:m.index + m[1].length, c:m.index + m[0].length, viec:n.viec });
+        n.re.lastIndex = m.index + m[0].length;
+      }
+    });
+    if (!moc.length) return { maChu:[], catNhan:s };
+    /* Cùng một chỗ thì nhãn DÀI thắng: "thành phần vải" chứ không phải "thành phần". */
+    moc.sort(function(a,b){ return (a.d - b.d) || ((b.c - b.d) - (a.c - a.d)); });
+    var maChu = [], ra = '', tu = 0;
+    for (var i=0;i<moc.length;i++){
+      var x = moc[i];
+      if (x.d < tu) continue;                        // nằm lọt trong nhãn vừa cắt -> bỏ
+      ra += s.slice(tu, x.d) + ' ';                  // giữ mọi thứ TRƯỚC nhãn, bỏ chữ nhãn
+      tu = x.c;
+      if (x.viec !== 'ma') continue;
+      /* Giá trị = từ sau dấu hai chấm tới NHÃN KẾ TIẾP, và không vượt quá hết dòng. Phải chặn cả
+         hai đầu: OCR có lúc trả cả thẻ trên MỘT dòng (lúc đó nhãn kế tiếp là biên duy nhất), có
+         lúc trả đúng từng dòng (lúc đó hết dòng là biên đúng). */
+      var het = s.length;
+      for (var j=i+1;j<moc.length;j++) if (moc[j].d >= x.c) { het = moc[j].d; break; }
+      var gt = s.slice(x.c, het);
+      var nl = gt.search(RE_DONG);
+      if (nl >= 0) gt = gt.slice(0, nl);
+      maChu.push(gt);
+    }
+    ra += s.slice(tu);
+    return { maChu:maChu, catNhan:ra };
+  }
+  /** Giá trị thô của trường định danh → danh sách MÃ CHỦ đã chuẩn hoá. DANH MỤC LÀM CHỨNG: chỉ nhận
+   *  mã có ĐÚNG NGUYÊN VĂN trong chỉ mục, vì luật "không mang mã chủ = không phải món này" quá mạnh
+   *  để đặt lên một chuỗi có thể đọc lệch. Không nhận được thì lõi chấm y như trước. */
+  function locMaChu(dsGiaTri, cm){
+    var ra = [];
+    if (!cm || !cm.idx) return ra;
+    (dsGiaTri || []).forEach(function(gt){
+      bocTen(gt).code.forEach(function(t){
+        if (cm.idx[t] && laMaHinhDang(t) && ra.indexOf(t) < 0) ra.push(t);
+      });
+    });
+    return ra;
+  }
+  /** MÃ CHỦ đọc từ CHỮ THÔ của tem. Tầng giao diện phải gọi lại hàm này sau khi gom badge qua
+   *  `tuAI` — badge đã mất ngữ cảnh nhãn nên không tự biết mảnh nào là mã chủ. */
+  function maChuTem(text, cm){ return locMaChu(docTheMau(text).maChu, cm); }
   function chuanChuoiTem(text){
     var s = String(text == null ? '' : text);
     s = s.replace(RE_NGAY, ' ');
@@ -9670,14 +9825,30 @@ var NDS_ENGINE = (function(){
         for (var z=0; z<dsm.length; z++) gom[dsm[z]] = 1;
       });
       var km = coMa ? Object.keys(gom) : [];
-      if (km.length && km.length <= TRAN_MA){
-        maKhop = gom;                                  // dùng lại ở luật cứng "CÓ MÃ" bên dưới
-        /* Đang LỌC THEO PHẦN TỬ thì chỉ dùng `maKhop` để XẾP HẠNG, KHÔNG kéo thêm dòng ngoài bộ
-           lọc vào — người dùng đã nói rõ tem có những mảnh nào, đừng tự ý mở rộng. */
-        if (!phuLoc){
-          var daCoUv = Object.create(null);
-          for (var u2=0; u2<uv.length; u2++) daCoUv[uv[u2]] = 1;
-          for (var u3=0; u3<km.length; u3++){ var im2=Number(km[u3]); if (!daCoUv[im2]) uv.push(im2); }
+      /* NHÚM MÃ CHỦ — hẹp hơn `gom`, và là nhúm ĐÚNG khi tem là thẻ mẫu có nhãn "Mã sản phẩm"
+         (xem docTheMau). Luật cứng "CÓ MÃ" phải bám nhúm này: không thì dòng chỉ mang mã VẢI in
+         trên cùng tấm thẻ cũng được xếp ngang hàng với dòng mang mã của chính món hàng. */
+      var gomChu = Object.create(null), coChu = false;
+      (nhan.maChu||[]).forEach(function(t){
+        if (!cm.idx[t]) return;
+        coChu = true;
+        var dsc = cm.idx[t];
+        for (var zc=0; zc<dsc.length; zc++) gomChu[dsc[zc]] = 1;
+      });
+      var kc = coChu ? Object.keys(gomChu) : [];
+      var duChu = !!(kc.length && kc.length <= TRAN_MA);
+      var duMa  = !!(km.length && km.length <= TRAN_MA);
+      if (duChu) maKhop = gomChu;                      // mã chủ đứng trước mọi mã khác của tem
+      else if (duMa) maKhop = gom;
+      /* Đang LỌC THEO PHẦN TỬ thì chỉ dùng `maKhop` để XẾP HẠNG, KHÔNG kéo thêm dòng ngoài bộ
+         lọc vào — người dùng đã nói rõ tem có những mảnh nào, đừng tự ý mở rộng. */
+      if (maKhop && !phuLoc){
+        var themUv = duChu ? (duMa ? kc.concat(km) : kc) : km;
+        var daCoUv = Object.create(null);
+        for (var u2=0; u2<uv.length; u2++) daCoUv[uv[u2]] = 1;
+        for (var u3=0; u3<themUv.length; u3++){
+          var im2 = Number(themUv[u3]);
+          if (!daCoUv[im2]) { daCoUv[im2] = 1; uv.push(im2); }
         }
       }
     }
@@ -9968,7 +10139,9 @@ var NDS_ENGINE = (function(){
     opt = opt || {};
     /* GIAI ĐOẠN 1-2: dọn chữ giấy tờ ở mức CHUỖI trước khi tách token (chuanChuoiTem) — chỉ áp cho
        chữ đọc từ TEM, không áp cho PRODUCTNAME (xem ghi chú ở chuanChuoiTem). */
-    var b = bocTen(chuanChuoiTem(text)), nhan = { code:[], spec:[], color:[], brand:[] }, bo = [];
+    /* BƯỚC 0 — TEM CÓ PHẢI BIỂU MẪU? Đọc nhãn trường trước: lấy MÃ CHỦ, cắt chữ nhãn (docTheMau). */
+    var tm = docTheMau(text);
+    var b = bocTen(chuanChuoiTem(tm.catNhan)), nhan = { code:[], spec:[], color:[], brand:[] }, bo = [];
     var them = function(v,t){ if (t && nhan[v].indexOf(t)<0) nhan[v].push(t); };
     /* ═══ SỬA CHÍNH TẢ MÃ THEO DANH MỤC (thêm 20/08/2026 — sự cố tem COATS astra C3185) ═══
      * Sự cố: tem in "Col C3185" nhưng OCR trả về **dính liền** ("ColC3185") hoặc đọc lệch chữ
@@ -10040,6 +10213,10 @@ var NDS_ENGINE = (function(){
     });
     napBangChung(nhan, cm);
     nhan.bo = bo;
+    nhan.maChu = locMaChu(tm.maChu, cm);
+    /* Mã chủ phải nằm trong rổ MÃ để các bước sau (gonTu · diemMot · timTop) nhìn thấy nó. Nó vốn ở
+       trong phần chữ đã giữ lại nên gần như luôn có sẵn; thêm cho chắc, không thêm trùng. */
+    nhan.maChu.forEach(function(t){ if (nhan.code.indexOf(t) < 0) nhan.code.push(t); });
     return nhan;
   }
 
@@ -10077,6 +10254,7 @@ var NDS_ENGINE = (function(){
   return { boDau:boDau, chuan:chuan, loi:loi, bocTen:bocTen, tuAI:tuAI, tuVanBan:tuVanBan, tyLe:tyLe, khopTot:khopTot, batIdf:batIdf,
     diemMot:diemMot, dungChiMuc:dungChiMuc, dungChiMucViec:dungChiMucViec, timTop:timTop, donVi:donVi, khoaHang:khoaHang,
     chuKy:chuKy, tachPhanTu:tachPhanTu, locDong:locDong, chuanManh:chuanManh, maGanGiong:maGanGiong, W:W, VAI:VAI, DV:DV,
+    docTheMau:docTheMau, maChuTem:maChuTem,
     chamIdf:chamIdf, datCham:datCham, kieuCham:kieuCham, chuanChuoiTem:chuanChuoiTem, trongSoTu:trongSoTu };
 })();
 /*</NDS-ENGINE>*/
@@ -11193,6 +11371,9 @@ async function ndsDoiSoat(){
   /* Truyền chỉ mục vào tuAI: mảnh nào RA DÁNG MÃ và CÓ THẬT trong danh mục thì được nâng lên vai
      MÃ, bất kể AI xếp nó ở rổ nào (sửa 19/08/2026 — xem napBangChung trong lõi). */
   var nhan=NDS_ENGINE.tuAI(goi, NDS.cm);
+  /* MÃ CHỦ của thẻ mẫu (nhãn "Mã sản phẩm:") — phải đọc lại TỪ CHỮ THÔ vì badge đã mất ngữ cảnh
+     nhãn. Chỉ giữ mã còn badge: thủ kho bấm × bỏ một mã đọc nhầm thì luật mã chủ tắt theo. */
+  nhan.maChu=raw ? NDS_ENGINE.maChuTem(raw, NDS.cm).filter(function(t){ return nhan.code.indexOf(t)>=0; }) : [];
   var ghim=ndsSoTra();                 // sổ tay tem: tem/mã vạch này người đã chốt SKU rồi -> ghim
   var t0=(window.performance&&performance.now)?performance.now():Date.now();
   NDS.ket=NDS_ENGINE.timTop(nhan, NDS.cm, { soLuong:3, chiActive:NDS.chiActive, ghim:ghim, loc:NDS.loc });
