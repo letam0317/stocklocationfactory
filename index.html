@@ -1037,7 +1037,7 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
    Chip tái dùng NGUYÊN khuôn `.nds-tag` của tab (popIn + nút × + focus ring) — lệ dự án: đã có khuôn
    thì không dựng control trần mới. Chip xếp TRƯỚC ô nhập nên đọc từ trái sang phải là đúng thứ tự
    sẽ in, và số vừa chốt luôn nằm sát ngay ô nhập. */
-/* Ô Số lượng chỉ còn ô nhập + nút "+". Danh sách số đã chốt nằm ở DẢI RIÊNG `.prslbar` (một hàng
+/* Ô Số lượng chỉ còn ô nhập + nút "+". Danh sách số đã chốt nằm ở HÀNG RIÊNG `tr.prsl2` (một hàng
    `tr.prsl2` ăn hết bề rộng, dán liền dưới) — xem ghi chú trong prVe. Vì sao đổi: chip nhét trong
    một cột hẹp, canh phải, 4-5 cái là rớt thành 2-3 dòng méo mó ngay chỗ tay đang gõ; và không có
    chỗ nào nói ra quan hệ "mỗi số lượng = một con tem". */
@@ -1045,14 +1045,9 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
 #prBody .prchip{--cc:var(--accent);font-variant-numeric:tabular-nums;padding:4px 4px 4px 10px}
 #prBody tr.prdong.co-chip>td{border-bottom:0}
 #prBody tr.prsl2>td{padding-top:0}
-#prBody .prslbar{display:flex;flex-wrap:wrap;align-items:center;gap:7px 10px;padding:7px 10px;
-  border-radius:10px;border:1px dashed color-mix(in srgb,var(--accent) 34%,var(--line));
-  background:color-mix(in srgb,var(--accent) 6%,var(--surface))}
-#prBody .prslnhan{font-size:11.5px;color:var(--ink3);letter-spacing:.02em}
 /* Chữ mờ nhắc việc phải NHỎ hơn con số thật: ô này in số ở 19px/700, để placeholder cùng cỡ thì
    nó vừa bị cắt cụt vừa trông như đã có số. */
 #prBody input.prsl-v::placeholder{font-size:12.5px;font-weight:600;opacity:.62}
-#prBody .prslnhan b{color:var(--ink);font-variant-numeric:tabular-nums;font-size:13px}
 #prBody .prchips{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-start;margin:0}
 /* Nút "+" phải ĐẬP VÀO MẮT (yêu cầu user): nền accent đặc, chữ trắng, có bóng — nó là thao tác chính
    của ô này, không phải một dấu cộng mờ nhạt lẫn vào nền. Chỉ hiện khi trong ô ĐANG có số. */
@@ -1119,8 +1114,12 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
      phải đọc lại để chắc không gõ nhầm số 0 nào. */
   #prmodal .mtbl td:nth-child(2){grid-area:sl;font-size:11px;color:var(--ink3);min-width:0}
   #prmodal .mtbl td:nth-child(2)::before{content:'Số lượng';color:var(--muted);display:block;margin-bottom:4px;text-align:right}
-  #prmodal .mtbl td:nth-child(2) input.prsl{flex:1;min-width:0;width:auto;min-height:44px;
-    font-size:19px;font-weight:700;padding:8px 12px}
+  /* Ô nhập còn MỘT NỬA bề rộng cột (user 21/08/2026: "bự quá — làm nhỏ lại 1 nửa kích thước ô").
+     Bản trước `flex:1` nên nó ăn hết phần còn lại của thẻ — trên màn 390px là một khối 232px, to
+     hơn cả ô SKU. Giữ nguyên cao 44px và chữ 19px/700: đó là hai ràng buộc user đã chốt trước đó
+     (đủ chạm + đọc lại được con số) — cái "bự" nằm ở BỀ RỘNG, không ở chữ. */
+  #prmodal .mtbl td:nth-child(2) input.prsl{flex:0 0 auto;width:50%;min-width:0;min-height:44px;
+    font-size:19px;font-weight:700;padding:8px 10px}
   /* ô 3 = SKU: đứng đầu thẻ, cỡ chữ lớn nhất — đây là thứ người dùng dò mắt tìm */
   #prmodal .mtbl td:nth-child(3){grid-area:sku;font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
   /* ô 4 = TÊN SẢN PHẨM */
@@ -1144,9 +1143,9 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
   /* Chip số lượng trên điện thoại: nút × phải là VÙNG CHẠM THẬT ≥40px (luật 9 luật của dự án). Khuôn
      `.nds-tag .x` dùng chung chỉ 18px — đủ cho badge từ khoá ở tab (bấm nhầm thì thêm lại), nhưng ở
      đây bấm nhầm là mất một con tem đã khai. Dải đã ăn hết bề rộng nên có chỗ cho chip to. */
-  #prBody .prslbar{gap:8px 10px;padding:9px 10px}
-  #prBody .prslbar .prchip{min-height:40px;padding:0 0 0 14px;gap:2px;font-size:14px}
-  #prBody .prslbar .prchip button.x{width:40px;height:40px;padding:0;font-size:19px;
+  #prBody tr.prsl2 .prchips{gap:8px 10px;padding:2px 0 0}
+  #prBody tr.prsl2 .prchip{min-height:40px;padding:0 0 0 14px;gap:2px;font-size:14px}
+  #prBody tr.prsl2 .prchip button.x{width:40px;height:40px;padding:0;font-size:19px;
     display:inline-flex;align-items:center;justify-content:center;opacity:.72}
   /* Ô số lượng dạng danh sách ("12, 14, 16") cần rộng hơn ô một số */
   #prBody input.prsl.co-ds{width:112px;text-align:left}
@@ -9078,6 +9077,15 @@ var NDS_ENGINE = (function(){
        Đánh cờ theo TÊN đơn vị chứ không theo ngưỡng q, để đọc mã là hiểu ngay ý định. */
     'bo set cay chai lo tuyp cuon roll thung hop box bao kien bich'.split(' ')
       .forEach(function(t){ if (m[t]) m[t].gop = true; });
+    /* CỜ "NHỎ" = ĐƠN VỊ ĐẾM ĐƯỢC NHỎ NHẤT của mỗi họ, theo đúng cách kho đếm (yêu cầu user
+       21/08/2026: "sku gợi ý phải LUÔN là sku đơn vị nhỏ nhất (mm, gr, g)").
+       Vì sao khai bằng DANH SÁCH TÊN chứ không lấy min(q) của họ: min(q) của họ khối lượng là `mg`
+       — đơn vị không bao giờ xuất hiện trong danh mục — nên mọi SKU tính bằng gam sẽ bị báo oan là
+       "chưa phải đơn vị nhỏ nhất". Ở đây "nhỏ nhất" là nhỏ nhất THỰC DỤNG: mm · g · ml · pcs.
+       Còn mét/yard/inch/kg/lít KHÔNG mang cờ này: chúng đếm được nhưng vẫn là bội của đơn vị nhỏ,
+       và luật kho là đếm bằng cái nhỏ nhất. */
+    'mm mg g gam gram gr ml pcs pc cai chiec soi tam to vien la'.split(' ')
+      .forEach(function(t){ if (m[t]) m[t].nho = true; });
     return m;
   })();
   /** PRODUCTNAME → đơn vị tính. `q` nhỏ = đơn vị nhỏ; `raw` giữ nguyên chữ WMS để hiển thị. */
@@ -9090,9 +9098,10 @@ var NDS_ENGINE = (function(){
          Nhờ vậy "cuộn 5000m, mm" ra đúng mm chứ không ra "m". */
       if (!w || /\d/.test(w)) return;
       var d = DV[w]; if (!d) return;
-      if (!best || d.q < best.q) best = { ma:w, q:d.q, ho:d.ho, gop:!!d.gop };
+      if (!best || d.q < best.q) best = { ma:w, q:d.q, ho:d.ho, gop:!!d.gop, nho:!!d.nho };
     });
-    return { raw:raw, ma:best?best.ma:'', q:best?best.q:1, ho:best?best.ho:'', gop:best?best.gop:false };
+    return { raw:raw, ma:best?best.ma:'', q:best?best.q:1, ho:best?best.ho:'', gop:best?best.gop:false,
+      nho:best?!!best.nho:false };
   }
   /** Khoá "cùng một mặt hàng" = PRODUCTNAME BỎ đoạn đơn vị ở cuối (chuẩn hoá bỏ dấu, hạ chữ). */
   function khoaHang(pn){
@@ -9898,7 +9907,7 @@ var NDS_ENGINE = (function(){
     var moTa = function(i, r, diem, khop, xungDot, phu, laSku){
       var dv = r._dv || (r._dv = donVi(r.pn));
       return { i:i, sku:r.sku, pn:r.pn, type:r.type, status:r.status, qty:r.qty,
-        donVi:dv.raw, dv:dv.ma, q:dv.q, gop:!!dv.gop, coMa:!!(maKhop && maKhop[i]),
+        donVi:dv.raw, dv:dv.ma, q:dv.q, gop:!!dv.gop, nho:!!dv.nho, coMa:!!(maKhop && maKhop[i]),
         khoa:(r._k!=null?r._k:(r._k=khoaHang(r.pn))),
         diem:diem, pct:Math.round(diem*100), khop:khop, xungDot:xungDot, phu:phu, laSku:laSku,
         bienThe:[], viDonVi:false, daHoc:false };
@@ -10043,10 +10052,15 @@ var NDS_ENGINE = (function(){
          "ACTIVE trước" chốt 19/08 lại che đúng cái SKU cần đếm. Chỉ mở ngoại lệ khi MỌI dòng còn
          sống của nhóm đều là hàng đóng gói — tức không còn lựa chọn đếm được nào khác. Nhóm chết
          hoàn toàn (không dòng nào sống) vẫn KHÔNG được gợi ý, y như cũ. */
+      /* NỚI 21/08/2026 (yêu cầu user "LUÔN là sku đơn vị nhỏ nhất"): điều kiện cũ là "mọi dòng còn
+         sống đều là hàng ĐÓNG GÓI", nên nó bỏ sót ca hay gặp không kém — nhóm còn sống một dòng
+         **mét** (hoặc yard) mà bản **mm** thì tồn 0: mét không phải hàng đóng gói nên ngoại lệ cũ im,
+         đại diện thành mét, còn bản mm chỉ nằm ở dòng "cùng mặt hàng, khác đơn vị". Kho đếm bằng mm.
+         Điều kiện mới: KHÔNG còn dòng nào MANG ĐƠN VỊ NHỎ NHẤT (cờ `nho`) còn sống. */
       var dvNhoThay = false;
       var conSong = v.filter(function(x){ return x.status!=='INACTIVE'; });
-      if (conSong.length && conSong.every(function(x){ return x.gop || x.type==='COMBO'; })){
-        var nhoHon = v.filter(function(x){ return x.status==='INACTIVE' && x.type!=='COMBO' && !x.gop; });
+      if (conSong.length && !conSong.some(function(x){ return x.nho; })){
+        var nhoHon = v.filter(function(x){ return x.status==='INACTIVE' && x.type!=='COMBO' && x.nho; });
         /* v đã sắp nên nhoHon vào theo đơn vị nhỏ nhất trước. Lọc trùng vì ở chế độ "xem cả INACTIVE"
            thì hop CHÍNH LÀ v (đã chứa mấy dòng này) — không lọc là đại diện đúng nhưng danh sách
            biến thể mất một dòng. */
@@ -10077,6 +10091,11 @@ var NDS_ENGINE = (function(){
       /* MẶT HÀNG còn sống hay không — không phải riêng dòng đại diện (dùng ở luật cứng ACTIVE). */
       dd.song = v.some(function(x){ return x.status!=='INACTIVE'; });
       dd.dvNhoThay = dvNhoThay && dd.status==='INACTIVE';
+      /* CẢ MẶT HÀNG KHÔNG CÓ BẢN ĐƠN VỊ NHỎ NHẤT (yêu cầu user 21/08/2026: "nếu không có đơn vị nhỏ
+         nhất mà đơn vị lớn (vd cuộn 5000m) thì phải BÁO"). Xét trên CẢ nhóm, kể cả dòng đã chết:
+         không có dòng nào mang cờ `nho` thì đây là mặt hàng chỉ tồn tại ở đơn vị lớn — thẻ phải nói
+         ra, vì thủ kho đếm bằng đơn vị nhỏ và sẽ không hiểu vì sao gợi ý lại là "cuộn 5000m". */
+      dd.khongCoDvNho = !v.some(function(x){ return x.nho; }) && v.some(function(x){ return !!x.dv; });
       got.push(dd);
     });
     /* THỨ TỰ XẾP HẠNG — ACTIVE/NORMAL là LUẬT CỨNG, đứng TRÊN điểm số (chốt 19/08/2026).
@@ -10530,7 +10549,7 @@ var NDS = { ds:null, cm:null, tokens:[], anh:null, maVach:[], loc:null, tuDong:f
   /* MỘT LƯỢT QUÉT = MỘT TẤM TEM (xem ndsLuotMoi). `luot` tăng mỗi lần đặt ảnh mới / bấm Xoá hết;
      `huy` giữ AbortController của lượt gọi mạng đang bay để huỷ được khi có ảnh mới; `boRac` là số
      mảnh giấy tờ đã lọc bỏ; `loiAI` là lỗi của bậc AI để bậc OCR nói lại cho đủ. */
-  luot:0, huy:null, boRac:0, loiAI:'', dongHo:null };
+  luot:0, huy:null, bay:[], nDua:0, boRac:0, loiAI:'', dongHo:null };
 var NDS_TAB = 'SKU_MASTER';
 var NDS_CACHE = 'nds-master-v1';
 /* TTL 12 GIỜ → 2 GIỜ (20/08/2026). Vì sao: hôm nay danh mục được bổ sung kho MẪU lúc 11:16, thủ
@@ -10891,12 +10910,15 @@ function ndsDatAnh(dataUrl){
  * `NDS.tuDong` chặn chạy chồng khi người dùng chọn ảnh liên tiếp.
  * ============================================================================================ */
 async function ndsTuDongNhanDien(){
-  if (NDS.tuDong || !NDS.anh) return;
-  /* Lượt đọc của ảnh TRƯỚC vừa bị huỷ ở ndsLuotMoi nhưng cờ `dangDoc` chỉ nhả trong `finally` của
-     nó — chờ một nhịp ngắn rồi chạy, ĐỪNG bỏ luôn lượt mới. Bản cũ `return` thẳng khi dangDoc=true,
-     nên chụp 2 tem liên tiếp thì tem thứ hai KHÔNG được đọc mà vẫn hiện kết quả của tem thứ nhất. */
-  for (var ch=0; ch<12 && NDS.dangDoc; ch++) await new Promise(function(r){ setTimeout(r,60); });
-  if (NDS.dangDoc || !NDS.anh) return;
+  if (!NDS.anh) return;
+  /* CHỜ CẢ HAI CỜ, KHÔNG return thẳng (sửa 21/08/2026 — bộ đo tab bắt được).
+     Lượt đọc của ảnh TRƯỚC vừa bị huỷ ở `ndsLuotMoi`, nhưng nó chỉ nhả cờ khi vòng đợi của nó tỉnh
+     dậy và thấy số lượt đã đổi — tức trễ tới ~150ms. Bản cũ `return` thẳng khi `tuDong` còn bật nên
+     chụp 2 tem liên tiếp thì TEM THỨ HAI KHÔNG ĐƯỢC ĐỌC mà vẫn hiện kết quả của tem thứ nhất; đúng
+     lỗi 19/08 (5b.8) tái phát theo một đường khác, lần này vì bậc thang mới có vòng đợi 150ms.
+     Trần 25 nhịp × 60ms = 1,5 giây: quá đó thì thà bỏ lượt hơn là để hai lượt chồng nhau. */
+  for (var ch=0; ch<25 && (NDS.tuDong || NDS.dangDoc); ch++) await new Promise(function(r){ setTimeout(r,60); });
+  if (NDS.tuDong || NDS.dangDoc || !NDS.anh) return;
   NDS.tuDong=true; NDS.loiAI='';
   var luot=NDS.luot;
   try{
@@ -10905,20 +10927,12 @@ async function ndsTuDongNhanDien(){
     if (ndsDaChac()) return;                       // mã vạch đã cho kết quả chắc -> khỏi gọi tiếp
     /* Từ khoá lúc này CHỈ có thể là của mã vạch vừa quét (ảnh mới đã dọn sạch state) -> tra sổ tay. */
     if (NDS.tokens.length){ await ndsDoiSoat(); if (!ndsConLuot(luot)) return; if (ndsDaChac()) return; }
-    /* AI TRƯỚC, OCR LÀ LƯỚI ĐỠ — đảo lại chiều 19/08/2026 sau khi thủ kho báo "đọc quá lâu >20s".
-       ĐO THẬT trên chính cổng này (cùng một tem, cùng đường truyền):
-         · phí cố định 2 chặng Apps Script (không ảnh) ........ 1,7 s
-         · OCR: Drive chuyển đổi 3,2–4,0 s + lấy chữ 0,6 s .... script 5,2–5,7 s → tổng 7–8,6 s
-         · AI : ............................................... script 4,5 s   → tổng 6,4 s
-       Cộng thêm thời gian ĐẨY ẢNH từ điện thoại qua mạng di động thì OCR chạm >20 s như thủ kho gặp.
-       OCR không thể nhanh hơn: 3–4 giây của nó là Drive chuyển ảnh sang Google Docs, mình không sửa
-       được. Mà AI vừa NHANH HƠN vừa ĐÚNG HƠN ở tem khó (đo 12 tem: 58% vs 42% Top-1).
-       ⇒ AI là người đọc chính; OCR giữ đúng vai TRỊ GIÁ NHẤT của nó: chạy khi AI hết hạn mức / trả
-       JSON sai khuôn — tức đúng ca "không có kết quả nào" mà thủ kho báo sáng nay. */
-    var ok=await ndsDocTem(true);
-    if (!ndsConLuot(luot)) return;
-    if (ok && ndsDuCanCu()) return;
-    await ndsDocOcr(true);
+    /* AI + OCR CHẠY SONG SONG, có ĐUA và có MỐC CHỐT — xem `ndsHaiNguoiDoc` (21/08/2026).
+       Trước đó (19/08) là bậc thang TUẦN TỰ "AI trước, OCR đỡ sau": đúng về thứ tự tin cậy (AI đọc
+       tem khó hơn hẳn OCR: 58% vs 42% Top-1) nhưng SAI về thời gian — ca tem mờ phải cộng dồn
+       5s + 7,4s ≈ 13 giây, mà lượt AI treo thì còn lâu hơn. Thứ tự TIN CẬY vẫn giữ nguyên; chỉ có
+       điều hai người đọc nay chạy CHỒNG nhau nên cái giá của việc tụt bậc gần như bằng 0. */
+    await ndsHaiNguoiDoc(luot);
   } finally { NDS.tuDong=false; }
 }
 /** ĐỦ CĂN CỨ chưa: đã lập được một MÃ HÀNG có thật trong danh mục (hoặc chắc chắn bằng sổ tay/tem
@@ -11052,6 +11066,10 @@ function ndsDatTenMay(){
 }
 function ndsBusy(on,chu){
   var st=document.getElementById('ndsStage'), cu=document.getElementById('ndsBusyBox');
+  /* HỘP ĐÃ CÓ + vẫn đang chạy ⇒ KHÔNG dựng lại (21/08/2026). Một lượt quét giờ gọi ndsBusy(true) từ
+     nhiều chỗ (hai người đọc song song, lượt đua, lượt thử lại) — dựng lại hộp là đồng hồ giây nhảy
+     về 0, người dùng thấy như máy bắt đầu lại từ đầu. Đồng hồ phải đo ĐÚNG một lượt quét. */
+  if (on && cu && NDS.dongHo) return;
   if (NDS.dongHo){ clearInterval(NDS.dongHo); NDS.dongHo=null; }
   if (cu) cu.remove();
   document.getElementById('ndsBtnDoc').disabled = !!on || !NDS.anh;
@@ -11079,6 +11097,196 @@ function ndsBusy(on,chu){
   },100);
 }
 /* ============================================================================================
+ * BA MỐC THỜI GIAN CỦA MỘT LƯỢT ĐỌC — chốt bằng SỐ ĐO 21/08/2026 (xem NHAN-DIEN-SKU.md §5b.25)
+ * --------------------------------------------------------------------------------------------
+ * Thủ kho báo lại "nhận diện quá lâu". Đo lại từng chặng (bộ đo `hasaki/do-toc-do-tem.mjs`):
+ *     · chặng model Gemini ............ 1,2-2,0 s   (bản `lite`, đo 48 lượt)
+ *     · phí 2 chặng Apps Script ....... 1,3-3,1 s   (đo 30 lượt, KHÔNG có đuôi)
+ *     · đẩy ảnh 4G yếu ................ ~1,7 s
+ *   ⇒ lượt bình thường 4-6 giây. Cái làm người dùng nói "quá lâu" là ĐUÔI, và đuôi có ba nguồn
+ *   khác nhau — mỗi mốc dưới đây chặn một nguồn:
+ *     NDS_T_OCR   OCR của Google (MIỄN PHÍ) chạy SONG SONG, không chờ AI thất bại rồi mới chạy.
+ *                 Đường cũ "AI yếu → OCR" là 5s + 7,4s ≈ 13 giây; chồng hai người đọc lên nhau còn
+ *                 ~8 giây. KHÔNG bắn ở giây 0: trên 4G yếu hai ảnh cùng lên sẽ giành băng thông của
+ *                 nhau, làm CHẬM chính lượt AI (chặng đẩy ảnh là chặng duy nhất mình sở hữu).
+ *     NDS_T_DUA   Apps Script (hoặc model) đôi khi treo lâu bất thường. Quá mốc này thì bắn THÊM
+ *                 một lượt AI nữa, CÙNG NONCE — vừa là một lần rút thăm mới, vừa lấy lại được kết
+ *                 quả đã cất nếu execution đầu xong mà chặng 2 trả trang HTML. Chỉ tốn thêm hạn mức
+ *                 trong đúng mấy lượt chậm (mô phỏng: ~1,1 lượt gọi AI cho mỗi tem).
+ *     NDS_T_CHOT  MỐC CHỐT — quá mốc này thì TRẢ MÀN HÌNH lại cho người dùng (gõ mã trên tem là ra
+ *                 ngay, không cần mạng). Lượt gọi vẫn để chạy tiếp: về sau mà ảnh chưa đổi thì lặng
+ *                 lẽ hiện kết quả. Đây mới là thứ giữ được lời hứa "không ai phải chờ quá 20 giây":
+ *                 nhanh hơn thì không ép được Google, nhưng CHỜ tới bao lâu thì mình quyết được.
+ * ============================================================================================ */
+var NDS_T_OCR   = 2500;
+var NDS_T_DUA   = 6000;
+/* 11 GIÂY, không phải 9 (chốt sau khi đo OCR 21/08/2026): trên 6 lượt OCR thật, OCR lập được mã
+   6/6 — nhưng với THẺ MẪU VIẾT TAY nó ra đúng SKU chỉ 1/2 (lượt kia ra 422423807, đúng cái bẫy
+   "cuộn vải trong ô Thành phần vải" của §5b.21). Tức OCR "có mã" KHÔNG đồng nghĩa "đúng hàng", nên
+   phải nhường AI lâu hơn một chút. Lượt AI bình thường về trong ~5s và lượt đua bắn ở giây 6, nên
+   mốc 11s chỉ chạm tới khi CẢ HAI lượt AI đều im — lúc đó lấy OCR là đúng, còn hơn không có gì. */
+var NDS_T_UU_AI = 11000;
+var NDS_T_CHOT  = 17000;
+
+/** Huỷ mọi lượt gọi mạng đang bay của lượt quét trước (AI · AI-đua · OCR). */
+function ndsHuyDangBay(){
+  var ds=NDS.bay||[];
+  for (var i=0;i<ds.length;i++){ try{ ds[i].abort(); }catch(e){ /* trình duyệt cũ không có AbortController */ } }
+  NDS.bay=[]; NDS.huy=null;
+}
+function ndsBoKhoiBay(ctl){
+  if (!ctl || !NDS.bay) return;
+  var i=NDS.bay.indexOf(ctl); if (i>=0) NDS.bay.splice(i,1);
+}
+/** ĐỌC TEM BẰNG AI, CÓ ĐUA — trả { ok:true, j } hoặc { ok:false, loi }. KHÔNG tự vẽ gì lên giao
+ *  diện: người gọi quyết định áp kết quả nào (bậc thang cần biết cả hai người đọc trước khi chọn). */
+function ndsLayAI(luot, tuDong){
+  var mail=ndsEmail();
+  if (!mail) return Promise.resolve({ ok:false, loi:'chưa có danh tính máy' });
+  /* NONCE GIỮ NGUYÊN cho CẢ lượt đầu, lượt thử lại VÀ lượt đua: doPost của Apps Script cất phản hồi
+     theo nonce 10 phút, nên nếu execution đầu đã xong thì lượt sau chỉ NHẬN LẠI, không chạy Gemini
+     lần nữa (không tốn thêm hạn mức). Cờ "đang đọc" phía GAS cũng đã sửa để CÙNG NONCE thì cho đi —
+     trước đây chính nó chặn oan lượt thử lại của chính mình. */
+  var nonce='nds-'+Date.now()+'-'+Math.random().toString(36).slice(2,8);
+  return ndsNenSan(NDS_MAX_CANH).then(function(a){
+    var goc={ action:'sku_vision', key:'', email:mail, mime:a.mime, anh:a.b64, nonce:nonce };
+    return new Promise(function(res){
+      var xong=false, daDua=false, loi1='', keo=null;
+      var chot=function(r){ if (xong) return; xong=true; if (keo) clearTimeout(keo); res(r); };
+      var mot=function(dua){
+        var b=goc;
+        if (dua){ b={}; for (var k in goc) b[k]=goc[k]; b.dua=1; }
+        /* ⚠ TUYỆT ĐỐI KHÔNG `throw` trong nhánh THÀNH CÔNG của `then(ok, err)`: lỗi ném ở đó KHÔNG
+           rơi vào `err` của cùng lời gọi then, nó thành một promise bị từ chối mà chẳng ai bắt.
+           Bẫy này vừa cắn 21/08/2026: cổng trả `status:'error'` (hết hạn mức) thì trang nổ
+           "unhandled rejection", nhánh xử lý lỗi KHÔNG chạy, nên lượt đua vẫn bắn ⇒ tốn 2 lượt AI
+           cho một lỗi chắc chắn. Nay cả hai đường lỗi cùng đi qua `loiRa`. */
+        var loiRa=function(m){
+          /* LƯỢT ĐẦU HỎNG THÌ CHỐT NGAY, ĐỪNG ngồi chờ tới mốc đua (bẫy đã cắn ngay hôm làm việc
+             này, bộ đo tab bắt được 6 ca):
+               · hết hạn mức / JSON sai khuôn là lỗi CHẮC CHẮN — đua lại cũng hỏng y như vậy, mà
+                 chờ thêm 6 giây là giữ cờ `dangDoc` 6 giây, nút "Đọc tem" bị khoá theo;
+               · lượt bị `abort` vì người dùng vừa chụp tem khác — chờ ở đây thì TẤM TEM THỨ HAI
+                 KHÔNG ĐƯỢC ĐỌC, đúng lỗi 19/08 đã chữa một lần rồi (xem 5b.8).
+             Chỉ khi lượt đua ĐÃ bay thì mới nhường nó chốt (may ra nó về được). */
+          if (dua || !daDua || !ndsConLuot(luot)) chot({ ok:false, loi:(dua && loi1) || m });
+          else loi1=m;
+        };
+        ndsGoiGas(b, tuDong).then(function(j){
+          if (j && j.status==='success'){ j.dua=!!dua; chot({ ok:true, j:j }); return; }
+          loiRa((j&&j.message)||'AI trả lỗi không rõ');
+        }, function(e){ loiRa(String(e&&e.message||e)); });
+      };
+      keo=setTimeout(function(){
+        if (xong || !ndsConLuot(luot)) return;       // đã có kết quả / đã chụp tem khác -> khỏi tốn hạn mức
+        daDua=true; NDS.nDua=(NDS.nDua||0)+1; mot(true);
+      }, NDS_T_DUA);
+      mot(false);
+    });
+  }, function(e){ return { ok:false, loi:String(e&&e.message||e) }; });
+}
+/** ĐỌC CHỮ BẰNG OCR CỦA GOOGLE — trả { ok:true, j } / { ok:false, loi }. `hoan` = hoãn mấy ms rồi
+ *  mới bắn, để không giành băng thông đẩy ảnh với lượt AI trên mạng di động. */
+function ndsLayOcr(luot, tuDong, hoan){
+  var nonce='ocr-'+Date.now()+'-'+Math.random().toString(36).slice(2,8);
+  return new Promise(function(r){ setTimeout(r, hoan||0); }).then(function(){
+    if (!ndsConLuot(luot)) throw new Error('đã có ảnh mới');
+    return ndsNenSan(NDS_MAX_OCR);
+  }).then(function(a){
+    return ndsGoiGas({ action:'sku_ocr', email:ndsEmail(), mime:a.mime, anh:a.b64, lang:'vi', nonce:nonce }, tuDong);
+  }).then(function(j){
+    if (!j || j.status!=='success' || !j.text) throw new Error((j&&j.message)||'OCR không trả về chữ nào');
+    return { ok:true, j:j };
+  /* CHỐT LỖI ĐẶT RIÊNG Ở CUỐI CHUỖI (`then(null, ...)`), không phải tham số thứ hai của then trên:
+     tham số thứ hai chỉ bắt lỗi của các bước TRƯỚC nó, còn lỗi ném ngay trong nhánh thành công thì
+     lọt ra ngoài thành "unhandled rejection" — đúng bẫy vừa cắn ở ndsLayAI. */
+  }).then(null, function(e){ return { ok:false, loi:String(e&&e.message||e) }; });
+}
+/* ============================================================================================
+ * HAI NGƯỜI ĐỌC CHẠY SONG SONG + ĐUA + MỐC CHỐT — đường đi chính của một lượt quét (21/08/2026)
+ * --------------------------------------------------------------------------------------------
+ * Bản trước là bậc thang TUẦN TỰ: AI (~5s) → chưa lập được mã thì OCR (~7,4s). Cộng lại đúng 13
+ * giây cho ca hay gặp nhất (tem mờ), chưa kể lượt AI treo. Nay:
+ *     giây 0    bắn AI            (người đọc chính — đúng hơn ở tem khó)
+ *     giây 2,5  bắn OCR song song (miễn phí; AI mà hụt thì kết quả đã sẵn, không phải chờ thêm)
+ *     giây 6    AI còn im → bắn thêm một lượt AI nữa (cùng nonce)
+ *     giây 9    OCR đã lập được mã mà AI vẫn im → LẤY OCR, đừng nhường nữa
+ *     giây 17   MỐC CHỐT: trả màn hình lại + trỏ vào ô gõ mã; lượt gọi vẫn chạy, về sau mà ảnh chưa
+ *               đổi thì lặng lẽ hiện kết quả
+ * Vòng đợi viết bằng POLL 150ms thay vì lồng Promise: cùng lúc phải hỏi 5 điều (AI xong chưa · OCR
+ * xong chưa · đủ căn cứ chưa · còn đúng tấm tem đó không · hết hạn chưa) — lồng promise cho 5 điều
+ * đó thì không ai đọc lại nổi, mà chính khúc này đã cắn hai lần vì đọc state của LƯỢT TRƯỚC.
+ * ============================================================================================ */
+async function ndsHaiNguoiDoc(luot){
+  if (!NDS.anh) return false;
+  NDS.dangDoc=true; NDS.nDua=0;
+  ndsBusy(true,'Đang đọc tem…');
+  var t0=Date.now(), ai=null, ocr=null, daAp=false;
+  var jobAI=ndsLayAI(luot, true).then(function(r){ ai=r||{ok:false}; return r; });
+  var jobOCR=ndsLayOcr(luot, true, NDS_T_OCR).then(function(r){ ocr=r||{ok:false}; return r; });
+  try{
+    while (true){
+      if (!ndsConLuot(luot)) return false;                    // có ảnh mới -> im lặng nhường lượt mới
+      var t=Date.now()-t0;
+      /* ① AI đã về */
+      if (ai){
+        if (ai.ok && !ai.daAp){
+          ai.daAp=1; daAp=true;
+          await ndsNhanKetQua(ai.j);
+          if (!ndsConLuot(luot)) return false;
+          if (ndsDuCanCu()) return true;                      // đủ căn cứ -> xong, khỏi cần OCR
+        }
+        if (!ai.ok && !NDS.loiAI) NDS.loiAI=ai.loi||'';
+        /* AI xong mà chưa đủ căn cứ (hoặc chết) -> OCR là lưới đỡ; nó đang bay sẵn nên chờ nốt */
+        if (ocr){
+          if (ocr.ok && !ocr.daAp){ ocr.daAp=1; daAp=true; await ndsNhanVanBan(ocr.j.text,'ocr',ocr.j); }
+          if (!daAp && ndsConLuot(luot)) ndsKhongDocDuoc();
+          return ndsConLuot(luot) && daAp;
+        }
+      }
+      /* ② OCR về trước mà AI còn im: nhường AI tới NDS_T_UU_AI rồi thôi */
+      else if (ocr && ocr.ok && !ocr.daAp && t>=NDS_T_UU_AI){
+        ocr.daAp=1; daAp=true;
+        await ndsNhanVanBan(ocr.j.text,'ocr',ocr.j);
+        if (!ndsConLuot(luot)) return false;
+        if (ndsDuCanCu()) return true;                        // OCR đã lập được mã -> khỏi chờ AI nữa
+      }
+      /* ③ MỐC CHỐT */
+      if (t>=NDS_T_CHOT) break;
+      await new Promise(function(r){ setTimeout(r,150); });
+    }
+    ndsHetHan(luot, jobAI, jobOCR, daAp);
+    return daAp;
+  } finally { NDS.dangDoc=false; ndsBusy(false); }
+}
+/** CẢ HAI NGƯỜI ĐỌC đều không cho được gì — nói MỘT lần rồi trỏ ngay vào đường KHÔNG CẦN MẠNG.
+ *  (Bậc thang cũ nói câu này trong `catch` của ndsDocOcr; nay OCR chạy song song nên chỗ nói phải
+ *  chuyển về đây — nếu không thì hỏng cả hai đường mà người dùng chẳng thấy dòng nào.) */
+function ndsKhongDocDuoc(){
+  toast('Không đọc được tem — gõ mã in trên tem.','err');
+  setTimeout(function(){ if (typeof ndsTroMa==='function') ndsTroMa(); }, 400);
+}
+/** HẾT HẠN 17 GIÂY — trả màn hình lại cho người dùng, nhưng KHÔNG bỏ hai lượt gọi đang bay: mạng
+ *  yếu thì chúng vẫn về sau đó, và nếu ảnh chưa đổi thì kết quả vẫn dùng được. Bản trước không có
+ *  mốc này, nên người dùng đứng nhìn đồng hồ chạy tới 28 giây mà không biết nên làm gì. */
+function ndsHetHan(luot, jobAI, jobOCR, daAp){
+  if (!daAp){
+    toast('Mạng đang chậm — gõ MÃ trên tem là ra ngay (máy vẫn đọc tiếp phía sau).','warn');
+    setTimeout(function(){ if (typeof ndsTroMa==='function') ndsTroMa(); }, 300);
+  }
+  var muon=async function(r, laOcr){
+    if (!r || !r.ok || r.daAp) return;
+    if (!ndsConLuot(luot)) return;                      // ảnh đã đổi -> bỏ, đúng luật MỘT LƯỢT = MỘT TEM
+    if (NDS.ket && NDS.ket.length) return;              // trong lúc chờ đã có kết quả -> đừng giật màn hình
+    r.daAp=1;
+    if (laOcr) await ndsNhanVanBan(r.j.text,'ocr',r.j); else await ndsNhanKetQua(r.j);
+    toast('Đã có kết quả đọc tem (về muộn).','ok');
+  };
+  jobAI.then(function(r){ muon(r,false); }, function(){});
+  jobOCR.then(function(r){ muon(r,true); }, function(){});
+}
+
+/* ============================================================================================
  * ĐỌC CHỮ TRÊN TEM BẰNG OCR CỦA GOOGLE (Apps Script action=sku_ocr → Drive OCR)
  * --------------------------------------------------------------------------------------------
  * Vì sao có đường này bên cạnh AI (19/08/2026, sau khi thủ kho báo "nhận diện toàn sai hoặc không
@@ -11099,12 +11307,12 @@ async function ndsDocOcr(tuDong){
     ? (NDS.loiAI ? 'AI không đọc được — đang thử OCR của Google (miễn phí)…' : 'Chưa lập được mã hàng — đang đọc lại bằng OCR của Google (miễn phí)…')
     : 'Đang đọc chữ trên tem bằng OCR của Google…');
   try{
-    var a=await ndsNenSan(NDS_MAX_OCR);
-    var nonce='ocr-'+Date.now()+'-'+Math.random().toString(36).slice(2,8);
-    var j=await ndsGoiGas({ action:'sku_ocr', email:ndsEmail(), mime:a.mime, anh:a.b64, lang:'vi', nonce:nonce }, tuDong);
+    /* MỘT đường gọi OCR duy nhất (`ndsLayOcr`) dùng chung với đường tự động — bài học `ndsLop()`:
+       hai đường làm cùng một việc thì sớm muộn cũng lệch nhau một chỗ nào đó. */
+    var r=await ndsLayOcr(luot, tuDong, 0);
     if (!ndsConLuot(luot)) return false;   // ảnh mới -> bỏ kết quả của ảnh cũ
-    if (j.status!=='success' || !j.text) throw new Error(j.message||'OCR không trả về chữ nào');
-    await ndsNhanVanBan(j.text, 'ocr', j);
+    if (!r.ok) throw new Error(r.loi||'OCR không trả về chữ nào');
+    await ndsNhanVanBan(r.j.text, 'ocr', r.j);
     return ndsConLuot(luot);
   }catch(e){
     if (!ndsConLuot(luot)) return false;
@@ -11147,15 +11355,12 @@ async function ndsDocTem(tuDong){
   var luot=NDS.luot;                       // chốt lượt: hết hàm phải kiểm lại, kẻo ghi kết quả của ảnh cũ
   NDS.dangDoc=true; ndsBusy(true, tuDong?'Không thấy mã vạch trên tem — đang nhờ AI đọc tem…':'Đang đọc tem bằng AI…');
   try{
-    var a=await ndsNenSan(NDS_MAX_CANH);
-    /* NONCE GIỮ NGUYÊN QUA MỌI LƯỢT THỬ LẠI — đây là điều kiện để thử lại mà KHÔNG tốn thêm lượt
-       Gemini: doPost của Apps Script cất phản hồi theo nonce 10 phút, lượt sau chỉ nhận lại. */
-    var nonce='nds-'+Date.now()+'-'+Math.random().toString(36).slice(2,8);
-    var body={ action:'sku_vision', key:'', email:mail, mime:a.mime, anh:a.b64, nonce:nonce };
-    var j=await ndsGoiGas(body, tuDong);
+    /* MỘT đường gọi AI duy nhất (`ndsLayAI`, có đua + giữ nguyên nonce) dùng chung với đường tự
+       động — xem ghi chú ở ndsDocOcr về lý do không để hai đường. */
+    var r=await ndsLayAI(luot, tuDong);
     if (!ndsConLuot(luot)) return false;   // đã có ảnh mới -> kết quả này thuộc ảnh cũ, BỎ
-    if (j.status!=='success') throw new Error(j.message||'AI trả lỗi không rõ');
-    await ndsNhanKetQua(j);
+    if (!r.ok) throw new Error(r.loi||'AI trả lỗi không rõ');
+    await ndsNhanKetQua(r.j);
     return ndsConLuot(luot);
   }catch(e){
     if (!ndsConLuot(luot)) return false;   // lượt này bị huỷ vì có ảnh mới -> im lặng, đúng ý người dùng
@@ -11188,20 +11393,22 @@ async function ndsGoiGas(body, tuDong){
   var LAN=3, cuoi='';
   for (var i=0;i<LAN;i++){
     if (i){
-      ndsBusy(true,'Google trả về trang lỗi — đang lấy lại kết quả (lượt '+(i+1)+'/'+LAN+')…');
+      /* KHÔNG gọi lại ndsBusy ở đây: hộp "đang đọc" chỉ còn cái đồng hồ giây, mà gọi lại là dựng
+         hộp mới ⇒ đồng hồ NHẢY VỀ 0 giữa một lượt quét — trông như máy vừa bắt đầu lại, đúng thứ
+         làm người dùng mất tin. Người dùng không cần biết lượt thử lại thứ mấy. */
       await new Promise(function(r){ setTimeout(r, 900*i); });
     }
     var ctl=(typeof AbortController!=='undefined')?new AbortController():null;
     /* Gửi ra ngoài để `ndsLuotMoi()` huỷ được lượt đang bay khi người dùng chụp tem mới: vừa nhả cờ
        `dangDoc` cho lượt mới chạy, vừa khỏi để phản hồi của tem CŨ rơi vào tem mới. */
-    NDS.huy=ctl;
+    NDS.huy=ctl; if (ctl) NDS.bay.push(ctl);
     var het=setTimeout(function(){ if(ctl) ctl.abort(); },90000);
     var txt='';
     try{
       var r=await fetch(APPSCRIPT_URL,{ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
         body:JSON.stringify(body), signal:ctl?ctl.signal:undefined });
       txt=await r.text();
-    } finally { clearTimeout(het); if (NDS.huy===ctl) NDS.huy=null; }
+    } finally { clearTimeout(het); if (NDS.huy===ctl) NDS.huy=null; ndsBoKhoiBay(ctl); }
     var t=String(txt||'').trim();
     if (t.charAt(0)==='{' || t.charAt(0)==='['){
       try{ return JSON.parse(t); }
@@ -11321,9 +11528,11 @@ function ndsThemTay(){
  * ============================================================================================ */
 function ndsLuotMoi(){
   NDS.luot=(NDS.luot||0)+1;
-  /* Huỷ luôn lượt gọi mạng đang bay: nó vừa tốn hạn mức vừa giữ cờ `dangDoc` chặn lượt mới. */
-  try{ if (NDS.huy) NDS.huy.abort(); }catch(e){ /* trình duyệt cũ không có AbortController */ }
-  NDS.huy=null;
+  /* Huỷ luôn MỌI lượt gọi mạng đang bay: nó vừa tốn hạn mức vừa giữ cờ `dangDoc` chặn lượt mới.
+     Từ 21/08/2026 một lượt quét có thể có TỚI BA lượt đang bay cùng lúc (AI · AI-đua · OCR) nên
+     phải giữ CẢ DANH SÁCH — bản cũ chỉ giữ một `NDS.huy` nên hai lượt kia bay tiếp sau khi người
+     dùng đã chụp tem khác. */
+  ndsHuyDangBay();
   NDS.tokens=[]; NDS.ket=[]; NDS.daBo={}; NDS.rawDaTach=''; NDS.maVach=[]; NDS.loc=null;
   NDS.boRac=0; NDS.loiAI=''; NDS.nenCache=null;
   var om=document.getElementById('ndsMa'); if (om) om.value='';
@@ -11622,6 +11831,12 @@ function ndsTheKetQua(r, hang){
      nằm CÙNG HÀNG với "N từ khoá khớp · N đơn vị khác" (xem `.nds-more>summary` / `.nds-inline`).
      Vì sao: hàng đầu đã có hạng · SKU · tồn · ghi chú · % — thêm nhãn lệch là máy hẹp phải xuống
      dòng, chừa một dải trống bên phải. Dòng thông tin thì đang trống hẳn nửa phải. */
+  /* KHÔNG CÓ BẢN ĐƠN VỊ NHỎ NHẤT — phải nói ra (yêu cầu user 21/08/2026). Đặt ở HÀNG ĐẦU cạnh %
+     chứ không xuống dòng phụ: nó đổi hẳn việc thủ kho phải làm (đếm bằng gì), nên phải đọc CÙNG LÚC
+     với mã SKU. Chỉ hiện khi cả nhóm — kể cả dòng đã chết — không có dòng nào mang mm/g/ml/pcs;
+     nếu có mà chỉ tồn 0 thì `dvNhoThay` đã lo (nó ĐƯA dòng đó lên làm đại diện). */
+  if (!canh && r.khongCoDvNho) canh='<span class="nds-lech" title="Cả mặt hàng này không có SKU nào tính bằng mm/gram/pcs — kiểm kê đếm bằng đơn vị nhỏ nhất, nên cân nhắc trước khi chọn">'+
+    'chưa có bản ĐƠN VỊ NHỎ NHẤT'+(dvNhan?(' — chỉ có "'+esc(dvNhan)+'"'):'')+'</span>';
   var canhLech='';
   if (r.xungDot.length){
     var ten={ cm:'chiều dài', mm:'kích thước', gsm:'định lượng', tex:'chi số Tex', tkt:'chi số Tkt',
@@ -12612,7 +12827,7 @@ function prVe(){
         (nhieu ? 'Dòng này khai ' + soTem + ' số lượng nên ra đúng ' + soTem + ' con tem' : 'Số con tem sẽ in') + '"></td>' +
       /* Ô SỐ LƯỢNG chỉ còn ĐÚNG chỗ để gõ: ô nhập + nút "+". Danh sách số đã chốt KHÔNG nằm ở đây
          nữa (đổi 21/08/2026, yêu cầu user "chỗ hiển thị số lượng chưa thân thiện") — nó xuống một
-         DẢI RIÊNG ăn hết bề rộng dòng, xem `.prslbar` bên dưới. Hai lý do:
+         HÀNG RIÊNG ăn hết bề rộng dòng, xem `tr.prsl2` bên dưới. Hai lý do:
            · chip nhét trong một cột hẹp, canh phải, 4-5 cái là rớt thành 2-3 dòng méo mó, mà cột đó
              chính là chỗ tay đang gõ;
            · và không có chỗ nào NÓI RA quan hệ "mỗi số lượng = một con tem" — người dùng thấy
@@ -12641,11 +12856,12 @@ function prVe(){
       /* DẢI SỐ LƯỢNG ĐÃ CHỐT — hàng riêng, ăn hết bề rộng, dán liền dưới dòng trên (dòng trên bị bỏ
          bo góc dưới bằng class `co-chip` nên hai hàng đọc ra như MỘT thẻ). Nhãn nói thẳng quan hệ
          giữa số lượng và số tem, để không ai phải tự đoán. */
-      (dsSl.length ? '<tr class="prsl2"><td colspan="5"><div class="prslbar">' +
-        '<span class="prslnhan">' + (nhieu
-          ? 'Sẽ in <b>' + soTem + '</b> tem — mỗi số lượng một con tem'
-          : 'Số lượng in trên tem') + '</span>' +
-        '<div class="prchips">' + prChipSl(r) + '</div></div></td></tr>' : '');
+      /* CHỈ CÒN CHIP, KHÔNG CÒN CHỮ (yêu cầu user 21/08/2026: "bỏ dòng ghi chú … trong ô số lượng").
+         Hai câu bị bỏ là "Số lượng in trên tem" và "Sẽ in N tem — mỗi số lượng một con tem": trên
+         điện thoại chúng ăn trọn một dòng chữ ngay giữa hai khối số, mà cột "Số tem" ngay bên cạnh
+         đã in đúng con số đó rồi — nói lại lần nữa chỉ đẩy danh sách xuống. */
+      (dsSl.length ? '<tr class="prsl2"><td colspan="5"><div class="prchips">' +
+        prChipSl(r) + '</div></td></tr>' : '');
   }).join('') : '<tr><td colspan="5"><div class="state" style="padding:18px">Danh sách in đang trống.</div></td></tr>';
   var tong = prTongTem(), nhom = PR_TEM.theoMau(ds);
   document.getElementById('prSum').innerHTML = nhom.thuTu.map(function(k){
