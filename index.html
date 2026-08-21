@@ -2242,9 +2242,13 @@ body.side-anim{overflow-x:clip}
 .nds-card.top{--cc:var(--good)} .nds-card.mid{--cc:var(--warn)} .nds-card.low{--cc:var(--muted)}
 .nds-card.nghi{--cc:var(--bad)}
 .nds-chead{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
-.nds-rank{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:6px;
+/* Badge đầu thẻ nay là LOẠI SKU (Normal/Combo…) chứ không còn là số hạng 1 ký tự → bỏ width cứng
+   20px, để chữ tự giãn (21/08/2026). */
+.nds-rank{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;
+  padding:0 7px;border-radius:6px;
   background:color-mix(in srgb,var(--cc,var(--brand2)) 18%,transparent);color:var(--cc,var(--brand2));
-  font-size:11px;font-weight:780;flex:none}
+  font-size:10.5px;font-weight:780;flex:none}
+.nds-rank.cb{background:color-mix(in srgb,var(--warn) 20%,transparent);color:var(--warn)}
 /* SKU là thứ phải đọc được từ xa nhất trên thẻ -> to hơn hẳn phần còn lại */
 .nds-sku{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:var(--ink)}
 .nds-pct{margin-left:auto;font-size:13px;font-weight:780;font-variant-numeric:tabular-nums;color:var(--cc,var(--brand2))}
@@ -9902,12 +9906,35 @@ var NDS_ENGINE = (function(){
       if (so.length<6) return;
       for (var i=0;i<ds.length;i++) if (String(ds[i].sku)===so && thangSku.indexOf(i)<0) thangSku.push(i);
     });
+    /* ═══ CẶP TỪ HIẾM = BẰNG CHỨNG ĐỊNH DANH (21/08/2026 — sự cố tem HWA-IL PANDA quay video) ═══
+       Tem phấn bay HWA-IL PANDA: AI đọc ra "hwa · il · panda" (mỗi từ chỉ có 1 SKU trong 5.610 dòng
+       mang nó) NHƯNG cũng đọc kèm màu "blue" từ hoạ tiết hộp. Cách chấm theo vai cho MỘT chữ màu
+       trọn 20 điểm, còn BA chữ tên riêng chia nhau 10 điểm vai NCC ⇒ "Màu keo silicon …/Blue/mg"
+       chiếm hạng 1 (46%), SKU đúng văng khỏi Top 3. Đo lại được nguyên si bằng danh mục thật.
+       Chữa theo đúng triết lý "định danh thắng chữ chung" của luật CÓ MÃ: một dòng khớp NGUYÊN VĂN
+       từ HAI TỪ HIẾM trở lên (mỗi từ xuất hiện ở ≤6 dòng danh mục — cùng cỡ df với mã hàng thật:
+       tx300ha=6, c5935=4, morito=5; còn blue=358, black=905 nên chữ màu/chất liệu không lọt) thì
+       được đối xử NHƯ dòng mang mã trong bộ so sánh xếp hạng. MỘT từ hiếm đơn lẻ thì không: rất có
+       thể là từ đọc lệch, nên vẫn để điểm số quyết như cũ. */
+    var NGUONG_HIEM = 6, hiemDem = Object.create(null);
+    (function(){
+      var da = Object.create(null), soHiem = 0;
+      tatCa.forEach(function(t){
+        if (da[t] || t.length < 3) return; da[t] = 1;
+        var dsh = cm.idx[t];
+        if (!dsh || dsh.length > NGUONG_HIEM) return;
+        soHiem++;
+        for (var z = 0; z < dsh.length; z++) hiemDem[dsh[z]] = (hiemDem[dsh[z]] || 0) + 1;
+      });
+      if (soHiem < 2) hiemDem = Object.create(null);   // chưa đủ một CẶP thì không có chữ ký nào cả
+    })();
     /* Mô tả 1 ứng viên. INACTIVE KHÔNG bị loại ở đây (khác bản đầu): còn giữ lại thì bước gom
        biến thể phía dưới mới liệt kê được "cùng hàng, khác đơn vị" kèm trạng thái của từng cái. */
     var moTa = function(i, r, diem, khop, xungDot, phu, laSku){
       var dv = r._dv || (r._dv = donVi(r.pn));
       return { i:i, sku:r.sku, pn:r.pn, type:r.type, status:r.status, qty:r.qty,
         donVi:dv.raw, dv:dv.ma, q:dv.q, gop:!!dv.gop, nho:!!dv.nho, coMa:!!(maKhop && maKhop[i]),
+        hiem:hiemDem[i]||0,
         khoa:(r._k!=null?r._k:(r._k=khoaHang(r.pn))),
         diem:diem, pct:Math.round(diem*100), khop:khop, xungDot:xungDot, phu:phu, laSku:laSku,
         bienThe:[], viDonVi:false, daHoc:false };
@@ -10061,6 +10088,11 @@ var NDS_ENGINE = (function(){
       var conSong = v.filter(function(x){ return x.status!=='INACTIVE'; });
       if (conSong.length && !conSong.some(function(x){ return x.nho; })){
         var nhoHon = v.filter(function(x){ return x.status==='INACTIVE' && x.type!=='COMBO' && x.nho; });
+        /* LUÔN HIỆN ĐƯỢC BẢN NORMAL (21/08/2026, yêu cầu user): mọi dòng còn sống của nhóm đều là
+           COMBO mà không có bản đơn vị nhỏ nào để kéo lên, thì kéo bản NORMAL đã tắt (bất kể đơn
+           vị) — combo là cách đóng gói, thẻ phải chỉ ra được mặt hàng thật để đếm. */
+        if (!nhoHon.length && conSong.every(function(x){ return x.type==='COMBO'; }))
+          nhoHon = v.filter(function(x){ return x.status==='INACTIVE' && x.type!=='COMBO'; });
         /* v đã sắp nên nhoHon vào theo đơn vị nhỏ nhất trước. Lọc trùng vì ở chế độ "xem cả INACTIVE"
            thì hop CHÍNH LÀ v (đã chứa mấy dòng này) — không lọc là đại diện đúng nhưng danh sách
            biến thể mất một dòng. */
@@ -10120,8 +10152,10 @@ var NDS_ENGINE = (function(){
     function chetNhom(x){ return (x.song===undefined) ? (x.status==='INACTIVE') : !x.song; }
     function soSanh(a,b){
       if (a.laSku!==b.laSku) return a.laSku?-1:1;
-      /* `ma1/ma2` phải tính TỪ ĐÂY vì bậc ACTIVE bên dưới cũng bị ràng vào nó (đổi 20/08/2026). */
-      var ma1=a.coMa?0:1, ma2=b.coMa?0:1;
+      /* `ma1/ma2` phải tính TỪ ĐÂY vì bậc ACTIVE bên dưới cũng bị ràng vào nó (đổi 20/08/2026).
+         Từ 21/08/2026 "có định danh" = mang MÃ tem HOẶC khớp nguyên văn ≥2 TỪ HIẾM (xem NGUONG_HIEM
+         phía trên — ca tem HWA-IL PANDA không in mã nào nhưng "hwa·il·panda" trỏ đúng 1 SKU). */
+      var ma1=(a.coMa||a.hiem>=2)?0:1, ma2=(b.coMa||b.hiem>=2)?0:1;
       /* MẶT HÀNG còn sống trước — nhưng CHỈ khi hai bên CÙNG MỨC bằng chứng định danh, đúng cái
          ngoặc đã dùng cho luật đóng gói ở 5b.9. Vì sao phải ràng: dòng mang ĐÚNG MÃ tem mà tồn 0
          (hàng mẫu, hàng mới nhập chưa có PO, hàng vừa hết) từng bị MỌI dòng ACTIVE vượt lên trên —
@@ -10172,6 +10206,15 @@ var NDS_ENGINE = (function(){
         if (ca!==cb) return ca-cb;
         var ga=a.gop?1:0, gb=b.gop?1:0;
         if (ga!==gb) return ga-gb;
+        /* ĐƠN VỊ NHỎ NHẤT LÀ LUẬT CỨNG KHI HAI BÊN CÙNG MANG ĐỊNH DANH (21/08/2026, yêu cầu user —
+           ca keo dựng TX300HA). Ba dòng cùng mang mã `tx300ha`: hai bản "m" 76% đứng trên bản "mm"
+           63%, mà kho đếm bằng mm. Định danh đã khoá "đây là mặt hàng gì" thì giữa các dòng cùng
+           mặt hàng/cùng mã, bản ĐƠN VỊ ĐẾM ĐƯỢC NHỎ NHẤT (mm·g·ml·pcs, cờ `nho`) phải thắng điểm số
+           — điểm chỉ đo độ trùng CHỮ của tên, không đo "kho đếm bằng gì".
+           CHỈ mở khi `!ma1` (cả hai CÓ định danh): chưa lập được định danh thì điểm phải quyết trước,
+           không thì một dòng chỉ-may "mm" 18% vô quan sẽ đè dòng đúng "Hộp" 50% (đúng ca video
+           HWA-IL — phấn bay chỉ có bản Hộp). */
+        if (!ma1){ var na=a.nho?0:1, nb=b.nho?0:1; if (na!==nb) return na-nb; }
       }
       /* SỔ TAY (người đã tự tay xác nhận cho ĐÚNG tem này) đứng trên mọi suy đoán của máy. */
       var h1=a.daHoc?0:1, h2=b.daHoc?0:1;
@@ -11831,12 +11874,9 @@ function ndsTheKetQua(r, hang){
      nằm CÙNG HÀNG với "N từ khoá khớp · N đơn vị khác" (xem `.nds-more>summary` / `.nds-inline`).
      Vì sao: hàng đầu đã có hạng · SKU · tồn · ghi chú · % — thêm nhãn lệch là máy hẹp phải xuống
      dòng, chừa một dải trống bên phải. Dòng thông tin thì đang trống hẳn nửa phải. */
-  /* KHÔNG CÓ BẢN ĐƠN VỊ NHỎ NHẤT — phải nói ra (yêu cầu user 21/08/2026). Đặt ở HÀNG ĐẦU cạnh %
-     chứ không xuống dòng phụ: nó đổi hẳn việc thủ kho phải làm (đếm bằng gì), nên phải đọc CÙNG LÚC
-     với mã SKU. Chỉ hiện khi cả nhóm — kể cả dòng đã chết — không có dòng nào mang mm/g/ml/pcs;
-     nếu có mà chỉ tồn 0 thì `dvNhoThay` đã lo (nó ĐƯA dòng đó lên làm đại diện). */
-  if (!canh && r.khongCoDvNho) canh='<span class="nds-lech" title="Cả mặt hàng này không có SKU nào tính bằng mm/gram/pcs — kiểm kê đếm bằng đơn vị nhỏ nhất, nên cân nhắc trước khi chọn">'+
-    'chưa có bản ĐƠN VỊ NHỎ NHẤT'+(dvNhan?(' — chỉ có "'+esc(dvNhan)+'"'):'')+'</span>';
+  /* Dòng "chưa có bản ĐƠN VỊ NHỎ NHẤT" ĐÃ BỎ (21/08/2026, yêu cầu user — nhắc lần 2 kèm video):
+     nó chiếm nguyên một dải đỏ trên thẻ để nói một việc mà cột "Tồn 47 Hộp" đã nói — đơn vị của
+     dòng in ngay cạnh tồn. Cờ `khongCoDvNho` vẫn được lõi tính (bộ đo dùng), chỉ thôi vẽ. */
   var canhLech='';
   if (r.xungDot.length){
     var ten={ cm:'chiều dài', mm:'kích thước', gsm:'định lượng', tex:'chi số Tex', tkt:'chi số Tkt',
@@ -11875,14 +11915,21 @@ function ndsTheKetQua(r, hang){
   }
 
   var nhan='';
-  if (r.type==='COMBO') nhan+='<span class="badge b-proc" title="Combo là cách đóng gói, không phải mặt hàng để đếm">COMBO</span>';
   if (r.status==='INACTIVE') nhan+='<span class="badge b-pend" title="Không còn tồn, không có hàng đang về">INACTIVE</span>';
   else if (!NDS.chiActive) nhan+='<span class="badge b-ok">ACTIVE</span>';
+
+  /* BADGE ĐẦU THẺ = LOẠI SKU thay cho số hạng 1·2·3 (21/08/2026, yêu cầu user). Số hạng không mang
+     tin — thẻ vốn đã xếp từ trên xuống; còn Normal/Combo là thứ quyết định "có đếm được không".
+     Loại lạ (nếu WMS thêm) hiện nguyên văn, viết hoa chữ đầu. Badge COMBO riêng phía sau đã bỏ vì
+     trùng tin với badge này. */
+  var loai=String(r.type||'NORMAL');
+  loai=loai.charAt(0).toUpperCase()+loai.slice(1).toLowerCase();
+  var loaiTip=(r.type==='COMBO')?'Combo là cách đóng gói, không phải mặt hàng để đếm':'Loại SKU trên WMS';
 
   return '<div class="'+lop+'" role="button" tabindex="0" title="Bấm để copy mã SKU này"'+
       ' onclick="ndsChonSku(\''+esc(r.sku)+'\')"'+
       ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();ndsChonSku(\''+esc(r.sku)+'\');}">'+
-    '<div class="nds-chead"><span class="nds-rank">'+hang+'</span>'+
+    '<div class="nds-chead"><span class="nds-rank'+(r.type==='COMBO'?' cb':'')+'" title="'+loaiTip+'">'+esc(loai)+'</span>'+
       '<span class="nds-sku">'+esc(r.sku)+'</span>'+ton+canh+nhan+
       '<span class="nds-pct">'+r.pct+'%</span>'+'</div>'+
     '<div class="nds-bar"><div class="nds-fill" style="width:'+r.pct+'%"></div></div>'+
@@ -11944,22 +11991,11 @@ function ndsVeKetQua(ms, themInactive){
         ' <button type="button" class="kktab nds-alt" onclick="ndsTroMa()">Nhập mã</button></div>';
     }
   }
-  /* THẺ MẪU MÀ KHÔNG ĐỌC ĐƯỢC Ô "MÃ SẢN PHẨM" — rủi ro CÒN LẠI của luật mã chủ (21/08/2026).
-     Luật mã chủ chỉ bắn khi đọc được mã và mã đó CÓ THẬT trong danh mục. Không đọc được (ô để
-     trống, chữ viết tay quá xấu, đọc lệch ≥2 ký tự) thì lõi tụt về chấm bằng chữ chung — và trên
-     thẻ mẫu, "chữ chung" phần lớn là dòng **Thành phần vải**, tức tên NGUYÊN LIỆU. Đo được trên
-     thẻ CWHO0006: đúng lúc đó cuộn vải chiếm hạng 1 với 93%, mà banner cũ IM LẶNG vì nó chỉ xét
-     "có khớp mã nào không" — mà mã VẢI thì có khớp. Đây là ca duy nhất máy vẫn tự tin mà sai, nên
-     phải nói thẳng. */
-  if (!canh && NDS.theMau && NDS.theMau.coNhan && !(NDS.theMau.maChu||[]).length){
-    canh='<div class="pcdnote" style="margin-bottom:10px;background:color-mix(in srgb,var(--warn) 14%,var(--surface));color:var(--ink2)">'+
-      '<b>Đây là THẺ MẪU nhưng chưa đọc được ô "Mã sản phẩm".</b> Mấy gợi ý dưới đây đang dựa vào '+
-      'dòng <b>Thành phần vải</b> — mà dòng đó là tên <b>nguyên liệu</b> dùng để may cái mẫu, không '+
-      'phải món hàng đang cầm, nên rất dễ ra <b>cuộn vải</b> thay vì cái áo mẫu. Gõ mã sản phẩm '+
-      '(vd <code>CWHO0006</code>) vào ô <b>Mã trên tem</b> ở bước 1 là ra đúng ngay.'+
-      ndsMoiChonMa()+
-      ' <button type="button" class="kktab nds-alt" onclick="ndsTroMa()">Nhập mã</button></div>';
-  }
+  /* Banner "Đây là THẺ MẪU nhưng chưa đọc được ô Mã sản phẩm" ĐÃ BỎ (21/08/2026, yêu cầu user —
+     kèm video): nó chiếm 6 dòng chữ trên điện thoại mà banner "Chưa khớp được MÃ HÀNG nào" phía
+     trên đã trỏ cùng một lối thoát (gõ mã vào ô Mã trên tem). Đường thứ hai của luật mã chủ
+     (loại trừ mã nguyên liệu trong tuVanBan) vẫn chạy nên phần lớn ca thẻ mẫu đã tự ra đúng;
+     `NDS.theMau` vẫn được ghi cho bộ đo. */
   /* BỎ HẲN 20/08/2026 (yêu cầu user): dải "N gợi ý dưới đây đều mang đúng mã X — chỉ khác nhau ở
      màu / thông số…". Nó chiếm 3 dòng chữ ngay trên Top 3 (trên điện thoại là đẩy hẳn thẻ #1 xuống
      dưới màn hình) để nói một việc mà bản thân 3 thẻ đã nói rõ hơn: cùng mã thì phần tô
