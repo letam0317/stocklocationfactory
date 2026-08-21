@@ -2480,6 +2480,72 @@ body.side-anim{overflow-x:clip}
   .h2tip::before{content:none}
   .h2tip:focus::after{display:block;animation:popIn .18s var(--ez-apple) both}
 }
+
+/* ===== KHUÔN THẺ DI ĐỘNG DÙNG CHUNG — `table.mbcard` (21/08/2026) ================================
+ * VÌ SAO: người dùng gửi ảnh màn hình điện thoại của panel "Danh sách theo dõi" — bảng 8 cột
+ * `min-width:820px` nằm trong khung `overflow-x:auto`, tức trên màn 360px người ta thấy 3 cột và
+ * phải kéo ngang từng dòng mới đọc được 5 cột còn lại. Bộ đo cũ báo XANH vì cuộn ngang TRONG khung
+ * là cách chữa hợp lệ cho bảng dày-số; cái nó không phân biệt được là "bảng dày-số" với "bảng có
+ * cột đoạn văn". Nay luật ⑩ của `hasaki/qc-mobile-toan-du-an.mjs` bắt: ≥5 cột + rộng hơn màn =
+ * LỖI, trừ khi tự khai `data-mb-cuon`.
+ *
+ * KHUÔN NÀY LÀ BẢN DÙNG CHUNG, không phải bản riêng cho một bảng: `#prmodal`/`#tvtmodal` mỗi cái tự
+ * viết một bộ rule y hệt nhau, nên bảng thêm sau lại phải chép lần nữa (và lần nào cũng có bảng bị
+ * bỏ sót — đúng chỗ này). Từ nay: bảng nào thêm `class="mbcard"`, ô nào gắn `data-lb` + một trong
+ * các lớp `mb-hd / mb-tag / mb-full / mb-0` là tự có chế độ thẻ. Cùng tên lớp, cùng hành vi ở CẢ
+ * dashboard Audit Hasaki (khai lại trong kiemsoatkho/index.html) — lệ đồng bộ của dự án.
+ *
+ *   mb-hd   ô TIÊU ĐỀ thẻ (mã vị trí / tên người) — chữ to, không cần nhãn
+ *   mb-tag  ô nhãn trạng thái — ghim mép phải cùng hàng với tiêu đề
+ *   mb-full ô chiếm trọn một hàng (đoạn văn, thanh tiến độ)
+ *   mb-0    ô KHÔNG mang tin (giá trị rỗng / chỉ có "—") — ẩn hẳn, xem luật ③
+ * Ô thường: nhãn dán bằng `::before{content:attr(data-lb)}` — nhắm theo THUỘC TÍNH, không theo
+ * nth-child (nth-child âm thầm sai ngày nào thêm/bớt cột). */
+@media(max-width:768px){
+  table.mbcard{display:block;width:100%;min-width:0 !important;border-collapse:separate;border-spacing:0}
+  table.mbcard thead{display:none}
+  table.mbcard tbody{display:block}
+  table.mbcard tr{display:flex;flex-wrap:wrap;align-items:baseline;gap:3px 10px;
+    padding:11px 12px;margin:0 0 8px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+  table.mbcard tr:last-child{margin-bottom:0}
+  table.mbcard tr.on{border-color:var(--brand2);background:color-mix(in srgb,var(--brand2) 8%,var(--panel))}
+  /* Ghi đè `white-space:nowrap` của bản bảng: trong thẻ thì chữ phải ngắt dòng được */
+  table.mbcard td{display:block;border:0;padding:0;min-width:0;max-width:100%;white-space:normal;
+    order:5;font-size:11.5px;color:var(--ink2);text-align:left !important}
+  table.mbcard td[data-lb]::before{content:attr(data-lb) " ";color:var(--ink3);font-size:10.5px;font-weight:650}
+  table.mbcard td.mb-hd{order:1;flex:1 1 auto;font-size:15px;font-weight:700;color:var(--ink);
+    font-variant-numeric:tabular-nums}
+  table.mbcard td.mb-tag{order:2;margin-left:auto;flex:0 0 auto;text-align:right !important}
+  table.mbcard td.mb-full{order:3;flex:1 1 100%;line-height:1.5}
+  table.mbcard td.mb-0{display:none}
+  table.mbcard td[colspan]{flex:1 1 100%;text-align:center !important;font-size:12.5px}
+  table.mbcard tr:has(td[colspan]){padding:16px 12px;background:0;border:0}
+  /* Khung bảng: bỏ hẳn khung cuộn (cả ngang lẫn dọc). Cuộn-trong-cuộn trên điện thoại là bẫy chạm
+     kinh điển — ngón tay kéo trang thì trúng khung con. Thẻ chảy theo trang, số dòng đã bị chặn
+     bằng CAP 300 nên không có chuyện danh sách dài vô hạn. */
+  .pg-tblwrap:has(table.mbcard){overflow:visible;max-height:none !important;border:0;border-radius:0}
+  /* Pop-up thì GIỮ khung cuộn DỌC (hộp pop-up cao cố định), chỉ bỏ đường cuộn ngang */
+  .modal .pg-tblwrap:has(table.mbcard){overflow-y:auto;max-height:70vh !important}
+  /* 4 cột số của bảng "từng dãy kệ": chú giải chấm màu ngay dưới thanh xếp chồng đã đọc ra đúng mấy
+     con số đó (xem plgHtmlDay) ⇒ trong thẻ chúng là bản sao. JS gắn `mb-0` cho chúng khi thanh đang
+     tô theo TRẠNG THÁI VỆ SINH, và bỏ `mb-0` khi thanh tô theo KHO (lúc đó không còn trùng). */
+  .pg-tbl td.bar .pg-track{margin-bottom:6px}
+  .pg-tbl td.bar .pg-parts{display:flex;flex-wrap:wrap;gap:2px 12px}
+  /* Dải chip trạng thái phiếu kiểm kê (7 viên, vỡ 5 hàng / 144px trên màn 360px): về MỘT hàng cuộn
+     ngang — cùng khuôn `.toptabs` của dự án. Chip là các GIÁ TRỊ cùng loại nên xếp dọc là mất nghĩa
+     "một dải để so sánh"; mà bóp cho vừa thì cắt mất nhãn. */
+  .kkstchips{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0;padding-bottom:3px}
+  .kkstchips>*{flex:0 0 auto}
+  /* Bộ CHUYỂN CHẾ ĐỘ (Từng vị trí / Từng dãy kệ) chỉ cao 27px trên điện thoại — đo thật 21/08/2026.
+     Đây không phải chip lọc dày-thông-tin (loại đó nhỏ là cố ý) mà là control CHÍNH của panel: bấm
+     sai là đổi hẳn nội dung đang xem. Nới bằng đúng con số bên Audit Hasaki đã dùng cho `.hp-seg`. */
+  .pg-seg button,.pg-seg.sm button{min-height:42px;padding-left:14px;padding-right:14px}
+}
+/* Chip đếm 0 = bộ lọc dẫn tới danh sách rỗng. Làm mờ để mắt bắt ngay chỗ CÓ SỐ (người dùng chỉ đúng
+   chỗ này: "Đã vệ sinh 0 · Chưa vệ sinh 0" chen giữa dải). Vẫn bấm được — lọc ra 0 dòng là một câu
+   trả lời hợp lệ, không phải lỗi. */
+.pg-whtab.pg-z0{opacity:.45}
+.pg-whtab.pg-z0:hover{opacity:.8}
 </style>
 </head>
 <body>
@@ -4961,7 +5027,7 @@ function plgHtmlVt(tong){
     '<button type="button" class="pg-whtab'+(PLG.st?'':' active')+'" onclick="plgSetSt(\'\')">Tất cả &middot; '+nf(os.length)+'</button>'+
     ['da','chua','nduyet','nolich'].map(function(k){
       var m=PLG_ST[k];
-      return '<button type="button" class="pg-whtab'+(PLG.st===k?' active':'')+'" data-k="'+k+'"'+
+      return '<button type="button" class="pg-whtab'+(PLG.st===k?' active':(cnt[k]?'':' pg-z0'))+'" data-k="'+k+'"'+
         ' onclick="plgSetSt(this.getAttribute(\'data-k\'))" title="'+esc(PLG_SUB[k])+'">'+
         '<span class="pg-dot'+(m.c?'':' dash')+'"'+(m.c?' style="background:'+m.c+'"':'')+'></span>'+
         esc(m.lb)+' <b>'+nf(cnt[k])+'</b></button>';
@@ -4975,7 +5041,7 @@ function plgHtmlVt(tong){
 
   return '<div class="pg-whbar">'+chips+'</div>'+
     '<input class="pg-search" placeholder="Tìm vị trí / dãy / kho / người vệ sinh…" value="'+esc(PLG.q||'')+'" oninput="plgSearch(this.value)">'+
-    '<div class="pg-tblwrap"><table class="pg-tbl"><thead><tr>'+
+    '<div class="pg-tblwrap"><table class="pg-tbl mbcard"><thead><tr>'+
     '<th>Vị trí</th><th>Dãy</th><th>Cột</th><th>Kho giữ tồn</th><th>Trạng thái vệ sinh</th>'+
     '<th>Lịch gốc</th><th>Yêu cầu gần nhất</th><th>Vệ sinh gần nhất</th>'+
     '</tr></thead><tbody>'+body+capNote+'</tbody></table></div>'+
@@ -4987,21 +5053,34 @@ function plgDongVt(o){
   var r=PLG.by[o.loc]||null, s=plgState(r), m=PLG_ST[s], w=plgKhoCua(o.loc);
   var badge='<span class="pg-badge" style="background:color-mix(in srgb,'+(m.c||'var(--ink3)')+' 16%,transparent);color:'+
     (m.c||'var(--ink2)')+'">'+esc(m.lb)+'</span>';
+  /* Thứ tự <td> PHẢI khớp <thead> (máy tính vẫn là bảng); thứ tự đọc trên THẺ do CSS `order` lo —
+     xem khối `table.mbcard` ở cuối <style>. Ô nào không có dữ liệu thì gắn `mb-0` để ẩn hẳn trong
+     thẻ: trên máy tính dấu "—" giữ cột thẳng hàng nên có nghĩa, trong thẻ thì không còn cột nào để
+     giữ, nó chỉ là một dòng rỗng có nhãn (luật ③). */
+  var lich=r&&r.schId?'#'+esc(r.schId)+(r.ttLich?' · '+esc(r.ttLich):''):'';
+  var ycg =r&&r.ycGan ?esc(r.ycGan)+(r.ttYC?' · '+esc(r.ttYC):''):'';
+  var vsg =r&&r.vsGan ?esc(r.vsGan)+(r.nguoi?' — '+esc(r.nguoi):''):'';
   return '<tr data-l="'+esc(o.loc)+'" onclick="plgOpen(this.getAttribute(\'data-l\'))">'+
-    '<td><b>'+esc(o.loc)+'</b></td>'+
-    '<td>'+esc(o.d)+'</td>'+
-    '<td class="num">'+esc(o.c)+'</td>'+
-    '<td>'+(w?'<span class="pg-dot" style="background:'+plgMauKho(w)+';margin-right:6px"></span>'+esc(plgTenNgan(w))
+    '<td class="mb-hd"><b>'+esc(o.loc)+'</b></td>'+
+    '<td data-lb="Dãy">'+esc(o.d)+'</td>'+
+    '<td class="num" data-lb="Cột">'+esc(o.c)+'</td>'+
+    /* Nhãn "Kho" chỉ dán khi CÓ kho: ô rỗng thì câu đọc ra thành "Kho không có tồn" — nhãn đánh nhau
+       với giá trị. Không kho thì bản thân câu "không có tồn" đã đủ nghĩa. */
+    '<td'+(w?' data-lb="Kho"':'')+'>'+(w?'<span class="pg-dot" style="background:'+plgMauKho(w)+';margin-right:6px"></span>'+esc(plgTenNgan(w))
              :'<span class="mut">không có tồn</span>')+'</td>'+
-    '<td>'+badge+'</td>'+
-    '<td class="mut">'+(r&&r.schId?'#'+esc(r.schId)+(r.ttLich?' · '+esc(r.ttLich):''):'—')+'</td>'+
-    '<td class="mut">'+(r&&r.ycGan?esc(r.ycGan)+(r.ttYC?' · '+esc(r.ttYC):''):'—')+'</td>'+
-    '<td class="mut">'+(r&&r.vsGan?esc(r.vsGan)+(r.nguoi?' — '+esc(r.nguoi):''):'—')+'</td></tr>';
+    '<td class="mb-tag">'+badge+'</td>'+
+    '<td class="mut'+(lich?'':' mb-0')+'" data-lb="Lịch gốc">'+(lich||'—')+'</td>'+
+    '<td class="mut'+(ycg ?'':' mb-0')+'" data-lb="Yêu cầu gần nhất">'+(ycg||'—')+'</td>'+
+    '<td class="mut'+(vsg ?'':' mb-0')+'" data-lb="Vệ sinh gần nhất">'+(vsg||'—')+'</td></tr>';
 }
 
 /* --- Chế độ 'day': bảng 14 dãy kệ, mỗi dòng 1 thanh xếp chồng; bấm dòng = soi dãy trên sơ đồ --- */
 function plgHtmlDay(mode,dem,thu,theoDay,dsDay){
-  var so=function(v){ return '<td class="num'+(v?'':' z')+'">'+(v?nf(v):'—')+'</td>'; };
+  /* 4 cột số cuối TRÙNG với chú giải chấm màu ngay dưới thanh xếp chồng — nhưng CHỈ khi thanh đang
+     tô theo trạng thái vệ sinh. Thanh tô theo KHO thì 4 con số này là thông tin duy nhất, phải giữ.
+     Nên `mb-0` (ẩn trong thẻ) gắn có điều kiện, không gắn cứng. */
+  var trungLegend = mode !== 'kho';
+  var so=function(v,lb){ return '<td class="num'+(v?'':' z')+(trungLegend||!v?' mb-0':'')+'" data-lb="'+lb+'">'+(v?nf(v):'—')+'</td>'; };
   var body=dsDay.map(function(d){
     var t=theoDay[d], co=thu.filter(function(k){ return t.k[k]; });
     /* Thanh xếp chồng + chú giải chấm màu NGAY DƯỚI nó: đọc được thành phần dãy mà không phải
@@ -5016,11 +5095,11 @@ function plgHtmlDay(mode,dem,thu,theoDay,dsDay){
         '<b>'+t.k[k]+'</b> '+esc(k==='_none'?'trống':mode==='kho'?plgTenNgan(dem[k].lb):dem[k].lb.toLowerCase())+'</span>';
     }).join('');
     return '<tr class="'+(PLG.hiDay===d?'on':'')+'" data-d="'+esc(d)+'" onclick="plgSoiDay(this.getAttribute(\'data-d\'))">'+
-      '<td><span class="pg-dbadge"><span class="u">Dãy</span>'+esc(d)+'</span></td>'+
-      '<td class="num">'+nf(t.n)+'</td>'+
-      '<td class="bar"><span class="pg-track"><span class="pg-fill">'+fill+'</span></span>'+
+      '<td class="mb-hd"><span class="pg-dbadge"><span class="u">Dãy</span>'+esc(d)+'</span></td>'+
+      '<td class="num mb-tag" data-lb="Số ô">'+nf(t.n)+'</td>'+
+      '<td class="bar mb-full"><span class="pg-track"><span class="pg-fill">'+fill+'</span></span>'+
         '<span class="pg-parts">'+parts+'</span></td>'+
-      so(t.vs.da)+so(t.vs.chua)+so(t.vs.nduyet)+so(t.vs.nolich)+'</tr>';
+      so(t.vs.da,'Đã VS')+so(t.vs.chua,'Chưa VS')+so(t.vs.nduyet,'Lịch chưa duyệt')+so(t.vs.nolich,'Chưa khai báo')+'</tr>';
   }).join('');
   return '<div class="pg-whbar">'+
       '<span class="pg-hint" style="font-weight:650">Bấm 1 dãy để soi riêng dãy đó trên sơ đồ</span>'+
@@ -5030,7 +5109,7 @@ function plgHtmlDay(mode,dem,thu,theoDay,dsDay){
     '</div>'+
     /* Chốt bề rộng cột: để tự động thì 4 cột số bị đẩy tản ra tận mép phải, đọc số phải rê mắt
        ngang cả màn hình. Cột Thành phần là cột duy nhất co giãn. */
-    '<div class="pg-tblwrap"><table class="pg-tbl" style="min-width:760px"><thead><tr>'+
+    '<div class="pg-tblwrap"><table class="pg-tbl mbcard" style="min-width:760px"><thead><tr>'+
     '<th style="width:130px">Dãy kệ</th><th class="num" style="width:74px">Số ô</th><th>Thành phần</th>'+
     '<th class="num" style="width:104px">Đã VS</th><th class="num" style="width:104px">Chưa VS</th>'+
     '<th class="num" style="width:126px">Lịch chưa duyệt</th><th class="num" style="width:126px">Chưa khai báo</th>'+
@@ -5082,7 +5161,7 @@ function plgOpenAll(st){
     nf(loc.length)+'/'+nf(os.length)+' ô kệ'+(PLG.area?' · '+plgTenNgan(PLG.area):' · cả 2 kho')+
     ' — danh mục lấy theo mặt bằng thật (bản vẽ MTG_zigzag), không lấy từ dữ liệu lịch';
   document.getElementById('plgallBody').innerHTML=
-    '<div class="pg-tblwrap" style="max-height:60vh"><table class="pg-tbl"><thead><tr>'+
+    '<div class="pg-tblwrap" style="max-height:60vh"><table class="pg-tbl mbcard"><thead><tr>'+
     '<th>Vị trí</th><th>Dãy</th><th>Cột</th><th>Kho giữ tồn</th><th>Trạng thái vệ sinh</th>'+
     '<th>Lịch gốc</th><th>Yêu cầu gần nhất</th><th>Vệ sinh gần nhất</th>'+
     '</tr></thead><tbody>'+(loc.length?loc.map(plgDongVt).join('')
@@ -5133,15 +5212,15 @@ function plgVeTra(){
   box.innerHTML=
     '<h2 style="margin:0 0 8px;font-size:15px;font-weight:700">Dãy '+esc(t.d)+' <span class="pg-chip">'+nf(t.n)+' ô kệ</span></h2>'+
     '<div class="pg-cov" style="margin:0 0 12px">'+covRows+'</div>'+
-    '<div class="pg-tblwrap" style="max-height:none"><table class="pg-tbl" style="min-width:0"><thead><tr>'+
+    '<div class="pg-tblwrap" style="max-height:none"><table class="pg-tbl mbcard" style="min-width:0"><thead><tr>'+
     '<th>Ô</th><th>Kho giữ tồn</th><th>Trạng thái vệ sinh</th><th>Vệ sinh gần nhất</th></tr></thead><tbody>'+
     t.o.map(function(o){
       var r=PLG.by[o.loc]||null, s=plgState(r), m=PLG_ST[s], w=plgKhoCua(o.loc);
       return '<tr data-l="'+esc(o.loc)+'" onclick="closePlgTra();plgOpen(this.getAttribute(\'data-l\'))">'+
-        '<td><b>'+esc(o.c)+'</b> <span class="mut">'+esc(o.loc)+'</span></td>'+
-        '<td>'+(w?esc(plgTenNgan(w)):'<span class="mut">không có tồn</span>')+'</td>'+
-        '<td><span class="pg-badge" style="background:color-mix(in srgb,'+(m.c||'var(--ink3)')+' 16%,transparent);color:'+(m.c||'var(--ink2)')+'">'+esc(m.lb)+'</span></td>'+
-        '<td class="mut">'+(r&&r.vsGan?esc(r.vsGan)+(r.nguoi?' — '+esc(r.nguoi):''):'—')+'</td></tr>';
+        '<td class="mb-hd"><b>'+esc(o.c)+'</b> <span class="mut">'+esc(o.loc)+'</span></td>'+
+        '<td data-lb="Kho">'+(w?esc(plgTenNgan(w)):'<span class="mut">không có tồn</span>')+'</td>'+
+        '<td class="mb-tag"><span class="pg-badge" style="background:color-mix(in srgb,'+(m.c||'var(--ink3)')+' 16%,transparent);color:'+(m.c||'var(--ink2)')+'">'+esc(m.lb)+'</span></td>'+
+        '<td class="mut'+(r&&r.vsGan?'':' mb-0')+'" data-lb="Vệ sinh gần nhất">'+(r&&r.vsGan?esc(r.vsGan)+(r.nguoi?' — '+esc(r.nguoi):''):'—')+'</td></tr>';
     }).join('')+'</tbody></table></div>'+
     '<p class="pg-hint" style="margin:10px 0 0"><button type="button" class="pg-whtab" data-d="'+esc(t.d)+
       '" onclick="closePlgTra();plgSoiDay(this.getAttribute(\'data-d\'))">Soi dãy này trên sơ đồ</button></p>';
