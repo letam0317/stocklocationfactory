@@ -2515,7 +2515,11 @@ body.side-anim{overflow-x:clip}
   table.mbcard td[data-lb]::before{content:attr(data-lb) " ";color:var(--ink3);font-size:10.5px;font-weight:650}
   table.mbcard td.mb-hd{order:1;flex:1 1 auto;font-size:15px;font-weight:700;color:var(--ink);
     font-variant-numeric:tabular-nums}
-  table.mbcard td.mb-tag{order:2;margin-left:auto;flex:0 0 auto;text-align:right !important}
+  /* `flex:1 0 auto` (không phải `0 0 auto`): nhãn trạng thái GIÃN hết phần trống còn lại của dòng
+     rồi canh phải. Với `0 0 auto` thì `margin-left:auto` ăn khoảng trống NGAY TRƯỚC nó, nên khi
+     mã vị trí dài đẩy nhãn xuống dòng 2, nhãn nằm lửng giữa dòng và ô nhỏ kế tiếp bám ngay sau —
+     nhìn ra một khoảng hở vô cớ (soi ảnh mới thấy, số đo vẫn xanh). */
+  table.mbcard td.mb-tag{order:2;margin-left:auto;flex:1 0 auto;text-align:right !important}
   table.mbcard td.mb-full{order:3;flex:1 1 100%;line-height:1.5}
   table.mbcard td.mb-0{display:none}
   table.mbcard td[colspan]{flex:1 1 100%;text-align:center !important;font-size:12.5px}
