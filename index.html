@@ -1037,11 +1037,23 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
    Chip tái dùng NGUYÊN khuôn `.nds-tag` của tab (popIn + nút × + focus ring) — lệ dự án: đã có khuôn
    thì không dựng control trần mới. Chip xếp TRƯỚC ô nhập nên đọc từ trái sang phải là đúng thứ tự
    sẽ in, và số vừa chốt luôn nằm sát ngay ô nhập. */
-/* Ô Số lượng = HAI DÒNG: `.prchips` (chip đã chốt) ở trên, `.prgo` (ô nhập + nút +) ở dưới.
-   Chip không bao giờ được chen ngang hàng với ô nhập — ô nhập là chỗ tay đang gõ. */
-#prBody .prchips{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;margin-top:7px}
+/* Ô Số lượng chỉ còn ô nhập + nút "+". Danh sách số đã chốt nằm ở DẢI RIÊNG `.prslbar` (một hàng
+   `tr.prsl2` ăn hết bề rộng, dán liền dưới) — xem ghi chú trong prVe. Vì sao đổi: chip nhét trong
+   một cột hẹp, canh phải, 4-5 cái là rớt thành 2-3 dòng méo mó ngay chỗ tay đang gõ; và không có
+   chỗ nào nói ra quan hệ "mỗi số lượng = một con tem". */
 #prBody .prgo{display:flex;gap:8px;align-items:center;justify-content:flex-end}
 #prBody .prchip{--cc:var(--accent);font-variant-numeric:tabular-nums;padding:4px 4px 4px 10px}
+#prBody tr.prdong.co-chip>td{border-bottom:0}
+#prBody tr.prsl2>td{padding-top:0}
+#prBody .prslbar{display:flex;flex-wrap:wrap;align-items:center;gap:7px 10px;padding:7px 10px;
+  border-radius:10px;border:1px dashed color-mix(in srgb,var(--accent) 34%,var(--line));
+  background:color-mix(in srgb,var(--accent) 6%,var(--surface))}
+#prBody .prslnhan{font-size:11.5px;color:var(--ink3);letter-spacing:.02em}
+/* Chữ mờ nhắc việc phải NHỎ hơn con số thật: ô này in số ở 19px/700, để placeholder cùng cỡ thì
+   nó vừa bị cắt cụt vừa trông như đã có số. */
+#prBody input.prsl-v::placeholder{font-size:12.5px;font-weight:600;opacity:.62}
+#prBody .prslnhan b{color:var(--ink);font-variant-numeric:tabular-nums;font-size:13px}
+#prBody .prchips{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-start;margin:0}
 /* Nút "+" phải ĐẬP VÀO MẮT (yêu cầu user): nền accent đặc, chữ trắng, có bóng — nó là thao tác chính
    của ô này, không phải một dấu cộng mờ nhạt lẫn vào nền. Chỉ hiện khi trong ô ĐANG có số. */
 #prBody .prsladd{display:none;align-items:center;justify-content:center;width:32px;height:32px;flex:0 0 auto;
@@ -1117,6 +1129,25 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
   /* ô 5 = nút xoá: đẩy hẳn sang góc trên phải, XA hai ô số để không bấm nhầm lúc sửa số */
   #prmodal .mtbl td:nth-child(5){grid-area:del;justify-self:end;align-self:start}
   #prmodal .mtbl td[colspan]{grid-column:1/-1}
+  /* DẢI SỐ LƯỢNG ĐÃ CHỐT là một HÀNG RIÊNG, nhưng trên điện thoại mỗi `tr` là một THẺ có viền +
+     bóng — để nguyên thì nó thành thẻ thứ hai rời rạc. Dán nó vào đáy thẻ trên: thẻ trên bỏ bo góc
+     dưới (class `co-chip` do prVe gắn, KHÔNG dùng `:has()` để khỏi phụ thuộc bản trình duyệt), dải
+     này bỏ viền trên và chỉ bo hai góc dưới. Hai hàng đọc ra như một thẻ liền. */
+  #prmodal .mtbl tr.prdong.co-chip{margin-bottom:0;border-bottom-left-radius:0;border-bottom-right-radius:0}
+  #prmodal .mtbl tr.prsl2{display:block;padding:0 12px 11px;margin:0 0 9px;
+    border:1px solid var(--line);border-top:0;border-radius:0 0 12px 12px;
+    background:var(--surface);box-shadow:var(--shadow)}
+  #prmodal .mtbl tr.prsl2>td{display:block;padding:0}
+  /* Hàng dải chip cũng có ô đầu tiên, nên nó thừa hưởng nhãn ::before "Số tem" của bố cục thẻ và
+     in ra một chữ "Số tem" lạc giữa hai khối (bắt được bằng ảnh chụp 390px). */
+  #prmodal .mtbl tr.prsl2>td::before{display:none}
+  /* Chip số lượng trên điện thoại: nút × phải là VÙNG CHẠM THẬT ≥40px (luật 9 luật của dự án). Khuôn
+     `.nds-tag .x` dùng chung chỉ 18px — đủ cho badge từ khoá ở tab (bấm nhầm thì thêm lại), nhưng ở
+     đây bấm nhầm là mất một con tem đã khai. Dải đã ăn hết bề rộng nên có chỗ cho chip to. */
+  #prBody .prslbar{gap:8px 10px;padding:9px 10px}
+  #prBody .prslbar .prchip{min-height:40px;padding:0 0 0 14px;gap:2px;font-size:14px}
+  #prBody .prslbar .prchip button.x{width:40px;height:40px;padding:0;font-size:19px;
+    display:inline-flex;align-items:center;justify-content:center;opacity:.72}
   /* Ô số lượng dạng danh sách ("12, 14, 16") cần rộng hơn ô một số */
   #prBody input.prsl.co-ds{width:112px;text-align:left}
   #prmodal .prcb{max-width:none;width:100%}
@@ -9342,34 +9373,45 @@ var NDS_ENGINE = (function(){
     }
     return ra;
   }
-  /* `viec:'ma'` = nhãn ĐỊNH DANH (giá trị của nó là mã chủ) · `viec:'bo'` = chỉ cắt chữ nhãn đi.
+  /* `viec:'ma'` = nhãn ĐỊNH DANH (giá trị của nó là mã chủ) · `viec:'lieu'` = nhãn NGUYÊN LIỆU (mã
+     trong đó là mã của VẬT LIỆU, không phải của món hàng) · `viec:'bo'` = chỉ cắt chữ nhãn đi.
      ⚠ KHÔNG đưa "size" vào đây: nhãn Size còn phải để nguyên cho RE_GHEP_CO ghép thành mảnh cỡ
      (`szs`) — cắt nhãn đi là mất luôn cỡ, vì "S" trần chỉ 1 ký tự nên bị lọc. */
   var NHAN_TEM = [
     { viec:'ma', ten:['ma san pham','ma hang hoa','ma hang','ma sp','ma vat tu','ma mau',
                       'style no','style','item code','art no'] },
-    { viec:'bo', ten:['loai mau','ten san pham','ten hang','thanh phan vai','thanh phan',
-                      'nguyen phu lieu','chat lieu','phu lieu','mau sac','nv may mau',
+    { viec:'lieu', ten:['thanh phan vai','thanh phan','nguyen phu lieu','chat lieu','vai chinh'] },
+    { viec:'bo', ten:['loai mau','ten san pham','ten hang','phu lieu','mau sac','nv may mau',
                       'nguoi thuc hien','ngay thuc hien','ghi chu','so luong','don vi tinh',
                       'don vi','nha cung cap'] }
   ];
-  /* Nhãn phải đứng ĐẦU CHUỖI hoặc sau khoảng trắng/dấu ngăn, VÀ có dấu hai chấm theo sau. Đòi dấu
-     hai chấm là chốt an toàn: không có nó thì chữ "mã hàng" trong một câu bất kỳ cũng thành nhãn. */
+  /* Nhãn phải đứng ĐẦU CHUỖI hoặc sau khoảng trắng/dấu ngăn.
+     · nhãn NGUYÊN LIỆU và nhãn chỉ-để-cắt: BẮT BUỘC có dấu hai chấm — chốt an toàn, không có nó thì
+       chữ "thành phần" trong một câu bất kỳ cũng bị coi là nhãn trường rồi cắt mất chữ thật.
+     · nhãn ĐỊNH DANH: dấu hai chấm KHÔNG bắt buộc (nới 21/08/2026). Vì sao dám nới: giá trị của nó
+       còn phải qua `locMaChu` — chỉ nhận mã có ĐÚNG NGUYÊN VĂN trong danh mục — nên một lần khớp
+       nhãn oan chỉ cho ra `maChu` RỖNG, tức không đổi gì. Còn cái mất thì thật: AI trả raw_text nối
+       dòng bằng " | " và có lượt nó bỏ luôn dấu hai chấm ("Mã sản phẩm CWHO0006"), thế là luật mã
+       chủ im hẳn (xem §5b.23). */
   var NHAN_MOC = (function(){
     var ds = [];
     NHAN_TEM.forEach(function(n){ n.ten.forEach(function(t){ ds.push({ viec:n.viec, ten:t }); }); });
     return ds.map(function(x){
+      var hai = (x.viec === 'ma') ? '\\s*[:：.]?\\s*' : '\\s*[:：]';
       return { viec:x.viec, ten:x.ten,
-        re:new RegExp('(^|[\\s(,;|\\[])(' + nguonNhan(x.ten) + ')\\s*[:：]', 'gi') };
+        re:new RegExp('(^|[\\s(,;|\\[])(' + nguonNhan(x.ten) + ')' + hai, 'gi') };
     });
   })();
   /**
-   * Đọc tem dạng BIỂU MẪU: cắt chữ NHÃN khỏi chuỗi và lấy giá trị của (các) trường ĐỊNH DANH.
-   * @return { maChu:[chuỗi giá trị thô], catNhan:chuỗi đã bỏ chữ nhãn }
+   * Đọc tem dạng BIỂU MẪU: cắt chữ NHÃN khỏi chuỗi và lấy giá trị của các trường ĐỊNH DANH /
+   * NGUYÊN LIỆU.
+   * @return { maChu:[giá trị thô], maLieu:[giá trị thô], laTheMau:bool, catNhan:chuỗi đã bỏ nhãn }
    */
   function docTheMau(text){
     var s = String(text == null ? '' : text);
-    if (s.indexOf(':') < 0 && s.indexOf('：') < 0) return { maChu:[], catNhan:s };   // không phải biểu mẫu
+    var laThe = /the\s*thong\s*tin\s*mau|thong\s*chuyen/i.test(boDau(s));   // tiêu đề thẻ của xưởng
+    if (s.indexOf(':') < 0 && s.indexOf('：') < 0 && !/[Mm][ãaAÃ]\s/.test(s))
+      return { maChu:[], maLieu:[], laTheMau:laThe, catNhan:s };
     var moc = [];
     NHAN_MOC.forEach(function(n){
       n.re.lastIndex = 0;
@@ -9379,28 +9421,28 @@ var NDS_ENGINE = (function(){
         n.re.lastIndex = m.index + m[0].length;
       }
     });
-    if (!moc.length) return { maChu:[], catNhan:s };
+    if (!moc.length) return { maChu:[], maLieu:[], laTheMau:laThe, catNhan:s };
     /* Cùng một chỗ thì nhãn DÀI thắng: "thành phần vải" chứ không phải "thành phần". */
     moc.sort(function(a,b){ return (a.d - b.d) || ((b.c - b.d) - (a.c - a.d)); });
-    var maChu = [], ra = '', tu = 0;
-    for (var i=0;i<moc.length;i++){
+    var maChu = [], maLieu = [], ra = '', tu = 0;
+    for (var i=0; i<moc.length; i++){
       var x = moc[i];
       if (x.d < tu) continue;                        // nằm lọt trong nhãn vừa cắt -> bỏ
       ra += s.slice(tu, x.d) + ' ';                  // giữ mọi thứ TRƯỚC nhãn, bỏ chữ nhãn
       tu = x.c;
-      if (x.viec !== 'ma') continue;
-      /* Giá trị = từ sau dấu hai chấm tới NHÃN KẾ TIẾP, và không vượt quá hết dòng. Phải chặn cả
-         hai đầu: OCR có lúc trả cả thẻ trên MỘT dòng (lúc đó nhãn kế tiếp là biên duy nhất), có
-         lúc trả đúng từng dòng (lúc đó hết dòng là biên đúng). */
+      if (x.viec === 'bo') continue;
+      /* Giá trị = từ sau nhãn tới NHÃN KẾ TIẾP, và không vượt quá hết dòng. Phải chặn cả hai đầu:
+         OCR có lúc trả cả thẻ trên MỘT dòng (lúc đó nhãn kế tiếp là biên duy nhất), có lúc trả đúng
+         từng dòng (lúc đó hết dòng là biên đúng). */
       var het = s.length;
-      for (var j=i+1;j<moc.length;j++) if (moc[j].d >= x.c) { het = moc[j].d; break; }
+      for (var j=i+1; j<moc.length; j++) if (moc[j].d >= x.c) { het = moc[j].d; break; }
       var gt = s.slice(x.c, het);
       var nl = gt.search(RE_DONG);
       if (nl >= 0) gt = gt.slice(0, nl);
-      maChu.push(gt);
+      (x.viec === 'ma' ? maChu : maLieu).push(gt);
     }
     ra += s.slice(tu);
-    return { maChu:maChu, catNhan:ra };
+    return { maChu:maChu, maLieu:maLieu, laTheMau:true, catNhan:ra };
   }
   /* ═══ SỬA CHÍNH TẢ MÃ THEO DANH MỤC (20/08/2026 — sự cố tem COATS astra C3185) ═══
    * Sự cố: tem in "Col C3185" nhưng OCR trả về **dính liền** ("ColC3185") hoặc đọc lệch chữ
@@ -9456,18 +9498,27 @@ var NDS_ENGINE = (function(){
   /** Giá trị thô của trường định danh → danh sách MÃ CHỦ đã chuẩn hoá. DANH MỤC LÀM CHỨNG: chỉ nhận
    *  mã có ĐÚNG NGUYÊN VĂN trong chỉ mục, vì luật "không mang mã chủ = không phải món này" quá mạnh
    *  để đặt lên một chuỗi có thể đọc lệch. Không nhận được thì lõi chấm y như trước. */
-  function locMaChu(dsGiaTri, cm){
+  function locMaChu(dsGiaTri, cm, motMoi){
     var ra = [];
     if (!cm || !cm.idx) return ra;
     (dsGiaTri || []).forEach(function(gt){
+      var xong = false;
       bocTen(gt).code.forEach(function(t0){
+        /* motMoi: mỗi ô chỉ lấy MÃ ĐẦU TIÊN. Cần cho trường ĐỊNH DANH vì nhãn của nó không đòi dấu
+           hai chấm, nên khi cả thẻ nằm trên MỘT dòng và các nhãn sau cũng mất dấu hai chấm thì "giá
+           trị" chạy tới hết dòng và nuốt luôn mã VẢI ở ô sau — đo được: mã chủ ra
+           [cwho0006, s130413] và cuộn vải lại chiếm hạng 1 với 91%. Ô nguyên liệu thì KHÔNG giới
+           hạn: ở đó càng nhận được nhiều mã liệu càng loại trừ tốt. */
+        if (xong) return;
         /* PHẢI đi qua đúng bộ sửa chính tả của vai MÃ (sửa 21/08/2026). Bản đầu tra thẳng `cm.idx[t]`
            trên chuỗi THÔ, nên một ký tự đọc lệch là mã chủ RỖNG — trong khi rổ MÃ ở ngay dưới thì đã
            được `suaMaTheoDanhMuc` chữa về đúng mã. Hậu quả đo được trên thẻ CWHO0006 giả lập chữ viết
            tay: thẻ đọc thành "CWH00006" (chữ O thành số 0) ⇒ lõi BIẾT mã đúng nhưng luật mã chủ không
            bắn ⇒ tụt về đường cũ và cuộn VẢI lại chiếm hạng 1 với 94%. */
         var t = suaMaTheoDanhMuc(t0, cm);
-        if (cm.idx[t] && laMaHinhDang(t) && ra.indexOf(t) < 0) ra.push(t);
+        if (!cm.idx[t] || !laMaHinhDang(t)) return;
+        if (ra.indexOf(t) < 0) ra.push(t);
+        if (motMoi) xong = true;
       });
     });
     return ra;
@@ -10250,7 +10301,29 @@ var NDS_ENGINE = (function(){
     });
     napBangChung(nhan, cm);
     nhan.bo = bo;
-    nhan.maChu = locMaChu(tm.maChu, cm);
+    nhan.maChu = locMaChu(tm.maChu, cm, true);
+    /* ═══ ĐƯỜNG THỨ HAI CHO MÃ CHỦ: LOẠI TRỪ MÃ NGUYÊN LIỆU (thêm 21/08/2026) ═══
+     * Sự cố thật (user chụp màn hình): AI trả raw_text CÒN nhãn "Thành phần vải:" nhưng MẤT nhãn
+     * "Mã sản phẩm" ⇒ `maChu` rỗng ⇒ luật mã chủ im ⇒ hai thẻ cùng **93%**:
+     *     #1 422495218 (áo mẫu, 18 từ khoá)   #2 422423807 (cuộn vải, 16 từ khoá)
+     * tức cuộn vải leo lên ngang hàng chỉ bằng chữ chung. Luật mã chủ mà chỉ có MỘT đường vào là
+     * quá mong manh: nó phụ thuộc việc AI có giữ đúng chữ nhãn hay không, mà đó là thứ không ai bảo
+     * đảm được.
+     * Đường thứ hai nói điều NGƯỢC LẠI mà cùng kết luận: mã nằm TRONG ô "Thành phần vải" là mã của
+     * VẬT LIỆU. Vậy nếu thẻ có ô đó, thì mã nào KHÔNG nằm trong đó mới có quyền định danh món hàng.
+     * Ca trên: rổ mã = [cwho0006, s130413], mã liệu = [s130413] ⇒ mã chủ = [cwho0006]. Xong.
+     * Chốt an toàn giữ nguyên: phải còn ÍT NHẤT MỘT mã ngoài ô nguyên liệu (không thì bỏ qua, chấm
+     * như cũ — thà không có luật còn hơn triệt tiêu sạch bằng chứng), và mã đó vẫn phải CÓ THẬT
+     * trong danh mục. So bằng `loi()` để bỏ luôn biến thể "khác dấu ngăn" của cùng một mã liệu. */
+    if (!nhan.maChu.length && (tm.maLieu||[]).length){
+      var mlieu = locMaChu(tm.maLieu, cm);
+      if (mlieu.length){
+        var boLieu = Object.create(null);
+        mlieu.forEach(function(t){ boLieu[loi(t)] = 1; });
+        var khac = nhan.code.filter(function(t){ return !boLieu[loi(t)] && laMaHinhDang(t) && cm.idx[t]; });
+        if (khac.length) nhan.maChu = khac;
+      }
+    }
     /* Mã chủ phải nằm trong rổ MÃ để các bước sau (gonTu · diemMot · timTop) nhìn thấy nó. Nó vốn ở
        trong phần chữ đã giữ lại nên gần như luôn có sẵn; thêm cho chắc, không thêm trùng. */
     nhan.maChu.forEach(function(t){ if (nhan.code.indexOf(t) < 0) nhan.code.push(t); });
@@ -11415,8 +11488,10 @@ async function ndsDoiSoat(){
      xem khối `canh` trong ndsVeKetQua. `docTheMau` trả giá trị THÔ của trường định danh (chưa đối
      chiếu danh mục), nên có chữ trong ô là biết ngay tem là biểu mẫu có khai mã. */
   var tmRaw=raw ? NDS_ENGINE.docTheMau(raw) : null;
-  NDS.theMau={ coNhan:!!(tmRaw && (tmRaw.maChu||[]).some(function(s){ return String(s).replace(/[^0-9a-zA-Z]/g,'').length>=3; })),
-    maChu:(nhan.maChu||[]).slice(0) };
+  /* `coNhan` = "tem này LÀ THẺ MẪU" (có nhãn trường, hoặc có tiêu đề thẻ) — rộng hơn "có ô Mã sản
+     phẩm", vì ca tệ nhất là AI dẹp phẳng cả thẻ làm MẤT hết nhãn: lúc đó không có ô nào để đọc mà
+     cuộn vải vẫn chiếm hạng 1, và im lặng thì thủ kho không có cách nào biết. */
+  NDS.theMau={ coNhan:!!(tmRaw && tmRaw.laTheMau), maChu:(nhan.maChu||[]).slice(0) };
   var ghim=ndsSoTra();                 // sổ tay tem: tem/mã vạch này người đã chốt SKU rồi -> ghim
   var t0=(window.performance&&performance.now)?performance.now():Date.now();
   NDS.ket=NDS_ENGINE.timTop(nhan, NDS.cm, { soLuong:3, chiActive:NDS.chiActive, ghim:ghim, loc:NDS.loc });
@@ -12286,12 +12361,23 @@ function prSoDangGo(v){
   return PR_TEM.tachSl(v).filter(function(x){ return !/^0+$/.test(String(x).replace(/\./g, '')); });
 }
 /** Chốt cái đang gõ thành chip. Gọi từ nút "+", từ Enter, và từ lúc rời ô (không ai muốn mất con số
- *  vừa đánh chỉ vì quên bấm +). */
+ *  vừa đánh chỉ vì quên bấm +).
+ *  ⚠ SỰ CỐ THẬT 21/08/2026 (user báo "gõ thêm số lượng thì bị double lên 2 lần tem"): ba đường chốt
+ *  đó có thể nổ HAI LẦN cho MỘT con số. Ca dựng lại được bằng bàn phím thật: gõ "6" rồi bấm Enter →
+ *  ra chip `5|6|6`. Vì sao: `onkeydown` gọi `prCam` (chốt lần 1) rồi `prVe()` dựng lại bảng, NHƯNG
+ *  Enter trong ô text còn làm trình duyệt bắn luôn `change` — và `preventDefault()` KHÔNG chặn được
+ *  `change` (nó là hệ quả của việc chốt giá trị, không phải hành vi mặc định của phím). Ô cũ dù đã
+ *  bị tháo khỏi DOM vẫn còn giữ chuỗi "6" nên `prCam` chạy lần 2.
+ *  Chữa bằng cách làm hàm này BẤT BIẾN THEO LƯỢT: dọn ô NGAY khi đã đọc xong con số, TRƯỚC lúc vẽ
+ *  lại. Sự kiện bắn muộn đọc lại ô thì thấy rỗng ⇒ tự thoát. Không đặt cờ, không hẹn giờ, không phụ
+ *  thuộc thứ tự sự kiện của từng trình duyệt. */
 function prCam(el){
   var sku = String(el.getAttribute('data-s') || ''), r = PR.sel[sku];
   if (!r) return;
   var them = prSoDangGo(el.value);
-  if (!them.length){ el.value = PR_TEM.tachSl(r.slHang).length ? '0' : ''; prHienCong(el); return; }
+  if (!them.length){ el.value = ''; prHienCong(el); return; }
+  el.value = '';                       // ← chốt rồi thì ô rỗng NGAY, kẻo change bắn muộn chốt lại
+  prHienCong(el);
   var moi = PR_TEM.tachSl(r.slHang).concat(them);
   if (moi.length > PR_TRAN_SL){
     moi = moi.slice(0, PR_TRAN_SL);
@@ -12469,19 +12555,25 @@ function prVe(){
     var dsSl = PR_TEM.tachSl(r.slHang);
     var nhieu = dsSl.length > 1;                        // 3 bịch khác số lượng -> 3 con tem
     var soTem = PR_TEM.temCuaDong(r);
-    return '<tr><td class="num prtem"><input class="prsl prsl-t" type="number" inputmode="numeric" min="1" max="' + PR_TRAN_SL + '" step="1" value="' + soTem + '"' +
+    return '<tr class="prdong' + (dsSl.length ? ' co-chip' : '') + '">' +
+      '<td class="num prtem"><input class="prsl prsl-t" type="number" inputmode="numeric" min="1" max="' + PR_TRAN_SL + '" step="1" value="' + soTem + '"' +
         (nhieu ? ' disabled' : '') + ' onfocus="prCuonVao(this)"' +
         ' data-s="' + esc(r.sku) + '" onchange="prDatSl(this.getAttribute(\'data-s\'),this.value)" title="' +
         (nhieu ? 'Dòng này khai ' + soTem + ' số lượng nên ra đúng ' + soTem + ' con tem' : 'Số con tem sẽ in') + '"></td>' +
-      /* HAI DÒNG trong ô Số lượng: chip đã chốt ở TRÊN, ô nhập + nút "+" ở DƯỚI.
-         Bản trước để chip nằm CÙNG HÀNG với ô nhập nên vừa thêm 2-3 chip là ô nhập bị bóp dẹt rồi
-         rớt dòng méo mó — mà ô nhập chính là chỗ tay đang gõ, không được co lại (video 21/08/2026). */
-      /* Ô nhập Ở TRÊN, số đã chốt Ở DƯỚI (đổi 21/08/2026 theo yêu cầu): tay đang gõ thì ô nhập phải
-         nằm đúng chỗ mắt đang nhìn, còn danh sách đã chốt là thứ đọc lại — nó ở dưới. */
+      /* Ô SỐ LƯỢNG chỉ còn ĐÚNG chỗ để gõ: ô nhập + nút "+". Danh sách số đã chốt KHÔNG nằm ở đây
+         nữa (đổi 21/08/2026, yêu cầu user "chỗ hiển thị số lượng chưa thân thiện") — nó xuống một
+         DẢI RIÊNG ăn hết bề rộng dòng, xem `.prslbar` bên dưới. Hai lý do:
+           · chip nhét trong một cột hẹp, canh phải, 4-5 cái là rớt thành 2-3 dòng méo mó, mà cột đó
+             chính là chỗ tay đang gõ;
+           · và không có chỗ nào NÓI RA quan hệ "mỗi số lượng = một con tem" — người dùng thấy
+             "Số tem 4" ở cột trước rồi 4 chip ở cột sau mà không biết cái nào sinh ra cái nào.
+         Ô nhập cũng KHÔNG còn hiện số "0" khi đã có chip: "Số lượng: 0" đọc ra thành "số lượng bằng
+         không", đúng thứ làm người dùng hoang mang nhất. Nay để rỗng + chữ mờ nhắc việc. */
       '<td class="num prslo">' +
         '<div class="prgo">' +
-        '<input class="prsl prsl-v" type="text" inputmode="numeric" value="' + (dsSl.length ? '0' : '') + '"' +
-        ' data-s="' + esc(r.sku) + '" placeholder="—" oninput="prGoSo(this);prHienCong(this)"' +
+        '<input class="prsl prsl-v" type="text" inputmode="numeric" value=""' +
+        ' data-s="' + esc(r.sku) + '" placeholder="' + (dsSl.length ? '+ số nữa' : 'gõ số lượng') + '"' +
+        ' oninput="prGoSo(this);prHienCong(this)"' +
         ' onfocus="prCuonVao(this)"' +
         ' onkeydown="if(event.key===\'Enter\'){event.preventDefault();prCam(this);}"' +
         ' onchange="prCam(this)"' +
@@ -12491,12 +12583,19 @@ function prVe(){
         ' title="Thêm số lượng này thành một con tem riêng"' +
         ' onclick="prCam(this.previousElementSibling)">+</button>' +
         '</div>' +
-        (dsSl.length ? '<div class="prchips">' + prChipSl(r) + '</div>' : '') +
         '</td>' +
       '<td><b>' + esc(r.sku) + '</b></td>' +
       '<td class="pn">' + esc(r.pn) + '</td>' +
       '<td><button class="prdel" data-s="' + esc(r.sku) + '" title="Bỏ SKU này khỏi danh sách in"' +
-        ' onclick="prXoa(this.getAttribute(\'data-s\'))">&times;</button></td></tr>';
+        ' onclick="prXoa(this.getAttribute(\'data-s\'))">&times;</button></td></tr>' +
+      /* DẢI SỐ LƯỢNG ĐÃ CHỐT — hàng riêng, ăn hết bề rộng, dán liền dưới dòng trên (dòng trên bị bỏ
+         bo góc dưới bằng class `co-chip` nên hai hàng đọc ra như MỘT thẻ). Nhãn nói thẳng quan hệ
+         giữa số lượng và số tem, để không ai phải tự đoán. */
+      (dsSl.length ? '<tr class="prsl2"><td colspan="5"><div class="prslbar">' +
+        '<span class="prslnhan">' + (nhieu
+          ? 'Sẽ in <b>' + soTem + '</b> tem — mỗi số lượng một con tem'
+          : 'Số lượng in trên tem') + '</span>' +
+        '<div class="prchips">' + prChipSl(r) + '</div></div></td></tr>' : '');
   }).join('') : '<tr><td colspan="5"><div class="state" style="padding:18px">Danh sách in đang trống.</div></td></tr>';
   var tong = prTongTem(), nhom = PR_TEM.theoMau(ds);
   document.getElementById('prSum').innerHTML = nhom.thuTu.map(function(k){
