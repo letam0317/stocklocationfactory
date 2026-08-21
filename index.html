@@ -8954,6 +8954,25 @@ var NDS_ENGINE = (function(){
     }
     return c;
   }
+  /** HAI MẢNH CÙNG RA DÁNG MÃ mà PHẦN SỐ khác nhau ⇒ KHÁC MẶT HÀNG, không phải lỗi đọc.
+   *  ═══ SỰ CỐ THẬT 21/08/2026 (user chụp màn hình) ═══
+   *  Thẻ mẫu ghi **CWPT0019** (mẫu mới, danh mục chưa đồng bộ kịp), mà tab gợi ý hai SKU mang
+   *  **CWPT0015** và vẫn dán chip "MÃ cwpt0019" lên đúng hai thẻ đó — tức nói với thủ kho rằng
+   *  "dòng này khớp mã trên tem của bạn", trong khi nó là mặt hàng khác hẳn.
+   *  Vì sao lọt: `tyLe` cho phép lệch 2 ký tự khi chuỗi dài ≥8, nên "cwpt0019" ↔ "cwpt0015" ra
+   *  1 − 1/8 = 0,875 → ×0,92 = **0,805**, thừa ngưỡng 0,6 để tính là KHỚP. Càng dài — tức càng
+   *  định danh — thì luật lại càng dễ dãi, ngược hẳn chiều đáng lẽ phải có.
+   *  Mã hàng của xưởng là **tiền tố + số thứ tự** (CWPT0015 · CWPT0018 · CWPT0019): khác một chữ số
+   *  là khác mặt hàng, KHÔNG phải đọc lệch. Còn lỗi đọc thật giữa chữ và số (O↔0 · I/L↔1 · S↔5)
+   *  đã có đường `ocr()` lo và nó chạy TRƯỚC bước này, nên chốt chặn ở đây không cắn vào ca đó.
+   *  ⚠ Lối cứu cho tem đọc lệch một chữ số vẫn còn nguyên và nằm ĐÚNG chỗ của nó: `suaMaTheoDanhMuc`
+   *  sửa về mã CÓ THẬT khi chỉ có DUY NHẤT một ứng viên. Mơ hồ (như cwpt0019: có tới 6 ứng viên) thì
+   *  không sửa, không khớp mờ, và giao diện nói thẳng "chưa khớp mã" + mời chọn "Ý bạn là…". */
+  function lechSoMa(a, b){
+    if (!laMaHinhDang(a) || !laMaHinhDang(b)) return false;
+    var sa = a.replace(/[^0-9]/g, ''), sb = b.replace(/[^0-9]/g, '');
+    return !!(sa && sb) && sa !== sb;
+  }
   /** Điểm khớp của MỘT cặp (từ khoá tem, từ khoá SKU) — thứ tự ưu tiên y như bản đầu.
    *  NHỚ KẾT QUẢ theo cặp: cùng một lượt đối soát, "polyester" hay "none" được so đi so lại với
    *  hàng nghìn dòng. Đo 19/08: đây là phần đắt nhất của cả lượt đối soát. Nhớ lại cho ra ĐÚNG
@@ -8978,6 +8997,7 @@ var NDS_ENGINE = (function(){
       else {
         var ot = ocr(tok);
         if (ot.length>=4 && ocr(m)===ot) v = 0.9;
+        else if (lechSoMa(tok, m)) v = 0;                  // mã khác số thứ tự = khác mặt hàng
         else { var r = tyLe(tok,m); v = r ? r*0.92 : 0; }
       }
     }
@@ -11686,12 +11706,28 @@ function ndsVeKetQua(ms, themInactive){
      "Phong Việt", "Polyester") thì hàng trăm SKU đều khớp như nhau — phải cảnh báo. */
   var canh='';
   if (!NDS.ket.coMaKhop){
-    canh='<div class="pcdnote" style="margin-bottom:10px;background:color-mix(in srgb,var(--warn) 14%,var(--surface));color:var(--ink2)">'+
-      '<b>Chưa khớp được MÃ HÀNG nào.</b> Mấy gợi ý dưới đây chỉ dựa vào chữ chung (loại hàng · nhà cung cấp · '+
-      'chất liệu · màu) — hàng trăm SKU giống nhau ở mấy chữ đó, nên <b>đừng chọn vội</b>. '+
-      'Gõ mã in trên tem (vd <code>F9-5374</code>) vào ô <b>Mã trên tem</b> ở bước 1 là ra đúng ngay.'+
-      ndsMoiChonMa()+
-      ' <button type="button" class="kktab nds-alt" onclick="ndsTroMa()">Nhập mã</button></div>';
+    /* HAI CA KHÁC NHAU HẲN, trước đây nói chung một câu (sửa 21/08/2026 — sự cố thẻ CWPT0019):
+         · ĐỌC KHÔNG RA mã nào  -> "chưa khớp được mã hàng nào", lỗi ở khâu đọc;
+         · ĐỌC RA rồi mà DANH MỤC KHÔNG CÓ -> lỗi ở khâu ĐỒNG BỘ, không phải ở khâu đọc. Thẻ mẫu mới
+           tạo sau lượt sync gần nhất là đúng ca này, và nói "chưa khớp mã" thì thủ kho đi soi lại
+           tấm tem (vô ích) thay vì biết rằng danh mục đang thiếu. */
+    var maLa = ndsMaLa();
+    if (maLa.length){
+      canh='<div class="pcdnote" style="margin-bottom:10px;background:color-mix(in srgb,var(--bad) 13%,var(--surface));color:var(--ink2)">'+
+        '<b>Danh mục chưa có mã '+esc(maLa.slice(0,2).join(' · ').toUpperCase())+'.</b> Tem đọc ra mã này rồi, '+
+        'nhưng tab <code>SKU_MASTER</code> không có nó — thường là hàng/mẫu <b>mới tạo sau lượt đồng bộ '+
+        'gần nhất</b>. Mấy gợi ý dưới đây <b>KHÔNG mang mã đó</b> (chỉ cùng dạng tên), đừng chọn vội.'+
+        ndsMoiChonMa()+
+        ' <button type="button" class="kktab nds-alt" onclick="ndsTaiDanhMuc(true)">Tải lại danh mục</button>'+
+        ' <button type="button" class="kktab nds-alt" onclick="ndsTroMa()">Nhập mã</button></div>';
+    } else {
+      canh='<div class="pcdnote" style="margin-bottom:10px;background:color-mix(in srgb,var(--warn) 14%,var(--surface));color:var(--ink2)">'+
+        '<b>Chưa khớp được MÃ HÀNG nào.</b> Mấy gợi ý dưới đây chỉ dựa vào chữ chung (loại hàng · nhà cung cấp · '+
+        'chất liệu · màu) — hàng trăm SKU giống nhau ở mấy chữ đó, nên <b>đừng chọn vội</b>. '+
+        'Gõ mã in trên tem (vd <code>F9-5374</code>) vào ô <b>Mã trên tem</b> ở bước 1 là ra đúng ngay.'+
+        ndsMoiChonMa()+
+        ' <button type="button" class="kktab nds-alt" onclick="ndsTroMa()">Nhập mã</button></div>';
+    }
   }
   /* THẺ MẪU MÀ KHÔNG ĐỌC ĐƯỢC Ô "MÃ SẢN PHẨM" — rủi ro CÒN LẠI của luật mã chủ (21/08/2026).
      Luật mã chủ chỉ bắn khi đọc được mã và mã đó CÓ THẬT trong danh mục. Không đọc được (ô để
@@ -11719,6 +11755,20 @@ function ndsVeKetQua(ms, themInactive){
      dữ kiện nào mà chỉ dịch Top 3 xuống. */
   c.innerHTML=canh+NDS.ket.map(function(r,i){ return ndsTheKetQua(r,i+1); }).join('');
   ndsCapNhatChan(ms);
+}
+/** Những mảnh ở vai MÃ mà DANH MỤC KHÔNG CÓ. Khác "chưa đọc được mã": ở đây đọc được rồi, chỉ là
+ *  danh mục thiếu — gần như luôn vì hàng/mẫu mới tạo sau lượt sync gần nhất (ca thật: thẻ CWPT0019
+ *  trong khi SKU_MASTER chỉ có tới CWPT0018). Hai ca đó phải nói hai câu khác nhau, vì chỗ phải sửa
+ *  khác nhau: một cái là chụp lại tem, một cái là chạy lại đồng bộ. */
+function ndsMaLa(){
+  if (!NDS.cm || !NDS.cm.idx) return [];
+  var ra = [], da = Object.create(null);
+  (NDS.tokens||[]).forEach(function(k){
+    if (!k || k.vai !== 'code' || NDS.cm.idx[k.t]) return;
+    if (String(k.t).length < 4 || !/[0-9]/.test(k.t)) return;      // phải RA DÁNG MÃ
+    if (!da[k.t]){ da[k.t] = 1; ra.push(k.t); }
+  });
+  return ra;
 }
 /* "Ý BẠN LÀ…" — mời chọn mã CÓ THẬT gần giống mảnh vừa đọc (thêm 20/08/2026, sự cố tem C3185).
  * Vì sao cần: tem in "Col C3185" mà OCR đọc lệch một số ("C3186") thì `suaMaTheoDanhMuc` KHÔNG dám
