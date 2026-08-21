@@ -5050,7 +5050,7 @@ function plgHtmlVt(tong){
     '<th>Lịch gốc</th><th>Yêu cầu gần nhất</th><th>Vệ sinh gần nhất</th>'+
     '</tr></thead><tbody>'+body+capNote+'</tbody></table></div>'+
     '<p class="pg-hint" style="margin:10px 0 0">Đang hiển thị '+nf(Math.min(rows.length,CAP))+' / '+nf(os.length)+
-      ' vị trí'+(PLG.area?' của '+esc(plgTenNgan(PLG.area)):'')+' &middot; bấm 1 dòng để mở chi tiết vị trí đó.</p>';
+      ' vị trí'+(PLG.area?' của '+esc(plgTenNgan(PLG.area)):'')+'.</p>';
 }
 /* 1 dòng bảng vị trí — dùng lại cho cả pop-up "Toàn bộ vị trí" */
 function plgDongVt(o){
@@ -5105,8 +5105,11 @@ function plgHtmlDay(mode,dem,thu,theoDay,dsDay){
         '<span class="pg-parts">'+parts+'</span></td>'+
       so(t.vs.da,'Đã VS')+so(t.vs.chua,'Chưa VS')+so(t.vs.nduyet,'Lịch chưa duyệt')+so(t.vs.nolich,'Chưa khai báo')+'</tr>';
   }).join('');
+  /* Nhãn "Bấm 1 dãy để soi riêng dãy đó trên sơ đồ" ĐÃ BỎ (21/08/2026, luật ⑦ — nhãn chỉ dẫn thao
+     tác không sống trong UI; dòng có `cursor:pointer` + hover đã nói lên nó bấm được). Nó còn là thủ
+     phạm đẩy nút "Mở tra cứu dãy kệ" ra ngoài mép màn 360px — chỉ thấy khi SOI ẢNH, vì nút nằm trong
+     khung cuộn ngang nên số đo "không tràn". */
   return '<div class="pg-whbar">'+
-      '<span class="pg-hint" style="font-weight:650">Bấm 1 dãy để soi riêng dãy đó trên sơ đồ</span>'+
       (PLG.hiDay?'<button type="button" class="pg-whtab active" onclick="plgSoiDay(\'\')">Đang soi dãy '+esc(PLG.hiDay)+' &times;</button>':'')+
       '<span style="flex:1"></span>'+
       '<button type="button" class="pg-whtab" onclick="plgOpenTra()">Mở tra cứu dãy kệ</button>'+
