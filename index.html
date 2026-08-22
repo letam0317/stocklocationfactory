@@ -1024,6 +1024,13 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
 /* Số MÁY ĐIỀN (Tex/lõi lấy từ sổ cân CAN-LOI-CHI) làm MỜ để phân biệt với số người gõ — thay cho
    hai dòng hint đã bỏ (user 22/08/2026 tối). Gõ đè là hết mờ (csTinh gỡ class). */
 #csmodal input.cs-mo{color:var(--ink3)}
+/* NHÃN TRONG Ô (22/08/2026 đêm): "Chỉ số Tex"/"Khối lượng 1 lõi" đè lên bìa trái của chính ô nhập
+   (số vốn canh phải nên không đụng nhau); ô chừa padding trái đúng bằng nhãn dài nhất. Nhãn không
+   ăn chuột (pointer-events:none) — bấm vào chữ vẫn là bấm vào ô. */
+#csmodal .cd-in.cs-innho{position:relative}
+#csmodal .cs-innhan{position:absolute;left:11px;top:50%;transform:translateY(-50%);
+  font-size:11px;font-weight:700;color:var(--ink3);pointer-events:none;white-space:nowrap}
+#csmodal .cd-in.cs-innho input{padding-left:98px;min-width:0}
 /* Dòng SKU dưới tiêu đề: MÃ nổi bật (accent + đậm), tên hàng lên một tông so với chữ mờ mặc định
    của .mtsub — user 22/08/2026 tối: "highlight dữ liệu của sku". */
 #csSub{color:var(--ink2);font-size:12px}
@@ -1057,7 +1064,9 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
    lại kèm nút Xoá xoá được chính SKU đang cân. */
 body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar,body.csm-open #prbar{display:none}
 /* Bảng danh sách in trong modal: dùng .mtbl có sẵn, chỉ thêm 2 ô nhập */
-#prBody input.prsl{width:88px;padding:7px 10px;font-family:inherit;font-size:14px;text-align:right;
+/* 22/08/2026 đêm (user): ô "gõ số lượng" + chip hạ chiều cao còn ~MỘT NỬA — padding dọc về sát 0,
+   chữ nhỏ lại một nấc; bề rộng giữ nguyên. */
+#prBody input.prsl{width:88px;padding:2px 9px;font-family:inherit;font-size:13px;text-align:right;
   border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
 #prBody input.prsl:focus{outline:2px solid var(--accent);outline-offset:1px}
 #prBody input.prsl:disabled{opacity:.55;cursor:not-allowed}
@@ -1072,7 +1081,7 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar,body.csm-open #pr
    Chip đứng trước = đúng thứ tự sẽ in, và "mỗi chip = một con tem" nên chỗ của cột Số tem cũ giờ
    hiện CHÍNH những số người dùng đã nhập. "Số tem: n" chỉ còn là CHỮ hiển thị ở ô SKU (.prtemso). */
 #prBody .prgo{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;justify-content:flex-start}
-#prBody .prchip{--cc:var(--accent);font-variant-numeric:tabular-nums;padding:4px 4px 4px 10px}
+#prBody .prchip{--cc:var(--accent);font-variant-numeric:tabular-nums;padding:0 3px 0 9px;min-height:0}
 /* Chữ mờ nhắc việc phải NHỎ hơn con số thật: ô này in số ở 19px/700, để placeholder cùng cỡ thì
    nó vừa bị cắt cụt vừa trông như đã có số. */
 #prBody input.prsl-v::placeholder{font-size:12.5px;font-weight:600;opacity:.62}
@@ -1094,7 +1103,8 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar,body.csm-open #pr
 /* Nút "+" phải ĐẬP VÀO MẮT (yêu cầu user): nền accent đặc, chữ trắng, có bóng — nó là thao tác chính
    của ô này, không phải một dấu cộng mờ nhạt lẫn vào nền. Chỉ hiện khi trong ô ĐANG có số. */
 /* Scope #prmodal (truoc la #prBody): nut "+" gio con dung o o "Them SKU ngoai" tren dau pop-up. */
-#prmodal .prsladd{display:none;align-items:center;justify-content:center;width:32px;height:32px;flex:0 0 auto;
+/* 22/08/2026 đêm: nút + hạ theo ô nhập (32→22px) — không thì hàng số lượng vẫn cao bằng cũ. */
+#prmodal .prsladd{display:none;align-items:center;justify-content:center;width:22px;height:22px;flex:0 0 auto;
   border:0;border-radius:9px;background:var(--accent);color:#fff;font-size:20px;font-weight:800;line-height:1;
   cursor:pointer;font-family:inherit;box-shadow:0 2px 9px color-mix(in srgb,var(--accent) 42%,transparent);
   animation:popIn .18s var(--ez-apple) both}
@@ -1170,18 +1180,20 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar,body.csm-open #pr
      đã chốt (đủ chạm + đọc lại được con số). */
   #prmodal .mtbl td.prslo{grid-area:sl;width:auto;min-width:0}
   #prmodal .mtbl td.prslo .prgo{gap:8px 10px}
+  /* 22/08/2026 đêm (user): hạ chiều cao ô nhập còn ~1/2 (44→22px, chữ 19→15px vẫn đậm); chip và
+     nút × cũng hạ nửa theo (xem .prchip dưới) — bề rộng 2/5 thẻ giữ nguyên. */
   #prmodal .mtbl td.prslo input.prsl-v{flex:0 1 40%;width:auto;min-width:96px;margin-left:auto;
-    min-height:44px;font-size:19px;font-weight:700;padding:8px 10px}
+    min-height:22px;font-size:15px;font-weight:700;padding:2px 10px}
   /* ô nút xoá: góc trên phải, XA hàng số để không bấm nhầm lúc sửa số */
   #prmodal .mtbl td.prxoa{grid-area:del;width:auto;justify-self:end;align-self:start}
   #prmodal .mtbl td[colspan]{grid-column:1/-1}
   /* (Dải chip `tr.prsl2` + class `co-chip` ĐÃ GỠ 22/08/2026 — chip dọn về cùng ô với ô nhập, xem
      ghi chú ở td.prslo phía trên. Giữ dòng mốc này vì khối dán-liền-đáy-thẻ từng qua 2 lần vá.) */
-  /* Chip số lượng trên điện thoại: nút × phải là VÙNG CHẠM THẬT ≥40px (luật 9 luật của dự án). Khuôn
-     `.nds-tag .x` dùng chung chỉ 18px — đủ cho badge từ khoá ở tab (bấm nhầm thì thêm lại), nhưng ở
-     đây bấm nhầm là mất một con tem đã khai. */
-  #prBody .prchip{min-height:40px;padding:0 0 0 14px;gap:2px;font-size:14px}
-  #prBody .prchip button.x{width:40px;height:40px;padding:0;font-size:19px;
+  /* Chip số lượng trên điện thoại — 22/08/2026 đêm user hạ chiều cao còn ~1/2 (chip 40→20px, nút ×
+     40→20px): danh sách nhiều chip từng ăn nửa thẻ. Ghi chú: nút × 20px là DƯỚI chuẩn vùng chạm
+     40px của dự án — đánh đổi có chủ đích theo yêu cầu user (bấm nhầm × thì gõ lại số đó). */
+  #prBody .prchip{min-height:20px;padding:0 0 0 10px;gap:2px;font-size:12px}
+  #prBody .prchip button.x{width:20px;height:20px;padding:0;font-size:14px;
     display:inline-flex;align-items:center;justify-content:center;opacity:.72}
   #prmodal .prcb{max-width:none;width:100%}
   #prmodal .prcb input{min-height:36px;font-size:12.5px}
@@ -1191,7 +1203,7 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar,body.csm-open #pr
   #prmodal .prcb .combo-menu{width:auto;min-width:0;max-width:none;left:0;right:0}
   #prmodal .prcb .combo-item{white-space:normal;line-height:1.45}
   #prBody input.prsl{min-height:42px;font-size:15px}
-  #prmodal .prsladd{width:44px;height:44px;flex:0 0 44px;font-size:22px}
+  #prmodal .prsladd{width:24px;height:24px;flex:0 0 24px;font-size:16px}
   #prBody .prdel{font-size:22px;padding:4px 8px}
   /* Hai ô "áp cho tất cả": nhãn dài chiếm nửa bề rộng nên ô chọn bị cắt mất chữ — xếp DỌC lại. */
   /* HAI Ô "ÁP CHO TẤT CẢ" GỘP MỘT HÀNG, NHÃN RÚT NGẮN.
@@ -3130,22 +3142,22 @@ body.side-anim{overflow-x:clip}
            Chữa: Enter/phím "→" gọi csTiep() — còn ô trống thì NHẢY SANG ô đó (kèm cuộn vào giữa
            vùng còn thấy), đủ cả thì rút bàn phím xuống; mọi ô đều cuộn vào giữa khi focus
            (prCuonVao). Số cuộn thừa BẮT BUỘC nhập, không còn mặc định 1. -->
+      <!-- 22/08/2026 đêm (user): NHÃN DỜI VÀO TRONG Ô ("Chỉ số Tex"/"Khối lượng 1 lõi" nằm bìa trái
+           ô nhập, số bìa phải) + bỏ chữ đơn vị "Tex"/"gr" bên phải hai ô này — hàng gọn còn một tầng. -->
       <div class="cs-hang2">
         <div class="cd-f dau">
-          <label for="csTex">Chỉ số Tex</label>
-          <div class="cd-in">
-            <input id="csTex" inputmode="decimal" enterkeyhint="next" autocomplete="off" spellcheck="false" placeholder="ví dụ 27" oninput="csTinh()"
+          <div class="cd-in cs-innho">
+            <span class="cs-innhan">Chỉ số Tex</span>
+            <input id="csTex" inputmode="decimal" enterkeyhint="next" autocomplete="off" spellcheck="false" aria-label="Chỉ số Tex" oninput="csTinh()"
               onfocus="prCuonVao(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();csTiep(this);}">
-            <span class="dv">Tex</span>
           </div>
           <div class="cd-doc" id="csTexDoc"></div>
         </div>
         <div class="cd-f dau">
-          <label for="csLoi">Khối lượng 1 lõi</label>
-          <div class="cd-in">
-            <input id="csLoi" inputmode="decimal" enterkeyhint="next" autocomplete="off" spellcheck="false" placeholder="ví dụ 50" oninput="csTinh()"
+          <div class="cd-in cs-innho">
+            <span class="cs-innhan">Khối lượng 1 lõi</span>
+            <input id="csLoi" inputmode="decimal" enterkeyhint="next" autocomplete="off" spellcheck="false" aria-label="Khối lượng 1 lõi (gram)" oninput="csTinh()"
               onfocus="prCuonVao(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();csTiep(this);}">
-            <span class="dv">gr</span>
           </div>
           <div class="cd-doc" id="csLoiDoc"></div>
         </div>
