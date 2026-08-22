@@ -1167,21 +1167,9 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
      "ÁP MẪU TEM CHO TẤT CẢ" rút thành "MẪU"/"SL" bằng `font-size:0` + `::before` (đổi chữ hiển thị mà
      KHÔNG sửa markup — khối in đang được lượt khác sửa, càng ít chạm càng tốt).
      `.mfilters .fld` đóng cứng `height:32px`; giữ nguyên chiều cao đó nhưng nới lên 36px cho ngón tay. */
-  /* Ô 1 là "áp SỐ TEM", ô 2 là "áp SỐ LƯỢNG" — bản trước ghi 'MẪU'/'SL' (nhãn của bảng cũ còn sót,
-     ảnh 16:59 cho thấy ô số tem bị gọi là MẪU và ô số lượng bị cắt còn "số in trê"). Chia đôi bề
-     rộng để cả hai ô đủ chỗ hiện chữ gợi ý. */
-  #prmodal .mfilters{padding:0 12px 10px;gap:8px;grid-template-columns:auto 1fr}
-  #prmodal .mfilters .fld{height:36px;padding:0 6px 0 10px;border-radius:999px}
-  #prmodal .mfilters .fld label{font-size:0;padding-right:8px;margin-right:8px;letter-spacing:0}
-  #prmodal .mfilters .fld label::before{font-size:9.5px;font-weight:750;letter-spacing:.06em;color:var(--muted)}
-  #prmodal .mfilters .fld:nth-child(1) label::before{content:'SỐ TEM'}
-  #prmodal .mfilters .fld:nth-child(2) label::before{content:'SỐ LƯỢNG'}
-  /* Ô "Thêm SKU ngoài" ăn trọn hàng riêng: mã SKU 9 chữ số + nút "+" không chen được nửa cột */
-  #prmodal .mfilters .fld:nth-child(3){grid-column:1/-1}
-  #prmodal .mfilters .fld:nth-child(3) label::before{content:'THÊM SKU'}
-  #prmodal .mfilters .fld:nth-child(3) input{flex:1;min-width:0}
-  #prmodal .mfilters #prSlAll{width:56px}
-  #prmodal .mfilters #prSlhAll{width:100%;max-width:none}
+  /* Khối CSS hàng "Áp SỐ TEM / Áp SỐ LƯỢNG / Thêm SKU ngoài" ĐÃ GỠ theo markup (user 22/08/2026
+     tối bỏ cả hàng điều khiển đầu pop-up) — giữ dòng ghi chú này làm mốc vì hàng đó từng qua 2 lần
+     sửa nhãn/bề rộng cho điện thoại. */
   /* Chiều cao ĐOÁN ĐƯỢC cho hai vùng cuộn: danh sách thẻ và khung xem trước 1:1 (3 con tem cỡ thật
      chiếm gần hết màn hình nếu để tự do). Nút "In" ở chân modal vì vậy luôn nhìn thấy. */
   #prmodal .modalbody{max-height:40vh}
@@ -3040,24 +3028,12 @@ body.side-anim{overflow-x:clip}
         title="Tên thiết bị này — hiện trong hàng đợi in để biết đợt tem của ai. Bấm để đổi tên.">Thiết bị: …</button>
       <button class="mclose" onclick="prDong()">&times;</button>
     </div></div>
-    <!-- Bỏ ô "áp mẫu tem" (20/08/2026): chỉ còn một khổ tem đang dùng nên không có gì để chọn. -->
-    <div class="mfilters" style="align-items:end">
-      <div class="fld"><label>Áp SỐ TEM cho tất cả</label>
-        <input id="prSlAll" class="prsl" type="number" min="1" max="200" step="1" value="1" style="width:96px"
-          onchange="prApSl(this.value)" title="Gõ số rồi rời ô: mọi dòng in cùng số tem này"></div>
-      <div class="fld"><label>Áp SỐ LƯỢNG cho tất cả</label>
-        <input id="prSlhAll" class="prsl" type="text" style="width:150px" placeholder="vd 1.200 hoặc 12, 14, 16"
-          oninput="prGoSo(this)" onchange="prApSlHang(this.value)" title="Con số này IN TRÊN TEM (không in chữ &quot;Số lượng&quot;)"></div>
-      <!-- THÊM SKU NGOÀI (user 22/08/2026): đường thứ hai vào danh sách in, khỏi đi vòng qua quét
-           tem/OCR ở tab Nhận diện SKU — gõ mã (đủ hoặc phần đầu) rồi bấm "+" / Enter. Vẫn đối chiếu
-           danh mục SKU_MASTER như prTick: tem mang mã không có thật là tem rác dán lên hàng thật. -->
-      <div class="fld"><label>Thêm SKU ngoài</label>
-        <input id="prThemSku" class="prsl" type="text" inputmode="numeric" style="width:130px" placeholder="gõ mã SKU"
-          onkeydown="if(event.key==='Enter'){event.preventDefault();prThemNgoai();}"
-          title="Thêm SKU vào danh sách in mà không cần quét tem — gõ mã rồi bấm + (gõ phần đầu mã cũng được, máy tự khớp danh mục)">
-        <button type="button" class="prsladd hien" id="prThemBtn" title="Thêm SKU này vào danh sách in"
-          onclick="prThemNgoai()">+</button></div>
-    </div>
+    <!-- Bỏ ô "áp mẫu tem" (20/08/2026): chỉ còn một khổ tem. BỎ TIẾP cả hàng điều khiển đầu pop-up
+         (user 22/08/2026 tối, nhắc lần 2 "vẫn còn hiển thị"): "Áp SỐ TEM cho tất cả" + "Áp SỐ LƯỢNG
+         cho tất cả" + "Thêm SKU ngoài" (vừa thêm sáng cùng ngày) — pop-up chỉ còn bảng dòng tem.
+         Các hàm prApSl / prApSlHang / prThemNgoai GIỮ NGUYÊN trong JS: nghiệp vụ "thêm SKU ngoài"
+         sẽ quay lại theo đường nút Cân → Số lượng trên thẻ nhận diện (đang bàn), gỡ hàm rồi viết
+         lại là tự chuốc lệch. -->
     <div class="msum" id="prSum"></div>
     <!-- 4 cột theo đúng thứ tự người dùng chốt 20/08/2026: Số tem · Số lượng · SKU · Tên sản phẩm.
          Bỏ cột "Mẫu tem" (chỉ còn một khổ) và cột ĐVT (thay bằng SỐ LƯỢNG in trên tem).
@@ -12710,6 +12686,9 @@ function prTimSku(sku){
   return null;
 }
 /* ── THÊM SKU NGOÀI (user 22/08/2026): ô + nút "+" ngay pop-up In tem ─────────────────────────────
+ * ⚠ UI ĐÃ GỠ NGAY TỐI CÙNG NGÀY (user bỏ cả hàng điều khiển đầu pop-up) — hàm giữ lại vì nghiệp vụ
+ * "thêm SKU không qua quét tem" sẽ quay lại theo đường nút Cân → Số lượng trên thẻ nhận diện
+ * (đang bàn); hiện KHÔNG có chỗ nào gọi.
  * Vì sao cần: có SKU muốn in tem mà KHÔNG có tem NCC để quét (hàng cũ mất tem, in bù) — bắt đi vòng
  * qua Nhận diện SKU là vô lý. Gõ mã đủ thì thêm ngay; gõ PHẦN ĐẦU mã mà chỉ khớp đúng 1 SKU trong
  * danh mục thì cũng thêm luôn (toast nói rõ đã khớp thành mã nào); khớp nhiều mã thì đề nghị gõ thêm
