@@ -2815,38 +2815,46 @@ body.side-anim{overflow-x:clip}
       <h2>1 · Số liệu cân<span class="h2tip-slot" data-tip-key="cd"></span></h2>
 
       <div class="cd-f dau">
-        <label>Quy cách cuộn nguyên <span class="hint">chiều dài 1 cuộn còn nguyên kiện</span></label>
+        <label>Quy cách cuộn nguyên <span class="hint">chiều dài 1 cuộn còn nguyên kiện — kết quả quy đổi vẫn luôn ra mm</span></label>
+        <!-- Nút hiện MÉT cho gọn (user 22/08/2026: 5.000 m thay vì 5.000.000 mm), data-mm vẫn giữ mm
+             và mọi kết quả/phiếu tính vẫn ra ĐƠN VỊ NHỎ NHẤT (mm, gr). Ô "Khác…" cũng gõ bằng MÉT. -->
         <div class="cd-qc" id="cdQCBar" role="group" aria-label="Quy cách cuộn nguyên">
-          <button type="button" class="kktab" data-mm="2500000" onclick="cdChonQC(2500000)" title="2.500 m">2,500,000 mm</button>
-          <button type="button" class="kktab" data-mm="3000000" onclick="cdChonQC(3000000)" title="3.000 m">3,000,000 mm</button>
-          <button type="button" class="kktab active" data-mm="5000000" onclick="cdChonQC(5000000)" title="5.000 m">5,000,000 mm</button>
-          <button type="button" class="kktab" data-mm="0" onclick="cdChonQC(0)" title="Quy cách khác — gõ tay">Khác…</button>
+          <button type="button" class="kktab" data-mm="2500000" onclick="cdChonQC(2500000)" title="2.500.000 mm">2,500 m</button>
+          <button type="button" class="kktab" data-mm="3000000" onclick="cdChonQC(3000000)" title="3.000.000 mm">3,000 m</button>
+          <button type="button" class="kktab active" data-mm="5000000" onclick="cdChonQC(5000000)" title="5.000.000 mm">5,000 m</button>
+          <button type="button" class="kktab" data-mm="0" onclick="cdChonQC(0)" title="Quy cách khác — gõ tay, đơn vị MÉT">Khác…</button>
         </div>
         <div class="cd-in" id="cdQCRow" hidden style="margin-top:8px">
-          <input id="cdQC" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="ví dụ 1,000,000" oninput="cdTinh()" aria-label="Quy cách khác (mm)">
-          <span class="dv">mm</span>
+          <input id="cdQC" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="ví dụ 1,000" oninput="cdTinh()" aria-label="Quy cách khác (m)">
+          <span class="dv">m</span>
         </div>
         <div class="cd-doc" id="cdQCDoc"></div>
       </div>
 
-      <!-- Tex có thật trong danh mục kho (yêu cầu user 22/08/2026): lọc từ nhóm hàng "Chỉ*" của tab
-           SKU_MASTER — dùng CHUNG cache danh mục với tab Nhận diện SKU nên thường 0 lượt mạng.
-           Bấm chip là điền thẳng thước ② phía dưới. Chưa có dữ liệu (offline + chưa từng tải) thì
-           cả khối ẨN — tab vẫn là công cụ tính tay đầy đủ. -->
-      <div class="cd-f" id="cdTexKho" hidden>
-        <label>Tex đang có trong danh mục kho <span class="hint">lọc từ nhóm hàng Chỉ của SKU_MASTER — bấm để điền thước ② bên dưới</span></label>
-        <div class="cd-qc" id="cdTexKhoBar" role="group" aria-label="Chỉ số Tex có trong danh mục kho"></div>
-        <div class="cd-doc" id="cdTexKhoDoc"></div>
+      <!-- CHỖ NHẬP TEX DUY NHẤT (user 22/08/2026 chiều: ô "thước ②" bên dưới là lặp lại — đã xoá).
+           Chip lọc từ nhóm hàng "Chỉ*" của SKU_MASTER (cache chung với tab Nhận diện SKU, thường
+           0 lượt mạng), XẾP THEO SỐ SKU GIẢM DẦN — Tex phổ biến nhất đứng trái. "Khác…" mở ô gõ
+           tay nên offline/không có danh mục vẫn nhập Tex được. Bấm lại chip đang sáng = bỏ chọn
+           (Tex là thứ KHÔNG bắt buộc — khác hàng quy cách luôn phải có 1 nút sáng). -->
+      <div class="cd-f" id="cdTexKho">
+        <label>Chỉ số Tex trên tem <span class="hint">gram của 1.000 m chỉ — có Tex thì khỏi cần cân cuộn nguyên; bấm lại chip đang sáng để bỏ chọn</span></label>
+        <div class="cd-qc" id="cdTexKhoBar" role="group" aria-label="Chỉ số Tex trên tem">
+          <button type="button" class="kktab" data-tex="0" onclick="cdChonTex(this)" title="Tex khác — gõ tay">Khác…</button>
+        </div>
+        <div class="cd-in" id="cdTexRow" hidden style="margin-top:8px">
+          <input id="cdTex" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="ví dụ 27" oninput="cdTinh()" aria-label="Chỉ số Tex khác (gõ tay)">
+          <span class="dv">Tex</span>
+        </div>
+        <div class="cd-doc" id="cdTexDoc"></div>
       </div>
 
+      <!-- CHỈ NHẬN GRAM (user 22/08/2026 chiều: bỏ hẳn nút kg). Dòng "Đọc là" vẫn quy ra kg để
+           người cân bằng cân kg soi lại — gõ 10 mà ý là 10 kg thì thấy ngay "0.01 kg" sai sai. -->
       <div class="cd-f">
-        <label for="cdTong">Tổng khối lượng chỉ trả về <span class="hint">cân cả lô, gồm cả lõi</span></label>
+        <label for="cdTong">Tổng khối lượng chỉ trả về <span class="hint">cân cả lô, gồm cả lõi — gõ bằng GRAM</span></label>
         <div class="cd-in">
-          <input id="cdTong" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="ví dụ 10" oninput="cdTinh()">
-          <span class="pg-seg sm" role="group" aria-label="Đơn vị cân">
-            <button type="button" id="cdDvKg" class="on" onclick="cdDoiDv('kg')">kg</button>
-            <button type="button" id="cdDvG" onclick="cdDoiDv('g')">gr</button>
-          </span>
+          <input id="cdTong" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="ví dụ 9,500" oninput="cdTinh()">
+          <span class="dv">gr</span>
         </div>
         <div class="cd-doc" id="cdTongDoc"></div>
       </div>
@@ -2869,17 +2877,12 @@ body.side-anim{overflow-x:clip}
         <div class="cd-doc" id="cdLoiDoc"></div>
       </div>
 
+      <!-- Cái thước mật độ thứ hai, bên cạnh chỉ số Tex ở trên: CÂN 1 cuộn nguyên (Tex = gram của
+           1.000 m chỉ -> 1 gr dài 1.000.000/Tex mm). Có cái nào dùng cái đó; đủ cả hai thì lấy CÂN
+           làm thước chính và đem Tex ra đối chứng chéo — lệch >5% là dán cờ đỏ vì gần như chắc có
+           một bên sai (nhầm loại chỉ, cân sai, lõi sai). -->
       <div class="cd-f">
-        <label>Cái thước mật độ <span class="hint">thứ cho biết 1 gram chỉ dài bao nhiêu mm — điền 1 trong 2 ô dưới là đủ; điền cả 2 thì máy đối chứng chéo</span></label>
-        <!-- 2 cái thước NHẬP RIÊNG, không phải nút chọn 1-trong-2 (user chỉnh 22/08/2026): CÂN 1 cuộn
-             nguyên (cách quen của kho) và CHỈ SỐ TEX in trên tem (Tex = gram của 1.000 m chỉ -> 1 gr
-             dài 1.000.000/Tex mm). Có ô nào dùng ô đó; đủ cả hai thì lấy CÂN làm thước chính và đem
-             Tex ra đối chứng chéo — lệch >5% là dán cờ đỏ vì gần như chắc có một bên sai (nhầm loại
-             chỉ, cân sai, lõi sai). -->
-      </div>
-
-      <div class="cd-f">
-        <label for="cdNguyen">Thước ① — khối lượng 1 cuộn nguyên <span class="hint">cân cả lõi + chỉ, đúng quy cách ở trên</span></label>
+        <label for="cdNguyen">Khối lượng 1 cuộn nguyên <span class="hint">cân cả lõi + chỉ, đúng quy cách ở trên — cần khi KHÔNG có Tex; điền cả hai thì máy đối chứng chéo</span></label>
         <div class="cd-in">
           <input id="cdNguyen" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="ví dụ 120" oninput="cdTinh()">
           <span class="dv">gr</span>
@@ -2894,15 +2897,6 @@ body.side-anim{overflow-x:clip}
           </span>
         </div>
         <div class="cd-doc" id="cdNguyenDoc"></div>
-      </div>
-
-      <div class="cd-f">
-        <label for="cdTex">Thước ② — chỉ số Tex trên tem <span class="hint">gram của 1.000 m chỉ — in trên tem/nhãn cuộn (Tex 27, Tex 40…); không có thì bỏ trống</span></label>
-        <div class="cd-in">
-          <input id="cdTex" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="ví dụ 27" oninput="cdTinh()">
-          <span class="dv">Tex</span>
-        </div>
-        <div class="cd-doc" id="cdTexDoc"></div>
       </div>
 
       <div class="nds-ctl">
@@ -2920,7 +2914,7 @@ body.side-anim{overflow-x:clip}
       <div class="abntiles cd-tiles" id="cdTiles" role="status" aria-live="polite" hidden></div>
       <div id="cdNote"></div>
       <div class="cd-steps" id="cdSteps" hidden></div>
-      <div id="cdState" class="state" style="padding:32px 20px">Nhập <b>tổng kg</b> · <b>số cuộn</b> · <b>khối lượng lõi</b> · <b>cuộn nguyên hoặc chỉ số Tex</b> ở bước 1.</div>
+      <div id="cdState" class="state" style="padding:32px 20px">Nhập <b>tổng gram</b> · <b>số cuộn</b> · <b>khối lượng lõi</b> · <b>cuộn nguyên hoặc chỉ số Tex</b> ở bước 1.</div>
 
       <details class="nds-more" style="margin-top:12px">
         <summary>Máy suy ra bằng cách nào? (và ví dụ 10kg / 10 cuộn)</summary>
@@ -4232,11 +4226,11 @@ var TIP={
        lúc dù người dùng chưa nhập gì. Mấy dải .pcdnote CÒN LẠI trong tab này thì GIỮ, vì đó là cảnh
        báo/kết luận theo SỐ VỪA NHẬP ("lô này gần như còn nguyên…") — hiện đúng lúc cần, không phải
        văn chắn màn. */
-    'Hai cái thước mật độ nhập riêng: cân 1 cuộn nguyên, hoặc chỉ số Tex in trên tem (gram của '+
-    '1.000 m chỉ) — có ô nào dùng ô đó, điền cả hai thì máy đối chứng chéo và tính theo cân. '+
-    'Dải chip Tex dưới ô quy cách lọc sẵn các Tex đang có trong danh mục kho (nhóm hàng Chỉ của '+
-    'SKU_MASTER), bấm là điền. Quy cách, lõi, cuộn nguyên và Tex được ghi nhớ trên máy này nên '+
-    'lô sau chỉ cần gõ lại số cân.'
+    'Hai cái thước mật độ: chỉ số Tex trên tem (chip xếp theo số SKU trong danh mục kho, phổ biến '+
+    'nhất đứng trái, "Khác…" để gõ tay) hoặc cân 1 cuộn nguyên — có cái nào dùng cái đó, điền cả '+
+    'hai thì máy đối chứng chéo và tính theo cân. Ô tổng cân chỉ nhận GRAM; nút quy cách hiện mét '+
+    'cho gọn nhưng kết quả luôn ra mm. Quy cách, lõi, cuộn nguyên và Tex được ghi nhớ trên máy '+
+    'này nên lô sau chỉ cần gõ lại số cân.'
 };
 /* Markup TĨNH không gọi được tipMuc() nên chỗ nào cần thì đặt sẵn <span class="h2tip-slot"
    data-tip-key="..."> rồi hàm này đổ nút vào lúc trang khởi động. Một chỗ khai câu chú thích (TIP),
@@ -13316,10 +13310,14 @@ loadData();
  *     tổng mm = (tổng gram − số cuộn × gram lõi) × quy cách mm ÷ gram CHỈ của cuộn nguyên
  * BỔ SUNG 22/08/2026 — CHỈ SỐ TEX: tem/nhãn cuộn thường in sẵn Tex (= gram của 1.000 m chỉ).
  * Có Tex thì mật độ là chuyện chia trực tiếp (1 gr = 1.000.000/Tex mm), khỏi phải đi tìm 1 cuộn
- * còn nguyên kiện để cân. Bản đầu làm NÚT chọn 1-trong-2 nguồn — user chỉnh ngay trong ngày:
- * phải là 2 Ô NHẬP RIÊNG cùng hiện. Luật hiện hành: có ô nào dùng ô đó; điền CẢ HAI thì lấy CÂN
- * làm thước chính (số đo thật trên hàng thật) và đem Tex ra ĐỐI CHỨNG CHÉO — lệch >5% dán cờ đỏ.
- * Mọi công thức vẫn một đường vì gNgu suy từ Tex (qc×Tex/10⁶) cho đúng mmTrenG = 10⁶/Tex.
+ * còn nguyên kiện để cân. Đã qua 3 bản trong ngày theo góp ý user: nút chọn 1-trong-2 → 2 ô nhập
+ * riêng → CHỐT: Tex nhập bằng DẢI CHIP dưới ô quy cách (chip lọc từ SKU_MASTER xếp theo số SKU
+ * GIẢM DẦN + "Khác…" gõ tay; bấm lại chip đang sáng = bỏ chọn), ô "thước ②" riêng bị xoá vì lặp.
+ * Luật tính: có thước nào dùng thước đó; điền CẢ HAI thì lấy CÂN làm thước chính (số đo thật trên
+ * hàng thật) và đem Tex ra ĐỐI CHỨNG CHÉO — lệch >5% dán cờ đỏ. Mọi công thức vẫn một đường vì
+ * gNgu suy từ Tex (qc×Tex/10⁶) cho đúng mmTrenG = 10⁶/Tex.
+ * CŨNG 22/08/2026 chiều: ô tổng khối lượng CHỈ NHẬN GRAM (bỏ nút kg) và nút quy cách hiện MÉT
+ * cho gọn (5.000 m) — nhưng kết quả/phiếu tính vẫn luôn ra ĐƠN VỊ NHỎ NHẤT (mm, gr).
  * 3 cái bẫy đã được chặn sẵn trong tab này:
  *   1) "cuộn nguyên 120gr" là cân CẢ LÕI hay riêng phần CHỈ? Lệch tới 1,7 lần kết quả.
  *      CHỐT 19/08/2026 (người dùng xác nhận): kho cân CẢ LÕI + CHỈ -> mặc định caLoi=true.
@@ -13330,7 +13328,7 @@ loadData();
  *      không để con số sai đi thẳng vào phiếu kiểm kê.
  * KHÔNG gọi mạng, không đọc Sheet, không đụng WMS -> đúng ràng buộc "nhẹ tải upstream".
  * ============================================================================================ */
-var CD={ qc:5000000, tuDo:false, dv:'kg', caLoi:true, loadedOnce:false, mm:0 };
+var CD={ qc:5000000, tuDo:false, caLoi:true, tex:0, texTuDo:false, loadedOnce:false, mm:0 };
 var CD_KEY='cd-quycach';   // chỉ nhố QUY CÁCH (lặp lại mọi lô), KHÔNG nhố số cân của lô cụ thể
 
 /* ---------- 1. ĐỌC SỐ NGƯỜI GÕ ----------
@@ -13372,15 +13370,27 @@ function cdChonQC(mm,imLang){
   });
   var row=document.getElementById('cdQCRow');
   row.hidden=!CD.tuDo;
-  /* imLang = lúc khôi phục quy cách đã lưu: KHÔNG focus, kỉo điện thoại vừa mở tab đã bật bàn phím */
-  if(CD.tuDo){ var o=document.getElementById('cdQC'); if(!o.value) o.value=String(CD.qc); if(!imLang){ o.focus(); o.select(); } }
+  /* imLang = lúc khôi phục quy cách đã lưu: KHÔNG focus, kỉo điện thoại vừa mở tab đã bật bàn phím.
+     Ô gõ tay nhận MÉT (CD.qc vẫn giữ mm) — cùng quy ước hiển thị gọn của các nút. */
+  if(CD.tuDo){ var o=document.getElementById('cdQC'); if(!o.value) o.value=String(CD.qc/1000); if(!imLang){ o.focus(); o.select(); } }
   cdTinh();
 }
-function cdDoiDv(dv){
-  CD.dv=dv;
-  document.getElementById('cdDvKg').classList.toggle('on',dv==='kg');
-  document.getElementById('cdDvG').classList.toggle('on',dv==='g');
+/* Chip Tex: bấm chip = chọn; bấm LẠI chip đang sáng = bỏ chọn (Tex không bắt buộc);
+   chip "Khác…" (data-tex=0) mở/đóng ô gõ tay — đúng nếp ô "Khác…" của hàng quy cách. */
+function cdChonTex(btn){
+  var v=Number(btn.getAttribute('data-tex'));
+  if(v===0){ CD.texTuDo=!CD.texTuDo; if(CD.texTuDo) CD.tex=0; }
+  else{ CD.texTuDo=false; CD.tex=(CD.tex===v)?0:v; }
+  cdVeTexChon();
+  if(CD.texTuDo){ var o=document.getElementById('cdTex'); o.focus(); o.select(); }
   cdTinh();
+}
+function cdVeTexChon(){
+  document.getElementById('cdTexRow').hidden=!CD.texTuDo;
+  document.getElementById('cdTexKhoBar').querySelectorAll('.kktab').forEach(function(b){
+    var v=Number(b.getAttribute('data-tex'));
+    b.classList.toggle('active', CD.texTuDo ? v===0 : (v>0 && v===CD.tex));
+  });
 }
 function cdDoiNguyen(caLoi){
   CD.caLoi=!!caLoi;
@@ -13395,7 +13405,7 @@ function cdXoaLo(){
 }
 function cdXoaHet(){
   ['cdTong','cdCuon','cdLoi','cdNguyen','cdTex','cdQC'].forEach(function(id){ document.getElementById(id).value=''; });
-  CD.qc=5000000; CD.tuDo=false; cdChonQC(5000000); cdDoiDv('kg'); cdDoiNguyen(1);
+  CD.qc=5000000; CD.tuDo=false; CD.tex=0; CD.texTuDo=false; cdVeTexChon(); cdChonQC(5000000); cdDoiNguyen(1);
   try{ localStorage.removeItem(CD_KEY); }catch(e){}
   toast('Đã xoá sạch ô nhập và quy cách đã lưu.','ok');
 }
@@ -13414,9 +13424,9 @@ function cdCopy(){
 function cdLuu(){
   try{
     localStorage.setItem(CD_KEY, JSON.stringify({
-      qc:CD.qc, tuDo:CD.tuDo, dv:CD.dv, caLoi:CD.caLoi,
+      qc:CD.qc, tuDo:CD.tuDo, caLoi:CD.caLoi, tex:CD.tex, texTuDo:CD.texTuDo,
       loi:document.getElementById('cdLoi').value, nguyen:document.getElementById('cdNguyen').value,
-      tex:document.getElementById('cdTex').value
+      texGo:document.getElementById('cdTex').value
     }));
   }catch(e){}
 }
@@ -13426,10 +13436,18 @@ function cdLoad(){
   if(d){
     if(d.loi) document.getElementById('cdLoi').value=d.loi;
     if(d.nguyen) document.getElementById('cdNguyen').value=d.nguyen;
-    if(d.tex) document.getElementById('cdTex').value=d.tex;
-    if(d.tuDo && d.qc){ CD.qc=d.qc; document.getElementById('cdQC').value=String(d.qc); cdChonQC(0,true); }
+    /* Tex: bản cũ (sáng 22/08) lưu `tex` là CHỮ trong ô gõ -> hiểu là gõ tay để không thành
+       trạng thái tàng hình (số áp vào phép tính mà không chip nào sáng). Bản mới lưu tex SỐ
+       (chip đang chọn) + texTuDo + texGo (chữ trong ô gõ tay). */
+    if(typeof d.tex==='string' && d.tex){ CD.texTuDo=true; document.getElementById('cdTex').value=d.tex; }
+    else{
+      CD.texTuDo=(d.texTuDo===true);
+      CD.tex=(Number(d.tex)>0)?Number(d.tex):0;
+      if(d.texGo) document.getElementById('cdTex').value=d.texGo;
+    }
+    cdVeTexChon();
+    if(d.tuDo && d.qc){ CD.qc=d.qc; document.getElementById('cdQC').value=String(d.qc/1000); cdChonQC(0,true); }
     else if(d.qc) cdChonQC(Number(d.qc),true);
-    cdDoiDv(d.dv==='g'?'g':'kg');
     cdDoiNguyen(d.caLoi!==false);
   }
   cdTinh();
@@ -13459,7 +13477,9 @@ function cdGomTex(rows){
       gom[v].n++;
     }
   }
-  return Object.keys(gom).map(function(k){ return gom[k]; }).sort(function(a,b){ return a.tex-b.tex; });
+  /* PHỔ BIẾN NHẤT ĐỨNG TRÁI (user 22/08/2026): xếp theo số SKU giảm dần — Tex 27/24 chiếm đa số
+     danh mục nên phải với tay được ngay, không bắt cuộn qua mấy Tex hiếm; đồng hạng thì Tex nhỏ trước. */
+  return Object.keys(gom).map(function(k){ return gom[k]; }).sort(function(a,b){ return (b.n-a.n)||(a.tex-b.tex); });
 }
 function cdNapTexKho(){
   if(CD.texNap) return; CD.texNap=true;
@@ -13474,51 +13494,49 @@ function cdNapTexKho(){
     }).catch(function(){});
   }catch(e){}
 }
+/* Vẽ chip danh mục vào TRƯỚC chip "Khác…" (chip này nằm sẵn trong markup nên offline vẫn gõ tay
+   được). Danh mục rỗng thì thôi — hàng Tex vẫn còn nguyên đường "Khác…". */
 function cdVeTexKho(ds){
   if(!ds||!ds.length) return;
   document.getElementById('cdTexKhoBar').innerHTML=ds.map(function(d){
     return '<button type="button" class="kktab" data-tex="'+d.tex+'" onclick="cdChonTex(this)" '+
       'title="ví dụ: '+esc(String(d.vd).slice(0,140))+'">Tex '+cdF(d.tex,(d.tex%1?1:0))+
       '<small> · '+d.n+' SKU</small></button>';
-  }).join('');
-  document.getElementById('cdTexKho').hidden=false;
-  cdDanhDauTex();
-}
-function cdChonTex(btn){
-  document.getElementById('cdTex').value=btn.getAttribute('data-tex');
-  cdTinh();
-}
-/* Tô sáng chip trùng với số đang nằm trong thước ② — kể cả khi người dùng gõ tay */
-function cdDanhDauTex(){
-  var bar=document.getElementById('cdTexKhoBar'); if(!bar||!bar.childElementCount) return;
-  var v=cdSo(document.getElementById('cdTex').value);
-  bar.querySelectorAll('.kktab').forEach(function(b){
-    b.classList.toggle('active', isFinite(v)&&Math.abs(Number(b.getAttribute('data-tex'))-v)<1e-9);
-  });
+  }).join('')+
+  '<button type="button" class="kktab" data-tex="0" onclick="cdChonTex(this)" title="Tex khác — gõ tay">Khác…</button>';
+  cdVeTexChon();
 }
 
 /* ---------- 4. TÍNH + VẼ ---------- */
 function cdTinh(){
-  var qc = CD.tuDo ? cdSo(document.getElementById('cdQC').value) : CD.qc;
-  var tong = cdSo(document.getElementById('cdTong').value);
+  var qcM  = CD.tuDo ? cdSo(document.getElementById('cdQC').value) : NaN;   // ô "Khác…" gõ bằng MÉT
+  var qc   = CD.tuDo ? qcM*1000 : CD.qc;                                    // tính toán vẫn bằng mm
+  var tong = cdSo(document.getElementById('cdTong').value);                 // CHỈ NHẬN GRAM
   var cuon = cdSo(document.getElementById('cdCuon').value);
   var loi  = cdSo(document.getElementById('cdLoi').value);
   var ngu  = cdSo(document.getElementById('cdNguyen').value);
-  var texIn= cdSo(document.getElementById('cdTex').value);
+  var texIn= CD.texTuDo ? cdSo(document.getElementById('cdTex').value) : (CD.tex>0?CD.tex:NaN);
 
   /* Dòng "Đọc là …" cho từng ô — soi lại con số máy hiểu, kể cả khi còn thiếu ô khác */
-  if(CD.tuDo) cdDoc('cdQCDoc', qc, 'mm mỗi cuộn nguyên · '+(isFinite(qc)?cdF(qc/1000,0)+' m':''), 0);
+  if(CD.tuDo) cdDoc('cdQCDoc', qcM, 'm = '+(isFinite(qcM)?cdF(qcM*1000,0):'—')+' mm mỗi cuộn nguyên', 0);
   else document.getElementById('cdQCDoc').innerHTML='';   // preset đã in sẵn số trên nút, soi lại là nhiễu mắt
-  cdDoc('cdTongDoc', tong, CD.dv==='kg'?('kg = '+(isFinite(tong)?cdFg(tong*1000):'—')+' gr'):'gr', 1);
+  /* Quy ngược ra kg để người quen cân kg soi: gõ 10 mà ý là 10 kg thì thấy ngay "0.01 kg" sai sai */
+  cdDoc('cdTongDoc', tong, 'gr = '+(isFinite(tong)?cdFg(tong/1000):'—')+' kg cả lô', 1);
   cdDoc('cdCuonDoc', cuon, 'cuộn', 0);
   cdDoc('cdLoiDoc', loi, isFinite(loi)&&isFinite(cuon)&&cuon>0?('gr/lõi → '+cdFg(loi*cuon)+' gr lõi cho cả lô'):'gr', 1);
   cdDoc('cdNguyenDoc', ngu, CD.caLoi
       ? (isFinite(ngu)&&isFinite(loi) ? ('gr cả lõi → chỉ trong cuộn nguyên còn '+cdFg(ngu-loi)+' gr') : 'gr (cả lõi)')
       : 'gr riêng phần chỉ', 1);
-  cdDoc('cdTexDoc', texIn, isFinite(texIn)&&texIn>0
-      ? ('gr mỗi 1,000 m → 1 gr chỉ dài '+cdF(1000000/texIn,0)+' mm')
-      : 'gr mỗi 1,000 m chỉ', 1);
-  cdDanhDauTex();
+  /* Chip mode mà chưa chọn gì thì dòng soi để TRỐNG hẳn — đừng để cdDoc soi ô gõ tay đang ẩn
+     (nó có thể còn chữ cũ của lần "Khác…" trước, soi vào là báo lỗi ma). */
+  if(!CD.texTuDo && !(CD.tex>0)){
+    var oTd=document.getElementById('cdTexDoc'); oTd.className='cd-doc'; oTd.innerHTML='';
+    document.getElementById('cdTex').classList.remove('xau');
+  }else{
+    cdDoc('cdTexDoc', texIn, isFinite(texIn)&&texIn>0
+        ? ('gr mỗi 1,000 m → 1 gr chỉ dài '+cdF(1000000/texIn,0)+' mm')
+        : 'gr mỗi 1,000 m chỉ', 1);
+  }
 
   var thieu=[];
   if(!(qc>0)) thieu.push('quy cách cuộn nguyên');
@@ -13529,7 +13547,7 @@ function cdTinh(){
   if(thieu.length){ cdTrong('Còn thiếu: <b>'+thieu.join('</b> · <b>')+'</b>.'); return; }
   cdLuu();
 
-  var gTong = (CD.dv==='kg') ? tong*1000 : tong;
+  var gTong = tong;                             // ô tổng chỉ nhận gram
   var gLoi  = cuon*loi;
   var gChi  = gTong-gLoi;                       // chỉ thật trong lô (đã bỏ lõi)
   /* Cái thước: gram chỉ trong 1 cuộn nguyên. Có số CÂN thì cân là thước chính (số đo thật trên
@@ -13548,7 +13566,8 @@ function cdTinh(){
   }
   if(gChi<=0){
     cdTrong('<b>Không tính được:</b> cả lô cân '+cdFg(gTong)+' gr nhưng '+cdF(cuon)+' lõi đã chiếm '+
-      cdFg(gLoi)+' gr — không còn chỉ nào. Kiểm lại số cuộn, khối lượng lõi, hoặc đơn vị kg/gr.','bad');
+      cdFg(gLoi)+' gr — không còn chỉ nào. Kiểm lại số cuộn, khối lượng lõi — và ô tổng cân nhận '+
+      '<b>GRAM</b>: 10 kg phải gõ 10,000.','bad');
     return;
   }
 
@@ -13577,7 +13596,7 @@ function cdTinh(){
   var st=document.getElementById('cdSteps');
   st.hidden=false;
   st.innerHTML=
-    cdStep(1,'Cân cả lô'+(CD.dv==='kg'?(' ('+cdFg(tong)+' kg)'):''), cdFg(gTong)+' gr')+
+    cdStep(1,'Cân cả lô ('+cdFg(gTong/1000)+' kg)', cdFg(gTong)+' gr')+
     cdStep(2,'Trừ lõi — '+cdF(cuon)+' cuộn × '+cdFg(loi)+' gr', '− '+cdFg(gLoi)+' gr')+
     cdStep(3,'Còn lại là <b>chỉ thật</b>', cdFg(gChi)+' gr')+
     cdStep(4, thuocCan
@@ -13595,8 +13614,8 @@ function cdTinh(){
     note.innerHTML='<div class="pcdnote" style="background:color-mix(in srgb,var(--bad) 12%,var(--surface));color:var(--bad)">'+
       '<b>Số liệu vô lý — đừng nhập phiếu ngay.</b> Mỗi cuộn thừa đang ra '+cdF(tbMm,0)+' mm, <b>dài hơn cả cuộn nguyên</b> '+
       cdF(qc)+' mm ('+cdF(tbPct,0)+'%). '+cdF(cuon)+' cuộn <i>còn nguyên</i> chỉ cân được '+cdFg(tran/1000)+' kg mà lô này cân '+
-      cdFg(gTong/1000)+' kg. Kiểm lại theo thứ tự: đơn vị <b>kg/gr</b> → <b>số cuộn</b> đếm đủ chưa → '+
-      '<b>khối lượng cuộn nguyên</b> có đúng quy cách '+cdF(qc)+' mm không.</div>';
+      cdFg(gTong/1000)+' kg. Kiểm lại theo thứ tự: ô tổng cân <b>gõ bằng GRAM chưa</b> (10 kg = 10,000 gr) → '+
+      '<b>số cuộn</b> đếm đủ chưa → <b>khối lượng cuộn nguyên</b> có đúng quy cách '+cdF(qc)+' mm không.</div>';
   }else if(tbPct>=99.5){
     note.innerHTML='<div class="pcdnote">Lô này gần như <b>còn nguyên</b> ('+cdF(tbPct,1)+'% mỗi cuộn) — nếu đúng là cuộn chưa dùng thì nhập thẳng '+
       cdF(qc)+' mm × '+cdF(cuon)+' cuộn, không cần quy đổi qua cân.</div>';
