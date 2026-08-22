@@ -2803,7 +2803,12 @@ body.side-anim{overflow-x:clip}
         <button type="button" class="kktab nds-zbtn" onclick="ndsZoomBuoc(0.5)" aria-label="Phóng to">+</button>
         <span class="pg-chip" id="ndsZoomVal">1,0×</span>
       </div>
-      <div class="nds-ctl">
+      <!-- BỎ HIỂN THỊ 3 nút đọc (user 22/08/2026): chụp/chọn ảnh là mã vạch + OCR + AI tự chạy song
+           song rồi, 3 nút chỉ là đường CHẠY LẠI thủ công — thực tế không ai bấm, chiếm một hàng màn
+           hình điện thoại. GIỮ NODE (display:none, KHÔNG xoá): JS bám thẳng getElementById vào 3 id
+           này để khoá/mở theo nhịp đọc (có chỗ không guard null), và inline style vì .nds-ctl có
+           display:flex đè được thuộc tính [hidden] (đúng bẫy mà QC "[hidden] thật sự ẩn" đang canh). -->
+      <div class="nds-ctl" style="display:none">
         <button type="button" class="kktab nds-go" id="ndsBtnMV" onclick="ndsThuMaVach()" disabled
           title="Đọc mã vạch ngay trên máy — nhanh nhất, không cần mạng, không tốn hạn mức AI">Quét mã vạch</button>
         <button type="button" class="kktab" id="ndsBtnOcr" onclick="ndsDocOcr()" disabled
