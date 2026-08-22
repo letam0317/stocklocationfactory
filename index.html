@@ -4179,10 +4179,12 @@ var HOME_MUC=[
   { g:'Công cụ kho', uuTien:true, mo:'Dùng ngay tại chỗ, không cần dữ liệu nền', items:[
     { t:'sku', ten:'Nhận diện SKU', cc:'var(--warn)', nhan:'Công cụ',
       mo:'Chụp tem nhà cung cấp → máy bóc từ khoá → gợi ý SKU nội bộ khớp nhất; bấm thẻ là copy mã SKU.',
-      muc:['Chụp/chọn ảnh tem','Gợi ý SKU','Từ khoá bóc được','Sổ tay tem'] },
+      /* Chip 2 thẻ Công cụ kho RÚT CHỮ CHO CÂN NHAU (user 22/08/2026: "chip hiển thị 2 mục này
+         chưa cân bằng") — mỗi thẻ 4 chip ngắn tương đương, không chip nào dài gấp đôi chip kia. */
+      muc:['Chụp ảnh tem','Gợi ý SKU','Từ khoá','Sổ tay tem'] },
     { t:'cd', ten:'Chuyển đổi cân', cc:'var(--brand2,var(--accent))', nhan:'Công cụ',
       mo:'Chỉ trả về từ sản xuất chỉ cân được kg — công cụ quy ra mm theo mật độ cuộn nguyên hoặc chỉ số Tex, đã trừ khối lượng lõi.',
-      muc:['Nhập số cân','Trừ lõi','Chỉ số Tex','Phiếu tính từng bước'] }
+      muc:['Nhập số cân','Trừ lõi','Chỉ số Tex','Phiếu tính'] }
   ]}
 ];
 function homeMucList(it){ return typeof it.muc==='function'?it.muc():(it.muc||[]); }
@@ -12120,14 +12122,10 @@ function ndsVeKetQua(ms, themInactive){
         ndsMoiChonMa()+
         ' <button type="button" class="kktab nds-alt" onclick="ndsTaiDanhMuc(true)">Tải lại danh mục</button>'+
         ' <button type="button" class="kktab nds-alt" onclick="ndsTroMa()">Nhập mã</button></div>';
-    } else {
-      canh='<div class="pcdnote" style="margin-bottom:10px;background:color-mix(in srgb,var(--warn) 14%,var(--surface));color:var(--ink2)">'+
-        '<b>Chưa khớp được MÃ HÀNG nào.</b> Mấy gợi ý dưới đây chỉ dựa vào chữ chung (loại hàng · nhà cung cấp · '+
-        'chất liệu · màu) — hàng trăm SKU giống nhau ở mấy chữ đó, nên <b>đừng chọn vội</b>. '+
-        'Gõ mã in trên tem (vd <code>F9-5374</code>) vào ô <b>Mã trên tem</b> ở bước 1 là ra đúng ngay.'+
-        ndsMoiChonMa()+
-        ' <button type="button" class="kktab nds-alt" onclick="ndsTroMa()">Nhập mã</button></div>';
     }
+    /* Banner "Chưa khớp được MÃ HÀNG nào" ĐÃ BỎ HẲN (user 22/08/2026 — "bỏ dòng này"): 4 dòng chữ
+       chắn trên Top 3 để dạy một việc mà badge loại-khớp trên từng thẻ đã nói. Banner "danh mục
+       chưa có mã X" ở nhánh trên thì GIỮ — nó báo một sự cố thật (danh mục thiếu), không phải dạy. */
   }
   /* Banner "Đây là THẺ MẪU nhưng chưa đọc được ô Mã sản phẩm" ĐÃ BỎ (21/08/2026, yêu cầu user —
      kèm video): nó chiếm 6 dòng chữ trên điện thoại mà banner "Chưa khớp được MÃ HÀNG nào" phía
@@ -13069,11 +13067,13 @@ function prVe(){
       (dsSl.length ? '<tr class="prsl2"><td colspan="5"><div class="prchips">' +
         prChipSl(r) + '</div></td></tr>' : '');
   }).join('') : '<tr><td colspan="5"><div class="state" style="padding:18px">Danh sách in đang trống.</div></td></tr>';
-  var tong = prTongTem(), nhom = PR_TEM.theoMau(ds);
-  document.getElementById('prSum').innerHTML = nhom.thuTu.map(function(k){
-    var mm = PR_TEM.mau(k);
-    return '<span class="badge b-ok">' + esc(mm.ten) + ': ' + PR_TEM.tongTem(nhom.m[k]) + ' tem</span>';
-  }).join(' ') + (tong > 100 ? ' <span class="badge b-pend">' + nf(tong) + ' tem — kiểm lại số lượng trước khi in</span>' : '');
+  var tong = prTongTem();
+  /* Dải "Tem SKU 40 × 60 mm …: N tem" ĐÃ BỎ (user 22/08/2026): chỉ còn một khổ tem đang dùng và
+     nút Xác nhận in đã ghi đúng tổng. GIỮ mỗi cảnh báo >100 tem — nó chỉ hiện đúng lúc cần; dải
+     rỗng thì giấu luôn khối .msum để khỏi để lại một khe trắng. */
+  var sumEl = document.getElementById('prSum');
+  sumEl.innerHTML = (tong > 100 ? '<span class="badge b-pend">' + nf(tong) + ' tem — kiểm lại số lượng trước khi in</span>' : '');
+  sumEl.style.display = (tong > 100) ? '' : 'none';
   var btn = document.getElementById('prBtnIn');
   btn.disabled = !ds.length || tong < 1;
   btn.textContent = ds.length ? ('Xác nhận in ' + nf(tong) + ' tem') : 'Xác nhận in';
