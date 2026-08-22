@@ -2191,6 +2191,10 @@ body.side-anim{overflow-x:clip}
 .nds-magoi{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:7px;font-size:11.5px;color:var(--ink3)}
 .nds-magoi .nds-son{display:inline-block;min-width:16px;padding:0 5px;border-radius:99px;font-size:9.5px;font-weight:750;
   background:color-mix(in srgb,var(--brand2) 16%,transparent);color:var(--brand2);vertical-align:1px}
+/* Tên hàng rút gọn trong nút gợi ý SKU (22/08/2026): chữ thường 10,5px (sàn chữ điện thoại),
+   đuôi dài cắt bằng ellipsis để nút không banh hàng trên máy hẹp. */
+.nds-magoi .nds-skupn{display:inline-block;max-width:min(46vw,210px);overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;font-size:10.5px;font-weight:500;color:var(--ink3);vertical-align:-2px}
 @media(max-width:560px){ .nds-marow label{width:100%} }
 .nds-ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
 .nds-ctl .sp{flex:1;min-width:0}
@@ -2739,9 +2743,12 @@ body.side-anim{overflow-x:clip}
            CHUYỂN LÊN TRÊN KHUNG CAMERA 20/08/2026 (yêu cầu user): mở tab là thấy ô nhập trước, khung
            hình sau — đường "gõ mảnh đọc được" không cần camera, không cần mạng, không tốn hạn mức,
            nên nó phải là thứ đập vào mắt đầu tiên chứ không nằm dưới khung + 3 nút. -->
+      <!-- 22/08/2026 (yêu cầu user): ô này nhận CẢ SKU NỘI BỘ — thủ kho cầm sẵn số SKU từ màn WMS/
+           phiếu kiểm kê thì gõ thẳng là ra, khỏi đi vòng qua tem. Gõ toàn số là máy tra cột SKU
+           (gợi ý kèm tên hàng), chữ lẫn số vẫn là đường mã NCC như cũ. -->
       <div class="nds-marow">
-        <label for="ndsMa">Phần tử trên tem</label>
-        <input id="ndsMa" autocomplete="off" spellcheck="false" placeholder="Gõ mảnh đọc được: 8916123 V9B11 29-all"
+        <label for="ndsMa">SKU / phần tử trên tem</label>
+        <input id="ndsMa" autocomplete="off" spellcheck="false" placeholder="Gõ SKU hoặc mảnh đọc được: 422448952 · 8916123 V9B11"
           oninput="ndsMaGo(this.value)"
           onkeydown="if(event.key==='Enter'){event.preventDefault();ndsTraMa();}">
         <button type="button" class="kktab nds-go" onclick="ndsTraMa()">Tra</button>
@@ -9229,7 +9236,11 @@ var NDS_ENGINE = (function(){
     var ms = [];
     (manh||[]).forEach(function(t){
       var c = chuanManh(t);
-      if (c.length >= 2) ms.push({ c:c, l:loi(c) });
+      /* Mảnh TOÀN SỐ ≥6 chữ số còn được tra vào CỘT SKU (đầu mã trở đi) — sự cố 22/08/2026:
+         gõ SKU nội bộ 422448952 (có thật trong WMS) mà máy báo "Không SKU nào chứa…", vì tên hàng
+         không bao giờ chứa số SKU của chính nó. Chỉ nhận khớp ĐẦU MÃ để mảnh số của tem (mã NCC
+         7 số như 8916123) không vớ nhầm khúc giữa của một SKU 9 số không liên quan. */
+      if (c.length >= 2) ms.push({ c:c, l:loi(c), s:/^\d{6,}$/.test(c) ? c : null });
     });
     if (!ms.length) return [];
     var ds = cm.ds, dem = Object.create(null), co = [];
@@ -9238,6 +9249,7 @@ var NDS_ENGINE = (function(){
       var n = 0;
       for (var k=0;k<ms.length;k++){
         if (pnc.indexOf(ms[k].c) >= 0) { n++; continue; }
+        if (ms[k].s && String(ds[i].sku).indexOf(ms[k].s) === 0) { n++; continue; }
         if (ms[k].l.length >= 3 && loi(pnc).indexOf(ms[k].l) >= 0) n++;
       }
       if (n){ dem[i]=n; co.push(i); }
@@ -10051,7 +10063,13 @@ var NDS_ENGINE = (function(){
        Người dùng ĐÃ NÓI RÕ tem có mảnh nào: không có dòng nào chứa thì câu trả lời trung thực là
        KHÔNG CÓ, để lớp trên hiện "Ý bạn là…" (mã gần giống) — nhánh đó viết sẵn mà trước giờ
        không bao giờ chạy tới được. */
-    if (locKq && soManh && !locKq.length) return [];
+    if (locKq && soManh && !locKq.length){
+      /* Lưới đỡ cuối cho ca GÕ ĐÚNG SKU NỘI BỘ (22/08/2026): khớp tuyệt đối SKU là bằng chứng
+         mạnh hơn mọi bộ lọc theo tên — locDong rỗng mà thangSku có dòng thì dòng đó chính là câu
+         trả lời, return [] ở đây là vứt đáp án đúng rồi báo "không có" (đúng lỗi 422448952). */
+      if (!thangSku.length) return [];
+      locKq = thangSku.map(function(i){ return { i:i, n:soManh }; });
+    }
     var phuLoc = null;
     if (locKq && locKq.length){
       phuLoc = Object.create(null);
@@ -11696,7 +11714,7 @@ function ndsDoiScope(active){
 function ndsTraMa(){
   var o=document.getElementById('ndsMa'); if (!o) return;
   var raw=String(o.value||'').trim();
-  if (!raw){ toast('Gõ mảnh đọc được trên tem (mã · màu · thông số), cách nhau bằng dấu cách.','warn'); o.focus(); return; }
+  if (!raw){ toast('Gõ SKU nội bộ, hoặc mảnh đọc được trên tem (mã · màu · thông số), cách nhau bằng dấu cách.','warn'); o.focus(); return; }
   if (!NDS.cm){ toast('Danh mục chưa tải xong — đợi một nhịp rồi tra lại.','warn'); return; }
 
   /* Tách thành PHẦN TỬ: cắt ở dấu phẩy, gạch chéo và khoảng trắng. Cắt cả khoảng trắng là CÓ CHỦ Ý
@@ -11726,9 +11744,17 @@ function ndsTraMa(){
   if (!(NDS.ket||[]).length){
     /* Không dòng nào chứa mảnh nào -> gợi ý mã gần giống cho mảnh DÀI NHẤT (chịu lỗi gõ/OCR) */
     var dai=pt.slice().sort(function(a,b){ return b.length-a.length; })[0];
-    var gan=[], t0=NDS_ENGINE.chuan(dai);
+    var gan=[], t0=NDS_ENGINE.chuan(dai), laSo=/^\d{6,}$/.test(t0);
     for (var i=0;i<NDS.cm.tuVung.length && gan.length<8;i++){
       var w=NDS.cm.tuVung[i];
+      if (laSo){
+        /* Gõ TOÀN SỐ (SKU nội bộ / mã NCC dạng số) mà không trúng: gợi ý các dãy số của danh mục
+           lệch đúng 1 bước gõ — nhánh dưới đòi "chữ lẫn số" nên với SKU bấm nhầm 1 phím nó câm
+           lặng (lộ ra khi làm ca 422448952, 22/08/2026). tuVung có sẵn cả SKU lẫn mã NCC số. */
+        if (!/^\d{6,}$/.test(w) || Math.abs(w.length-t0.length)>1) continue;
+        if (NDS_ENGINE.tyLe(t0,w)>=0.8) gan.push(w);
+        continue;
+      }
       if (w.length<3 || !/\d/.test(w) || !/[a-z]/.test(w)) continue;
       if (NDS_ENGINE.tyLe(t0,w)>=0.72 || NDS_ENGINE.loi(w)===NDS_ENGINE.loi(t0)) gan.push(w);
     }
@@ -11795,15 +11821,42 @@ function ndsGoiMa(txt){
   }
   return dau.concat(giua).slice(0,8);
 }
+/* GÕ THẲNG SKU NỘI BỘ (22/08/2026 — yêu cầu user, sự cố 422448952): thủ kho cầm sẵn số SKU
+   (màn WMS, phiếu kiểm kê) thì phải gõ được vào đúng ô này. Gõ TOÀN SỐ ≥4 chữ số là tra thẳng
+   cột SKU của danh mục: khớp ĐẦU mã xếp trước, khớp giữa xếp sau, kèm tên hàng rút gọn để chọn
+   bằng mắt. KHÔNG thay gợi ý mã NCC — hai danh sách ghép lại (xem ndsMaGo). */
+function ndsGoiSku(txt){
+  var so=String(txt==null?'':txt).replace(/[\s.,\-]/g,'');
+  if (!/^\d{4,}$/.test(so) || !NDS.cm) return [];
+  var ds=NDS.cm.ds, dau=[], giua=[];
+  for (var i=0;i<ds.length && dau.length<8;i++){
+    var sk=String(ds[i].sku), p=sk.indexOf(so);
+    if (p===0) dau.push({ m:sk, pn:ds[i].pn, sku:true });
+    else if (p>0 && giua.length<8) giua.push({ m:sk, pn:ds[i].pn, sku:true });
+  }
+  return dau.concat(giua).slice(0,8);
+}
+/** Tên hàng rút gọn cho nút gợi ý SKU: 2 phần tử đầu là đủ nhận mặt hàng, đuôi cắt bằng CSS. */
+function ndsTenNgan(pn){
+  var pt=String(pn==null?'':pn).split('/');
+  return pt.slice(0,2).join(' · ').trim();
+}
 function ndsMaGo(txt){
-  var ds=ndsGoiMa(txt);
   var el=document.getElementById('ndsMaGoi'); if (!el) return;
+  var ma=ndsGoiMa(txt), sku=ndsGoiSku(txt);
+  /* Gõ ≥6 chữ số là đang chép SKU (9 số) → SKU đứng trước; 4-5 số thường là khúc giữa của mã NCC
+     in trên tem (ca "5374" → F9-5374) → mã NCC đứng trước. Tổng trần 8 nút như cũ. */
+  var soTho=String(txt==null?'':txt).replace(/[\s.,\-]/g,'');
+  var ds=(/^\d{6,}$/.test(soTho) ? sku.concat(ma) : ma.concat(sku)).slice(0,8);
   if (!ds.length){ el.hidden=true; el.innerHTML=''; return; }
   el.hidden=false;
-  el.innerHTML='<b>Mã trong danh mục:</b>'+ds.map(function(x){
-    return '<button type="button" class="kktab nds-alt" onclick="ndsDungMa(\'' + esc(x.m) + '\')">' +
-      esc(x.m) + ' <span class="nds-son">' + x.n + '</span></button>';
-  }).join('');
+  var coSku=ds.some(function(x){ return x.sku; }), coMa=ds.some(function(x){ return !x.sku; });
+  el.innerHTML='<b>'+(coSku&&coMa?'Trong danh mục:':(coSku?'SKU trong danh mục:':'Mã trong danh mục:'))+'</b>'+
+    ds.map(function(x){
+      return '<button type="button" class="kktab nds-alt" onclick="ndsDungMa(\'' + esc(x.m) + '\')">' +
+        esc(x.m) + (x.sku ? ' <span class="nds-skupn" title="'+esc(x.pn)+'">'+esc(ndsTenNgan(x.pn))+'</span>'
+                          : ' <span class="nds-son">' + x.n + '</span>') + '</button>';
+    }).join('');
 }
 
 /* ---------- 5. ĐỐI SOÁT + VẼ KẾT QUẢ ---------- */
