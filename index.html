@@ -2328,8 +2328,10 @@ body.side-anim{overflow-x:clip}
 .cd-f>label{display:block;font-size:12px;font-weight:700;color:var(--ink2);margin-bottom:5px}
 .cd-qc{display:flex;flex-wrap:wrap;gap:6px}
 .cd-qc .kktab{font-variant-numeric:tabular-nums}
-/* Chip Tex tu danh muc kho: phan dem SKU la thong tin phu -> nho va mo hon so Tex chinh */
-.cd-qc .kktab small{font-size:11px;font-weight:600;opacity:.72}
+/* "go bang GRAM" phai dap vao mat (user 22/08/2026): dung cap accent/accent-text cua CHINH theme
+   dang chon nen theme nao cung tuong phan cao, khong hardcode mau. */
+.cd-gram{display:inline-block;background:var(--accent);color:var(--accent-text);
+  padding:0 6px;border-radius:6px;font-weight:800;letter-spacing:.02em}
 /* Danh muc that co ~10 gia tri Tex -> tren dien thoai dai chip vo 5 hang cao 164px (25% man
    iPhone SE — bo do rang cua bat duoc truoc khi len live). Chua bang dung khuon chip-strip cua
    du an (.pg-whbar / #kkWhBar): MOT hang cuon ngang + min-width:0 de overflow-x an trong flex. */
@@ -2837,7 +2839,7 @@ body.side-anim{overflow-x:clip}
            tay nên offline/không có danh mục vẫn nhập Tex được. Bấm lại chip đang sáng = bỏ chọn
            (Tex là thứ KHÔNG bắt buộc — khác hàng quy cách luôn phải có 1 nút sáng). -->
       <div class="cd-f" id="cdTexKho">
-        <label>Chỉ số Tex trên tem <span class="hint">gram của 1.000 m chỉ — có Tex thì khỏi cần cân cuộn nguyên; bấm lại chip đang sáng để bỏ chọn</span></label>
+        <label>Chỉ số Tex trên tem <span class="hint">gram của 1.000 m chỉ</span></label>
         <div class="cd-qc" id="cdTexKhoBar" role="group" aria-label="Chỉ số Tex trên tem">
           <button type="button" class="kktab" data-tex="0" onclick="cdChonTex(this)" title="Tex khác — gõ tay">Khác…</button>
         </div>
@@ -2851,7 +2853,7 @@ body.side-anim{overflow-x:clip}
       <!-- CHỈ NHẬN GRAM (user 22/08/2026 chiều: bỏ hẳn nút kg). Dòng "Đọc là" vẫn quy ra kg để
            người cân bằng cân kg soi lại — gõ 10 mà ý là 10 kg thì thấy ngay "0.01 kg" sai sai. -->
       <div class="cd-f">
-        <label for="cdTong">Tổng khối lượng chỉ trả về <span class="hint">cân cả lô, gồm cả lõi — gõ bằng GRAM</span></label>
+        <label for="cdTong">Tổng khối lượng chỉ trả về <span class="hint">cân cả lô, gồm cả lõi — <b class="cd-gram">gõ bằng GRAM</b></span></label>
         <div class="cd-in">
           <input id="cdTong" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="ví dụ 9,500" oninput="cdTinh()">
           <span class="dv">gr</span>
@@ -13478,9 +13480,14 @@ function cdGomTex(rows){
     }
   }
   /* PHỔ BIẾN NHẤT ĐỨNG TRÁI (user 22/08/2026): xếp theo số SKU giảm dần — Tex 27/24 chiếm đa số
-     danh mục nên phải với tay được ngay, không bắt cuộn qua mấy Tex hiếm; đồng hạng thì Tex nhỏ trước. */
-  return Object.keys(gom).map(function(k){ return gom[k]; }).sort(function(a,b){ return (b.n-a.n)||(a.tex-b.tex); });
+     danh mục nên phải với tay được ngay; đồng hạng thì Tex nhỏ trước. CHỈ GIỮ 4 Tex hay dùng
+     (user chốt cùng ngày: 27 · 24 · 60 · 18) cho hàng chip gọn — Tex hiếm (240, 120, 105, 80…)
+     đi đường chip "Khác…" gõ tay, không mất đường nhập. */
+  return Object.keys(gom).map(function(k){ return gom[k]; })
+    .filter(function(d){ return CD_TEX_GIU.indexOf(d.tex)>=0; })
+    .sort(function(a,b){ return (b.n-a.n)||(a.tex-b.tex); });
 }
+var CD_TEX_GIU=[27,24,60,18];
 function cdNapTexKho(){
   if(CD.texNap) return; CD.texNap=true;
   var ve=function(rows){ if(rows&&rows.length) cdVeTexKho(cdGomTex(rows)); };
@@ -13498,10 +13505,11 @@ function cdNapTexKho(){
    được). Danh mục rỗng thì thôi — hàng Tex vẫn còn nguyên đường "Khác…". */
 function cdVeTexKho(ds){
   if(!ds||!ds.length) return;
+  /* Trên chip chỉ còn "Tex 27" cho gọn (user 22/08/2026) — số SKU dùng Tex đó dời vào tooltip */
   document.getElementById('cdTexKhoBar').innerHTML=ds.map(function(d){
     return '<button type="button" class="kktab" data-tex="'+d.tex+'" onclick="cdChonTex(this)" '+
-      'title="ví dụ: '+esc(String(d.vd).slice(0,140))+'">Tex '+cdF(d.tex,(d.tex%1?1:0))+
-      '<small> · '+d.n+' SKU</small></button>';
+      'title="'+d.n+' SKU trong danh mục · ví dụ: '+esc(String(d.vd).slice(0,140))+'">Tex '+
+      cdF(d.tex,(d.tex%1?1:0))+'</button>';
   }).join('')+
   '<button type="button" class="kktab" data-tex="0" onclick="cdChonTex(this)" title="Tex khác — gõ tay">Khác…</button>';
   cdVeTexChon();
