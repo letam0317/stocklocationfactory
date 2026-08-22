@@ -1021,6 +1021,13 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
    1fr tran: bay min-content da tung banh trang 889px o tab cd, khong lap lai. */
 #csmodal .cs-hang2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 12px}
 #csmodal .cs-hang2 .cd-f{margin-top:0}
+/* Số MÁY ĐIỀN (Tex/lõi lấy từ sổ cân CAN-LOI-CHI) làm MỜ để phân biệt với số người gõ — thay cho
+   hai dòng hint đã bỏ (user 22/08/2026 tối). Gõ đè là hết mờ (csTinh gỡ class). */
+#csmodal input.cs-mo{color:var(--ink3)}
+/* Dòng SKU dưới tiêu đề: MÃ nổi bật (accent + đậm), tên hàng lên một tông so với chữ mờ mặc định
+   của .mtsub — user 22/08/2026 tối: "highlight dữ liệu của sku". */
+#csSub{color:var(--ink2);font-size:12px}
+#csSub b{color:var(--accent);font-weight:800;font-size:13px;font-variant-numeric:tabular-nums}
 #csmodal .nds-ctl{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
 #csBtnChot{background:var(--accent);border-color:var(--accent);color:var(--accent-text);font-weight:750}
 #csBtnChot:disabled{opacity:.5;cursor:not-allowed}
@@ -2803,12 +2810,7 @@ body.side-anim{overflow-x:clip}
         <button type="button" class="kktab nds-zbtn" onclick="ndsZoomBuoc(0.5)" aria-label="Phóng to">+</button>
         <span class="pg-chip" id="ndsZoomVal">1,0×</span>
       </div>
-      <!-- BỎ HIỂN THỊ 3 nút đọc (user 22/08/2026): chụp/chọn ảnh là mã vạch + OCR + AI tự chạy song
-           song rồi, 3 nút chỉ là đường CHẠY LẠI thủ công — thực tế không ai bấm, chiếm một hàng màn
-           hình điện thoại. GIỮ NODE (display:none, KHÔNG xoá): JS bám thẳng getElementById vào 3 id
-           này để khoá/mở theo nhịp đọc (có chỗ không guard null), và inline style vì .nds-ctl có
-           display:flex đè được thuộc tính [hidden] (đúng bẫy mà QC "[hidden] thật sự ẩn" đang canh). -->
-      <div class="nds-ctl" style="display:none">
+      <div class="nds-ctl">
         <button type="button" class="kktab nds-go" id="ndsBtnMV" onclick="ndsThuMaVach()" disabled
           title="Đọc mã vạch ngay trên máy — nhanh nhất, không cần mạng, không tốn hạn mức AI">Quét mã vạch</button>
         <button type="button" class="kktab" id="ndsBtnOcr" onclick="ndsDocOcr()" disabled
@@ -3114,22 +3116,30 @@ body.side-anim{overflow-x:clip}
       <div class="mtsub" id="csSub"></div>
     </div><button class="mclose" onclick="csDong()">&times;</button></div>
     <div class="modalbody" style="padding:14px 16px 16px">
-      <!-- HÀNG 1 gom Tex + lõi (user 22/08/2026 tối: 2 ô prefill sẵn đứng chung một dòng cho gọn —
-           thường không phải đụng tới); hàng 2-3 lấy ĐÚNG câu chữ của tab Chuyển đổi cân để hai nơi
-           không dạy hai kiểu tên gọi. -->
+      <!-- HÀNG 1 gom Tex + lõi; hàng 2-3 lấy ĐÚNG câu chữ của tab Chuyển đổi cân để hai nơi không
+           dạy hai kiểu tên gọi. BỎ 3 CỤM HINT (user 22/08/2026 tối: "bỏ các cụm thừa") — "tự bóc từ
+           tên SKU" / "tự điền từ sổ cân" / "đếm đầu cuộn…": số prefill giờ nói bằng MÀU (mờ = máy
+           điền, xem class cs-mo trong csTinh), còn thiếu gì thì khối "Còn thiếu:" ở dưới đã kể tên.
+           LUỒNG BÀN PHÍM 22/08/2026 (sự cố máy thật): gõ xong Tổng khối lượng mà bàn phím ảo vẫn
+           dựng, che mất ô "Số cuộn thừa" bên dưới — người dùng không biết còn ô phải nhập nên sót.
+           Chữa: Enter/phím "→" gọi csTiep() — còn ô trống thì NHẢY SANG ô đó (kèm cuộn vào giữa
+           vùng còn thấy), đủ cả thì rút bàn phím xuống; mọi ô đều cuộn vào giữa khi focus
+           (prCuonVao). Số cuộn thừa BẮT BUỘC nhập, không còn mặc định 1. -->
       <div class="cs-hang2">
         <div class="cd-f dau">
-          <label for="csTex">Chỉ số Tex <span class="hint">tự bóc từ tên SKU đã chọn</span></label>
+          <label for="csTex">Chỉ số Tex</label>
           <div class="cd-in">
-            <input id="csTex" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="ví dụ 27" oninput="csTinh()">
+            <input id="csTex" inputmode="decimal" enterkeyhint="next" autocomplete="off" spellcheck="false" placeholder="ví dụ 27" oninput="csTinh()"
+              onfocus="prCuonVao(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();csTiep(this);}">
             <span class="dv">Tex</span>
           </div>
           <div class="cd-doc" id="csTexDoc"></div>
         </div>
         <div class="cd-f dau">
-          <label for="csLoi">Khối lượng 1 lõi <span class="hint">tự điền từ sổ cân CAN-LOI-CHI</span></label>
+          <label for="csLoi">Khối lượng 1 lõi</label>
           <div class="cd-in">
-            <input id="csLoi" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="ví dụ 50" oninput="csTinh()">
+            <input id="csLoi" inputmode="decimal" enterkeyhint="next" autocomplete="off" spellcheck="false" placeholder="ví dụ 50" oninput="csTinh()"
+              onfocus="prCuonVao(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();csTiep(this);}">
             <span class="dv">gr</span>
           </div>
           <div class="cd-doc" id="csLoiDoc"></div>
@@ -3138,16 +3148,17 @@ body.side-anim{overflow-x:clip}
       <div class="cd-f">
         <label for="csCan">Tổng khối lượng chỉ trả về <span class="hint">cân cả lô, gồm cả lõi — <b class="cd-gram">gõ bằng GRAM</b></span></label>
         <div class="cd-in">
-          <input id="csCan" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="ví dụ 117.5" oninput="csTinh()"
-            onkeydown="if(event.key==='Enter'){event.preventDefault();csChot();}">
+          <input id="csCan" inputmode="decimal" enterkeyhint="next" autocomplete="off" spellcheck="false" placeholder="ví dụ 117.5" oninput="csTinh()"
+            onfocus="prCuonVao(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();csTiep(this);}">
           <span class="dv">gr</span>
         </div>
         <div class="cd-doc" id="csCanDoc"></div>
       </div>
       <div class="cd-f">
-        <label for="csCuon">Số cuộn thừa <span class="hint">đếm đầu cuộn — dùng để trừ lõi; cân từng cuộn (=1) thì mỗi cuộn một tem</span></label>
+        <label for="csCuon">Số cuộn thừa</label>
         <div class="cd-in">
-          <input id="csCuon" inputmode="numeric" autocomplete="off" spellcheck="false" value="1" oninput="csTinh()">
+          <input id="csCuon" inputmode="numeric" enterkeyhint="done" autocomplete="off" spellcheck="false" placeholder="ví dụ 1" oninput="csTinh()"
+            onfocus="prCuonVao(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();csTiep(this);}">
           <span class="dv">cuộn</span>
         </div>
       </div>
@@ -12927,7 +12938,8 @@ function csMo(sku){
   }
   var r = PR.sel[sku];
   CS.sku = sku;
-  document.getElementById('csSub').textContent = sku + ' · ' + String(r.pn || '').slice(0, 90);
+  /* Mã SKU tô nổi (accent + đậm, CSS #csSub b) — user 22/08/2026 tối: "highlight dữ liệu của sku". */
+  document.getElementById('csSub').innerHTML = '<b>' + esc(sku) + '</b> · ' + esc(String(r.pn || '').slice(0, 90));
   var tex = csBocTex(r.pn);
   document.getElementById('csTex').value = tex ? String(tex) : '';
   CS.texPrefill = tex ? String(tex) : '';
@@ -12935,7 +12947,9 @@ function csMo(sku){
   try{ var d = JSON.parse(localStorage.getItem(CD_KEY) || 'null'); if (d && d.loi) loi = d.loi; }catch(e){}
   document.getElementById('csLoi').value = loi;   // lõi là thuộc tính loại chỉ — mượn số đã nhớ của tab cd
   document.getElementById('csCan').value = '';
-  document.getElementById('csCuon').value = '1';
+  /* Số cuộn thừa BẮT BUỘC NHẬP (user 22/08/2026 tối) — bỏ mặc định 1: mặc định làm người dùng
+     không biết ô này tồn tại (bàn phím ảo che mất) và lô N cuộn bị trừ thiếu lõi mà không ai hay. */
+  document.getElementById('csCuon').value = '';
   /* Số cân thật theo nhãn (CAN-LOI-CHI): lõi thật đè số nhớ, mật độ thật đè thước Tex. Lượt đầu
      dữ liệu về trễ (JSONP) — nạp xong mà pop-up vẫn mở đúng SKU này thì áp lại cho khỏi lỡ. */
   CS.that = null;
@@ -12948,9 +12962,24 @@ function csMo(sku){
   m.style.display = 'flex';
   requestAnimationFrame(function(){ m.classList.add('show'); });
   csTinh();
+  prNgheBanPhim();   // bàn phím ảo mở/đóng thì cuộn lại ô đang gõ (dùng chung máy nghe với In tem)
   /* Focus thẳng vào ô còn thiếu đầu tiên: mở pop-up này là để CÂN, đừng bắt bấm thêm lần nữa */
   var coLoi = !!document.getElementById('csLoi').value;
   document.getElementById(!tex && !CS.that ? 'csTex' : (!coLoi ? 'csLoi' : 'csCan')).focus();
+}
+/* Enter (phím "→"/"✓" của bàn phím ảo) ở BẤT KỲ ô nào của pop-up cân — sự cố máy thật 22/08/2026:
+   gõ xong Tổng khối lượng mà bàn phím vẫn dựng, che mất ô "Số cuộn thừa"; người dùng không biết còn
+   ô phải nhập, cũng không biết cuộn/nhấp ra ngoài cho bàn phím tụt.
+     · còn ô TRỐNG → nhảy sang ô đó (focus + cuộn vào giữa vùng còn thấy) — điền nốt cho đủ;
+     · đủ cả + đang ở Ô CÂN → chốt luôn (GIỮ nhịp "cân từng cuộn: gõ số, Enter, cân cuộn kế");
+     · đủ cả ở ô khác → rút bàn phím xuống (blur) cho thấy kết quả + nút Chốt. */
+function csTiep(el){
+  var ds = ['csTex', 'csLoi', 'csCan', 'csCuon'].map(function(id){ return document.getElementById(id); });
+  var thieu = ds.filter(function(o){ return o !== el && !String(o.value).trim(); });
+  if (thieu.length){ thieu[0].focus(); return; }          // onfocus="prCuonVao" tự cuộn ô vào giữa
+  if (el === document.getElementById('csCan') && !document.getElementById('csBtnChot').disabled){ csChot(); return; }
+  el.blur();
+  try{ document.getElementById('csKq').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }catch(e){}
 }
 function csDong(){
   var m = document.getElementById('csmodal');
@@ -12969,6 +12998,13 @@ function csTinh(){
   var texGo = String(document.getElementById('csTex').value || '').trim();
   var dungThat = !!(CS.that && CS.that.mmg > 0 && (texGo === '' || texGo === CS.texPrefill));
   var mmg = dungThat ? CS.that.mmg : (tex > 0 ? 1000000/tex : 0);
+  /* Tex + lõi (user 22/08/2026 tối): CÓ sổ cân CAN-LOI-CHI → số máy điền LÀM MỜ (class cs-mo, gõ đè
+     là hết mờ); KHÔNG có sổ cân mà ô còn trống → viền đỏ `xau` đòi nhập — thay cho hai dòng hint đã bỏ. */
+  var oTexEl = document.getElementById('csTex'), oLoiEl = document.getElementById('csLoi');
+  oTexEl.classList.toggle('cs-mo', dungThat);
+  oLoiEl.classList.toggle('cs-mo', !!(CS.that && CS.that.loi > 0) && String(oLoiEl.value).trim() === String(CS.that.loi));
+  oTexEl.classList.toggle('xau', !dungThat && !(tex > 0));
+  oLoiEl.classList.toggle('xau', !(isFinite(loi) && loi >= 0));
   if (dungThat){
     var oTd = document.getElementById('csTexDoc');
     oTd.className = 'cd-doc';
@@ -13099,8 +13135,10 @@ function prNgheBanPhim(){
   if (PR_NGHE_VV || !window.visualViewport) return;
   PR_NGHE_VV = true;
   window.visualViewport.addEventListener('resize', function(){
-    var md = document.getElementById('prmodal');
-    if (!md || !md.classList.contains('show')) return;
+    /* Nghe cho CẢ HAI pop-up có ô nhập: In tem (prmodal) + Cân → SL (csmodal, thêm 22/08/2026). */
+    var md = document.getElementById('prmodal'), cs = document.getElementById('csmodal');
+    var dangMo = (md && md.classList.contains('show')) || (cs && cs.classList.contains('show'));
+    if (!dangMo) return;
     var el = PR_O_DANG_GO;
     if (!el || !document.body.contains(el) || document.activeElement !== el) return;
     try{ el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }catch(e){}
