@@ -1017,6 +1017,10 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
 /* Cum 2 nut cua the: khong de flex space-between cua summary/nds-inline keo 2 nut dat ra 2 phia */
 .nds-acts{display:inline-flex;gap:6px;align-items:center;flex:0 0 auto}
 /* Pop-up Can -> So luong: nut chot la thao tac CHINH -> nen accent + du cham tren dien thoai */
+/* Hang 1 gom Tex (trai) + Khoi luong loi (phai) — user 22/08/2026 toi. minmax(0,1fr) chu KHONG
+   1fr tran: bay min-content da tung banh trang 889px o tab cd, khong lap lai. */
+#csmodal .cs-hang2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 12px}
+#csmodal .cs-hang2 .cd-f{margin-top:0}
 #csmodal .nds-ctl{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
 #csBtnChot{background:var(--accent);border-color:var(--accent);color:var(--accent-text);font-weight:750}
 #csBtnChot:disabled{opacity:.5;cursor:not-allowed}
@@ -3087,7 +3091,9 @@ body.side-anim{overflow-x:clip}
      cân, dùng MỖI thước Tex (tên hàng WMS mang sẵn "Text 27"/"Tex 24" nên prefill được); cần
      thước cân-cuộn-nguyên đầy đủ thì sub-tab Chuyển đổi cân vẫn nguyên. Nhịp dùng: cân TỪNG cuộn
      → "＋ Chốt" → mỗi cuộn thành MỘT chip số lượng (= 1 con tem, đúng cơ chế chip của In tem);
-     đặt N cuộn lên cân một lượt thì đổi ô "trên cân có" — ra 1 chip tem tổng.
+     đặt N cuộn lên cân một lượt thì đổi ô "Số cuộn thừa" — ra 1 chip tem tổng. Nhãn 3 ô dưới lấy
+     ĐÚNG câu chữ tab Chuyển đổi cân (user 22/08/2026 tối): Tổng khối lượng chỉ trả về · Số cuộn
+     thừa; hàng 1 gom Tex + lõi (hai ô prefill sẵn, thường không phải đụng).
      Tái dùng khuôn .cd-f/.cd-in/.cd-doc của tab Chuyển đổi cân + modal khuôn chung (popIn có sẵn). -->
 <div id="csmodal" class="modal" onclick="if(event.target===this)csDong()">
   <div class="modalbox" style="max-width:560px;width:100%">
@@ -3096,24 +3102,29 @@ body.side-anim{overflow-x:clip}
       <div class="mtsub" id="csSub"></div>
     </div><button class="mclose" onclick="csDong()">&times;</button></div>
     <div class="modalbody" style="padding:14px 16px 16px">
-      <div class="cd-f dau">
-        <label for="csTex">Chỉ số Tex <span class="hint">tự bóc từ tên hàng — sửa nếu tem NCC ghi khác</span></label>
-        <div class="cd-in">
-          <input id="csTex" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="ví dụ 27" oninput="csTinh()">
-          <span class="dv">Tex</span>
+      <!-- HÀNG 1 gom Tex + lõi (user 22/08/2026 tối: 2 ô prefill sẵn đứng chung một dòng cho gọn —
+           thường không phải đụng tới); hàng 2-3 lấy ĐÚNG câu chữ của tab Chuyển đổi cân để hai nơi
+           không dạy hai kiểu tên gọi. -->
+      <div class="cs-hang2">
+        <div class="cd-f dau">
+          <label for="csTex">Chỉ số Tex <span class="hint">tự bóc từ tên SKU đã chọn</span></label>
+          <div class="cd-in">
+            <input id="csTex" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="ví dụ 27" oninput="csTinh()">
+            <span class="dv">Tex</span>
+          </div>
+          <div class="cd-doc" id="csTexDoc"></div>
         </div>
-        <div class="cd-doc" id="csTexDoc"></div>
+        <div class="cd-f dau">
+          <label for="csLoi">Khối lượng 1 lõi <span class="hint">tự điền từ sổ cân CAN-LOI-CHI</span></label>
+          <div class="cd-in">
+            <input id="csLoi" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="ví dụ 50" oninput="csTinh()">
+            <span class="dv">gr</span>
+          </div>
+          <div class="cd-doc" id="csLoiDoc"></div>
+        </div>
       </div>
       <div class="cd-f">
-        <label for="csLoi">Khối lượng 1 lõi <span class="hint">lõi rỗng, không gồm chỉ — tự điền từ số cân thật (tab CAN-LOI-CHI) hoặc lần cân trước</span></label>
-        <div class="cd-in">
-          <input id="csLoi" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="ví dụ 50" oninput="csTinh()">
-          <span class="dv">gr</span>
-        </div>
-        <div class="cd-doc" id="csLoiDoc"></div>
-      </div>
-      <div class="cd-f">
-        <label for="csCan">Cân được <span class="hint">cả lõi + chỉ — <b class="cd-gram">gõ bằng GRAM</b></span></label>
+        <label for="csCan">Tổng khối lượng chỉ trả về <span class="hint">cân cả lô, gồm cả lõi — <b class="cd-gram">gõ bằng GRAM</b></span></label>
         <div class="cd-in">
           <input id="csCan" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="ví dụ 117.5" oninput="csTinh()"
             onkeydown="if(event.key==='Enter'){event.preventDefault();csChot();}">
@@ -3122,7 +3133,7 @@ body.side-anim{overflow-x:clip}
         <div class="cd-doc" id="csCanDoc"></div>
       </div>
       <div class="cd-f">
-        <label for="csCuon">Trên cân có <span class="hint">cân từng cuộn (=1) thì mỗi cuộn một tem; đặt nhiều cuộn thì ra 1 tem tổng</span></label>
+        <label for="csCuon">Số cuộn thừa <span class="hint">đếm đầu cuộn — dùng để trừ lõi; cân từng cuộn (=1) thì mỗi cuộn một tem</span></label>
         <div class="cd-in">
           <input id="csCuon" inputmode="numeric" autocomplete="off" spellcheck="false" value="1" oninput="csTinh()">
           <span class="dv">cuộn</span>
@@ -12952,8 +12963,8 @@ function csTinh(){
   } else {
     cdDoc('csTexDoc', tex, isFinite(tex) && tex > 0 ? ('gr mỗi 1,000 m → 1 gr chỉ dài ' + cdF(1000000/tex, 0) + ' mm') : 'gr mỗi 1,000 m chỉ', 1);
   }
-  cdDoc('csLoiDoc', loi, isFinite(loi) && isFinite(cuon) && cuon > 1 ? ('gr/lõi → ' + cdFg(loi*cuon) + ' gr lõi trên cân') : 'gr/lõi', 1);
-  cdDoc('csCanDoc', can, 'gr = ' + (isFinite(can) ? cdFg(can/1000) : '—') + ' kg trên cân', 1);
+  cdDoc('csLoiDoc', loi, isFinite(loi) && isFinite(cuon) && cuon > 1 ? ('gr/lõi → ' + cdFg(loi*cuon) + ' gr lõi cho cả lô') : 'gr/lõi', 1);
+  cdDoc('csCanDoc', can, 'gr = ' + (isFinite(can) ? cdFg(can/1000) : '—') + ' kg cả lô', 1);
   var r = PR.sel[CS.sku], daCo = r ? PR_TEM.tachSl(r.slHang) : [];
   document.getElementById('csDaChot').innerHTML = daCo.length
     ? ('Đã chốt <b>' + daCo.length + '</b> số lượng cho SKU này: ' + daCo.map(function(x){ return cdF(Number(x)) + ' mm'; }).join(' · '))
@@ -12965,7 +12976,7 @@ function csTinh(){
   if (!(tex > 0) && !dungThat) thieu.push('chỉ số Tex');
   if (!(loi >= 0) || !isFinite(loi)) thieu.push('khối lượng lõi');
   if (!(can > 0)) thieu.push('số cân');
-  if (!(cuon > 0)) thieu.push('số cuộn trên cân');
+  if (!(cuon > 0)) thieu.push('số cuộn thừa');
   if (thieu.length){
     kq.innerHTML = '<div class="state" style="padding:12px">Còn thiếu: <b>' + thieu.join('</b> · <b>') + '</b>.</div>';
     nut.disabled = true; nut.textContent = '＋ Chốt thành 1 tem';
