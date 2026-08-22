@@ -1060,18 +1060,30 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar,body.csm-open #pr
    Chip tái dùng NGUYÊN khuôn `.nds-tag` của tab (popIn + nút × + focus ring) — lệ dự án: đã có khuôn
    thì không dựng control trần mới. Chip xếp TRƯỚC ô nhập nên đọc từ trái sang phải là đúng thứ tự
    sẽ in, và số vừa chốt luôn nằm sát ngay ô nhập. */
-/* Ô Số lượng chỉ còn ô nhập + nút "+". Danh sách số đã chốt nằm ở HÀNG RIÊNG `tr.prsl2` (một hàng
-   `tr.prsl2` ăn hết bề rộng, dán liền dưới) — xem ghi chú trong prVe. Vì sao đổi: chip nhét trong
-   một cột hẹp, canh phải, 4-5 cái là rớt thành 2-3 dòng méo mó ngay chỗ tay đang gõ; và không có
-   chỗ nào nói ra quan hệ "mỗi số lượng = một con tem". */
-#prBody .prgo{display:flex;gap:8px;align-items:center;justify-content:flex-end}
+/* ĐỔI 22/08/2026 (yêu cầu user): CỘT "SỐ TEM" ĐÃ BỎ — ô nhập số tem đi luôn, chip số lượng đã chốt
+   dọn về NGAY TRƯỚC ô nhập, CÙNG MỘT Ô (hết hàng rời `tr.prsl2` + class `co-chip` của bản 21/08).
+   Chip đứng trước = đúng thứ tự sẽ in, và "mỗi chip = một con tem" nên chỗ của cột Số tem cũ giờ
+   hiện CHÍNH những số người dùng đã nhập. "Số tem: n" chỉ còn là CHỮ hiển thị ở ô SKU (.prtemso). */
+#prBody .prgo{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;justify-content:flex-start}
 #prBody .prchip{--cc:var(--accent);font-variant-numeric:tabular-nums;padding:4px 4px 4px 10px}
-#prBody tr.prdong.co-chip>td{border-bottom:0}
-#prBody tr.prsl2>td{padding-top:0}
 /* Chữ mờ nhắc việc phải NHỎ hơn con số thật: ô này in số ở 19px/700, để placeholder cùng cỡ thì
    nó vừa bị cắt cụt vừa trông như đã có số. */
 #prBody input.prsl-v::placeholder{font-size:12.5px;font-weight:600;opacity:.62}
-#prBody .prchips{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-start;margin:0}
+/* QC MÀU + KHOẢNG CÁCH (user 22/08/2026: "đang cho 2 màu chữ khác nhau, khoảng cách giữa các mục
+   cũng xa"): MỘT màu chữ --ink cho cả bảng (riêng cột Tên sản phẩm trước ăn màu mờ --ink2 nên nhìn
+   thành 2 tông), và cột nào ôm sát nội dung cột đó — phần bề rộng dư dồn hết cho cột Tên (chữ dài,
+   co giãn tự nhiên nhất), hết cảnh các cột số dạt xa nhau. */
+#prmodal .mtbl th,#prmodal .mtbl td{padding:8px 9px}
+#prmodal .mtbl td{color:var(--ink)}
+#prmodal .mtbl .pn{color:var(--ink);min-width:220px}
+#prmodal .mtbl td.prslo{width:36%;min-width:240px}
+#prmodal .mtbl td.prsku{width:1%;white-space:nowrap}
+#prmodal .mtbl td.prxoa{width:1%}
+/* "Số tem: n" nằm DƯỚI mã SKU (máy bàn): mã giữ cỡ hiện tại, dòng này cỡ NỬA — nhãn mờ, CON SỐ nổi
+   bật (accent + đậm) để liếc là so được với các chip số lượng bên trái. */
+#prBody td.prsku>b{font-size:13.5px}
+#prBody .prtemso{display:block;margin-top:3px;font-size:10.5px;font-weight:600;color:var(--ink3)}
+#prBody .prtemso b{font-size:12px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums}
 /* Nút "+" phải ĐẬP VÀO MẮT (yêu cầu user): nền accent đặc, chữ trắng, có bóng — nó là thao tác chính
    của ô này, không phải một dấu cộng mờ nhạt lẫn vào nền. Chỉ hiện khi trong ô ĐANG có số. */
 /* Scope #prmodal (truoc la #prBody): nut "+" gio con dung o o "Them SKU ngoai" tren dau pop-up. */
@@ -1118,61 +1130,52 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar,body.csm-open #pr
   #prmodal .mtbl{display:block;font-size:13px}
   #prmodal .mtbl thead{display:none}
   #prmodal .mtbl tbody{display:block}
-  /* BA CỘT (siết 21/08/2026 theo đặc tả user, sau khi xem video quay máy thật):
-       · cột 1 = 82px CHÔN CỨNG cho "Số tem" — nó chỉ nhận 1-2 chữ số, không có lý gì chiếm nửa thẻ;
-       · cột 2 co giãn + cột 3 auto = phần của "Số lượng" (555 · 1.200 · 12.500) và nút xoá.
-     Hàng SKU trải hai cột đầu để không bị bóp vào 82px. */
-  #prmodal .mtbl tr{display:grid;grid-template-columns:82px minmax(0,1fr) auto;
-    grid-template-areas:"sku sku del" "pn pn pn" "tem sl sl";
+  /* THẺ BẢN 22/08/2026 (bỏ cột Số tem theo yêu cầu user): 2 cột — trái co giãn, phải auto (nút ×).
+     Ba hàng đọc xuôi:
+       [ SKU ............ Số tem: n  × ]
+       [ tên hàng (kẹp 2 dòng)         ]
+       [ chip đã chốt …      [ô nhập]+ ]
+     · "Số tem: n" CÙNG HÀNG với mã SKU, chôn cứng kế nút × (đặc tả user);
+     · chip số lượng đã chốt nằm ĐÚNG CHỖ Ô "SỐ TEM" CŨ — bìa trái hàng số, ngang hàng với ô nhập;
+     · nhãn ::before "Số tem"/"Số lượng" BỎ HẲN: placeholder "gõ số lượng" đã nói đủ, bớt một tầng
+       chữ (luật "bỏ ô không mang tin"). Ô bám theo CLASS chứ không nth-child nữa — bài học nhãn
+       dán sai 20/08 khi số cột đổi. */
+  #prmodal .mtbl tr{display:grid;grid-template-columns:minmax(0,1fr) auto;
+    grid-template-areas:"sku del" "pn pn" "sl sl";
     gap:8px 10px;align-items:start;padding:11px 12px;margin:0 0 9px;
     border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:var(--shadow)}
   #prmodal .mtbl tbody tr:hover{background:var(--surface)}
   #prmodal .mtbl td{display:block;border:0;padding:0;white-space:normal}
-  /* ô 1 = SỐ TEM: nhãn TRÊN, ô nhập DƯỚI, số canh giữa. Rộng đúng 82px của cột, không co giãn. */
-  #prmodal .mtbl td:nth-child(1){grid-area:tem;font-size:11px;color:var(--ink3);min-width:0}
-  /* Nhãn căn BÌA TRÁI: ô này có class `num` (căn phải cho con số) nên nhãn thừa hưởng căn phải và
-     trôi sang bên phải cột 82px — phải khai lại rõ ràng. */
-  #prmodal .mtbl td:nth-child(1)::before{content:'Số tem';color:var(--muted);display:block;margin-bottom:4px;text-align:left}
-  #prmodal .mtbl td:nth-child(1) input.prsl{width:100%;text-align:center;font-size:16px;padding:9px 4px}
-  /* ô 2 = SỐ LƯỢNG: ăn hết phần còn lại; ô nhập cao ≥44px, chữ to và đậm — đây là con số người dùng
-     phải đọc lại để chắc không gõ nhầm số 0 nào. */
-  #prmodal .mtbl td:nth-child(2){grid-area:sl;font-size:11px;color:var(--ink3);min-width:0}
-  #prmodal .mtbl td:nth-child(2)::before{content:'Số lượng';color:var(--muted);display:block;margin-bottom:4px;text-align:right}
-  /* Ô nhập còn MỘT NỬA bề rộng cột (user 21/08/2026: "bự quá — làm nhỏ lại 1 nửa kích thước ô").
-     Bản trước `flex:1` nên nó ăn hết phần còn lại của thẻ — trên màn 390px là một khối 232px, to
-     hơn cả ô SKU. Giữ nguyên cao 44px và chữ 19px/700: đó là hai ràng buộc user đã chốt trước đó
-     (đủ chạm + đọc lại được con số) — cái "bự" nằm ở BỀ RỘNG, không ở chữ. */
-  #prmodal .mtbl td:nth-child(2) input.prsl{flex:0 0 auto;width:50%;min-width:0;min-height:44px;
-    font-size:19px;font-weight:700;padding:8px 10px}
-  /* ô 3 = SKU: đứng đầu thẻ, cỡ chữ lớn nhất — đây là thứ người dùng dò mắt tìm */
-  #prmodal .mtbl td:nth-child(3){grid-area:sku;font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
-  /* ô 4 = TÊN SẢN PHẨM */
-  #prmodal .mtbl td:nth-child(4){grid-area:pn;min-width:0;color:var(--ink2);font-size:12px;line-height:1.5;
+  /* ô SKU: mã cỡ lớn nhất (thứ người dùng dò mắt tìm) + "Số tem: n" đẩy sát bìa phải bằng
+     margin-left:auto — nó kề ngay ô nút × của cột bên cạnh. */
+  /* width:auto phải khai lại cả ba ô: khối desktop phía trên vừa đóng width 1%/36% để cột ôm nội
+     dung — sang thẻ lưới mà giữ thì ô co còn cái tăm. */
+  #prmodal .mtbl td.prsku{grid-area:sku;width:auto;display:flex;align-items:baseline;gap:8px;min-width:0;white-space:nowrap}
+  #prmodal .mtbl td.prsku>b{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
+  #prmodal .mtbl td.prsku .prtemso{display:inline;margin:0 0 0 auto;font-size:11px}
+  #prmodal .mtbl td.prsku .prtemso b{font-size:13px}
+  /* ô TÊN SẢN PHẨM: kẹp 2 dòng (đoạn văn dài phải kẹp — luật dự án) */
+  #prmodal .mtbl td.pn{grid-area:pn;min-width:0;font-size:12px;line-height:1.5;
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-  /* ô 5 = nút xoá: đẩy hẳn sang góc trên phải, XA hai ô số để không bấm nhầm lúc sửa số */
-  #prmodal .mtbl td:nth-child(5){grid-area:del;justify-self:end;align-self:start}
+  /* ô SỐ LƯỢNG = chip + ô nhập CHUNG MỘT HÀNG: chip dồn trái, ô nhập ~2/5 thẻ (user 21/08 "bự quá —
+     nửa ô") + nút "+" dính bìa phải nhờ margin-left:auto; chật quá thì ô nhập tự rớt xuống dòng
+     dưới (flex-wrap) chứ không bóp chip. Cao 44px + chữ 19px/700 giữ nguyên — hai ràng buộc user
+     đã chốt (đủ chạm + đọc lại được con số). */
+  #prmodal .mtbl td.prslo{grid-area:sl;width:auto;min-width:0}
+  #prmodal .mtbl td.prslo .prgo{gap:8px 10px}
+  #prmodal .mtbl td.prslo input.prsl-v{flex:0 1 40%;width:auto;min-width:96px;margin-left:auto;
+    min-height:44px;font-size:19px;font-weight:700;padding:8px 10px}
+  /* ô nút xoá: góc trên phải, XA hàng số để không bấm nhầm lúc sửa số */
+  #prmodal .mtbl td.prxoa{grid-area:del;width:auto;justify-self:end;align-self:start}
   #prmodal .mtbl td[colspan]{grid-column:1/-1}
-  /* DẢI SỐ LƯỢNG ĐÃ CHỐT là một HÀNG RIÊNG, nhưng trên điện thoại mỗi `tr` là một THẺ có viền +
-     bóng — để nguyên thì nó thành thẻ thứ hai rời rạc. Dán nó vào đáy thẻ trên: thẻ trên bỏ bo góc
-     dưới (class `co-chip` do prVe gắn, KHÔNG dùng `:has()` để khỏi phụ thuộc bản trình duyệt), dải
-     này bỏ viền trên và chỉ bo hai góc dưới. Hai hàng đọc ra như một thẻ liền. */
-  #prmodal .mtbl tr.prdong.co-chip{margin-bottom:0;border-bottom-left-radius:0;border-bottom-right-radius:0}
-  #prmodal .mtbl tr.prsl2{display:block;padding:0 12px 11px;margin:0 0 9px;
-    border:1px solid var(--line);border-top:0;border-radius:0 0 12px 12px;
-    background:var(--surface);box-shadow:var(--shadow)}
-  #prmodal .mtbl tr.prsl2>td{display:block;padding:0}
-  /* Hàng dải chip cũng có ô đầu tiên, nên nó thừa hưởng nhãn ::before "Số tem" của bố cục thẻ và
-     in ra một chữ "Số tem" lạc giữa hai khối (bắt được bằng ảnh chụp 390px). */
-  #prmodal .mtbl tr.prsl2>td::before{display:none}
+  /* (Dải chip `tr.prsl2` + class `co-chip` ĐÃ GỠ 22/08/2026 — chip dọn về cùng ô với ô nhập, xem
+     ghi chú ở td.prslo phía trên. Giữ dòng mốc này vì khối dán-liền-đáy-thẻ từng qua 2 lần vá.) */
   /* Chip số lượng trên điện thoại: nút × phải là VÙNG CHẠM THẬT ≥40px (luật 9 luật của dự án). Khuôn
      `.nds-tag .x` dùng chung chỉ 18px — đủ cho badge từ khoá ở tab (bấm nhầm thì thêm lại), nhưng ở
-     đây bấm nhầm là mất một con tem đã khai. Dải đã ăn hết bề rộng nên có chỗ cho chip to. */
-  #prBody tr.prsl2 .prchips{gap:8px 10px;padding:2px 0 0}
-  #prBody tr.prsl2 .prchip{min-height:40px;padding:0 0 0 14px;gap:2px;font-size:14px}
-  #prBody tr.prsl2 .prchip button.x{width:40px;height:40px;padding:0;font-size:19px;
+     đây bấm nhầm là mất một con tem đã khai. */
+  #prBody .prchip{min-height:40px;padding:0 0 0 14px;gap:2px;font-size:14px}
+  #prBody .prchip button.x{width:40px;height:40px;padding:0;font-size:19px;
     display:inline-flex;align-items:center;justify-content:center;opacity:.72}
-  /* Ô số lượng dạng danh sách ("12, 14, 16") cần rộng hơn ô một số */
-  #prBody input.prsl.co-ds{width:112px;text-align:left}
   #prmodal .prcb{max-width:none;width:100%}
   #prmodal .prcb input{min-height:36px;font-size:12.5px}
   /* Menu `width:max-content` rộng hơn ô ⇒ dù ĐANG ẨN (`visibility:hidden`) nó vẫn tính vào vùng cuộn
@@ -3058,12 +3061,13 @@ body.side-anim{overflow-x:clip}
          sẽ quay lại theo đường nút Cân → Số lượng trên thẻ nhận diện (đang bàn), gỡ hàm rồi viết
          lại là tự chuốc lệch. -->
     <div class="msum" id="prSum"></div>
-    <!-- 4 cột theo đúng thứ tự người dùng chốt 20/08/2026: Số tem · Số lượng · SKU · Tên sản phẩm.
-         Bỏ cột "Mẫu tem" (chỉ còn một khổ) và cột ĐVT (thay bằng SỐ LƯỢNG in trên tem).
-         Bỏ luôn khối xem trước: tem in ra đã dựng bằng CHÍNH hàm của bản xem trước nên xem trước chỉ
-         còn là chỗ chiếm màn hình. -->
+    <!-- 3 cột (đổi 22/08/2026, yêu cầu user): BỎ CỘT "Số tem" — ô nhập số tem đi luôn, chỗ đó giờ là
+         CHÍNH các số lượng đã chốt (chip) nằm cùng ô với ô nhập Số lượng. Con số "Số tem: n" chỉ còn
+         là CHỮ HIỂN THỊ, dán vào ô SKU (máy bàn: dòng nhỏ DƯỚI mã; điện thoại: cùng hàng với mã, chôn
+         cứng kế nút ×). Trước đó 20/08 từng chốt 4 cột Số tem · Số lượng · SKU · Tên; bỏ cột "Mẫu tem"
+         (một khổ) + cột ĐVT + khối xem trước vẫn giữ nguyên lý do cũ. -->
     <div class="modalbody"><table class="mtbl"><thead><tr>
-      <th class="num">Số tem</th><th class="num">Số lượng</th><th>SKU</th><th class="pn">Tên sản phẩm</th><th></th>
+      <th>Số lượng</th><th>SKU</th><th class="pn">Tên sản phẩm</th><th></th>
     </tr></thead><tbody id="prBody"></tbody></table></div>
     <div class="prfoot">
       <!-- Dòng trạng thái là chỗ DUY NHẤT nói tình hình máy in: rảnh / đang in đợt của ai / máy trạm
@@ -13296,55 +13300,37 @@ function prVe(){
     }).join('');
   };
   tb.innerHTML = ds.length ? ds.map(function(r){
-    /* Thứ tự cột: SỐ TEM (số bản in) · SỐ LƯỢNG (con số IN TRÊN tem) · SKU · TÊN SẢN PHẨM.
-       Hai con số này khác nhau hẳn nhau nên đứng cạnh nhau và có nhãn rõ ở thead — trước đây gộp
-       một cột "Số tem" là chỗ dễ nhầm nhất. */
+    /* BẢN 22/08/2026 (yêu cầu user): CỘT "SỐ TEM" ĐÃ BỎ — ô nhập số tem đi hẳn, chỗ đó là CHÍNH
+       những số lượng người dùng đã nhập (chip đứng NGAY TRƯỚC ô nhập, cùng một ô — hết hàng rời
+       `tr.prsl2`). Quan hệ "mỗi số lượng = một con tem" nay tự hiện ra: đếm chip là ra số tem, và
+       con số đó in thành chữ "Số tem: n" ở ô SKU (máy bàn: dòng nhỏ DƯỚI mã; điện thoại: cùng hàng
+       với mã, chôn cứng kế nút ×). Muốn in N tem thì chốt N số lượng — hàm prDatSl (sửa tay số tem)
+       vẫn nằm trong JS nhưng không còn lối gọi nào. */
     var dsSl = PR_TEM.tachSl(r.slHang);
-    var nhieu = dsSl.length > 1;                        // 3 bịch khác số lượng -> 3 con tem
     var soTem = PR_TEM.temCuaDong(r);
-    return '<tr class="prdong' + (dsSl.length ? ' co-chip' : '') + '">' +
-      '<td class="num prtem"><input class="prsl prsl-t" type="number" inputmode="numeric" min="1" max="' + PR_TRAN_SL + '" step="1" value="' + soTem + '"' +
-        (nhieu ? ' disabled' : '') + ' onfocus="prCuonVao(this)"' +
-        ' data-s="' + esc(r.sku) + '" onchange="prDatSl(this.getAttribute(\'data-s\'),this.value)" title="' +
-        (nhieu ? 'Dòng này khai ' + soTem + ' số lượng nên ra đúng ' + soTem + ' con tem' : 'Số con tem sẽ in') + '"></td>' +
-      /* Ô SỐ LƯỢNG chỉ còn ĐÚNG chỗ để gõ: ô nhập + nút "+". Danh sách số đã chốt KHÔNG nằm ở đây
-         nữa (đổi 21/08/2026, yêu cầu user "chỗ hiển thị số lượng chưa thân thiện") — nó xuống một
-         HÀNG RIÊNG ăn hết bề rộng dòng, xem `tr.prsl2` bên dưới. Hai lý do:
-           · chip nhét trong một cột hẹp, canh phải, 4-5 cái là rớt thành 2-3 dòng méo mó, mà cột đó
-             chính là chỗ tay đang gõ;
-           · và không có chỗ nào NÓI RA quan hệ "mỗi số lượng = một con tem" — người dùng thấy
-             "Số tem 4" ở cột trước rồi 4 chip ở cột sau mà không biết cái nào sinh ra cái nào.
-         Ô nhập cũng KHÔNG còn hiện số "0" khi đã có chip: "Số lượng: 0" đọc ra thành "số lượng bằng
-         không", đúng thứ làm người dùng hoang mang nhất. Nay để rỗng + chữ mờ nhắc việc. */
-      '<td class="num prslo">' +
+    return '<tr class="prdong">' +
+      '<td class="prslo">' +
         '<div class="prgo">' +
+        prChipSl(r) +
         '<input class="prsl prsl-v" type="text" inputmode="numeric" value=""' +
         ' data-s="' + esc(r.sku) + '" placeholder="' + (dsSl.length ? '+ số nữa' : 'gõ số lượng') + '"' +
         ' oninput="prGoSo(this);prHienCong(this)"' +
         ' onfocus="prCuonVao(this)"' +
         ' onkeydown="if(event.key===\'Enter\'){event.preventDefault();prCam(this);}"' +
         ' onchange="prCam(this)"' +
-        ' title="Con số IN TRÊN TEM. Mỗi bịch một số lượng: gõ số rồi bấm dấu +">' +
+        ' title="Con số IN TRÊN TEM. Mỗi bịch một số lượng: gõ số rồi bấm dấu + — mỗi số là một con tem">' +
         /* Nút "+" nằm NGAY SAU ô nhập (không phải ở đầu dòng): mắt vừa gõ số xong là thấy nó. */
         '<button type="button" class="prsladd" tabindex="0" data-s="' + esc(r.sku) + '"' +
         ' title="Thêm số lượng này thành một con tem riêng"' +
         ' onclick="prCam(this.previousElementSibling)">+</button>' +
         '</div>' +
         '</td>' +
-      '<td><b>' + esc(r.sku) + '</b></td>' +
+      '<td class="prsku"><b>' + esc(r.sku) + '</b>' +
+        '<span class="prtemso" title="Số con tem sẽ in — mỗi số lượng đã chốt là một con tem">Số tem: <b>' + soTem + '</b></span></td>' +
       '<td class="pn">' + esc(r.pn) + '</td>' +
-      '<td><button class="prdel" data-s="' + esc(r.sku) + '" title="Bỏ SKU này khỏi danh sách in"' +
-        ' onclick="prXoa(this.getAttribute(\'data-s\'))">&times;</button></td></tr>' +
-      /* DẢI SỐ LƯỢNG ĐÃ CHỐT — hàng riêng, ăn hết bề rộng, dán liền dưới dòng trên (dòng trên bị bỏ
-         bo góc dưới bằng class `co-chip` nên hai hàng đọc ra như MỘT thẻ). Nhãn nói thẳng quan hệ
-         giữa số lượng và số tem, để không ai phải tự đoán. */
-      /* CHỈ CÒN CHIP, KHÔNG CÒN CHỮ (yêu cầu user 21/08/2026: "bỏ dòng ghi chú … trong ô số lượng").
-         Hai câu bị bỏ là "Số lượng in trên tem" và "Sẽ in N tem — mỗi số lượng một con tem": trên
-         điện thoại chúng ăn trọn một dòng chữ ngay giữa hai khối số, mà cột "Số tem" ngay bên cạnh
-         đã in đúng con số đó rồi — nói lại lần nữa chỉ đẩy danh sách xuống. */
-      (dsSl.length ? '<tr class="prsl2"><td colspan="5"><div class="prchips">' +
-        prChipSl(r) + '</div></td></tr>' : '');
-  }).join('') : '<tr><td colspan="5"><div class="state" style="padding:18px">Danh sách in đang trống.</div></td></tr>';
+      '<td class="prxoa"><button class="prdel" data-s="' + esc(r.sku) + '" title="Bỏ SKU này khỏi danh sách in"' +
+        ' onclick="prXoa(this.getAttribute(\'data-s\'))">&times;</button></td></tr>';
+  }).join('') : '<tr><td colspan="4"><div class="state" style="padding:18px">Danh sách in đang trống.</div></td></tr>';
   var tong = prTongTem();
   /* Dải "Tem SKU 40 × 60 mm …: N tem" ĐÃ BỎ (user 22/08/2026): chỉ còn một khổ tem đang dùng và
      nút Xác nhận in đã ghi đúng tổng. GIỮ mỗi cảnh báo >100 tem — nó chỉ hiện đúng lúc cần; dải
