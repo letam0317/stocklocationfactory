@@ -1045,7 +1045,10 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
 #prbar .go{background:var(--brand2,var(--accent));color:#fff} #prbar .go:hover{filter:brightness(1.06)}
 #prbar .rm{background:transparent;color:var(--muted)} #prbar .rm:hover{color:var(--bad)}
 @media(max-width:900px){#prbar{bottom:138px}}
-body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
+/* csm-open: pop-up Cân → SL (22/08/2026, ảnh user 14:03) — thanh nổi từng ĐÈ LÊN pop-up này vì nó
+   sinh sau mà quên gắn class body như prmodal; trong pop-up đã có nút "Mở In tem" nên thanh là thừa,
+   lại kèm nút Xoá xoá được chính SKU đang cân. */
+body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar,body.csm-open #prbar{display:none}
 /* Bảng danh sách in trong modal: dùng .mtbl có sẵn, chỉ thêm 2 ô nhập */
 #prBody input.prsl{width:88px;padding:7px 10px;font-family:inherit;font-size:14px;text-align:right;
   border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
@@ -12929,6 +12932,9 @@ function csMo(sku){
   CS.that = null;
   clNap(function(){ var mo = document.getElementById('csmodal'); if (CS.sku === sku && mo.classList.contains('show')) csApThat(); });
   csApThat();
+  /* csm-open: ẩn thanh nổi Chờ in khi pop-up mở (cùng khuôn prm-open của prmodal) — thanh từng
+     ĐÈ LÊN pop-up này, trong khi nút "Mở In tem" đã nằm sẵn ở chân pop-up (ảnh user 22/08 14:03). */
+  document.body.classList.add('csm-open');
   var m = document.getElementById('csmodal');
   m.style.display = 'flex';
   requestAnimationFrame(function(){ m.classList.add('show'); });
@@ -12940,6 +12946,7 @@ function csMo(sku){
 function csDong(){
   var m = document.getElementById('csmodal');
   m.classList.remove('show');
+  document.body.classList.remove('csm-open');
   setTimeout(function(){ m.style.display = 'none'; }, 200);
 }
 function csMoInTem(){ csDong(); if (prSo()) prMo(); }
