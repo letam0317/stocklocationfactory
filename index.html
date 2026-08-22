@@ -1051,13 +1051,14 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
 #prBody .prchips{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-start;margin:0}
 /* Nút "+" phải ĐẬP VÀO MẮT (yêu cầu user): nền accent đặc, chữ trắng, có bóng — nó là thao tác chính
    của ô này, không phải một dấu cộng mờ nhạt lẫn vào nền. Chỉ hiện khi trong ô ĐANG có số. */
-#prBody .prsladd{display:none;align-items:center;justify-content:center;width:32px;height:32px;flex:0 0 auto;
+/* Scope #prmodal (truoc la #prBody): nut "+" gio con dung o o "Them SKU ngoai" tren dau pop-up. */
+#prmodal .prsladd{display:none;align-items:center;justify-content:center;width:32px;height:32px;flex:0 0 auto;
   border:0;border-radius:9px;background:var(--accent);color:#fff;font-size:20px;font-weight:800;line-height:1;
   cursor:pointer;font-family:inherit;box-shadow:0 2px 9px color-mix(in srgb,var(--accent) 42%,transparent);
   animation:popIn .18s var(--ez-apple) both}
-#prBody .prsladd.hien{display:inline-flex}
-#prBody .prsladd:hover{filter:brightness(1.09)}
-#prBody .prsladd:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#prmodal .prsladd.hien{display:inline-flex}
+#prmodal .prsladd:hover{filter:brightness(1.09)}
+#prmodal .prsladd:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 /* COMBO mẫu tem: chỉ cần 3 dòng vì `.combo`/`.combo-menu`/`.combo-item` đã có sẵn (popIn + focus ring
    + hover accent). Mũi tên dùng đúng kiểu `.fccombo` của pop-up Dự báo. */
 #prmodal .prcb{max-width:210px}
@@ -1157,7 +1158,7 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
   #prmodal .prcb .combo-menu{width:auto;min-width:0;max-width:none;left:0;right:0}
   #prmodal .prcb .combo-item{white-space:normal;line-height:1.45}
   #prBody input.prsl{min-height:42px;font-size:15px}
-  #prBody .prsladd{width:44px;height:44px;flex:0 0 44px;font-size:22px}
+  #prmodal .prsladd{width:44px;height:44px;flex:0 0 44px;font-size:22px}
   #prBody .prdel{font-size:22px;padding:4px 8px}
   /* Hai ô "áp cho tất cả": nhãn dài chiếm nửa bề rộng nên ô chọn bị cắt mất chữ — xếp DỌC lại. */
   /* HAI Ô "ÁP CHO TẤT CẢ" GỘP MỘT HÀNG, NHÃN RÚT NGẮN.
@@ -1175,6 +1176,10 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar{display:none}
   #prmodal .mfilters .fld label::before{font-size:9.5px;font-weight:750;letter-spacing:.06em;color:var(--muted)}
   #prmodal .mfilters .fld:nth-child(1) label::before{content:'SỐ TEM'}
   #prmodal .mfilters .fld:nth-child(2) label::before{content:'SỐ LƯỢNG'}
+  /* Ô "Thêm SKU ngoài" ăn trọn hàng riêng: mã SKU 9 chữ số + nút "+" không chen được nửa cột */
+  #prmodal .mfilters .fld:nth-child(3){grid-column:1/-1}
+  #prmodal .mfilters .fld:nth-child(3) label::before{content:'THÊM SKU'}
+  #prmodal .mfilters .fld:nth-child(3) input{flex:1;min-width:0}
   #prmodal .mfilters #prSlAll{width:56px}
   #prmodal .mfilters #prSlhAll{width:100%;max-width:none}
   /* Chiều cao ĐOÁN ĐƯỢC cho hai vùng cuộn: danh sách thẻ và khung xem trước 1:1 (3 con tem cỡ thật
@@ -2582,6 +2587,11 @@ body.side-anim{overflow-x:clip}
   .pg-tblwrap:has(table.mbcard){overflow:visible;max-height:none !important;border:0;border-radius:0}
   /* Pop-up thì GIỮ khung cuộn DỌC (hộp pop-up cao cố định), chỉ bỏ đường cuộn ngang */
   .modal .pg-tblwrap:has(table.mbcard){overflow-y:auto;max-height:70vh !important}
+  /* Bảng "Danh sách phiếu" khối VỊ TRÍ của pop-up Kiểm kê đi khuôn thẻ (22/08/2026): phải GỠ bộ
+     nowrap/min-width mà #kkmodal áp cho MỌI bảng kkwrap (selector id thắng khối mbcard chung ở trên) */
+  #kkmodal .kkwrap table.mbcard{min-width:0}
+  #kkmodal .kkwrap table.mbcard tbody td{white-space:normal;word-wrap:break-word;padding:0}
+  #kkmodal .kkwrap:has(table.mbcard){overflow-x:hidden}
   /* 4 cột số của bảng "từng dãy kệ": chú giải chấm màu ngay dưới thanh xếp chồng đã đọc ra đúng mấy
      con số đó (xem plgHtmlDay) ⇒ trong thẻ chúng là bản sao. JS gắn `mb-0` cho chúng khi thanh đang
      tô theo TRẠNG THÁI VỆ SINH, và bỏ `mb-0` khi thanh tô theo KHO (lúc đó không còn trùng). */
@@ -3031,6 +3041,15 @@ body.side-anim{overflow-x:clip}
       <div class="fld"><label>Áp SỐ LƯỢNG cho tất cả</label>
         <input id="prSlhAll" class="prsl" type="text" style="width:150px" placeholder="vd 1.200 hoặc 12, 14, 16"
           oninput="prGoSo(this)" onchange="prApSlHang(this.value)" title="Con số này IN TRÊN TEM (không in chữ &quot;Số lượng&quot;)"></div>
+      <!-- THÊM SKU NGOÀI (user 22/08/2026): đường thứ hai vào danh sách in, khỏi đi vòng qua quét
+           tem/OCR ở tab Nhận diện SKU — gõ mã (đủ hoặc phần đầu) rồi bấm "+" / Enter. Vẫn đối chiếu
+           danh mục SKU_MASTER như prTick: tem mang mã không có thật là tem rác dán lên hàng thật. -->
+      <div class="fld"><label>Thêm SKU ngoài</label>
+        <input id="prThemSku" class="prsl" type="text" inputmode="numeric" style="width:130px" placeholder="gõ mã SKU"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();prThemNgoai();}"
+          title="Thêm SKU vào danh sách in mà không cần quét tem — gõ mã rồi bấm + (gõ phần đầu mã cũng được, máy tự khớp danh mục)">
+        <button type="button" class="prsladd hien" id="prThemBtn" title="Thêm SKU này vào danh sách in"
+          onclick="prThemNgoai()">+</button></div>
     </div>
     <div class="msum" id="prSum"></div>
     <!-- 4 cột theo đúng thứ tự người dùng chốt 20/08/2026: Số tem · Số lượng · SKU · Tên sản phẩm.
@@ -3158,7 +3177,7 @@ body.side-anim{overflow-x:clip}
 </div>
 
 <!-- Modal drill-down Kiểm kê: bảng thô CHỈ dựng khi bấm thẻ chỉ số (lazy DOM) -->
-<div id="kkmodal" class="modal" onclick="if(event.target===this)closeKkModal()">
+<div id="kkmodal" class="modal" data-mb-cuon="bảng nhiều view (SKU 13 cột, UID group packed) — giữ đường cuộn ngang; riêng bảng phiếu VỊ TRÍ đã đi khuôn thẻ mbcard" onclick="if(event.target===this)closeKkModal()">
   <div class="modalbox kkbox">
     <div class="modalhd"><div><div class="mt" id="kkmTitle"></div><div class="mtsub" id="kkmSub"></div></div><button class="mclose" onclick="closeKkModal()">&times;</button></div>
     <div class="mfilters kkmf" id="kkmFilters"></div>
@@ -5693,6 +5712,21 @@ function nfStrip(t){ t=String(t==null?'':t).trim(); var s=t.replace(/,/g,''); re
 function kkByShort(v){ v=String(v||'').trim(); if(!v) return '—';
   var m=v.match(/^([^@\s]+)@hasaki\.vn$/i); return m?'<span title="'+esc(v)+'">'+esc(m[1])+'</span>':esc(v); }
 function kkDcell(d){ return '<td class="num '+(d<0?'d-am':d>0?'d-duong':'d-khop')+'">'+(d>0?'+':'')+nf(d)+'</td>'; }
+/* Diff của PHIẾU VỊ TRÍ = tổng số DÒNG SKU LỆCH trong phiếu (22/08/2026). List API type-location chỉ
+   phát cờ qty_by_user=1 khi phiếu có lệch (và xoá luôn sau APPROVED) nên cột Diff cũ toàn "+1"/0 —
+   vô nghĩa. Đếm thật từ tab kiemke-uidgr (push-pc-to-sheet kéo tracking mọi phiếu đã đếm): số
+   tracking_id có Line Diff ≠ 0. null = chưa đếm, hoặc phiếu có cờ lệch mà tracking chưa về (quá cap
+   UIDGR_MAX / tab chưa tải) — thà hiện "—" còn hơn hiện số 0 sai. */
+function kkLocLech(r){
+  if(!kkIsCounted('loc',r)) return null;
+  var us=(UIDGR.map&&!UIDGR.err)?UIDGR.map[String(r.id)]:null;
+  if(us){ var t={}; us.forEach(function(u){ if((Number(u.ld)||0)!==0) t[u.tid||u.sku]=1; }); return Object.keys(t).length; }
+  return (Number(r.diff)||0)!==0?null:0;
+}
+function kkLechCell(n){
+  if(n==null) return '<td class="num d-khop mb-0" data-lb="Dòng lệch">—</td>';
+  return '<td class="num '+(n>0?'d-am':'d-khop')+'" data-lb="Dòng lệch">'+nf(n)+'</td>';
+}
 function kkEmpty(n){ return '<tr><td colspan="'+n+'" style="text-align:center;color:var(--ink3);padding:28px;white-space:normal">Không có dòng phù hợp</td></tr>'; }
 /* CT1: định tuyến URL WMS theo ngữ cảnh — location KHÔNG có /detail/, sku CÓ /detail/ */
 function kkWmsUrl(id,kind){
@@ -6705,11 +6739,19 @@ function kkTable(kind,rs){
     return '<div class="kkwrap"><table><thead><tr>'+pcHeadCell()+'<th>ID</th><th>SKU</th><th>Category</th><th class="num">Diff</th><th class="num">Inventory</th><th class="num">Qty count</th><th>Type</th><th>Request</th><th>Counted by</th><th>Counted date</th><th>Plan date</th><th>Status</th></tr></thead><tbody>'+(out.join('')||kkEmpty(13))+'</tbody></table></div>'+
       '<div class="kknote">'+(rs.length>CAP?('Hiển thị '+nf(CAP)+' / '+nf(rs.length)+' dòng — lọc để thu hẹp.'):(nf(rs.length)+' dòng.'))+'</div>';
   }
-  for(var j=0;j<rs.length&&out.length<CAP;j++){ var l=rs[j];
-    out.push('<tr><td>'+kkIdLink(l.id,'loc')+'</td><td class="loc">'+esc(l.loc)+'</td><td>'+kkDash(l.wh)+'</td><td>'+kkDash(l.type)+'</td><td>'+kkDash(l.pri)+'</td>'+kkDcell(l.diff)+'<td>'+kkDash(l.req)+'</td><td>'+kkDash(l.by)+'</td><td>'+kkFmtD(kkParseDate(l.cdate))+'</td><td>'+kkFmtD(kkParseDate(l.plan),true)+'</td><td><span class="badge '+kkBadge(l.st)+'">'+(l.st?esc(l.st):'—')+'</span></td></tr>');
+  /* Khối VỊ TRÍ (rút gọn 22/08/2026 theo chỉ thị): bỏ Warehouse/Type/Priority/Request/Plan date —
+     kho đã có cross-filter + combo, Type/Priority/Plan date không giúp quyết định gì ở đây.
+     Diff = TỔNG SỐ DÒNG SKU LỆCH của phiếu (đếm từ tab kiemke-uidgr) thay cho cờ 1/0 của list API
+     (trước hiển thị toàn "+1" — không nói lên phiếu lệch nặng hay nhẹ). Bảng 6 cột đi khuôn thẻ mbcard. */
+  for(var j=0;j<rs.length&&out.length<CAP;j++){ var l=rs[j], cd=kkFmtD(kkParseDate(l.cdate));
+    out.push('<tr><td data-lb="Phiếu">'+kkIdLink(l.id,'loc')+'</td><td class="loc mb-hd">'+esc(l.loc)+'</td>'+
+      kkLechCell(kkLocLech(l))+
+      '<td data-lb="Người đếm"'+(l.by?'':' class="mb-0"')+'>'+kkByShort(l.by)+'</td>'+
+      '<td data-lb="Ngày đếm"'+(cd!=='—'?'':' class="mb-0"')+'>'+cd+'</td>'+
+      '<td class="mb-tag"><span class="badge '+kkBadge(l.st)+'">'+(l.st?esc(l.st):'—')+'</span></td></tr>');
   }
-  return '<div class="kkwrap"><table><thead><tr><th>ID</th><th>Location</th><th>Warehouse</th><th>Type</th><th>Priority</th><th class="num">Diff</th><th>Request</th><th>Counted by</th><th>Counted date</th><th>Plan date</th><th>Status</th></tr></thead><tbody>'+(out.join('')||kkEmpty(11))+'</tbody></table></div>'+
-    '<div class="kknote">'+(rs.length>CAP?('Hiển thị '+nf(CAP)+' / '+nf(rs.length)+' dòng — lọc để thu hẹp.'):(nf(rs.length)+' dòng.'))+'</div>';
+  return '<div class="kkwrap"><table class="mbcard"><thead><tr><th>ID</th><th>Location</th><th class="num" title="Tổng số dòng SKU lệch trong phiếu (từ chi tiết tracking)">Diff</th><th>Counted by</th><th>Counted date</th><th>Status</th></tr></thead><tbody>'+(out.join('')||kkEmpty(6))+'</tbody></table></div>'+
+    '<div class="kknote">'+(rs.length>CAP?('Hiển thị '+nf(CAP)+' / '+nf(rs.length)+' dòng — lọc để thu hẹp.'):(nf(rs.length)+' dòng.'))+' Diff = số dòng SKU lệch trong phiếu.</div>';
 }
 /* CT2: Smart Modal — thanh lọc cục bộ TỰ SINH từ dữ liệu bảng, THIẾT KẾ đồng bộ pop-up Trạng thái lưu trữ:
    nhãn uppercase + combo gõ-để-lọc (menu unique value + số dòng) + dòng tổng kết .msum */
@@ -12584,7 +12626,8 @@ function prDs(){ return Object.keys(PR.sel).map(function(k){ return PR.sel[k]; }
 function prSo(){ return Object.keys(PR.sel).length; }
 function prTongTem(){ return PR_TEM.tongTem(prDs()); }
 function prCo(sku){ return !!PR.sel[String(sku)]; }
-/** Bật/tắt một SKU trong danh sách chờ in. Đây là ĐƯỜNG DUY NHẤT thêm tem — xem ghi chú ① ở trên. */
+/** Bật/tắt một SKU trong danh sách chờ in — đường thêm tem từ thẻ gợi ý của Nhận diện SKU.
+ *  Từ 22/08/2026 có thêm đường thứ hai: prThemNgoai (ô "Thêm SKU ngoài" ngay trong pop-up). */
 function prTick(sku, ev){
   if (ev && ev.stopPropagation) ev.stopPropagation();
   var k = String(sku);
@@ -12614,6 +12657,37 @@ function prTimSku(sku){
     return { sku: r.sku, pn: r.pn, donVi: dv.raw, dv: dv.ma };
   }
   return null;
+}
+/* ── THÊM SKU NGOÀI (user 22/08/2026): ô + nút "+" ngay pop-up In tem ─────────────────────────────
+ * Vì sao cần: có SKU muốn in tem mà KHÔNG có tem NCC để quét (hàng cũ mất tem, in bù) — bắt đi vòng
+ * qua Nhận diện SKU là vô lý. Gõ mã đủ thì thêm ngay; gõ PHẦN ĐẦU mã mà chỉ khớp đúng 1 SKU trong
+ * danh mục thì cũng thêm luôn (toast nói rõ đã khớp thành mã nào); khớp nhiều mã thì đề nghị gõ thêm
+ * số. Vẫn bắt buộc CÓ TRONG danh mục SKU_MASTER như prTick — tem mang mã bịa là tem rác dán lên
+ * hàng thật. Danh mục lấy NDS.ds, chưa dựng thì đọc thẳng cache chung (0 lượt mạng). */
+function prThemNgoai(){
+  var o = document.getElementById('prThemSku');
+  var go = String(o.value || '').replace(/\D/g, '');
+  if (!go){ toast('Gõ mã SKU trước đã.', 'warn'); o.focus(); return; }
+  if (prCo(go)){ toast('SKU ' + go + ' đã có trong danh sách in.', 'warn'); o.select(); return; }
+  if (prSo() >= PR_TRAN_DONG){ toast('Danh sách in tối đa ' + nf(PR_TRAN_DONG) + ' SKU.', 'warn'); return; }
+  var ds = (NDS.ds && NDS.ds.length) ? NDS.ds
+         : (function(){ var c = (typeof ndsDocCache === 'function') ? ndsDocCache() : null; return (c && c.rows) || []; })();
+  if (!ds.length){ toast('Chưa tải được danh mục SKU — chờ tab Nhận diện SKU nạp xong rồi thử lại.', 'err'); return; }
+  var r = null, i;
+  for (i = 0; i < ds.length; i++) if (String(ds[i].sku) === go){ r = ds[i]; break; }
+  if (!r){
+    var bd = ds.filter(function(x){ return String(x.sku).indexOf(go) === 0; });
+    if (bd.length === 1) r = bd[0];
+    else if (bd.length > 1){ toast(bd.length + ' mã cùng bắt đầu bằng ' + go + ' — gõ thêm số cho đủ.', 'warn'); o.select(); return; }
+    else { toast('Không thấy SKU ' + go + ' trong danh mục nguyên liệu.', 'err'); o.select(); return; }
+  }
+  var dv = (typeof NDS_ENGINE !== 'undefined' && NDS_ENGINE.donVi) ? NDS_ENGINE.donVi(r.pn) : { raw: '' };
+  PR.sel[String(r.sku)] = { sku: String(r.sku), pn: r.pn || '', dv: dv.raw || '', slHang: '', mau: PR_TEM.MAU_MAC_DINH, sl: 1 };
+  prLuu(); prSyncBar(); prVe(); ndsVeKetQua(NDS.msDoiSoat);
+  o.value = '';
+  toast('Đã thêm SKU ' + r.sku + (String(r.sku) === go ? '' : ' (khớp từ ' + go + '…)') +
+    ' — ' + nf(prSo()) + ' SKU · ' + nf(prTongTem()) + ' tem.', 'ok');
+  o.focus();
 }
 function prSyncBar(){
   var el = document.getElementById('prbar'); if (!el) return;
