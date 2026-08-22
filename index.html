@@ -3164,19 +3164,19 @@ body.side-anim{overflow-x:clip}
       </div>
       <div class="cd-f">
         <label for="csCan">Tổng khối lượng chỉ trả về <span class="hint">cân cả lô, gồm cả lõi — <b class="cd-gram">gõ bằng GRAM</b></span></label>
+        <!-- 22/08/2026 đêm (user, đợt 2): bỏ chữ "gr" bên phải + bỏ placeholder ví dụ — nhãn trên
+             và dòng "Đọc là … gr" bên dưới đã nói đủ đơn vị. -->
         <div class="cd-in">
-          <input id="csCan" inputmode="decimal" enterkeyhint="next" autocomplete="off" spellcheck="false" placeholder="ví dụ 117.5" oninput="csTinh()"
+          <input id="csCan" inputmode="decimal" enterkeyhint="next" autocomplete="off" spellcheck="false" oninput="csTinh()"
             onfocus="prCuonVao(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();csTiep(this);}">
-          <span class="dv">gr</span>
         </div>
         <div class="cd-doc" id="csCanDoc"></div>
       </div>
       <div class="cd-f">
         <label for="csCuon">Số cuộn thừa</label>
         <div class="cd-in">
-          <input id="csCuon" inputmode="numeric" enterkeyhint="done" autocomplete="off" spellcheck="false" placeholder="ví dụ 1" oninput="csTinh()"
+          <input id="csCuon" inputmode="numeric" enterkeyhint="done" autocomplete="off" spellcheck="false" oninput="csTinh()"
             onfocus="prCuonVao(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();csTiep(this);}">
-          <span class="dv">cuộn</span>
         </div>
       </div>
       <div id="csKq" style="margin-top:12px"></div>
