@@ -9665,6 +9665,39 @@ var NDS_ENGINE = (function(){
       return (g >= 30 && g <= 900) ? { gsm: g, nguon: nguon } : null;
     }
   }
+  /* ═══ HỆ SỐ CÂN ↔ DÀI GHI SẴN TRONG TÊN HÀNG (23/08/2026) ═══
+   * Người khai đã tự ghi tỉ lệ quy đổi vào PRODUCTNAME từ lâu, bằng BỐN kiểu khác nhau (đếm thật
+   * trên 8.143 dòng danh mục — 17 dòng, xem `hasaki/phan-tich-vai-thun.mjs`):
+   *     10 × "22g-260m"      2 × "1kg-6700m"      2 × "7m 1kg"      1 × "6300m - 1kg"
+   * Đây là con số ĐÚNG NGHỀ của mặt hàng đó, quý hơn hẳn thước suy ra từ chỉ số chung — nhất là với
+   * THUN, loại mà không một SKU nào ghi định lượng.
+   * Trả về `{gMet, chu}`: `chu` giữ nguyên cách người ta viết ("1 kg = 6.700 m") để giao diện nói
+   * lại đúng thứ thủ kho đọc trên tem, không quy về gam-trên-mét rồi bắt họ tự dịch ngược.
+   * ⚠ CỐ Ý KHÔNG nhận "5000m" đứng một mình: đó là QUY CÁCH cuộn (chiều dài 1 cuộn), không phải tỉ
+   *   lệ cân — lẫn hai thứ này là sai kết quả gấp hàng nghìn lần. */
+  function heSoCan(pn){
+    var p = boDau(pn).toLowerCase(), m;
+    /* kiểu ① "1kg-6700m" · "22g-260m" (cân trước, dài sau) */
+    m = p.match(/(\d+(?:[.,]\d+)?)\s*(kg|g)\s*[-–~=]\s*(\d+(?:[.,]\d+)?)\s*(m|met|yard)\b/);
+    if (m) return chot(so(m[1]), m[2], so(m[3]), m[4]);
+    /* kiểu ② "6300m - 1kg" (dài trước, cân sau) và ③ "7m 1kg" (chỉ cách nhau một khoảng trắng) */
+    m = p.match(/(\d+(?:[.,]\d+)?)\s*(m|met|yard)\s*[-–~=]\s*(\d+(?:[.,]\d+)?)\s*(kg|g)\b/)
+     || p.match(/(\d+(?:[.,]\d+)?)\s*(m|met)\s+(\d+(?:[.,]\d+)?)\s*(kg|g)\b/);
+    if (m) return chot(so(m[3]), m[4], so(m[1]), m[2]);
+    return null;
+    function so(x){ return Number(String(x).replace(',', '.')); }
+    function chot(kl, dvKl, dai, dvDai){
+      var gam = kl * (dvKl === 'kg' ? 1000 : 1);
+      var met = dai * (/^y/.test(dvDai) ? 0.9144 : 1);
+      if (!(gam > 0) || !(met > 0)) return null;
+      var gMet = gam / met;
+      /* Dải tin được: 0,01 g/m (chỉ mảnh nhất) tới 2.000 g/m (vải khổ nặng). Ngoài dải đó gần như
+         chắc là bóc nhầm hai con số chẳng liên quan đứng cạnh nhau. */
+      if (!(gMet >= 0.01 && gMet <= 2000)) return null;
+      return { gMet: gMet, gam: gam, met: met,
+        chu: (gam >= 1000 ? (gam/1000) + ' kg' : gam + ' g') + ' = ' + met.toLocaleString('vi-VN') + ' m' };
+    }
+  }
   /** Khoá "cùng một mặt hàng" = PRODUCTNAME BỎ đoạn đơn vị ở cuối (chuẩn hoá bỏ dấu, hạ chữ). */
   function khoaHang(pn){
     var s = String(pn==null?'':pn);
@@ -11050,7 +11083,7 @@ var NDS_ENGINE = (function(){
   return { boDau:boDau, chuan:chuan, loi:loi, bocTen:bocTen, tuAI:tuAI, tuVanBan:tuVanBan, tyLe:tyLe, khopTot:khopTot, batIdf:batIdf,
     diemMot:diemMot, dungChiMuc:dungChiMuc, dungChiMucViec:dungChiMucViec, timTop:timTop, donVi:donVi, khoaHang:khoaHang,
     chuKy:chuKy, tachPhanTu:tachPhanTu, locDong:locDong, chuanManh:chuanManh, maGanGiong:maGanGiong, W:W, VAI:VAI, DV:DV,
-    docTheMau:docTheMau, maChuTem:maChuTem, khoVai:khoVai, dinhLuong:dinhLuong,
+    docTheMau:docTheMau, maChuTem:maChuTem, khoVai:khoVai, dinhLuong:dinhLuong, heSoCan:heSoCan,
     chamIdf:chamIdf, datCham:datCham, kieuCham:kieuCham, chuanChuoiTem:chuanChuoiTem, trongSoTu:trongSoTu };
 })();
 /*</NDS-ENGINE>*/
@@ -14593,10 +14626,7 @@ function cdFg(x){ return cdF(x, (Math.abs(x-Math.round(x))<1e-9)?0:1); }
 /* ---------- 2. NHẬN NÚT ---------- */
 function cdChonQC(mm,imLang){
   CD.tuDo=(mm===0); if(!CD.tuDo) CD.qc=mm;
-  var bar=document.getElementById('cdQCBar');
-  bar.querySelectorAll('.kktab').forEach(function(b){
-    b.classList.toggle('active', Number(b.getAttribute('data-mm'))===(CD.tuDo?0:mm));
-  });
+  cdVeQCChon();
   var row=document.getElementById('cdQCRow');
   row.hidden=!CD.tuDo;
   /* imLang = lúc khôi phục quy cách đã lưu: KHÔNG focus, kỉo điện thoại vừa mở tab đã bật bàn phím.
@@ -14642,7 +14672,15 @@ function cdChonLoai(l, imLang){
   document.querySelectorAll('.cd-th').forEach(function(e){ e.textContent=CD_LOAI[l].ten; });
   document.querySelectorAll('.cd-thuoc').forEach(function(e){ e.textContent=CD_LOAI[l].thuoc; });
   if(l==='thun') cdSoTayVe();
+  cdNapQuyCach(l);
   if(!imLang) cdTinh();
+}
+/* Nạp quy cách của loại hàng đang chọn từ danh mục (cache chung, 0 lượt mạng). CHỈ MAY giữ nguyên
+   3 chip user đã chốt 22/08; hai loại kia đếm từ danh mục, không có số thì chỉ còn "Khác…". */
+function cdNapQuyCach(l){
+  if(l==='chi'){ cdVeQuyCach(CD_QC_CHI.map(function(mm){ return { m:mm/1000, n:0 }; })); return; }
+  var ds=cdDanhMuc();
+  cdVeQuyCach(ds ? cdGomQuyCach(ds, l) : []);
 }
 /* Ô SKU: tra danh mục (cache chung với tab Nhận diện SKU, 0 lượt mạng) rồi TỰ ĐIỀN thông số.
    Cố ý KHÔNG đoán bừa: chỉ nhận khi mã khớp ĐÚNG một dòng. */
@@ -14689,9 +14727,33 @@ function cdSkuGo(){
     them = ' · ' + (k? ('khổ <b>'+cdF(k.cm,(k.cm%1?1:0))+' cm</b>'+(k.nguon==='inch'||k.nguon==='inch-khoang'?' (đổi từ inch)':'')+(k.nguon==='cm-thua-so-0'?' <b style="color:var(--warn)">— tên hàng ghi thừa một số 0, kiểm lại</b>':'')) : '<b style="color:var(--warn)">tên hàng không ghi khổ</b>')
          + ' · ' + (g? ('định lượng <b>'+g.gsm+' gsm</b>'+(g.nguon==='oz'?' (đổi từ oz)':'')) : '<b style="color:var(--warn)">tên hàng không ghi định lượng</b>');
   }else if(CD.loai==='thun'){
-    var s=cdSoTayDoc()[CD.sku];
-    if(s && s.gm>0){ document.getElementById('cdGm').value=String(s.gm); them=' · lấy <b>'+cdF(s.gm,2)+' g/m</b> từ sổ tay'; }
+    /* Hai nguồn g/m, xếp theo độ tin: ① SỔ TAY — số CÂN THẬT của chính cuộn hàng này, ② HỆ SỐ ghi
+       trong tên hàng ("1kg-6700m") — số nhà cung cấp khai. Cân thật thắng, nhưng phải NÓI RA là đang
+       lấy ở đâu, đừng để người dùng đoán vì sao ô g/m tự có số. */
+    var so=cdSoTayDoc()[CD.sku];
+    var hs=(typeof NDS_ENGINE!=='undefined')?NDS_ENGINE.heSoCan(CD.pn):null;
+    if(so && so.gm>0){
+      document.getElementById('cdGm').value=String(so.gm);
+      them=' · lấy <b>'+cdF(so.gm,2)+' g/m</b> từ sổ tay (đã cân)';
+      if(hs) them+=' · tên hàng ghi <b>'+esc(hs.chu)+'</b> ('+cdF(hs.gMet,3)+' g/m)';
+    }else if(hs){
+      document.getElementById('cdGm').value=String(Math.round(hs.gMet*1000)/1000);
+      them=' · tên hàng ghi <b>'+esc(hs.chu)+'</b> → <b>'+cdF(hs.gMet,3)+' g/m</b>';
+    }
     cdSoTayVe();
+  }
+  /* Hệ số cân↔dài của VẢI chỉ để SOI, không tự dùng: đo thật trên danh mục thấy nó chọi nhau với
+     định lượng (SKU 422462136 ghi "Mỏng 7m 1kg" = 143 g/m trong khi "228gsm, W160cm" = 365 g/m,
+     lệch 2,6 lần). Máy không có quyền chọn hộ bên nào — nói cả hai rồi để người cân phân xử. */
+  if(CD.loai==='vai' && typeof NDS_ENGINE!=='undefined'){
+    var hsv=NDS_ENGINE.heSoCan(CD.pn);
+    if(hsv){
+      var kv=NDS_ENGINE.khoVai(CD.pn), gv=NDS_ENGINE.dinhLuong(CD.pn);
+      var theoDl=(kv&&gv)?(gv.gsm*kv.cm/100):0;
+      them += ' · tên hàng còn ghi <b>'+esc(hsv.chu)+'</b> ('+cdF(hsv.gMet,1)+' g/m)' +
+        (theoDl>0 && Math.abs(theoDl-hsv.gMet)/theoDl>0.2
+          ? ' <b style="color:var(--warn)">— chọi với định lượng ('+cdF(theoDl,1)+' g/m), kiểm lại trước khi tin</b>' : '');
+    }
   }
   doc.className='cd-doc';
   doc.innerHTML='<b>'+esc(CD.sku)+'</b> '+esc(String(CD.pn).slice(0,70))+(doiLoai?' <b>→ chuyển sang thước '+CD_LOAI[CD.loai].ten+'</b>':'')+them;
@@ -14874,6 +14936,63 @@ function cdGomTex(rows){
     .sort(function(a,b){ return (b.n-a.n)||(a.tex-b.tex); });
 }
 var CD_TEX_GIU=[27,24,60];
+/* ═══ QUY CÁCH CUỘN NGUYÊN THEO TỪNG LOẠI HÀNG (23/08/2026, user báo) ═══
+ * Trước đây hàng chip này CHÔN CỨNG 2.500 / 3.000 / 5.000 m — quy cách của CHỈ MAY. Sang tab Thun
+ * hay Vải nó vẫn đứng đó, tức bày ra ba con số không liên quan gì tới mặt hàng đang cân, và tệ hơn:
+ * chip 5.000 m vẫn SÁNG nên máy lặng lẽ tính theo cuộn chỉ 5.000 m.
+ * Nay quy cách được ĐẾM TỪ CHÍNH DANH MỤC theo loại hàng (cùng nguồn với chip Tex, 0 lượt mạng):
+ *     chỉ  : 5.000m (343 SKU) · 200m (137) · 2.500m (59) · 3.000m (45) …
+ *     thun : 100m (1 SKU)          vải : không SKU nào ghi quy cách
+ * Loại nào danh mục không có số thì hàng chip chỉ còn "Khác…" — thà để trống còn hơn mượn số của
+ * mặt hàng khác. Riêng CHỈ giữ nguyên 3 chip user đã chốt 22/08 (và chúng trùng đúng nhóm đầu bảng).
+ * ⚠ Phải BÓC BỎ hệ số cân↔dài trước khi đếm: "1kg-6700m" có chữ "6700m" nhưng đó là TỈ LỆ CÂN, không
+ *   phải chiều dài một cuộn — nhận nhầm là sai kết quả hàng nghìn lần. */
+var CD_QC_CHI=[2500000,3000000,5000000];
+function cdGomQuyCach(rows, loai){
+  var dau = (loai==='vai') ? 'vai' : (loai==='thun' ? 'thun' : 'chi');
+  var gom={}, re=/\b(\d{2,5})\s*(m|met|yard)\b/g;
+  for(var i=0;i<rows.length;i++){
+    var pn=String(rows[i].pn||'');
+    var p=(typeof NDS_ENGINE!=='undefined') ? NDS_ENGINE.boDau(pn).toLowerCase() : pn.toLowerCase();
+    if(p.trim().indexOf(dau)!==0) continue;
+    if(typeof NDS_ENGINE!=='undefined'){
+      var hs=NDS_ENGINE.heSoCan(pn);
+      if(hs) p=p.replace(/(\d+(?:[.,]\d+)?)\s*(kg|g)\s*[-–~=]\s*(\d+(?:[.,]\d+)?)\s*(m|met|yard)\b/,' ')
+                 .replace(/(\d+(?:[.,]\d+)?)\s*(m|met|yard)\s*[-–~=]\s*(\d+(?:[.,]\d+)?)\s*(kg|g)\b/,' ')
+                 .replace(/(\d+(?:[.,]\d+)?)\s*(m|met)\s+(\d+(?:[.,]\d+)?)\s*(kg|g)\b/,' ');
+    }
+    var hit, thay={};
+    re.lastIndex=0;
+    while((hit=re.exec(p))){
+      var v=Number(hit[1]) * (/^y/.test(hit[2]) ? 0.9144 : 1);
+      if(!(v>=20 && v<=20000)) continue;
+      v=Math.round(v);
+      if(!thay[v]){ thay[v]=1; gom[v]=(gom[v]||0)+1; }     // 1 SKU đếm 1 lần dù tên lặp
+    }
+  }
+  return Object.keys(gom).map(function(k){ return { m:Number(k), n:gom[k] }; })
+    .sort(function(a,b){ return (b.n-a.n)||(a.m-b.m); }).slice(0,3);
+}
+/* Vẽ lại hàng chip quy cách. `ds` rỗng ⇒ chỉ còn "Khác…" — offline/không có danh mục cũng vẫn gõ được. */
+function cdVeQuyCach(ds){
+  var bar=document.getElementById('cdQCBar'); if(!bar) return;
+  bar.innerHTML = (ds||[]).map(function(d){
+    return '<button type="button" class="kktab" data-mm="'+(d.m*1000)+'" onclick="cdChonQC('+(d.m*1000)+')" title="'+
+      (d.n?(d.n+' SKU trong danh mục · '):'')+nf(d.m*1000)+' mm">'+nf(d.m)+' m</button>';
+  }).join('')+
+  '<button type="button" class="kktab" data-mm="0" onclick="cdChonQC(0)" title="Quy cách khác — gõ tay, đơn vị MÉT">Khác…</button>';
+  /* Quy cách đang chọn KHÔNG còn trong hàng chip của loại mới (vd đang 5.000 m của chỉ mà chuyển
+     sang Thun) ⇒ bỏ chọn, chuyển sang ô gõ tay. Giữ nguyên là lặng lẽ tính bằng cuộn chỉ. */
+  var con = (ds||[]).some(function(d){ return d.m*1000===CD.qc; });
+  if(!CD.tuDo && !con){ CD.qc=0; CD.tuDo=true; document.getElementById('cdQCRow').hidden=false; }
+  cdVeQCChon();
+}
+function cdVeQCChon(){
+  document.getElementById('cdQCBar').querySelectorAll('.kktab').forEach(function(b){
+    var v=Number(b.getAttribute('data-mm'));
+    b.classList.toggle('active', CD.tuDo ? v===0 : (v>0 && v===CD.qc));
+  });
+}
 function cdNapTexKho(){
   if(CD.texNap) return; CD.texNap=true;
   var ve=function(rows){ if(rows&&rows.length) cdVeTexKho(cdGomTex(rows)); };
