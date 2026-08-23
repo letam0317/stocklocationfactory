@@ -177,8 +177,30 @@ h1.brand-title{margin:0;min-width:0}
      · KHÔNG ghim nữa: nó là dòng cuối trang, cuộn hết mới thấy, không đè lên nội dung.
    Bỏ ghim kéo theo: hết cần z-index đấu với modal, hết cần đệm đáy 60px chống che. */
 .footbar{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;
-  padding:12px 16px 16px;border-top:1px solid var(--border);margin-top:16px;
-  color:var(--ink3);font-size:12px}
+  padding:14px 16px 18px;margin-top:16px;color:var(--ink3);font-size:12px}
+/* Mốc cập nhật dạng CHIP (23/08/2026): viền mảnh + nền surface2 + đốm nhịp, thay cho một dòng chữ
+   trơ. Giờ và ngày tách vai rõ: giờ là thứ người ta soi (đậm, tabular-nums để không nhảy cột mỗi
+   giây), ngày chỉ để đối chiếu (mờ). Nhãn "CẬP NHẬT" chữ nhỏ giãn ký tự — đọc như nhãn, không
+   tranh chỗ với con số.
+   Đốm màu ACCENT (không phải xanh "good"): nó nói "trang đang sống", KHÔNG dám nói "dữ liệu còn
+   mới" — mốc của từng tab già trẻ khác nhau (planogram có thể là mốc tuần trước và vẫn đúng). Tuổi
+   thật nằm ở tooltip. */
+.footbar .cn{display:inline-flex;align-items:center;gap:9px;padding:7px 15px 7px 12px;
+  border:1px solid var(--border);border-radius:999px;background:var(--surface2);
+  box-shadow:0 1px 2px rgba(0,0,0,.05);cursor:default;transition:border-color .2s ease,box-shadow .2s ease}
+.footbar .cn:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.footbar .cn-dot{width:8px;height:8px;border-radius:50%;background:currentColor;color:var(--accent);
+  position:relative;flex:0 0 auto}
+.footbar .cn-dot::after{content:"";position:absolute;inset:0;border-radius:50%;background:currentColor;
+  animation:cnpulse 2.6s ease-out infinite}
+@keyframes cnpulse{0%{transform:scale(1);opacity:.5} 70%{transform:scale(2.8);opacity:0} 100%{transform:scale(2.8);opacity:0}}
+.footbar .cn-lb{text-transform:uppercase;letter-spacing:.07em;font-size:10.5px;font-weight:700;color:var(--ink3)}
+.footbar .cn-gio{font-variant-numeric:tabular-nums;font-weight:750;font-size:13px;color:var(--ink);letter-spacing:.01em}
+.footbar .cn-ngay{font-variant-numeric:tabular-nums;color:var(--ink3)}
+/* "N tab lỗi" tách thành chip riêng màu cảnh báo — lỗi thì phải đứng riêng, không lẫn vào mốc giờ */
+.footbar .cn-loi{border-color:var(--warn);color:var(--warn);background:transparent;font-weight:700}
+@media(prefers-reduced-motion:reduce){ .footbar .cn-dot::after{animation:none;opacity:0} }
+@media(max-width:430px){ .footbar .cn{padding:6px 13px 6px 11px} .footbar .cn-gio{font-size:12.5px} }
 /* Đệm đáy chỉ còn ở 2 tab có GIỎ SKU nổi (pill fixed) — chỗ khác không còn gì che nội dung nữa */
 #viewKK,#viewAbn{padding-bottom:60px}
 /* 2 tab của "Công cụ kho" (Nhận diện SKU · Chuyển đổi cân) ẨN HẴN dòng chân — chúng là công cụ
@@ -4163,9 +4185,25 @@ function capNhatThongTin(){
   if(TOPTAB==='kk' && TAB_SYNC.kk) moc=TAB_SYNC.kk;
   else if(TOPTAB==='abn' && TAB_SYNC.abn) moc=TAB_SYNC.abn;
   else if(TOPTAB==='plg' && TAB_SYNC.plg) moc=TAB_SYNC.plg;
-  var t = moc ? 'cập nhật '+fmtTime(moc) : '';
-  if(TOPTAB==='stock' && _failed) t+=(t?' · ':'')+_failed+' tab lỗi';
-  document.getElementById('loadinfo').textContent=t;
+  var el=document.getElementById('loadinfo');
+  if(!moc){ el.innerHTML=''; return; }
+  /* fmtTime cho "HH:mm:ss DD/MM/YYYY" — cắt làm 2 vai để giờ đậm, ngày mờ */
+  var s=fmtTime(moc), gio=s.slice(0,8), ngay=s.slice(9);
+  var h='<span class="cn" title="'+esc('Dữ liệu '+tuoiChu(Date.now()-moc)+' · mốc do máy trạm ghi sau khi đồng bộ WMS xong')+'">'+
+        '<i class="cn-dot"></i><span class="cn-lb">Cập nhật</span> '+
+        '<b class="cn-gio">'+gio+'</b> <span class="cn-ngay">'+ngay+'</span></span>';
+  if(TOPTAB==='stock' && _failed) h+=' <span class="cn cn-loi">'+_failed+' tab lỗi</span>';
+  el.innerHTML=h;
+}
+/* Tuổi dữ liệu bằng chữ — chỉ hiện trong tooltip của chip (không chiếm chỗ trên màn) */
+function tuoiChu(ms){
+  var p=Math.round(ms/60000);
+  if(p<1) return 'vừa xong';
+  if(p<60) return p+' phút trước';
+  var g=Math.floor(p/60);
+  if(g<24) return g+' giờ'+(p%60?' '+(p%60)+' phút':'')+' trước';
+  var n=Math.floor(g/24);
+  return n+' ngày'+(g%24?' '+(g%24)+' giờ':'')+' trước';
 }
 /* Nút chỉ "sáng" khi đã qua 4h kể từ lần đồng bộ WMS cuối; còn lại khoá + hint (nút 2 tầng kiểu kiemsoatkho) */
 function capNhatNut(){
