@@ -1122,16 +1122,27 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar,body.csm-open #pr
    để hàng "Số tem" vẫn là DÒNG PHỤ dưới mã SKU chứ không tranh chỗ với nó.
    `.cd` = dòng đã khai nhiều số lượng ⇒ số tem là dẫn xuất: bỏ viền/nền cho nó trông đúng như CHỮ
    (trước đây nó vốn là chữ), khỏi mời người dùng gõ vào một ô không nhận. */
-#prBody .prtemso{display:flex;align-items:center;gap:5px;margin-top:3px;font-size:10.5px;font-weight:600;color:var(--ink3)}
-#prBody .prtemin{width:44px;padding:1px 5px;font-family:inherit;font-size:12px;font-weight:800;text-align:center;
-  color:var(--accent);background:var(--surface);border:1px solid var(--line);border-radius:7px;
-  font-variant-numeric:tabular-nums;transition:border-color .15s var(--ease)}
-#prBody .prtemin:hover{border-color:var(--accent)}
+/* Bấm cả nhãn cũng vào ô (label) nên nhãn phải có `cursor:pointer` — dấu hiệu duy nhất nói "chỗ này
+   bấm được" trên máy bàn. Dòng `.cd` (số tem dẫn xuất) thì trả về con trỏ thường: bấm cũng không sửa
+   được, mời bấm là hứa hão. */
+#prBody .prtemso{display:flex;align-items:center;gap:5px;margin-top:3px;font-size:10.5px;font-weight:600;
+  color:var(--ink3);cursor:pointer;width:max-content}
+#prBody .prtemso.cd{cursor:default}
+/* VIỀN ACCENT, KHÔNG PHẢI `--line` (23/08/2026, sau khi user báo "không nhập được"): ô 44×20px viền mờ
+   trên một dòng phụ cỡ nửa thì đọc ra thành CHỮ, không ai nghĩ là gõ được. Nay 54×24px, viền pha
+   accent 45%, con trỏ text — nhìn là biết ô nhập. */
+#prBody .prtemin{width:54px;padding:2px 6px;font-family:inherit;font-size:12.5px;font-weight:800;
+  text-align:center;cursor:text;color:var(--accent);background:var(--surface);border-radius:7px;
+  border:1px solid color-mix(in srgb,var(--accent) 45%,var(--line));
+  font-variant-numeric:tabular-nums;transition:border-color .15s var(--ease),box-shadow .15s var(--ease)}
+#prBody .prtemso:hover .prtemin{border-color:var(--accent);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 14%,transparent)}
 #prBody .prtemin:focus{outline:2px solid var(--accent);outline-offset:1px}
 /* KHÔNG đổi `width` ở đây: `width:auto` trên `<input>` không co về bề rộng con số mà nở ra bề rộng
    mặc định của ô text (~177px) — con số bị đẩy xa hẳn nhãn "Số tem:" (thấy rõ trên ảnh QC 23/08).
    Giữ đúng khung như dòng nhập được, chỉ bỏ viền/nền để nó đọc như CHỮ. */
-#prBody .prtemso.cd .prtemin{border-color:transparent;background:transparent;cursor:default}
+#prBody .prtemso.cd .prtemin{border-color:transparent;background:transparent;cursor:default;box-shadow:none}
+#prBody .prtemso.cd:hover .prtemin{border-color:transparent;box-shadow:none}
 /* Nút "+" phải ĐẬP VÀO MẮT (yêu cầu user): nền accent đặc, chữ trắng, có bóng — nó là thao tác chính
    của ô này, không phải một dấu cộng mờ nhạt lẫn vào nền. Chỉ hiện khi trong ô ĐANG có số. */
 /* Scope #prmodal (truoc la #prBody): nut "+" gio con dung o o "Them SKU ngoai" tren dau pop-up. */
@@ -13238,9 +13249,13 @@ function prChipSl(r){
  *  Dòng đã khai TỪ 2 SỐ LƯỢNG trở lên thì số tem do chính danh sách chip quyết định (3 bịch = 3 tem)
  *  — ô khoá lại (readonly, viền trong suốt nên trông như chữ) kèm title nói rõ vì sao, thay vì nhận
  *  con số rồi âm thầm bỏ qua (`prDatSl` vốn đã chặn ca này từ trước). */
+/* `<label>` chứ không phải `<span>` (23/08/2026, sau khi user báo "không nhập được"): bấm vào CHỮ
+ * "Số tem:" là con trỏ vào luôn ô — người dùng nhắm vào một ô 44×20px trên máy bàn thì rất dễ bấm
+ * lệch ra chữ bên cạnh rồi kết luận là ô không nhận. `<label>` bọc input làm việc đó sẵn, không cần
+ * một dòng JS nào. */
 function prTemSoHtml(r, soTem){
   var nhieu = PR_TEM.tachSl(r.slHang).length > 1;
-  return '<span class="prtemso' + (nhieu ? ' cd' : '') + '">Số tem:' +
+  return '<label class="prtemso' + (nhieu ? ' cd' : '') + '">Số tem:' +
     '<input class="prtemin" type="text" inputmode="numeric" value="' + soTem + '"' +
     ' data-s="' + esc(r.sku) + '" aria-label="Số tem của SKU ' + esc(r.sku) + '"' +
     (nhieu ? ' readonly tabindex="-1"' : '') +
@@ -13250,7 +13265,7 @@ function prTemSoHtml(r, soTem){
     ' onchange="prDatSl(this.getAttribute(\'data-s\'),this.value)"' +
     ' title="' + (nhieu
       ? 'Dòng này khai nhiều số lượng — mỗi số lượng là một con tem, nên số tem do danh sách số lượng quyết định. Muốn đổi thì thêm/bỏ một số lượng.'
-      : 'Số con tem sẽ in cho dòng này — gõ số rồi Enter (tối đa ' + PR_TRAN_SL + ')') + '"></span>';
+      : 'Số con tem sẽ in cho dòng này — gõ số rồi Enter (tối đa ' + PR_TRAN_SL + ')') + '"></label>';
 }
 /* ── BÀN PHÍM ẢO ─────────────────────────────────────────────────────────────────────────────────
  * Trên điện thoại, bàn phím số bật lên ăn ~50% chiều cao màn. Ô đang gõ (và nút "Xác nhận in") rất
