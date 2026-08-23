@@ -3592,6 +3592,10 @@ function loadTabSync(){
  * Chỉ chạy khi trình duyệt báo RẢNH và tab đang hiển thị — không giành băng thông với màn hình
  * chính, cũng không tốn gì thêm của WMS/Apps Script (đọc gviz, y như lúc mở tab). */
 function ndsHamNong(){
+  /* Đọc GÓI CHỈ MỤC đã cất từ lần trước ngay bây giờ — lượt đọc IndexedDB không cần danh mục, mà
+     mở DB + đọc 4,25MB trên điện thoại mất 0,2-0,4 giây. Bắn sớm thì lúc rows sẵn sàng là gói đã
+     nằm trong tay (xem khối "CHỈ MỤC CẤT SẴN"). Hỏng thì `ndsNapDs` tự đọc lại. */
+  try{ if (!NDS._goiCho) NDS._goiCho = ndsKhoDoc(); }catch(e){}
   var chay=function(){
     if (NDS.loadedOnce || NDS.dangTai || document.hidden) return;
     /* Gọi ĐÚNG ndsLoad() mà showTab vẫn gọi (chứ không chép lại các bước): nó lo cả việc trả dòng
@@ -9967,15 +9971,32 @@ var NDS_ENGINE = (function(){
    */
   function dungChiMucViec(ds){
     var idx = Object.create(null), tuVung = [], mauVung = Object.create(null), i = 0, pha = 0;
+    /* TRẠNG THÁI CỦA ĐUÔI (23/08/2026): trước đây cả `hoanTat` chạy MỘT HƠI ở pha cuối — trên PC chỉ
+       27-52ms nhưng điện thoại bóp CPU 6× là ~200ms đứng hình, mà lúc đó dòng tiến độ đã đứng ở con
+       số cuối cùng nó kịp vẽ (người dùng báo: "98% lâu quá"). Nay đuôi cũng chia lô như thân, nên
+       phần trăm chạy tới 100% rồi mới biến mất. Các biến dưới đây trước nằm trong `hoanTat`, nâng
+       lên đây để chia lô được — CÔNG THỨC KHÔNG ĐỔI, chỉ đổi chỗ khai báo. */
+    var gram = Object.create(null), loiIdx = Object.create(null), ocrIdx = Object.create(null), tuNgan = [];
+    var theoSku = Object.create(null), idf = Object.create(null), dsIdf = [];
+    var v = 0, s2 = 0, v2 = 0;
     var viec = { tong: ds.length, xong: false, cm: null,
-      tienDo: function(){ return ds.length ? i/ds.length : 1; },
+      /* Trọng số lấy từ số đo thật (5.610 dòng): thân 226ms · từ vựng ~20ms · theoSku+idf ~10ms. */
+      tienDo: function(){
+        var L = ds.length || 1, V = tuVung.length || 1;
+        if (pha === 0) return 0.85 * (i / L);
+        if (pha === 1) return 0.85 + 0.10 * (v / V);
+        if (pha === 2) return 0.95 + 0.03 * (s2 / L);
+        if (pha === 3) return 0.98 + 0.02 * (v2 / V);
+        return 1;
+      },
       buoc: function(n){
-        if (pha === 0){
-          loDong(n||600);
-          if (i >= ds.length) pha = 1;
-          return false;
+        n = n || 600;
+        if (pha === 0){ loDong(n);          if (i  >= ds.length)     pha = 1; return false; }
+        if (pha === 1){ loTuVung(n);        if (v  >= tuVung.length) pha = 2; return false; }
+        if (pha === 2){ loTheoSku(n * 8);   if (s2 >= ds.length)     pha = 3; return false; }
+        if (pha === 3){ loIdf(n * 8);       if (v2 <  tuVung.length) return false;
+          viec.cm = chotSo(); viec.xong = true; pha = 4;
         }
-        if (pha === 1){ viec.cm = hoanTat(); viec.xong = true; pha = 2; }
         return true;
       } };
     function loDong(n){
@@ -10014,13 +10035,13 @@ var NDS_ENGINE = (function(){
       if (!idx[sk]) { idx[sk]=[i]; tuVung.push(sk); } else idx[sk].push(i);
      }
     }
-    function hoanTat(){
     /* CHỈ MỤC 2-GRAM CỦA TỪ VỰNG — để bước tìm ứng viên khỏi quét tuyến tính cả 9.272 từ mỗi lượt.
        Vì sao 2-gram chứ không 3: một ký tự sai phá tối đa HAI 2-gram, mà từ dài ≥5 có ≥4 cái, nên
        mọi cặp mà Levenshtein-có-ngưỡng chấp nhận đều còn chung ít nhất một 2-gram ⇒ rút ngắn danh
        sách mà KHÔNG bỏ sót kết quả nào (3-gram thì "abcde" vs "abXde" mất sạch, sẽ sót). */
-    var gram = Object.create(null), loiIdx = Object.create(null), ocrIdx = Object.create(null), tuNgan = [];
-    for (var v=0; v<tuVung.length; v++){
+    function loTuVung(n){
+     var hetV = v + n; if (hetV > tuVung.length) hetV = tuVung.length;
+     for (; v<hetV; v++){
       var w = tuVung[v];
       if (w.length < 2) { tuNgan.push(v); continue; }
       var da = Object.create(null);
@@ -10040,9 +10061,12 @@ var NDS_ENGINE = (function(){
         var ow = ocr(w);
         if (ow){ var dso = ocrIdx[ow] || (ocrIdx[ow]=[]); if (dso.indexOf(w) < 0) dso.push(w); }
       }
+     }
     }
-    var theoSku = Object.create(null);
-    for (var s2=0; s2<ds.length; s2++) if (theoSku[String(ds[s2].sku)]==null) theoSku[String(ds[s2].sku)] = s2;
+    function loTheoSku(n){
+      var hetS = s2 + n; if (hetS > ds.length) hetS = ds.length;
+      for (; s2<hetS; s2++) if (theoSku[String(ds[s2].sku)]==null) theoSku[String(ds[s2].sku)] = s2;
+    }
     /* ═══ IDF — TRỌNG SỐ TỰ HỌC TỪ DANH MỤC (19/08/2026, theo yêu cầu của user) ═══
        Trước đó trọng số chỉ có 4 mức theo VAI (mã 45 · thông số 25 · màu 20 · loại 10) và mọi từ
        trong cùng một vai đều nặng bằng nhau. Nhưng "polyester" (có ở 1.800 SKU) và "8209948" (có ở
@@ -10052,16 +10076,20 @@ var NDS_ENGINE = (function(){
        nhờ fuzzy (jco1262 ~ jc01262), cho vô cực là để một từ đọc sai lái cả điểm.
        Cái này KHÔNG thay các luật nghiệp vụ (ACTIVE → đóng gói → sổ tay → CÓ MÃ) mà chỉ đổi cách
        tính điểm bên trong từng vai. */
-    var idf = Object.create(null), N = ds.length || 1, dsIdf = [];
-    for (var v2=0; v2<tuVung.length; v2++){
-      var tv = tuVung[v2], df = (idx[tv]||[]).length || 1;
-      var g = Math.log(N/df);
-      idf[tv] = g; dsIdf.push(g);
+    function loIdf(n){
+      var N = ds.length || 1, hetI = v2 + n; if (hetI > tuVung.length) hetI = tuVung.length;
+      for (; v2<hetI; v2++){
+        var tv = tuVung[v2], df = (idx[tv]||[]).length || 1;
+        var g = Math.log(N/df);
+        idf[tv] = g; dsIdf.push(g);
+      }
     }
-    dsIdf.sort(function(a,b){ return a-b; });
-    var idfGiua = dsIdf.length ? dsIdf[dsIdf.length>>1] : 1;
-    return { idx:idx, tuVung:tuVung, mauVung:mauVung, ds:ds, gram:gram, loiIdx:loiIdx, ocrIdx:ocrIdx,
-      tuNgan:tuNgan, theoSku:theoSku, idf:idf, idfGiua:idfGiua, soDong:N };
+    function chotSo(){
+      var N = ds.length || 1;
+      dsIdf.sort(function(a,b){ return a-b; });
+      var idfGiua = dsIdf.length ? dsIdf[dsIdf.length>>1] : 1;
+      return { idx:idx, tuVung:tuVung, mauVung:mauVung, ds:ds, gram:gram, loiIdx:loiIdx, ocrIdx:ocrIdx,
+        tuNgan:tuNgan, theoSku:theoSku, idf:idf, idfGiua:idfGiua, soDong:N };
     }
     return viec;
   }
@@ -10905,9 +10933,16 @@ function ndsDocCache(){
   }catch(e){}
   return null;
 }
+/* Cất kèm VÂN của danh mục (23/08/2026): rows trong cache không thể tự đổi, nên băm một lần ở đây
+   rồi lần sau khỏi băm lại 1,1MB (xem ndsVan). */
 function ndsLuuCache(rows){
-  try{ localStorage.setItem(NDS_CACHE, JSON.stringify({ at:Date.now(), rows:rows })); }
+  try{
+    var van = ndsVanDanhMuc(rows);
+    localStorage.setItem(NDS_CACHE, JSON.stringify({ at:Date.now(), rows:rows, vanDm:van }));
+    return van;
+  }
   catch(e){ /* quá quota -> chạy không cache, chỉ chậm hơn lần sau */ }
+  return null;
 }
 /* Hợp đồng 5 cột — sai cột thì DỪNG, không đoán: gviz trả TAB ĐẦU TIÊN khi tab không tồn tại
    (bẫy đã cắn nhiều lần trong dự án), nhận nhầm là cả tab hiện dữ liệu vô nghĩa. */
@@ -10937,7 +10972,7 @@ async function ndsTaiDanhMuc(batBuocMoi){
       if (c){
         NDS.cacheAt = c.at;
         NDS.nguon='bộ nhớ máy (' + fmtTime(c.at) + ')';
-        var raC = ndsNapDs(c.rows);
+        var raC = ndsNapDs(c.rows, c.vanDm);
         ndsSoatMocDanhMuc();                    // dùng bản cũ NGAY, soát mốc ở nền (không bắt ai chờ)
         return raC;
       }
@@ -10950,13 +10985,13 @@ async function ndsTaiDanhMuc(batBuocMoi){
       var cu = (function(){ try{ return JSON.parse(localStorage.getItem(NDS_CACHE)||'null'); }catch(e){ return null; } })();
       if (cu && cu.rows){                                   // hết mạng / tab lỗi -> dùng bản cũ, nói rõ tuổi
         NDS.nguon='bộ nhớ máy — bản ' + fmtTime(cu.at) + ' (không tải được bản mới)';
-        return ndsNapDs(cu.rows);
+        return ndsNapDs(cu.rows, cu.vanDm);
       }
       ndsTrangThai('Chưa đọc được danh mục <code>' + NDS_TAB + '</code>. Kiểm tra mạng, hoặc chạy <code>node sync-sku-master.mjs</code> trên máy trạm để tạo tab.');
       return null;
     }
-    ndsLuuCache(rows); NDS.cacheAt = Date.now(); NDS.nguon='Google Sheet (vừa tải)';
-    return ndsNapDs(rows);
+    var vanMoi = ndsLuuCache(rows); NDS.cacheAt = Date.now(); NDS.nguon='Google Sheet (vừa tải)';
+    return ndsNapDs(rows, vanMoi);
   } finally { NDS.dangTai=false; }
 }
 /* SOÁT MỐC GHI TAB — tự nạp lại khi danh mục trên Sheet đã đổi (20/08/2026).
@@ -10993,6 +11028,151 @@ function ndsNhuongLuong(){
     else setTimeout(r, 0);
   });
 }
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════
+ * CHỈ MỤC CẤT SẴN — IndexedDB (23/08/2026, yêu cầu user: "98% lâu quá, tăng tốc trong nháy mắt")
+ * -----------------------------------------------------------------------------------------------
+ * Vì sao phải có: bản rows đã được cất trong localStorage nên mở lại tab KHÔNG tốn mạng nữa, nhưng
+ * mỗi lần mở trang vẫn phải DỰNG LẠI chỉ mục từ đầu. Đo thật trên PC (5.610 dòng): 226ms — điện
+ * thoại thủ kho bóp CPU 4-6× là 1,0-1,5 GIÂY, và đó chính là dòng "Đang dựng chỉ mục danh mục…".
+ * Thứ đắt nhất là `bocTen` (121ms/226ms, hồ sơ CPU) — bóc 5.610 tên hàng bằng ~15 lượt regex mỗi
+ * tên. Không có cách nào bóc nhanh gấp 10, nhưng KHÔNG CẦN bóc lại: danh mục hôm nay giống hệt
+ * danh mục lúc nãy.
+ * Đo cùng máy, cùng dữ liệu:
+ *      dựng lại từ đầu ........... 226 ms
+ *      JSON.parse gói đã dựng ..... 18 ms   (4,25 MB)  ← nhanh gấp 12
+ * Vì sao IndexedDB chứ không localStorage: gói 4,25MB vượt quota ~5MB của localStorage (mà chỗ đó
+ * đang giữ 1,1MB rows rồi), và IndexedDB cất thẳng object nên không tốn cả stringify lẫn parse.
+ *
+ * ⚠ CHỖ NGUY HIỂM LÀ HẠN DÙNG, KHÔNG PHẢI TỐC ĐỘ. Một chỉ mục cũ mà vẫn được tin là "đúng" thì
+ * lặng lẽ trả SKU sai — đúng thứ dự án này không chấp nhận. Nên gói chỉ được dùng lại khi TRÙNG CẢ
+ * HAI VÂN TAY:
+ *   ① vân DANH MỤC — FNV-1a trên `sku|status|type|pn` của TỪNG dòng (3-5ms). Đổi một ký tự trong
+ *     tên hàng là vân đổi. Cố tình băm cả NỘI DUNG chứ không lấy mốc `LAST_SYNC`: máy trạm chép lại
+ *     y nguyên danh mục mỗi sáng, lấy mốc thì ngày nào cũng dựng lại vô ích.
+ *   ② vân LÕI — băm THẲNG mã nguồn khối lõi, đọc từ `document.scripts` của chính trang đang chạy
+ *     (~114KB, ~1ms). Sửa bất kỳ ký tự nào trong lõi — regex, cặp màu, từ bỏ, danh sách đơn vị —
+ *     là vân đổi ngay, không phải nhớ tay đánh số phiên bản.
+ *     Bản đầu chỉ băm mã nguồn TỪNG HÀM + bóc thử vài tên mẫu, và bộ đo bắt được ngay: thêm một cặp
+ *     màu không dính tới tên mẫu thì vân KHÔNG đổi ⇒ sửa bảng xong vẫn dùng gói cũ. Đường đó nay
+ *     chỉ còn là ĐƯỜNG LÙI cho trường hợp không đọc được nguồn (kèm dựng thử 3 dòng mẫu).
+ * Hỏng ở bất kỳ khâu nào (trình duyệt riêng tư, hết chỗ, DB không mở được) thì im lặng quay về
+ * đường dựng lại — chỉ chậm như cũ, không sai. */
+var NDS_KHO_DB = 'factory-nds', NDS_KHO_BAN = 'chimuc', NDS_KHO_KHOA = 'sku-master';
+function ndsBam32(s){
+  var h = 0x811c9dc5;
+  for (var i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = (h + ((h<<1)+(h<<4)+(h<<7)+(h<<8)+(h<<24))) >>> 0; }
+  return h.toString(36);
+}
+/* 3 dòng mẫu để DỰNG THỬ một chỉ mục tí hon — cố ý gom đủ mọi thứ mà lõi có bảng tra: màu Việt +
+   màu Anh (DONG_NGHIA_MAU · LA_MAU), mã dài nhiều đoạn, thông số/đơn vị (tex · cm · mm · gsm ·
+   yard), cỡ có nhãn Size, tỉ lệ %, tên NCC sau gạch dưới, COMBO/INACTIVE. */
+var NDS_VAN_MAU = [
+  { sku:'1', pn:'Chi may Tex 27-60-3/Den 345/100% Polyester/CWPT0019_Phong Viet/Size XL', type:'NORMAL', status:'ACTIVE', qty:0 },
+  { sku:'2', pn:'Vai thun/W150cm/Trang nga 19-4117/HKM-DET.TT.10-163/170gsm/Cuộn', type:'NORMAL', status:'ACTIVE', qty:0 },
+  { sku:'3', pn:'Keo Bemis 3914 Clear/20*58mm/Black/yard', type:'COMBO', status:'INACTIVE', qty:0 }
+];
+/* NGUỒN LÕI ĐỌC TỪ CHÍNH TRANG ĐANG CHẠY — lõi nằm trong thẻ script nội tuyến nên `textContent`
+   chính là mã nguồn, không phải tải lại gì cả. Đây là vân CHẮC NHẤT: đổi một ký tự bất kỳ trong lõi (kể cả
+   trong BẢNG dữ liệu — cặp màu, từ bỏ, danh sách đơn vị) là vân đổi, không phải nhớ đánh số phiên
+   bản bằng tay. Băm ~100KB chữ mất ~1ms. */
+function ndsNguonLoi(){
+  try{
+    var sc = document.scripts || [];
+    for (var i=0;i<sc.length;i++){
+      var t = sc[i].textContent || '';
+      var a = t.indexOf('/*<' + 'NDS-ENGINE>*/');          // nối chuỗi: đừng để chính dòng này thành dấu mốc
+      if (a >= 0){ var b = t.indexOf('/*</' + 'NDS-ENGINE>*/', a); if (b > a) return t.slice(a, b); }
+    }
+  }catch(e){}
+  return '';
+}
+function ndsVanLoi(){
+  if (NDS._vanLoi) return NDS._vanLoi;
+  var s = ndsNguonLoi();
+  try{
+    /* Không đọc được nguồn (chạy trong bộ test, hoặc trang bị đóng gói lại) thì lùi về đường băm mã
+       nguồn từng hàm + dựng thử — bắt được sửa HÀM, còn sửa BẢNG thì chỉ bắt được phần bảng có dính
+       tới 3 dòng mẫu. Yếu hơn, nhưng vẫn hơn là tin gói cũ vô điều kiện. */
+    ['bocTen','chuan','boDau','loi','donVi','khoaHang','dungChiMucViec','chuanChuoiTem','maChuTem']
+      .forEach(function(t){ s += String(NDS_ENGINE[t] || ''); });
+    /* DỰNG THỬ trên 3 dòng mẫu rồi băm KẾT QUẢ — đây mới là thứ bắt được thay đổi nằm trong BẢNG
+       (thêm cặp màu, thêm từ bỏ, sửa danh sách đơn vị): nguồn hàm y nguyên nhưng chỉ mục đã khác.
+       Băm cả 4 trường bóc sẵn của từng dòng vì gói cất chính là 4 trường đó. */
+    var mau = NDS_VAN_MAU.map(function(r){ return { sku:r.sku, pn:r.pn, type:r.type, status:r.status, qty:0 }; });
+    var thu = NDS_ENGINE.dungChiMuc(mau);
+    s += JSON.stringify([thu.tuVung, thu.tuNgan, thu.mauVung, thu.loiIdx, thu.ocrIdx, thu.idf, thu.idfGiua,
+      mau.map(function(r){ return [r._b, r._dv, r._k, r._pnc]; })]);
+  }catch(e){ return (NDS._vanLoi = 'loi-' + Date.now()); }   // không băm được -> vân duy nhất, coi như không có gói
+  return (NDS._vanLoi = ndsBam32(s));
+}
+function ndsVanDanhMuc(rows){
+  var h = 0x811c9dc5;
+  function nut(s){ s = String(s==null?'':s); for (var j=0;j<s.length;j++){ h ^= s.charCodeAt(j); h = (h + ((h<<1)+(h<<4)+(h<<7)+(h<<8)+(h<<24))) >>> 0; } h ^= 124; }
+  for (var i=0;i<rows.length;i++){ var r=rows[i]; nut(r.sku); nut(r.status); nut(r.type); nut(r.pn); }
+  return rows.length + '-' + (h>>>0).toString(36);
+}
+/* `vanDm` truyền sẵn: vân của danh mục được tính MỘT LẦN lúc cất rows vào localStorage rồi nằm luôn
+   trong bản cache đó. Băm 1,1MB tên hàng mất 19ms trên PC nhưng 82ms khi bóp CPU 6× — mà rows nằm
+   trong cache thì không thể tự đổi, nên tính lại mỗi lần mở trang là trả tiền cho một câu trả lời
+   đã biết. Bản cache cũ (chưa có vân) thì tính như thường. */
+function ndsVan(rows, vanDm){ return 'v1|' + ndsVanLoi() + '|' + (vanDm || ndsVanDanhMuc(rows)); }
+/* Mở DB MỘT LẦN cho cả phiên. Có hàng rào 1,2 giây: đã gặp máy mà `indexedDB.open` không gọi lại
+   callback nào (DB đang bị tab khác nâng cấp) — không có hàng rào thì cả tab treo chờ vô hạn. */
+function ndsKhoMo(){
+  if (NDS._db) return NDS._db;
+  NDS._db = new Promise(function(ok){
+    var xong = false, chot = function(v){ if (!xong){ xong = true; ok(v); } };
+    setTimeout(function(){ chot(null); }, 1200);
+    try{
+      if (typeof indexedDB === 'undefined' || !indexedDB) return chot(null);
+      var r = indexedDB.open(NDS_KHO_DB, 1);
+      r.onupgradeneeded = function(){ try{ r.result.createObjectStore(NDS_KHO_BAN); }catch(e){} };
+      r.onsuccess = function(){ chot(r.result); };
+      r.onerror = function(){ chot(null); };
+      r.onblocked = function(){ chot(null); };
+    }catch(e){ chot(null); }
+  });
+  return NDS._db;
+}
+async function ndsKhoDoc(){
+  var db = await ndsKhoMo(); if (!db) return null;
+  return new Promise(function(ok){
+    try{
+      var y = db.transaction(NDS_KHO_BAN, 'readonly').objectStore(NDS_KHO_BAN).get(NDS_KHO_KHOA);
+      y.onsuccess = function(){ ok(y.result || null); };
+      y.onerror = function(){ ok(null); };
+    }catch(e){ ok(null); }
+  });
+}
+function ndsKhoGhi(goi){
+  ndsKhoMo().then(function(db){
+    if (!db) return;
+    try{
+      var t = db.transaction(NDS_KHO_BAN, 'readwrite');
+      t.objectStore(NDS_KHO_BAN).put(goi, NDS_KHO_KHOA);
+      t.onerror = function(){ /* hết chỗ -> thôi, lần sau dựng lại */ };
+    }catch(e){}
+  });
+}
+/* Gói CHỈ những thứ không tính lại được rẻ: 4 trường bóc sẵn của từng dòng + 8 bảng của chỉ mục.
+   `ds` KHÔNG vào gói — nó chính là mảng rows đang có sẵn trong bộ nhớ, cất thêm là nhân đôi 1,1MB. */
+function ndsDongGoi(cm, rows){
+  return { van:NDS.van, at:Date.now(), soDong:rows.length,
+    b:rows.map(function(d){ return d._b; }), dv:rows.map(function(d){ return d._dv; }),
+    k:rows.map(function(d){ return d._k; }), pnc:rows.map(function(d){ return d._pnc; }),
+    idx:cm.idx, tuVung:cm.tuVung, mauVung:cm.mauVung, gram:cm.gram, loiIdx:cm.loiIdx,
+    ocrIdx:cm.ocrIdx, tuNgan:cm.tuNgan, theoSku:cm.theoSku, idf:cm.idf, idfGiua:cm.idfGiua };
+}
+function ndsMoGoi(goi, rows){
+  if (!goi || !goi.b || goi.b.length !== rows.length || !goi.idx || !goi.tuVung) return null;
+  for (var i=0;i<rows.length;i++){
+    var b = goi.b[i]; if (!b || !b.all) return null;     // gói hỏng -> dựng lại, đừng chắp vá nửa vời
+    rows[i]._b = b; rows[i]._dv = goi.dv[i]; rows[i]._k = goi.k[i]; rows[i]._pnc = goi.pnc[i];
+  }
+  return { idx:goi.idx, tuVung:goi.tuVung, mauVung:goi.mauVung, ds:rows, gram:goi.gram,
+    loiIdx:goi.loiIdx, ocrIdx:goi.ocrIdx, tuNgan:goi.tuNgan, theoSku:goi.theoSku,
+    idf:goi.idf, idfGiua:goi.idfGiua, soDong:rows.length };
+}
 /* DỰNG CHỈ MỤC THEO LÔ, NHƯỜNG LUỒNG GIỮA CÁC LÔ (20/08/2026).
    Vì sao không gọi thẳng `dungChiMuc` như trước: đo trong Edge thật, bước này mất 194ms trên PC
    nhưng **1,36s khi bóp CPU 4×** và **2,2s khi bóp 6×** — tức trên điện thoại thủ kho, cả trang
@@ -11001,13 +11181,28 @@ function ndsNhuongLuong(){
    độ để người dùng biết máy đang làm gì.
    `await new Promise(r => setTimeout(r, 0))` chứ không phải requestAnimationFrame: tab có thể đang
    ở chế độ nền (người dùng mở tab khác chờ), rAF sẽ ngủ luôn và danh mục không bao giờ dựng xong. */
-async function ndsNapDs(rows){
+async function ndsNapDs(rows, vanDm){
   /* ⚠ BẪY ĐÃ CẮN NGAY LÚC VIẾT (bộ 92 ca bắt được): bản đầu gán `NDS.ds = rows` ở ĐÂY, trước khi
      chỉ mục dựng xong. Nhưng `NDS.ds` chính là CỜ "danh mục đã sẵn sàng" mà `ndsDoiSoat` xem để
      quyết định có phải chờ nạp hay không — nên một lượt đối soát chen vào giữa (ảnh vừa nhận diện
      xong, hoặc người dùng gõ mảnh) thấy cờ đã bật mà `NDS.cm` còn null ⇒ không vẽ được thẻ nào.
      Hồi chỉ mục dựng đồng bộ thì không có kẽ nào để chen; chia lô là mở ra kẽ đó. Gán CẢ HAI sau
      khi xong. */
+  /* ĐƯỜNG NHANH: chỉ mục đã cất sẵn từ lần trước và danh mục chưa đổi ⇒ gắn lại rồi đi luôn
+     (18ms thay vì 226ms — xem khối "CHỈ MỤC CẤT SẴN" ở trên). Không vẽ dòng tiến độ nào cả. */
+  /* Đọc kho ĐI TRƯỚC phần băm vân: hai việc không phụ thuộc nhau, mà lượt đọc IndexedDB là việc của
+     luồng khác — bắt đầu sớm được chừng nào hay chừng ấy (`ndsHamNong` còn bắn nó từ lúc trang vừa
+     mở, trước cả khi có rows). */
+  var choGoi = NDS._goiCho || (NDS._goiCho = ndsKhoDoc());
+  NDS.van = ndsVan(rows, vanDm);
+  try{
+    var goi = await choGoi;
+    NDS._goiCho = null;                     // 4,25MB: dùng xong thì thả, đừng giữ cả phiên
+    if (goi && goi.van === NDS.van){
+      var cmCu = ndsMoGoi(goi, rows);
+      if (cmCu){ NDS.cm = cmCu; NDS.ds = rows; NDS.chiMucTu = 'cất sẵn'; ndsCapNhatChan(); return rows; }
+    }
+  }catch(e){ NDS._goiCho = null; /* kho hỏng thì dựng lại như thường */ }
   /* LÔ 200 DÒNG, nhường luồng sau MỖI lô. Ba cấu hình đã đo trong Edge thật (20/08/2026), cột đầu
      là mức luồng UI bị giữ lâu nhất khi bóp CPU 4× / 6×:
        lô 500, nhường mỗi 3 lô ......... 494ms / 848ms   (vẫn là "trang đứng")
@@ -11015,16 +11210,28 @@ async function ndsNapDs(rows){
        lô 200, nhường mỗi lô ...........  59ms / 122ms   tổng đội +25% (nhường bằng setTimeout)
        lô 200 + nhường MessageChannel ..  73ms / 142ms   tổng KHÔNG đội   ← chọn cái này
      Vì sao MessageChannel: `setTimeout(0)` bị trình duyệt ghim sàn ~4ms mỗi lượt, gần 30 lượt liền
-     là chỗ sinh ra 25% đội thêm ở dòng trên; MessageChannel nhường xong quay lại ngay.
-     Số cuối cùng đo được: bóp CPU 4× — cũ 1.188ms treo cả 1.179ms, mới 1.059ms mà treo dài nhất
-     73ms; bóp 6× — cũ 1.977/1.969, mới 1.942/142. */
-  var viec = NDS_ENGINE.dungChiMucViec(rows), n = 0;
+     là chỗ sinh ra 25% đội thêm ở dòng trên; MessageChannel nhường xong quay lại ngay. */
+  var viec = NDS_ENGINE.dungChiMucViec(rows), t0 = Date.now(), tVe = 0;
   while (!viec.buoc(200)){
-    if ((++n % 5) === 0) ndsTrangThai('<div class="spin"></div>Đang dựng chỉ mục danh mục… ' + Math.round(viec.tienDo()*100) + '%');
+    /* DÒNG TIẾN ĐỘ THEO THỜI GIAN, KHÔNG THEO SỐ LÔ (23/08/2026). Bản cũ vẽ mỗi 5 lô nên trên PC nó
+       nháy 5 lần trong 0,2 giây (chớp vô nghĩa), còn trên điện thoại thì con số cuối cùng nó kịp vẽ
+       đứng im suốt cả đuôi — đúng cái người dùng thấy là "98% lâu quá".
+       · 250ms đầu KHÔNG vẽ gì: máy nào dựng xong trong nháy mắt thì không được thấy chớp.
+       · sau đó vẽ lại mỗi ~120ms, và `tienDo` nay chạy tới 100% (đuôi cũng chia lô). */
+    var t = Date.now();
+    if (t - t0 > 250 && t - tVe > 120){
+      tVe = t;
+      ndsTrangThai('<div class="spin"></div>Đang dựng chỉ mục danh mục… ' + Math.round(viec.tienDo()*100) + '%');
+    }
     await ndsNhuongLuong();
   }
-  NDS.cm = viec.cm; NDS.ds = rows;
+  NDS.cm = viec.cm; NDS.ds = rows; NDS.chiMucTu = 'vừa dựng';
+  NDS.msChiMuc = Date.now() - t0;
   ndsCapNhatChan();
+  /* CẤT LẠI LÚC RẢNH: đóng gói + ghi IndexedDB tốn ~30-50ms, làm ngay tại đây là cộng thẳng vào
+     thời gian chờ của người dùng, mà nó chỉ có ích cho LẦN SAU. */
+  var catGoi = function(){ try{ ndsKhoGhi(ndsDongGoi(viec.cm, rows)); }catch(e){} };
+  if (typeof requestIdleCallback === 'function') requestIdleCallback(catGoi, { timeout:4000 }); else setTimeout(catGoi, 800);
   return rows;
 }
 /* Dòng chân: DỰNG LẠI mỗi lần (đừng nối chuỗi vào innerHTML cũ — chạy vài lượt là dài vô tận) */
@@ -14075,14 +14282,14 @@ function cdGomTex(rows){
     }
   }
   /* PHỔ BIẾN NHẤT ĐỨNG TRÁI (user 22/08/2026): xếp theo số SKU giảm dần — Tex 27/24 chiếm đa số
-     danh mục nên phải với tay được ngay; đồng hạng thì Tex nhỏ trước. CHỈ GIỮ 4 Tex hay dùng
-     (user chốt cùng ngày: 27 · 24 · 60 · 18) cho hàng chip gọn — Tex hiếm (240, 120, 105, 80…)
-     đi đường chip "Khác…" gõ tay, không mất đường nhập. */
+     danh mục nên phải với tay được ngay; đồng hạng thì Tex nhỏ trước. CHỈ GIỮ 3 Tex hay dùng
+     (user chốt 23/08: 27 · 24 · 60 — Tex 18 dời sang đường "Khác…") cho hàng chip gọn —
+     Tex hiếm (240, 120, 105, 80, 18…) đi đường chip "Khác…" gõ tay, không mất đường nhập. */
   return Object.keys(gom).map(function(k){ return gom[k]; })
     .filter(function(d){ return CD_TEX_GIU.indexOf(d.tex)>=0; })
     .sort(function(a,b){ return (b.n-a.n)||(a.tex-b.tex); });
 }
-var CD_TEX_GIU=[27,24,60,18];
+var CD_TEX_GIU=[27,24,60];
 function cdNapTexKho(){
   if(CD.texNap) return; CD.texNap=true;
   var ve=function(rows){ if(rows&&rows.length) cdVeTexKho(cdGomTex(rows)); };
