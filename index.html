@@ -169,22 +169,22 @@ h1.brand-title{margin:0;min-width:0}
 .settings-pop a.dropdown-action-btn{text-decoration:none}
 .settings-pop .dropdown-action-btn:disabled{opacity:.55;cursor:not-allowed}
 
-/* ===== Sticky Footer Metadata: ghim đáy, nền theo theme, viền + bóng đổ, không trong suốt ===== */
-.footbar{position:sticky;bottom:0;z-index:100;width:100%;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:9px 16px;
-  background:var(--surface);border-top:1px solid var(--border);border-left:1px solid var(--border);border-right:1px solid var(--border);
-  border-radius:10px 10px 0 0;box-shadow:0 -4px 6px -1px rgba(0,0,0,0.1);font-size:12.5px;margin-top:16px}
-/* chống đè nội dung: khối content cộng đệm đáy để dòng cuối không bị footer che khi cuộn kịch */
-#viewStock,#viewKK,#viewAbn,#viewPlg{padding-bottom:60px}
-/* Pop-up đang mở: footbar (z100) tụt xuống DƯỚI lớp modal (z99) — không thì thanh này đè lên đáy
-   modal trên điện thoại, hớt tap của các nút vùng đáy (Lưu / Áp dụng của sheet bộ lọc) */
-body:has(.modal.show) .footbar{z-index:98}
-/* 2 tab của "Công cụ kho" (Nhận diện SKU · Chuyển đổi cân) ẨN HẴN thanh chân — chúng là công cụ
-   tính tay, không đọc tab Sheet nào, nên "Nguồn: …" + số dòng + mốc cập nhật đều vô nghĩa (bỏ
-   19/08/2026). Lớp .an-chan do showTab() bật/tắt. */
+/* ===== Dòng chân trang: CHỈ mốc cập nhật (23/08/2026, yêu cầu user) =====
+   Trước đây đây là thanh GHIM ĐÁY (position:sticky) mang chip "Nguồn: stocklocationfactory" + số
+   dòng + mốc cập nhật, tức lúc nào cũng chiếm một dải ngang màn hình. Nay:
+     · bỏ hẳn chip nguồn — người đi kho không cần biết dashboard đọc Sheet nào;
+     · bỏ số dòng — số liệu đã hiện ngay trong từng tab;
+     · KHÔNG ghim nữa: nó là dòng cuối trang, cuộn hết mới thấy, không đè lên nội dung.
+   Bỏ ghim kéo theo: hết cần z-index đấu với modal, hết cần đệm đáy 60px chống che. */
+.footbar{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;
+  padding:12px 16px 16px;border-top:1px solid var(--border);margin-top:16px;
+  color:var(--ink3);font-size:12px}
+/* Đệm đáy chỉ còn ở 2 tab có GIỎ SKU nổi (pill fixed) — chỗ khác không còn gì che nội dung nữa */
+#viewKK,#viewAbn{padding-bottom:60px}
+/* 2 tab của "Công cụ kho" (Nhận diện SKU · Chuyển đổi cân) ẨN HẴN dòng chân — chúng là công cụ
+   tính tay, không đọc tab Sheet nào, nên mốc cập nhật cũng vô nghĩa (bỏ 19/08/2026).
+   Lớp .an-chan do showTab() bật/tắt. */
 body.an-chan .footbar{display:none}
-/* Không còn thanh chân thì hạ giỏ SKU xuống sát đáy, để nguyên 58/84px là pill lễnh giữa khoảng trống.
-   Dùng #pcbar có thêm class body nên thắng cả rule trong @media(max-width:900px) ở trên. */
-body.an-chan #pcbar{bottom:16px}
 .footbar a{color:var(--brand2);text-decoration:none;font-weight:600}
 .footbar a:hover{text-decoration:underline}
 .footbar .hint{font-variant-numeric:tabular-nums}
@@ -1396,12 +1396,12 @@ body.pcm-open #prbar,body.ovl-open #prbar,body.prm-open #prbar,body.csm-open #pr
 /* ===== Chọn SKU từ pop-up (2 tab) -> tạo lệnh kiểm kê WMS (template CHECKLIST_SKU) ===== */
 .pcc{width:34px;text-align:center !important}
 .pcc input{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;vertical-align:middle}
-/* giỏ chọn nổi: neo trên footbar, giữ nguyên khi chuyển tab/pop-up/bộ lọc */
-#pcbar{position:fixed;left:50%;bottom:58px;transform:translateX(-50%);z-index:110;display:flex;align-items:center;gap:8px;
+/* giỏ chọn nổi: sát đáy màn (23/08/2026 — thanh chân hết ghim đáy nên không phải né nó nữa),
+   giữ nguyên khi chuyển tab/pop-up/bộ lọc */
+#pcbar{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:110;display:flex;align-items:center;gap:8px;
   background:var(--surface);border:1px solid var(--accent);border-radius:999px;padding:7px 9px 7px 16px;box-shadow:var(--shadow-lg);
   font-size:12.5px;font-weight:650;flex-wrap:wrap;justify-content:center;row-gap:4px;max-width:94vw;animation:barIn .22s var(--ez-spring)}   /* C6: mobile hẹp pill tự wrap trong 94vw thay vì tràn 2 mép */
 #pcbar.hidden{display:none}
-@media(max-width:900px){#pcbar{bottom:84px}}   /* footbar wrap 2 dòng ở màn hẹp — nâng giỏ lên khỏi vùng đè */
 /* NÚT CHỤP NỔI DƯỚI MÀN HÌNH (20/08/2026, yêu cầu user): đứng đúng chỗ của thanh "Đã chọn N SKU"
    để ngón tay khỏi phải rướn lên khung hình — chụp tem là thao tác một tay, cầm điện thoại thấp.
    Dùng lại nguyên khuôn pill + barIn của #pcbar (luật tái dùng control của dự án), chỉ đổi màu:
@@ -2269,8 +2269,24 @@ body.side-anim{overflow-x:clip}
 .nds-busy{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
   background:var(--overlay);color:#fff;font-size:12.5px;font-weight:650;animation:fadeIn .2s ease both}
 .nds-busy .spin{margin:0}
-/* Đồng hồ giây giờ là NỘI DUNG DUY NHẤT của hộp đọc (bỏ hết chữ 20/08/2026) nên cho to đúng tầm */
-.nds-busy #ndsDongHo{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
+/* VÒNG CHẠY KIỂU CH PLAY (23/08/2026, yêu cầu user) — thay vòng xoay + đồng hồ giây.
+   Vòng ĐẦY DẦN chứ không xoay tròn vô nghĩa: người ta đã quen nhìn nó lúc tải app, nên hiểu ngay
+   là "đang chạy, sắp xong". Con số giây thì bỏ hẳn (user chốt) — mốc "mạng yếu" ở giây 12 nay báo
+   bằng MÀU (vòng ngả --warn) chứ không bằng số. */
+.nds-vong{width:64px;height:64px;position:relative}
+.nds-vong svg{width:100%;height:100%;display:block;transform:rotate(-90deg)}   /* bắt đầu từ 12 giờ */
+.nds-vong circle{fill:none;stroke-width:5;stroke-linecap:round}
+.nds-vong .ray{stroke:rgba(255,255,255,.22)}
+.nds-vong .chay{stroke:var(--accent);transition:stroke-dashoffset .18s linear,stroke .35s ease}
+.nds-vong.lau .chay{stroke:var(--warn)}
+/* Vòng vừa đầy vừa quay chậm: đầy dần là "còn bao nhiêu", quay là "vẫn đang chạy" — thiếu cái sau
+   thì lúc đường cong tiến độ chững lại (mạng yếu) nhìn y như treo máy. */
+.nds-vong .quay{animation:ndsquay 2.6s linear infinite;transform-origin:24px 24px}
+@keyframes ndsquay{to{transform:rotate(360deg)}}
+/* Bóng chữ: lớp phủ chỉ mờ 50-72% nên câu này nằm trên ẢNH TEM — tem trắng loá thì chữ trắng biến mất */
+.nds-cho{font-size:13.5px;font-weight:800;letter-spacing:.2px;color:#fff;text-align:center;max-width:82%;
+  text-shadow:0 1px 4px rgba(0,0,0,.6)}
+@media(prefers-reduced-motion:reduce){ .nds-vong .quay{animation:none} }
 
 /* Hàng zoom: 2 nút bước + thanh trượt + số. Nút bước để chỉnh nhanh bằng ngón cái khi một tay
    đang giữ tem; thanh trượt để chỉnh mịn. Tái dùng .kktab và .pg-chip, không chế control mới. */
@@ -3103,7 +3119,6 @@ body.side-anim{overflow-x:clip}
      chỗ dùng (dòng chân từng tab, tooltip, dải ghi chú), để lại chỉ là một khối chữ không ai đọc. -->
 
 <div class="footbar">
-  <span class="chip">Nguồn: stocklocationfactory</span>
   <span id="loadinfo" class="hint"></span>
 </div>
 </div>
@@ -4134,32 +4149,22 @@ function fmtTime(ms){  // HH:mm:ss DD/MM/YYYY — NEO GIỜ VN (+07) như mọi 
   var d=new Date(ms+7*3600*1000); function p(n){return (n<10?'0':'')+n;}
   return p(d.getUTCHours())+':'+p(d.getUTCMinutes())+':'+p(d.getUTCSeconds())+' '+p(d.getUTCDate())+'/'+p(d.getUTCMonth()+1)+'/'+d.getUTCFullYear();
 }
-/* Footer "· N dòng · cập nhật …": số dòng NEO theo tab đang xem, mốc cập nhật CHUNG (LAST_SYNC_MS)
-   -> đồng bộ giữa 3 tab, tab Tồn kho bất thường không còn hiện nhầm số dòng của Trạng thái lưu trữ. */
+/* DÒNG CHÂN CHỈ CÒN MỐC CẬP NHẬT (23/08/2026, yêu cầu user): "cập nhật 11:39:27 23/08/2026".
+   Đã bỏ chip "Nguồn: stocklocationfactory" và cả phần "· N dòng / N SKU / N hạng mục" — số liệu
+   ấy đã hiện ngay trong từng tab, nhắc lại ở chân trang chỉ làm dài dòng.
+   Mốc thì vẫn NEO THEO TAB đang xem (kiểm kê / bất thường / planogram có mốc ghi tab riêng, còn
+   lại lấy Metadata) và LẤY TỪ BACKEND — không gõ cứng ngày giờ nào vào trang.
+   Giữ lại đúng MỘT thứ ngoài mốc: cảnh báo "N tab lỗi", vì đó là chỗ DUY NHẤT báo có tab Sheet đọc
+   hỏng; bình thường không có lỗi thì dòng này đọc đúng một câu như user yêu cầu. */
 function capNhatThongTin(){
-  /* 2 tab "Công cụ kho" đã ẩn hẳn thanh chân -> thoát ngay, không tính rồi ghi vào chỗ không ai thấy */
+  /* 2 tab "Công cụ kho" đã ẩn hẳn dòng chân -> thoát ngay, không tính rồi ghi vào chỗ không ai thấy */
   if(TOPTAB==='sku'||TOPTAB==='cd') return;
-  var t='';
-  if(TOPTAB==='home'){
-    var nT=HOME_MUC.reduce(function(s,g){ return s+g.items.length; },0);
-    t='· '+nT+' hạng mục';
-  }else if(TOPTAB==='abn'){
-    if(typeof ABN!=='undefined' && ABN.ok) t='· '+nf(ABN.agg?ABN.nTong:ABN.rows.length)+' SKU bất thường';
-  }else if(TOPTAB==='kk'){
-    var n=((KK.data.sku||[]).length)+((KK.data.loc||[]).length);
-    if(n) t='· '+nf(n)+' dòng kiểm kê';
-  }else if(TOPTAB==='plg'){
-    if(typeof PLG!=='undefined' && PLG.ok) t='· '+nf(Object.keys(PLG.by).length)+' ô mặt bằng';
-  }else{
-    if(_rowCount) t='· '+nf(_rowCount)+' dòng';
-    else if(_skuCount) t='· '+nf(_skuCount)+' SKU';
-  }
   var moc=LAST_SYNC_MS;   // mặc định: Metadata (mốc tồn-vị-trí)
   if(TOPTAB==='kk' && TAB_SYNC.kk) moc=TAB_SYNC.kk;
   else if(TOPTAB==='abn' && TAB_SYNC.abn) moc=TAB_SYNC.abn;
   else if(TOPTAB==='plg' && TAB_SYNC.plg) moc=TAB_SYNC.plg;
-  if(moc) t+=(t?' ':'')+'· cập nhật '+fmtTime(moc);
-  if(TOPTAB==='stock' && _failed) t+=' · '+_failed+' tab lỗi';
+  var t = moc ? 'cập nhật '+fmtTime(moc) : '';
+  if(TOPTAB==='stock' && _failed) t+=(t?' · ':'')+_failed+' tab lỗi';
   document.getElementById('loadinfo').textContent=t;
 }
 /* Nút chỉ "sáng" khi đã qua 4h kể từ lần đồng bộ WMS cuối; còn lại khoá + hint (nút 2 tầng kiểu kiemsoatkho) */
@@ -11594,8 +11599,8 @@ function ndsDatTenMay(){
 function ndsBusy(on,chu){
   var st=document.getElementById('ndsStage'), cu=document.getElementById('ndsBusyBox');
   /* HỘP ĐÃ CÓ + vẫn đang chạy ⇒ KHÔNG dựng lại (21/08/2026). Một lượt quét giờ gọi ndsBusy(true) từ
-     nhiều chỗ (hai người đọc song song, lượt đua, lượt thử lại) — dựng lại hộp là đồng hồ giây nhảy
-     về 0, người dùng thấy như máy bắt đầu lại từ đầu. Đồng hồ phải đo ĐÚNG một lượt quét. */
+     nhiều chỗ (hai người đọc song song, lượt đua, lượt thử lại) — dựng lại hộp là vòng chạy tụt về
+     0, người dùng thấy như máy bắt đầu lại từ đầu. Vòng phải đo ĐÚNG một lượt quét. */
   if (on && cu && NDS.dongHo) return;
   if (NDS.dongHo){ clearInterval(NDS.dongHo); NDS.dongHo=null; }
   if (cu) cu.remove();
@@ -11604,23 +11609,35 @@ function ndsBusy(on,chu){
   if (!on) return;
   var d=document.createElement('div');
   d.id='ndsBusyBox'; d.className='nds-busy';
-  /* CHỈ CÒN ĐỒNG HỒ GIÂY (đổi 20/08/2026, yêu cầu user). Trước đây hộp này còn đọc cả câu "đang
-     nhờ ai đọc": "AI không đọc được — đang thử OCR của Google (miễn phí)…", "Chưa lập được mã hàng
-     — đang đọc lại bằng OCR…". Người đứng trước kệ không cần biết máy đang gọi ai, chỉ cần biết
-     ĐANG CHẠY và ĐÃ BAO LÂU. Tham số `chu` giữ lại để mọi lời gọi cũ không phải sửa (và để lỡ sau
-     này muốn bật lại thì có sẵn chỗ), nhưng KHÔNG vẽ ra nữa. */
-  d.innerHTML='<div class="spin"></div><b id="ndsDongHo">0,0s</b>';
+  /* VÒNG CHẠY KIỂU CH PLAY + MỘT CÂU (đổi 23/08/2026, yêu cầu user). Lịch sử chỗ này: ban đầu là
+     vòng xoay + câu "đang nhờ ai đọc"; 20/08 bỏ hết chữ, chỉ còn đồng hồ giây; nay bỏ luôn số giây.
+     Người đứng trước kệ không cần biết máy gọi ai, cũng không cần con số — chỉ cần thấy nó ĐANG
+     CHẠY và SẮP XONG. Tham số `chu` vẫn giữ để mọi lời gọi cũ không phải sửa, nhưng không vẽ ra. */
+  d.innerHTML =
+    '<div class="nds-vong" id="ndsVong" role="progressbar" aria-label="Đang đọc tem" aria-valuemin="0" aria-valuemax="100">' +
+      '<svg viewBox="0 0 48 48" aria-hidden="true"><g class="quay">' +
+        '<circle class="ray" cx="24" cy="24" r="20"></circle>' +
+        '<circle class="chay" id="ndsVongArc" cx="24" cy="24" r="20" stroke-dasharray="125.7" stroke-dashoffset="125.7"></circle>' +
+      '</g></svg></div>' +
+    '<b class="nds-cho">Đợi chút nhe cục dzàng</b>';
   st.appendChild(d);
-  /* ĐỒNG HỒ GIÂY: đọc tem mất 4–8 giây và không có cách nào rút xuống 1–2 giây (3–4 giây là Google
-     chuyển đổi/suy luận phía họ). Cái sửa được là CẢM GIÁC TREO MÁY: thấy số chạy thì biết máy đang
-     làm, không phải chết. Kèm mốc "quá lâu" ở giây thứ 12 để người dùng biết mạng đang yếu. */
-  var t0=Date.now();
+  /* VÒNG ĐẦY THEO ĐƯỜNG CONG TIỆM CẬN, KHÔNG PHẢI TUYẾN TÍNH — và cố ý KHÔNG chạm 100%.
+     Lượt đọc mất 4-8 giây nhưng đuôi có thể tới 17 (xem BA MỐC THỜI GIAN bên dưới): không có cách
+     nào biết trước còn bao lâu, nên vòng chạy nhanh lúc đầu rồi chậm dần, trần 94%. Vòng đứng ở
+     100% mà màn hình chưa đổi là kiểu nói dối mà ai cũng nhận ra ngay.
+     Con số giây bỏ khỏi màn hình nhưng vẫn ghi vào `data-giay` của hộp — bộ đo và lúc chẩn đoán
+     cần nó, người dùng thì không. */
+  var t0=Date.now(), CHU_VI=125.7;
   NDS.dongHo=setInterval(function(){
-    var el=document.getElementById('ndsDongHo'); if (!el){ clearInterval(NDS.dongHo); NDS.dongHo=null; return; }
+    var box=document.getElementById('ndsBusyBox'), v=document.getElementById('ndsVong');
+    if (!box || !v){ clearInterval(NDS.dongHo); NDS.dongHo=null; return; }
     var gy=(Date.now()-t0)/1000;
-    el.textContent=gy.toFixed(1).replace('.',',')+'s';
-    /* Quá 12 giây thì ĐỔI MÀU thôi, không thêm chữ nào (cùng lý do như trên). */
-    el.style.color = gy>12 ? 'var(--warn)' : '';
+    var p=0.94*(1-Math.exp(-gy/4.2));
+    box.setAttribute('data-giay', gy.toFixed(1));
+    v.querySelector('.chay').setAttribute('stroke-dashoffset', (CHU_VI*(1-p)).toFixed(1));
+    v.setAttribute('aria-valuenow', Math.round(p*100));
+    /* Quá 12 giây thì ĐỔI MÀU thôi, không thêm chữ nào — mốc "mạng yếu" cũ vẫn còn, chỉ đổi cách nói. */
+    v.classList.toggle('lau', gy>12);
   },100);
 }
 /* ============================================================================================
