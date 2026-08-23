@@ -2517,6 +2517,38 @@ body.side-anim{overflow-x:clip}
 .cd-in input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}
 .cd-in input.xau{border-color:var(--bad);box-shadow:0 0 0 3px color-mix(in srgb,var(--bad) 14%,transparent)}
 .cd-in .dv{font-size:12px;font-weight:700;color:var(--ink3);flex:none;min-width:26px}
+/* ═══ HAI Ô MỘT HÀNG (23/08/2026, user: "1 bên dài sọc, 1 bên trống quá nhiều") ═══
+   Ô nào giá trị NGẮN (mã, số cân, số cuộn) thì đi cặp — cột trái ngắn lại gần một nửa mà không mất
+   ô nào. Điện thoại vẫn 1 cột: 2 ô cạnh nhau ở 390px là bóp cả hai. */
+.cd-doi{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 14px;align-items:start}
+/* Ô khổ có thêm dải chip nên cần rộng hơn ô định lượng — để 50/50 thì chip vỡ xuống hai hàng */
+#cdVaiF{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}
+.cd-doi>.cd-f{margin-top:12px}
+@media(max-width:520px){ .cd-doi,#cdVaiF{grid-template-columns:minmax(0,1fr)} }
+/* ═══ CHIP ĐƠN VỊ (23/08/2026) ═══
+   Đơn vị bày MỘT chỗ duy nhất: ở đây. Chip số phía trên vì thế là SỐ TRẦN (150 · 152 · 190) —
+   trước đây mỗi chip lặp lại "cm" rồi ô nhập lại thêm một chữ "cm" nữa, ba lần cùng một chữ.
+   Có mũi tên = đổi được đơn vị (khổ: cm ⇄ inch · quy cách: m ⇄ yard). Không mũi tên (`.tinh`) là
+   đơn vị cố định — nhìn là biết chỗ nào bấm được, không cần chú thích. */
+.cd-in .cd-dv{flex:none;display:inline-flex;align-items:center;gap:5px;height:36px;padding:0 10px;
+  border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--ink2);
+  font:inherit;font-size:12px;font-weight:750;cursor:pointer;font-variant-numeric:tabular-nums}
+.cd-in .cd-dv:hover{border-color:var(--accent);color:var(--ink)}
+.cd-in .cd-dv:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.cd-in .cd-dv i{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;
+  border-top:5px solid currentColor;opacity:.75}
+.cd-in .cd-dv.doi{background:color-mix(in srgb,var(--accent) 14%,var(--surface));border-color:var(--accent);color:var(--accent)}
+.cd-in .cd-dv.tinh{background:transparent;border-color:transparent;color:var(--ink3);cursor:default;padding:0 2px;font-weight:700}
+/* ═══ SỐ MÁY TỰ ĐIỀN vs SỐ NGƯỜI PHẢI NHẬP (23/08/2026, user: "làm mờ nhìn còn mơ hồ") ═══
+   Không thêm một chữ giải nghĩa nào — phân biệt bằng HÌNH:
+     · máy tự điền  → nền accent nhạt + viền accent + dấu ✓ nằm trong ô
+     · còn phải nhập → viền NÉT ĐỨT (ô trống mà bắt buộc)
+   Người dùng gõ đè lên số máy điền thì dấu ✓ mất ngay — vì lúc đó nó là số của họ. */
+.cd-in input.tu-dien{background-color:color-mix(in srgb,var(--accent) 9%,var(--surface));
+  border-color:color-mix(in srgb,var(--accent) 55%,var(--border));padding-left:26px;
+  background-repeat:no-repeat;background-position:8px center;background-size:12px 12px;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300a37a' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'><path d='M4 13l6 6L20 5'/></svg>")}
+.cd-in input.can-nhap{border-style:dashed;border-color:color-mix(in srgb,var(--ink3) 60%,transparent)}
 .cd-in .pg-seg{flex:none}
 /* "Doc la ..." -- o nhan ca 2.500.000 / 2,500,000 / 2500000 nen phai soi lai con so may hieu duoc.
    Cho nay lech mot dau la lech 1.000 lan, khong co dong soi thi sai cung khong ai thay. */
@@ -2525,6 +2557,14 @@ body.side-anim{overflow-x:clip}
 .cd-doc.xau{color:var(--bad)}
 /* The ket qua: be nguyen .abntile cua tab Ton kho bat thuong, chi bo con tro bam (khong mo gi) */
 .cd-tiles{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+/* CỘT PHẢI KHÔNG ĐƯỢC TRỐNG TRƠN (23/08/2026, user: "1 bên dài sọc, 1 bên trống quá nhiều").
+   Chưa đủ số thì bày sẵn 4 thẻ MỜ đúng chỗ 4 con số sắp hiện — người dùng thấy trước mình sẽ nhận
+   được gì, và cột phải không còn là một mảng trắng. Không thêm một chữ giải nghĩa nào. */
+.cd-tiles.mo .abntile{opacity:.4;--cc:var(--line)}
+.cd-tiles.mo .abntile .k{color:var(--ink3)}
+/* Panel kết quả BÁM THEO khi cuộn: bước 1 dài gấp mấy lần bước 2, không bám thì cuộn xuống giữa
+   chừng là mất hút con số vừa tính. Chỉ bám ở màn rộng — điện thoại vốn 1 cột. */
+@media(min-width:901px){ .cd-grid>section:last-child{position:sticky;top:12px} }
 .cd-tiles .abntile{cursor:default}
 .cd-tiles .abntile:hover{transform:none;box-shadow:none;background:var(--surface)}
 .cd-tiles .abntile.to{grid-column:1/-1}
@@ -3004,8 +3044,14 @@ body.side-anim{overflow-x:clip}
              Chỉ  → Tex (gram của 1.000 m)          · đã có từ 22/08
              Vải  → định lượng (g/m²) × khổ (m)      · 49% SKU có sẵn 2 số này trong tên hàng
              Thun → g/m, phải CÂN mới biết (không SKU nào ghi) — xem CHUYEN-DOI-CAN-VAI-THUN.md -->
+      <!-- LOẠI HÀNG (23/08/2026) — cả ba loại dùng CHUNG một phép chia:
+             chiều dài = khối lượng ÷ khối lượng mỗi mét
+           chỉ khác nhau ở chỗ lấy "khối lượng mỗi mét" (cái thước) ở đâu:
+             Chỉ  → Tex (gram của 1.000 m)          · đã có từ 22/08
+             Vải  → định lượng (g/m²) × khổ (m)      · 49% SKU có sẵn 2 số này trong tên hàng
+             Thun → g/m, phải CÂN mới biết (không SKU nào ghi) — xem CHUYEN-DOI-CAN-VAI-THUN.md -->
       <div class="cd-f dau">
-        <label>Loại hàng <span class="hint">chọn đúng loại thì máy hỏi đúng cái thước</span></label>
+        <label>Loại hàng</label>
         <div class="cd-qc" id="cdLoaiBar" role="group" aria-label="Loại hàng">
           <button type="button" class="kktab active" data-loai="chi" onclick="cdChonLoai('chi')" title="Thước là chỉ số Tex trên tem">Chỉ</button>
           <button type="button" class="kktab" data-loai="vai" onclick="cdChonLoai('vai')" title="Thước là định lượng (gsm) × khổ vải">Vải</button>
@@ -3013,42 +3059,35 @@ body.side-anim{overflow-x:clip}
         </div>
       </div>
 
-      <!-- MÃ SKU: không bắt buộc để TÍNH, nhưng có nó thì (a) máy tự điền khổ + định lượng từ tên
-           hàng, (b) tự nhớ g/m vào sổ tay, (c) đẩy thẳng kết quả sang In tem. -->
-      <div class="cd-f">
-        <label for="cdSku">Mã SKU <span class="hint">không bắt buộc — có mã thì máy tự điền thông số và đẩy được sang In tem</span></label>
-        <div class="cd-in">
-          <input id="cdSku" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="ví dụ 422273473" oninput="cdSkuGo()">
-          <span class="dv">SKU</span>
+      <!-- HAI Ô ĐỊNH DANH ĐI CẶP (23/08/2026, user: "1 bên dài sọc, 1 bên trống quá nhiều").
+           Chúng đều là mã ngắn, để mỗi ô một hàng là kéo cột trái dài gấp đôi mà chẳng thêm gì.
+           Câu giải nghĩa dài đã BỎ (user) — cái gì cần nói thì dòng soi dưới ô nói, khi có số. -->
+      <div class="cd-doi">
+        <div class="cd-f">
+          <label for="cdSku">Mã SKU</label>
+          <div class="cd-in">
+            <input id="cdSku" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="422273473" oninput="cdSkuGo()">
+          </div>
+          <div class="cd-doc" id="cdSkuDoc"></div>
         </div>
-        <div class="cd-doc" id="cdSkuDoc"></div>
+        <div class="cd-f">
+          <label for="cdUid">UIDgr code</label>
+          <div class="cd-in">
+            <input id="cdUid" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="1028260605000316" oninput="cdUidGo()">
+          </div>
+          <div class="cd-doc" id="cdUidDoc"></div>
+        </div>
       </div>
 
-      <!-- UIDgr code: IN LÊN TEM (user chốt 23/08/2026). Luật nghiệp vụ 19/08: SKU vải nguyên liệu
-           BẮT BUỘC khai báo UIDgr — dán tem có sẵn mã group thì người đứng ở kệ đọc được ngay.
-           Mã thật là dãy 16 chữ số (vd 1028260605000316, lấy từ doi-soat-po-uidgr). -->
+      <!-- QUY CÁCH: chip là SỐ TRẦN, đơn vị nằm ở CHIP ĐVT cạnh ô nhập (user 23/08: "không để thừa
+           đơn vị kế bên ô chip"). Chip ĐVT có mũi tên sổ xuống vì đổi được m ⇄ yard — 85 SKU vải
+           trong danh mục khai bằng yard. -->
       <div class="cd-f">
-        <label for="cdUid">UIDgr code <span class="hint">không bắt buộc — điền thì con tem in thêm dòng <b>UIDgr</b></span></label>
-        <div class="cd-in">
-          <input id="cdUid" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="ví dụ 1028260605000316" oninput="cdUidGo()">
-          <span class="dv">group</span>
-        </div>
-        <div class="cd-doc" id="cdUidDoc"></div>
-      </div>
-
-      <div class="cd-f">
-        <label>Quy cách cuộn nguyên <span class="hint">chiều dài 1 cuộn còn nguyên kiện — kết quả quy đổi vẫn luôn ra mm</span></label>
-        <!-- Nút hiện MÉT cho gọn (user 22/08/2026: 5.000 m thay vì 5.000.000 mm), data-mm vẫn giữ mm
-             và mọi kết quả/phiếu tính vẫn ra ĐƠN VỊ NHỎ NHẤT (mm, gr). Ô "Khác…" cũng gõ bằng MÉT. -->
-        <div class="cd-qc" id="cdQCBar" role="group" aria-label="Quy cách cuộn nguyên">
-          <button type="button" class="kktab" data-mm="2500000" onclick="cdChonQC(2500000)" title="2.500.000 mm">2,500 m</button>
-          <button type="button" class="kktab" data-mm="3000000" onclick="cdChonQC(3000000)" title="3.000.000 mm">3,000 m</button>
-          <button type="button" class="kktab active" data-mm="5000000" onclick="cdChonQC(5000000)" title="5.000.000 mm">5,000 m</button>
-          <button type="button" class="kktab" data-mm="0" onclick="cdChonQC(0)" title="Quy cách khác — gõ tay, đơn vị MÉT">Khác…</button>
-        </div>
+        <label>Quy cách cuộn nguyên</label>
+        <div class="cd-qc" id="cdQCBar" role="group" aria-label="Quy cách cuộn nguyên"></div>
         <div class="cd-in" id="cdQCRow" hidden style="margin-top:8px">
-          <input id="cdQC" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="ví dụ 1,000" oninput="cdTinh()" aria-label="Quy cách khác (m)">
-          <span class="dv">m</span>
+          <input id="cdQC" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="1,000" oninput="cdTinh()" aria-label="Quy cách khác">
+          <button type="button" class="cd-dv" id="cdQCDv" onclick="cdDoiDv('qc')" aria-label="Đổi đơn vị quy cách">m<i></i></button>
         </div>
         <div class="cd-doc" id="cdQCDoc"></div>
       </div>
@@ -3059,106 +3098,112 @@ body.side-anim{overflow-x:clip}
            tay nên offline/không có danh mục vẫn nhập Tex được. Bấm lại chip đang sáng = bỏ chọn
            (Tex là thứ KHÔNG bắt buộc — khác hàng quy cách luôn phải có 1 nút sáng). -->
       <div class="cd-f" id="cdTexKho">
-        <label>Chỉ số Tex trên tem <span class="hint">gram của 1.000 m chỉ</span></label>
+        <label>Chỉ số Tex trên tem</label>
         <div class="cd-qc" id="cdTexKhoBar" role="group" aria-label="Chỉ số Tex trên tem">
           <button type="button" class="kktab" data-tex="0" onclick="cdChonTex(this)" title="Tex khác — gõ tay">Khác…</button>
         </div>
         <div class="cd-in" id="cdTexRow" hidden style="margin-top:8px">
-          <input id="cdTex" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="ví dụ 27" oninput="cdTinh()" aria-label="Chỉ số Tex khác (gõ tay)">
-          <span class="dv">Tex</span>
+          <input id="cdTex" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="27" oninput="cdTinh()" aria-label="Chỉ số Tex khác (gõ tay)">
+          <span class="cd-dv tinh">Tex</span>
         </div>
         <div class="cd-doc" id="cdTexDoc"></div>
       </div>
 
       <!-- ═══ THƯỚC CỦA VẢI: định lượng × khổ ═══
-           Khổ làm CHIP (150 · 152 · 190 phủ ~40% danh mục, đúng khuôn chip Tex), còn định lượng thì
-           KHÔNG làm chip: đếm thật có 60+ giá trị rời rạc, giá trị đầu bảng chỉ phủ 9% — chip kiểu
-           đó chỉ tổ chiếm chỗ. Đường đúng của định lượng là ĐỌC TỪ SKU ở ô trên. -->
-      <div class="cd-f" id="cdVaiF" hidden>
-        <label>Khổ vải <span class="hint">bề ngang cuộn — cùng với định lượng thành thước</span></label>
-        <div class="cd-qc" id="cdKhoBar" role="group" aria-label="Khổ vải">
-          <button type="button" class="kktab" data-kho="150" onclick="cdChonKho(150)">150 cm</button>
-          <button type="button" class="kktab" data-kho="152" onclick="cdChonKho(152)">152 cm</button>
-          <button type="button" class="kktab" data-kho="190" onclick="cdChonKho(190)">190 cm</button>
-          <button type="button" class="kktab" data-kho="0" onclick="cdChonKho(0)" title="Khổ khác — gõ tay, đơn vị cm">Khác…</button>
+           Khổ làm CHIP (150 · 152 · 190 phủ ~40% danh mục), còn định lượng thì KHÔNG: đếm thật có
+           60+ giá trị rời rạc, giá trị đầu bảng chỉ phủ 9%. Đường đúng của định lượng là ĐỌC TỪ SKU.
+           Chip ĐVT của khổ đổi được cm ⇄ inch — danh mục có 92 SKU ghi khổ bằng inch. -->
+      <div class="cd-doi" id="cdVaiF" hidden>
+        <div class="cd-f">
+          <label>Khổ vải</label>
+          <div class="cd-qc" id="cdKhoBar" role="group" aria-label="Khổ vải">
+            <button type="button" class="kktab" data-kho="150" onclick="cdChonKho(150)">150</button>
+            <button type="button" class="kktab" data-kho="152" onclick="cdChonKho(152)">152</button>
+            <button type="button" class="kktab" data-kho="190" onclick="cdChonKho(190)">190</button>
+            <button type="button" class="kktab" data-kho="0" onclick="cdChonKho(0)" title="Khổ khác — gõ tay">Khác…</button>
+          </div>
+          <div class="cd-in" id="cdKhoRow" hidden style="margin-top:8px">
+            <input id="cdKho" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="165" oninput="cdTinh()" aria-label="Khổ khác">
+            <button type="button" class="cd-dv" id="cdKhoDv" onclick="cdDoiDv('kho')" aria-label="Đổi đơn vị khổ">cm<i></i></button>
+          </div>
+          <div class="cd-doc" id="cdKhoDoc"></div>
         </div>
-        <div class="cd-in" id="cdKhoRow" hidden style="margin-top:8px">
-          <input id="cdKho" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="ví dụ 165" oninput="cdTinh()" aria-label="Khổ khác (cm)">
-          <span class="dv">cm</span>
+        <div class="cd-f">
+          <label for="cdGsm">Định lượng</label>
+          <div class="cd-in">
+            <input id="cdGsm" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="220" oninput="cdTinh()">
+            <span class="cd-dv tinh">gsm</span>
+          </div>
+          <div class="cd-doc" id="cdGsmDoc"></div>
         </div>
-        <div class="cd-doc" id="cdKhoDoc"></div>
-        <label for="cdGsm" style="margin-top:12px">Định lượng <span class="hint">g mỗi m² — tem NCC ghi gsm (hoặc oz)</span></label>
-        <div class="cd-in">
-          <input id="cdGsm" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="ví dụ 220" oninput="cdTinh()">
-          <span class="dv">gsm</span>
-        </div>
-        <div class="cd-doc" id="cdGsmDoc"></div>
       </div>
 
       <!-- ═══ THƯỚC CỦA THUN: g/m ═══
            Không một SKU Thun nào ghi định lượng trong tên (soát 98 SKU, 23/08) nên chỉ có hai
            đường: CÂN cuộn nguyên có quy cách (chính xác nhất), hoặc gõ thẳng g/m. Cân xong thì máy
-           NHỚ vào sổ tay theo SKU để lần sau khỏi cân lại. -->
+           NHỚ vào sổ tay theo SKU để lần sau khỏi cân lại. Tên hàng nào có sẵn hệ số ("1kg-6700m")
+           thì máy tự điền — xem `heSoCan` trong lõi. -->
       <div class="cd-f" id="cdThunF" hidden>
-        <label for="cdGm">Định lượng dài <span class="hint">gram mỗi mét — chưa biết thì để trống rồi cân 1 cuộn nguyên ở dưới</span></label>
+        <label for="cdGm">Định lượng dài</label>
         <div class="cd-in">
-          <input id="cdGm" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="ví dụ 4,8" oninput="cdTinh()">
-          <span class="dv">g/m</span>
+          <input id="cdGm" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="4,8" oninput="cdTinh()">
+          <span class="cd-dv tinh">g/m</span>
         </div>
         <div class="cd-doc" id="cdGmDoc"></div>
         <div class="cd-doc" id="cdSoTay"></div>
       </div>
 
-      <!-- CHỈ NHẬN GRAM (user 22/08/2026 chiều: bỏ hẳn nút kg; giữ nguyên cho cả 3 loại hàng —
-           user chốt lại 23/08). Dòng "Đọc là" vẫn quy ra kg để người cân bằng cân kg soi lại —
-           gõ 10 mà ý là 10 kg thì thấy ngay "0.01 kg" sai sai. -->
-      <div class="cd-f">
-        <label for="cdTong">Tổng khối lượng <span class="cd-th">chỉ</span> trả về <span class="hint">cân cả lô, gồm cả lõi — <b class="cd-gram">gõ bằng GRAM</b></span></label>
-        <div class="cd-in">
-          <input id="cdTong" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="ví dụ 9,500" oninput="cdTinh()">
-          <span class="dv">gr</span>
+      <!-- BỐN Ô CÂN, XẾP THÀNH HAI CẶP. Ô tổng CHỈ NHẬN GRAM (user 22/08/2026 chiều: bỏ hẳn nút kg;
+           chốt lại 23/08 cho cả 3 loại hàng). Dòng "Đọc là" vẫn quy ra kg để người cân bằng cân kg
+           soi lại — gõ 10 mà ý là 10 kg thì thấy ngay "0.01 kg" sai sai. -->
+      <div class="cd-doi">
+        <div class="cd-f">
+          <label for="cdTong">Tổng khối lượng <span class="cd-th">chỉ</span> trả về</label>
+          <div class="cd-in">
+            <input id="cdTong" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="9,500" oninput="cdTinh()">
+            <span class="cd-dv tinh">gr</span>
+          </div>
+          <div class="cd-doc" id="cdTongDoc"></div>
         </div>
-        <div class="cd-doc" id="cdTongDoc"></div>
+        <div class="cd-f">
+          <label for="cdCuon">Số cuộn thừa</label>
+          <div class="cd-in">
+            <input id="cdCuon" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="10" oninput="cdTinh()">
+            <span class="cd-dv tinh">cuộn</span>
+          </div>
+          <div class="cd-doc" id="cdCuonDoc"></div>
+        </div>
       </div>
 
-      <div class="cd-f">
-        <label for="cdCuon">Số cuộn thừa <span class="hint">đếm đầu cuộn — dùng để trừ lõi</span></label>
-        <div class="cd-in">
-          <input id="cdCuon" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="ví dụ 10" oninput="cdTinh()">
-          <span class="dv">cuộn</span>
+      <div class="cd-doi">
+        <div class="cd-f">
+          <label for="cdLoi">Khối lượng 1 lõi</label>
+          <div class="cd-in">
+            <input id="cdLoi" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="50" oninput="cdTinh()">
+            <span class="cd-dv tinh">gr</span>
+          </div>
+          <div class="cd-doc" id="cdLoiDoc"></div>
         </div>
-        <div class="cd-doc" id="cdCuonDoc"></div>
-      </div>
-
-      <div class="cd-f">
-        <label for="cdLoi">Khối lượng 1 lõi <span class="hint">lõi rỗng, không bao gồm <span class="cd-th">chỉ</span></span></label>
-        <div class="cd-in">
-          <input id="cdLoi" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="ví dụ 50" oninput="cdTinh()">
-          <span class="dv">gr</span>
+        <!-- Cái thước mật độ thứ hai, bên cạnh thước khai ở trên: CÂN 1 cuộn nguyên. Có cái nào dùng
+             cái đó; đủ cả hai thì lấy CÂN làm thước chính và đem thước khai ra đối chứng chéo —
+             lệch >5% là dán cờ đỏ vì gần như chắc có một bên sai. -->
+        <div class="cd-f">
+          <label for="cdNguyen">Khối lượng 1 cuộn nguyên</label>
+          <div class="cd-in">
+            <input id="cdNguyen" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="120" oninput="cdTinh()">
+            <span class="cd-dv tinh">gr</span>
+          </div>
+          <!-- "Cuộn nguyên 120gr" là cân CẢ LÕI hay riêng phần hàng? Hai cách đọc lệch nhau 1,7 lần.
+               CHỐT 19/08/2026: kho mình cân CẢ LÕI -> để nguyên mặc định. Giữ nút thứ hai vì bảng
+               quy cách của nhà cung cấp lại ghi khối lượng riêng phần hàng. -->
+          <div class="cd-in" style="margin-top:7px">
+            <span class="pg-seg sm" role="group" aria-label="Cách hiểu khối lượng cuộn nguyên">
+              <button type="button" id="cdNgCa" class="on" onclick="cdDoiNguyen(1)" title="Đặt cả cuộn lên cân: lõi + hàng — đúng cách kho mình cân (mặc định)">cân cả lõi</button>
+              <button type="button" id="cdNgChi" onclick="cdDoiNguyen(0)" title="Chỉ dùng khi lấy số từ bảng quy cách nhà cung cấp: khối lượng riêng phần hàng">riêng hàng</button>
+            </span>
+          </div>
+          <div class="cd-doc" id="cdNguyenDoc"></div>
         </div>
-        <div class="cd-doc" id="cdLoiDoc"></div>
-      </div>
-
-      <!-- Cái thước mật độ thứ hai, bên cạnh chỉ số Tex ở trên: CÂN 1 cuộn nguyên (Tex = gram của
-           1.000 m chỉ -> 1 gr dài 1.000.000/Tex mm). Có cái nào dùng cái đó; đủ cả hai thì lấy CÂN
-           làm thước chính và đem Tex ra đối chứng chéo — lệch >5% là dán cờ đỏ vì gần như chắc có
-           một bên sai (nhầm loại chỉ, cân sai, lõi sai). -->
-      <div class="cd-f">
-        <label for="cdNguyen">Khối lượng 1 cuộn nguyên <span class="hint">cân cả lõi + <span class="cd-th">chỉ</span>, đúng quy cách ở trên — cần khi KHÔNG có <span class="cd-thuoc">Tex</span>; điền cả hai thì máy đối chứng chéo</span></label>
-        <div class="cd-in">
-          <input id="cdNguyen" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="ví dụ 120" oninput="cdTinh()">
-          <span class="dv">gr</span>
-        </div>
-        <!-- "Cuộn nguyên 120gr" là cân CẢ LÕI hay riêng phần CHỈ? Hai cách đọc lệch nhau 1,7 lần.
-             CHỐT 19/08/2026: kho mình cân CẢ LÕI + CHỈ -> để nguyên mặc định "cân cả lõi". Giữ
-             nút thứ hai vì bảng quy cách của nhà cung cấp lại ghi khối lượng riêng phần chỉ. -->
-        <div class="cd-in" style="margin-top:7px">
-          <span class="pg-seg sm" role="group" aria-label="Cách hiểu khối lượng cuộn nguyên">
-            <button type="button" id="cdNgCa" class="on" onclick="cdDoiNguyen(1)" title="Đặt cả cuộn lên cân: lõi + chỉ — đúng cách kho mình cân (mặc định)">cân cả lõi</button>
-            <button type="button" id="cdNgChi" onclick="cdDoiNguyen(0)" title="Chỉ dùng khi lấy số từ bảng quy cách nhà cung cấp: khối lượng riêng phần chỉ">chỉ riêng chỉ</button>
-          </span>
-        </div>
-        <div class="cd-doc" id="cdNguyenDoc"></div>
       </div>
 
       <div class="nds-ctl">
@@ -14576,8 +14621,14 @@ loadData();
  * KHÔNG gọi mạng, không đọc Sheet, không đụng WMS -> đúng ràng buộc "nhẹ tải upstream".
  * ============================================================================================ */
 var CD={ qc:5000000, tuDo:false, caLoi:true, tex:0, texTuDo:false, loadedOnce:false, mm:0,
-  loai:'chi', sku:'', pn:'', kho:0, khoTuDo:false, uid:'', gMet:0 };
+  loai:'chi', sku:'', pn:'', kho:0, khoTuDo:false, uid:'', gMet:0,
+  dvKho:'cm', dvQc:'m', tuDien:{} };
 var CD_SOTAY='cd-gm-sotay';        // sổ tay g/m của THUN: cân một lần, nhớ theo SKU
+/* Đơn vị của HAI ô đổi được (23/08/2026). Máy vẫn tính bằng mm/cm như cũ — đây chỉ là đơn vị NGƯỜI
+   GÕ. Danh mục thật có 92 SKU ghi khổ bằng inch và 85 SKU vải khai bằng yard, nên bắt họ tự nhân
+   2,54 hay 0,9144 trước khi gõ là mời gọi sai số. */
+var CD_DV={ kho:{ ds:['cm','inch'], he:{ cm:1, inch:2.54 } },     // → cm
+            qc: { ds:['m','yard'],  he:{ m:1, yard:0.9144 } } };  // → m
 /* Ba loại hàng — mỗi loại chỉ khác nhau ở CÁI THƯỚC và ở mấy chữ trên nhãn. Bảng này là chỗ DUY
    NHẤT khai sự khác nhau đó, để thêm loại thứ tư sau này không phải đi sửa rải rác. */
 var CD_LOAI={
@@ -14720,10 +14771,10 @@ function cdSkuGo(){
        bị bỏ qua vì tab không vẽ nổi kết quả.) */
     if(k){
       if(cdKhoChip(k.cm)){ CD.khoTuDo=false; CD.kho=k.cm; }
-      else { CD.khoTuDo=true; CD.kho=0; document.getElementById('cdKho').value=String(k.cm); }
+      else { CD.khoTuDo=true; CD.kho=0; CD.dvKho='cm'; cdDatTuDien('cdKho', k.cm); cdVeDv(); }
       cdVeKhoChon();
     }
-    if(g) document.getElementById('cdGsm').value=String(g.gsm);
+    if(g) cdDatTuDien('cdGsm', g.gsm);
     them = ' · ' + (k? ('khổ <b>'+cdF(k.cm,(k.cm%1?1:0))+' cm</b>'+(k.nguon==='inch'||k.nguon==='inch-khoang'?' (đổi từ inch)':'')+(k.nguon==='cm-thua-so-0'?' <b style="color:var(--warn)">— tên hàng ghi thừa một số 0, kiểm lại</b>':'')) : '<b style="color:var(--warn)">tên hàng không ghi khổ</b>')
          + ' · ' + (g? ('định lượng <b>'+g.gsm+' gsm</b>'+(g.nguon==='oz'?' (đổi từ oz)':'')) : '<b style="color:var(--warn)">tên hàng không ghi định lượng</b>');
   }else if(CD.loai==='thun'){
@@ -14733,11 +14784,11 @@ function cdSkuGo(){
     var so=cdSoTayDoc()[CD.sku];
     var hs=(typeof NDS_ENGINE!=='undefined')?NDS_ENGINE.heSoCan(CD.pn):null;
     if(so && so.gm>0){
-      document.getElementById('cdGm').value=String(so.gm);
+      cdDatTuDien('cdGm', so.gm);
       them=' · lấy <b>'+cdF(so.gm,2)+' g/m</b> từ sổ tay (đã cân)';
       if(hs) them+=' · tên hàng ghi <b>'+esc(hs.chu)+'</b> ('+cdF(hs.gMet,3)+' g/m)';
     }else if(hs){
-      document.getElementById('cdGm').value=String(Math.round(hs.gMet*1000)/1000);
+      cdDatTuDien('cdGm', Math.round(hs.gMet*1000)/1000);
       them=' · tên hàng ghi <b>'+esc(hs.chu)+'</b> → <b>'+cdF(hs.gMet,3)+' g/m</b>';
     }
     cdSoTayVe();
@@ -14771,6 +14822,42 @@ function cdUidGo(){
   doc.innerHTML= ok ? ('Sẽ in lên tem: <b>UIDgr '+esc(v)+'</b>')
     : ('Mã group thường là dãy <b>16 chữ số</b> — “'+esc(v.slice(0,24))+'” trông không giống, kiểm lại trước khi in.');
   cdTinh();
+}
+/* Bấm chip đơn vị = xoay vòng trong danh sách của ô đó. Hai đơn vị nên xoay vòng là đủ; mũi tên
+   chỉ để nói "chỗ này bấm được", không phải hứa một menu dài. */
+function cdDoiDv(o){
+  var c=CD_DV[o]; if(!c) return;
+  var cu=(o==='kho')?CD.dvKho:CD.dvQc;
+  var moi=c.ds[(c.ds.indexOf(cu)+1) % c.ds.length];
+  if(o==='kho') CD.dvKho=moi; else CD.dvQc=moi;
+  cdVeDv(); cdTinh();
+}
+function cdVeDv(){
+  [['kho','cdKhoDv',CD.dvKho],['qc','cdQCDv',CD.dvQc]].forEach(function(x){
+    var b=document.getElementById(x[1]); if(!b) return;
+    b.innerHTML=esc(x[2])+'<i></i>';
+    b.classList.toggle('doi', x[2]!==CD_DV[x[0]].ds[0]);   // khác đơn vị mặc định thì tô sáng
+    b.title='Đang gõ bằng '+x[2]+' — bấm để đổi sang '+CD_DV[x[0]].ds.filter(function(d){ return d!==x[2]; }).join('/');
+  });
+}
+/* Đánh dấu ô nào MÁY TỰ ĐIỀN, ô nào CÒN PHẢI NHẬP — bằng hình, không bằng chữ (xem CSS .tu-dien /
+   .can-nhap). Số máy điền mà người dùng gõ đè thì hết là "máy điền", bỏ dấu ngay. */
+function cdDanhDau(thieuId){
+  var moi={};
+  for(var id in CD.tuDien){
+    var o=document.getElementById(id); if(!o) continue;
+    if(String(o.value).trim()===String(CD.tuDien[id]).trim()) moi[id]=CD.tuDien[id];
+  }
+  CD.tuDien=moi;
+  ['cdSku','cdUid','cdQC','cdTex','cdKho','cdGsm','cdGm','cdTong','cdCuon','cdLoi','cdNguyen'].forEach(function(id){
+    var o=document.getElementById(id); if(!o) return;
+    o.classList.toggle('tu-dien', !!CD.tuDien[id] && !!String(o.value).trim());
+    o.classList.toggle('can-nhap', !String(o.value).trim() && (thieuId||[]).indexOf(id)>=0);
+  });
+}
+function cdDatTuDien(id, gt){
+  var o=document.getElementById(id); if(!o) return;
+  o.value=String(gt); CD.tuDien[id]=String(gt);
 }
 function cdKhoChip(cm){ return [150,152,190].indexOf(Number(cm))>=0; }
 function cdChonKho(cm, imLang){
@@ -14820,7 +14907,7 @@ function cdXoaLo(){
 function cdXoaHet(){
   ['cdTong','cdCuon','cdLoi','cdNguyen','cdTex','cdQC','cdSku','cdUid','cdKho','cdGsm','cdGm'].forEach(function(id){ document.getElementById(id).value=''; });
   CD.qc=5000000; CD.tuDo=false; CD.tex=0; CD.texTuDo=false; CD.sku=''; CD.pn=''; CD.uid='';
-  CD.kho=0; CD.khoTuDo=false;
+  CD.kho=0; CD.khoTuDo=false; CD.dvKho='cm'; CD.dvQc='m'; CD.tuDien={}; cdVeDv();
   ['cdSkuDoc','cdUidDoc','cdKhoDoc','cdGsmDoc','cdGmDoc'].forEach(function(id){ var o=document.getElementById(id); o.className='cd-doc'; o.innerHTML=''; });
   cdVeTexChon(); cdVeKhoChon(); cdChonQC(5000000); cdChonLoai('chi',true); cdDoiNguyen(1);
   try{ localStorage.removeItem(CD_KEY); }catch(e){}
@@ -14868,7 +14955,7 @@ function cdLuu(){
       texGo:document.getElementById('cdTex').value,
       /* Thước của VẢI/THUN cũng là thuộc tính của LOẠI HÀNG (lặp lại ở mọi lô) nên nhớ như Tex.
          SKU + UIDgr thì KHÔNG nhớ: chúng là của riêng cuộn/lô, nhớ lại là in nhầm tem. */
-      loai:CD.loai, kho:CD.kho, khoTuDo:CD.khoTuDo,
+      loai:CD.loai, kho:CD.kho, khoTuDo:CD.khoTuDo, dvKho:CD.dvKho, dvQc:CD.dvQc,
       khoGo:document.getElementById('cdKho').value, gsm:document.getElementById('cdGsm').value,
       gm:document.getElementById('cdGm').value
     }));
@@ -14894,11 +14981,14 @@ function cdLoad(){
     if(d.gm) document.getElementById('cdGm').value=d.gm;
     if(d.khoGo) document.getElementById('cdKho').value=d.khoGo;
     CD.khoTuDo=(d.khoTuDo===true); CD.kho=(Number(d.kho)>0)?Number(d.kho):0;
+    if(CD_DV.kho.ds.indexOf(d.dvKho)>=0) CD.dvKho=d.dvKho;
+    if(CD_DV.qc.ds.indexOf(d.dvQc)>=0) CD.dvQc=d.dvQc;
     cdVeKhoChon();
     if(d.tuDo && d.qc){ CD.qc=d.qc; document.getElementById('cdQC').value=String(d.qc/1000); cdChonQC(0,true); }
     else if(d.qc) cdChonQC(Number(d.qc),true);
     cdDoiNguyen(d.caLoi!==false);
   }
+  cdVeDv();
   cdChonLoai((d&&CD_LOAI[d.loai])?d.loai:'chi', true);
   cdTinh();
   cdNapTexKho();
@@ -14977,8 +15067,9 @@ function cdGomQuyCach(rows, loai){
 function cdVeQuyCach(ds){
   var bar=document.getElementById('cdQCBar'); if(!bar) return;
   bar.innerHTML = (ds||[]).map(function(d){
+    /* SỐ TRẦN trên chip — đơn vị đã có ở chip ĐVT cạnh ô nhập (user 23/08: đừng lặp lại đơn vị) */
     return '<button type="button" class="kktab" data-mm="'+(d.m*1000)+'" onclick="cdChonQC('+(d.m*1000)+')" title="'+
-      (d.n?(d.n+' SKU trong danh mục · '):'')+nf(d.m*1000)+' mm">'+nf(d.m)+' m</button>';
+      (d.n?(d.n+' SKU trong danh mục · '):'')+nf(d.m)+' m = '+nf(d.m*1000)+' mm">'+nf(d.m)+'</button>';
   }).join('')+
   '<button type="button" class="kktab" data-mm="0" onclick="cdChonQC(0)" title="Quy cách khác — gõ tay, đơn vị MÉT">Khác…</button>';
   /* Quy cách đang chọn KHÔNG còn trong hàng chip của loại mới (vd đang 5.000 m của chỉ mà chuyển
@@ -15023,19 +15114,26 @@ function cdVeTexKho(ds){
 /* ---------- 4. TÍNH + VẼ ---------- */
 function cdTinh(){
   var L    = CD_LOAI[CD.loai] || CD_LOAI.chi, ten = L.ten;
-  var qcM  = CD.tuDo ? cdSo(document.getElementById('cdQC').value) : NaN;   // ô "Khác…" gõ bằng MÉT
+  /* Ô "Khác…" gõ bằng ĐƠN VỊ ĐANG CHỌN ở chip ĐVT (m hoặc yard) — quy về mét rồi mới ra mm.
+     Máy vẫn tính bằng mm như cũ; chip ĐVT chỉ đổi cách NGƯỜI GÕ, không đổi kết quả. */
+  var heQc = CD_DV.qc.he[CD.dvQc] || 1;
+  var qcGo = CD.tuDo ? cdSo(document.getElementById('cdQC').value) : NaN;
+  var qcM  = CD.tuDo ? qcGo*heQc : NaN;                                     // mét
   var qc   = CD.tuDo ? qcM*1000 : CD.qc;                                    // tính toán vẫn bằng mm
   var tong = cdSo(document.getElementById('cdTong').value);                 // CHỈ NHẬN GRAM (cả 3 loại)
   var cuon = cdSo(document.getElementById('cdCuon').value);
   var loi  = cdSo(document.getElementById('cdLoi').value);
   var ngu  = cdSo(document.getElementById('cdNguyen').value);
   var texIn= CD.texTuDo ? cdSo(document.getElementById('cdTex').value) : (CD.tex>0?CD.tex:NaN);
-  var khoCm= CD.khoTuDo ? cdSo(document.getElementById('cdKho').value) : (CD.kho>0?CD.kho:NaN);
+  var heKho= CD_DV.kho.he[CD.dvKho] || 1;
+  var khoGo= CD.khoTuDo ? cdSo(document.getElementById('cdKho').value) : NaN;
+  var khoCm= CD.khoTuDo ? khoGo*heKho : (CD.kho>0?CD.kho:NaN);              // luôn quy về cm
   var gsm  = cdSo(document.getElementById('cdGsm').value);
   var gmIn = cdSo(document.getElementById('cdGm').value);
 
   /* Dòng "Đọc là …" cho từng ô — soi lại con số máy hiểu, kể cả khi còn thiếu ô khác */
-  if(CD.tuDo) cdDoc('cdQCDoc', qcM, 'm = '+(isFinite(qcM)?cdF(qcM*1000,0):'—')+' mm mỗi cuộn nguyên', 0);
+  if(CD.tuDo) cdDoc('cdQCDoc', qcGo, CD.dvQc+(CD.dvQc==='m'?'':' = '+(isFinite(qcM)?cdF(qcM,1):'—')+' m')+
+    ' = '+(isFinite(qcM)?cdF(qcM*1000,0):'—')+' mm mỗi cuộn nguyên', 1);
   else document.getElementById('cdQCDoc').innerHTML='';   // preset đã in sẵn số trên nút, soi lại là nhiễu mắt
   /* Quy ngược ra kg để người quen cân kg soi: gõ 10 mà ý là 10 kg thì thấy ngay "0.01 kg" sai sai */
   cdDoc('cdTongDoc', tong, 'gr = '+(isFinite(tong)?cdFg(tong/1000):'—')+' kg cả lô', 1);
@@ -15057,7 +15155,7 @@ function cdTinh(){
   if(!CD.khoTuDo && !(CD.kho>0)){
     var oKd=document.getElementById('cdKhoDoc'); oKd.className='cd-doc'; oKd.innerHTML='';
     document.getElementById('cdKho').classList.remove('xau');
-  }else cdDoc('cdKhoDoc', khoCm, 'cm bề ngang cuộn', 1);
+  }else cdDoc('cdKhoDoc', khoGo, CD.dvKho+(CD.dvKho==='cm'?'' : ' = '+(isFinite(khoCm)?cdF(khoCm,1):'—')+' cm')+' bề ngang cuộn', 1);
   cdDoc('cdGsmDoc', gsm, isFinite(gsm)&&isFinite(khoCm)&&gsm>0&&khoCm>0
       ? ('g/m² × khổ '+cdF(khoCm,(khoCm%1?1:0))+' cm → <b>'+cdF(gsm*khoCm/100,1)+' g mỗi mét vải</b>')
       : 'g mỗi m²', 1);
@@ -15091,6 +15189,20 @@ function cdTinh(){
       : (CD.loai==='vai' ? 'cuộn nguyên, hoặc khổ + định lượng (một trong hai là đủ)'
                          : 'cuộn nguyên, hoặc định lượng dài g/m (một trong hai là đủ)'));
   }
+  /* Ô nào ĐANG TRỐNG mà thiếu thì viền nét đứt — người dùng nhìn là biết còn phải gõ chỗ nào,
+     khỏi đọc câu "Còn thiếu:" rồi dò ngược lên. */
+  var thieuId=[];
+  if(!(tong>0)) thieuId.push('cdTong');
+  if(!(cuon>0)) thieuId.push('cdCuon');
+  if(!(loi>=0) || !isFinite(loi)) thieuId.push('cdLoi');
+  if(!(ngu>0) && !(gMetKhai>0)){
+    thieuId.push('cdNguyen');
+    if(CD.loai==='chi' && CD.texTuDo) thieuId.push('cdTex');
+    if(CD.loai==='vai'){ if(!(gsm>0)) thieuId.push('cdGsm'); if(!(khoCm>0) && CD.khoTuDo) thieuId.push('cdKho'); }
+    if(CD.loai==='thun') thieuId.push('cdGm');
+  }
+  if(canQc && !(qc>0) && CD.tuDo) thieuId.push('cdQC');
+  cdDanhDau(thieuId);
   if(thieu.length){ cdTrong('Còn thiếu: <b>'+thieu.join('</b> · <b>')+'</b>.'); return; }
   cdLuu();
 
@@ -15116,6 +15228,11 @@ function cdTinh(){
 
   var gMet    = thuocCan ? (gNgu*1000/qc) : gMetKhai;   // gram mỗi mét — cái thước cuối cùng
   var mmTrenG = 1000/gMet;                              // 1 gram hàng dài bao nhiêu mm
+  /* SỐ CHỮ SỐ THẬP PHÂN CỦA MẬT ĐỘ phải theo ĐỘ LỚN của nó. Chỉ may: 37.037 mm/gr — lấy 0 số lẻ là
+     đúng. Vải: 2,469 mm/gr — lấy 0 số lẻ thành "2", rồi phiếu tính đọc ra "23,400 gr × 2 mm/gr =
+     57,778 mm", ai bấm máy tính kiểm lại cũng ra 46.800 và kết luận máy tính sai. Phiếu tính mà
+     không lần lại được bằng tay thì mất luôn công dụng của nó. */
+  var soLeMd = mmTrenG >= 100 ? 0 : (mmTrenG >= 10 ? 1 : 3);
   var mm      = Math.round(gHang*mmTrenG);
   var tbMm    = mm/cuon;                                // trung bình 1 cuộn thừa
   var coQc    = (qc>0);
@@ -15125,17 +15242,18 @@ function cdTinh(){
   /* THUN: cân cuộn nguyên xong thì NHỚ g/m theo SKU — lần sau chỉ cần cân tổng, khỏi cân mẫu lại */
   if(CD.loai==='thun' && thuocCan && CD.sku) cdSoTayGhi(CD.sku, gMet);
 
+  cdDanhDau([]);                     // tính được rồi thì không ô nào còn "phải nhập"
   document.getElementById('cdState').hidden=true;
   document.getElementById('cdBtnCopy').disabled=false;
   document.getElementById('cdBtnTem').disabled=!CD.sku;
   document.getElementById('cdBtnTem').title = CD.sku
     ? ('Đưa '+CD.sku+' + '+cdF(mm)+' mm sang danh sách In tem'+(CD.uid?(' (kèm UIDgr '+CD.uid+')'):''))
     : 'Điền ô Mã SKU ở bước 1 thì mới đẩy sang In tem được';
-  document.getElementById('cdKQHint').textContent='mật độ '+cdF(mmTrenG,0)+' mm mỗi gram '+ten+' · '+
+  document.getElementById('cdKQHint').textContent='mật độ '+cdF(mmTrenG,soLeMd)+' mm mỗi gram '+ten+' · '+
     (thuocCan ? ('≈ '+L.noi(gMet)) : (L.noi(gMetKhai)+' '+L.nguon));
 
   var tiles=document.getElementById('cdTiles');
-  tiles.hidden=false;
+  tiles.hidden=false; tiles.classList.remove('mo');
   tiles.innerHTML=
     cdTile('to','var(--accent)', cdF(mm)+' <small>mm</small>', 'Tổng số lượng quy đổi', 'số để nhập phiếu kiểm kê · '+cdF(cuon)+' cuộn thừa')+
     cdTile('','var(--info)', cdF(mm/1000,1)+' <small>m</small>', 'Quy ra mét', '1 kg ≈ '+cdF(1000/gMet,2)+' m')+
@@ -15154,8 +15272,8 @@ function cdTinh(){
     cdStep(4, thuocCan
         ? ('Cuộn nguyên '+cdF(qc)+' mm có '+cdFg(gNgu)+' gr '+ten+(CD.caLoi?(' ('+cdFg(ngu)+' gr cả lõi − '+cdFg(loi)+' gr lõi)'):' (số nhà cung cấp ghi)'))
         : motaKhai,
-      cdF(mmTrenG,0)+' mm/gr')+
-    cdStep('=', '<b>'+cdFg(gHang)+' gr × '+cdF(mmTrenG,0)+' mm/gr</b>', cdF(mm)+' mm', true);
+      cdF(mmTrenG,soLeMd)+' mm/gr')+
+    cdStep('=', '<b>'+cdFg(gHang)+' gr × '+cdF(mmTrenG,soLeMd)+' mm/gr</b>', cdF(mm)+' mm', true);
 
   /* CỜ đỏ kiểm tra chéo: cuộn thừa thì phải NGẮN hơn cuộn nguyên. Dài hơn = số cân / số
      cuộn / khối lượng cuộn nguyên đang sai ở đâu đó — nói thẳng bằng số để đi cân/đếm lại. */
@@ -15222,7 +15340,15 @@ function cdTrong(html,loai){
   CD.mm=0;
   document.getElementById('cdBtnCopy').disabled=true;
   document.getElementById('cdBtnTem').disabled=true;
-  document.getElementById('cdTiles').hidden=true;
+  /* 4 thẻ MỜ giữ chỗ đúng 4 con số sắp hiện — xem ghi chú `.cd-tiles.mo` ở CSS */
+  var tiles=document.getElementById('cdTiles');
+  tiles.hidden=false; tiles.classList.add('mo');
+  var ten=(CD_LOAI[CD.loai]||CD_LOAI.chi).ten;
+  tiles.innerHTML=
+    cdTile('to','var(--line)','—','Tổng số lượng quy đổi','số để nhập phiếu kiểm kê')+
+    cdTile('','var(--line)','—','Quy ra mét','1 kg ≈ … m')+
+    cdTile('','var(--line)','—','Tương đương cuộn nguyên','')+
+    cdTile('','var(--line)','—','Trung bình 1 cuộn thừa','');
   document.getElementById('cdSteps').hidden=true;
   document.getElementById('cdKQHint').textContent='máy tính lại ngay mỗi lần gõ';
   document.getElementById('cdNote').innerHTML = (loai==='bad')
