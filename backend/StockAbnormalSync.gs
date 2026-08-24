@@ -103,7 +103,12 @@ function syncStockAbnormal() {
   var token = getAccessToken_();
 
   var out = [], page = 1, got = 0, total = null;
+  var t0 = new Date().getTime();
   while (page <= cfg.MAX_PAGES) {
+    /* NGÂN SÁCH THỜI GIAN (audit 23/08/2026): kéo tuần tự hàng trăm trang có thể chạm trần 6' của
+       Apps Script — execution bị chém ngang là mất trắng lượt. Quá 270s thì THROW trước khi ghi:
+       writeSheet_ nằm SAU vòng này nên tab giữ nguyên dữ liệu cũ, không bao giờ ghi nửa vời. */
+    if (new Date().getTime() - t0 > 270000) throw new Error('Quá ngân sách 270s ở trang ' + page + '/' + (total != null ? Math.ceil(total / cfg.PAGE_SIZE) : '?') + ' — bỏ lượt, giữ dữ liệu cũ (lượt sau/máy trạm kéo lại).');
     var res;
     try {
       res = fetchStockPage_(token, page);
