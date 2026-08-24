@@ -1,5 +1,23 @@
 /**
  * ============================================================================
+ *  ⚠ FILE NÀY KHÔNG CHẠY Ở ĐÂU (đối chứng 24/08/2026) — GIỮ LÀM THAM KHẢO / ĐƯỜNG LÙI.
+ *
+ *  Rollout audit ghi "dán tay bản mới vào project GAS của sheet factory (trigger 7h)". Đi kiểm
+ *  thì KHÔNG CÓ project nào như vậy:
+ *    · Script gắn trong Sheet "stock location MTG/Garment"
+ *      (18sqm-nGJtNr6sRDqwpdRB5v84HrTKNoiHvlP3c3RVAvt2iwte4i7kTJh) kéo về bằng clasp chỉ có
+ *      `appsscript.json` (timeZone Asia/Bangkok = mặc định, README yêu cầu Asia/Ho_Chi_Minh)
+ *      và `Mã.js` = `function myFunction(){}` — project RỖNG, chưa từng dùng.
+ *    · Drive không có project Apps Script standalone nào.
+ *    · Tab `stock-inventory-beta` thực tế do MÁY TRẠM ghi: `hasaki/sync-tonbatthuong.js`
+ *      (log 24/08 09:33 ghi 47.457 dòng theo lô; 1.208 lượt trong log).
+ *  ⇒ CỐ TÌNH KHÔNG dán file này lên project nào. Dán vào là tạo bên ghi THỨ HAI cho cùng một tab:
+ *    hai bên cùng clearContents/setValues = đúng loại lỗi mà mục LockService của audit nói tới.
+ *  Mục audit "keoWmsBo_ không time-budget" vẫn được vá ở nơi CÓ chạy thật: `keoWmsBo_` trong
+ *  `hasaki/google-script.gs` (project 5S, gọi từ `apiForceSyncWms`) — ngân sách 240s, đã deploy @83.
+ *  Muốn hồi sinh đường GAS này thì phải TẮT bước tonbatthuong ở máy trạm trước.
+ * ============================================================================
+ *
  *  StockAbnormalSync.gs — Đồng bộ "Tồn kho bất thường" (report stock-inventory-beta)
  *  từ WMS Hasaki về Google Sheet để tab "Tồn kho bất thường" của dashboard đọc.
  *
