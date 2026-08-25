@@ -7614,8 +7614,57 @@ function kkForecastInfo(kind,univ,conLai){
       return out2;
     }
   }
+/* Bộ số chuẩn tham khảo đo từ ĐỢT KIỂM 252161 (Request 252161 — 81 phiên kiểm, 1.451 dòng SKU có giờ phút thực tế) */
+var KK_BENCHMARK_252161 = {
+  req: '252161',
+  sku: {
+    all: 78.8,    // ~1.31 phút / SKU (46 SKU / giờ / người)
+    NVL: 82.4,    // ~1.37 phút / SKU (44 SKU / giờ / người) - Vải cuộn, Nguyên liệu
+    PL: 45.6,     // ~0.76 phút / SKU (79 SKU / giờ / người) - Phụ liệu nhãn mác bao bì
+    KHAC: 78.8
+  },
+  loc: {
+    FULL_LOCATION_FACTORY: 260.2, // ~4.34 phút / vị trí (14 vị trí / giờ / người)
+    LOCATION_FACTORY: 136.6,      // ~2.28 phút / vị trí (26 vị trí / giờ / người)
+    all: 260.2
+  },
+  capNgay: 4 * 3600 * 3.5, // 3.5 người × 4 giờ/ngày = 14 giờ công/ngày
+  nguoiTB: 3.5,
+  phutNguoi: 240
+};
+
   /* ---- ƯU TIÊN 3: tại chỗ trắng dữ liệu — dự báo trọn bằng EFFORT THAM CHIẾU (mượn) ---- */
   if(secM){ var outM=tinhEffort(tmM,secM,muon); if(outM) return outM; }
+
+  /* ---- ƯU TIÊN 4: fallback CHUẨN THỰC ĐO ĐỢT 252161 (khi bảng chưa có giờ phút) ---- */
+  if(kind === 'sku'){
+    var bm = KK_BENCHMARK_252161;
+    var tmBM = { rate: { PL: [bm.sku.PL], NVL: [bm.sku.NVL], KHAC: [bm.sku.KHAC] }, dayEffort: {}, persEff: {} };
+    var outBM = tinhEffort(tmBM, bm.sku.all, 'đợt kiểm chuẩn ' + bm.req + ' (≈78.8s/SKU · PL: 45.6s · NVL: 82.4s)');
+    if(outBM){
+      outBM.capNgay = bm.capNgay;
+      outBM.nguoiTB = bm.nguoiTB;
+      outBM.phutNguoi = bm.phutNguoi;
+      outBM.ngay = Math.ceil(outBM.effort / outBM.capNgay);
+      outBM.eta = fmt(etaSkipCN(outBM.ngay));
+      return outBM;
+    }
+  } else if(kind === 'loc'){
+    var bm = KK_BENCHMARK_252161;
+    var fT = kkfGet('tl');
+    var secLoc = (fT && /location factory/i.test(fT.raw)) ? bm.loc.LOCATION_FACTORY : bm.loc.FULL_LOCATION_FACTORY;
+    var tmBM = { rate: { ALL: [secLoc] }, dayEffort: {}, persEff: {} };
+    var outBM = tinhEffort(tmBM, secLoc, 'đợt kiểm chuẩn ' + bm.req + ' (≈' + (secLoc / 60).toFixed(1) + ' phút/vị trí)');
+    if(outBM){
+      outBM.capNgay = bm.capNgay;
+      outBM.nguoiTB = bm.nguoiTB;
+      outBM.phutNguoi = bm.phutNguoi;
+      outBM.ngay = Math.ceil(outBM.effort / outBM.capNgay);
+      outBM.eta = fmt(etaSkipCN(outBM.ngay));
+      return outBM;
+    }
+  }
+
   return {none:true};
 }
 /* Danh sách tồn kho gộp theo (kho|mã) từ Stock Location — nền tảng cho cả 2 thẻ:
@@ -7842,6 +7891,7 @@ function kkFcOpen(kind){
     var gChips=''; for(var g2 in fc.nhomTong){ if(fc.nhomTong[g2]) gChips+='<button class="fcg on" data-g="'+g2+'" onclick="this.classList.toggle(\'on\');kkFcSim()">'+KK_NHOM_TEN[g2]+' · '+nf(fc.nhom[g2]||0)+'</button>'; }
     var baseItems=[{v:'conlai',t:'Còn lại chưa kiểm'},{v:'tong',t:'Toàn bộ — kiểm lại từ đầu'}];
     return '<div class="fcsec"><h3>② Người chọn — mô phỏng phương án nhân sự</h3>'+
+      '<div class="fcref">💡 <b>Số tham khảo đợt 252161:</b> SKU trung bình <b>78.8s/mã</b> (Phụ liệu: <b>45.6s</b> · Vải/NVL: <b>82.4s</b>) · Vị trí đếm trọn: <b>260.2s/vị trí</b> (~4.3 phút) · Vị trí đếm điểm: <b>136.6s/vị trí</b> (~2.3 phút).</div>'+
       (fc.muon?'<div class="fcref">Giây/mã &amp; nhịp làm việc mượn từ '+esc(fc.muon)+' làm THAM CHIẾU — sẽ tự thay bằng số đo tại chỗ khi phạm vi này có phiếu kiểm kèm giờ.</div>':'')+
       '<div class="fcctl">'+
       '<label>Số nhân sự kiểm'+fcComboHtml('fcN',nItems,nMac)+'</label>'+
