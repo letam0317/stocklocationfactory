@@ -452,6 +452,13 @@ body.an-chan .footbar{display:none}
    segment display:contents để con của chúng đứng NGANG HÀNG nhau thay vì thành 2 khối riêng */
 .kkonebar{row-gap:6px}
 .kkonebar>#kkWhBar{display:contents}
+/* Thu gọn bộ lọc tab Kiểm kê (25/08/2026): mặc định chip kho + ô lọc ẨN sau nút "Bộ lọc" — bộ lọc
+   đang chọn vẫn áp dụng, badge số trên nút cho biết đang lọc mấy trường. !important để thắng cả
+   display:contents (desktop) lẫn display:grid (khối mobile bên dưới). */
+#kkOneBar.thu>#kkWhBar,#kkOneBar.thu>#kkFilters{display:none !important}
+.kkfltbtn .n{display:inline-block;min-width:16px;padding:0 5px;margin-left:1px;border-radius:99px;
+  font-size:10px;font-weight:750;background:var(--accent);color:var(--accent-text);line-height:1.6}
+.kkfltbtn .n:empty{display:none}
 .kkonebar>#kkFilters:not([hidden]){display:contents}
 /* ĐỒNG BỘ KÍCH THƯỚC cả hàng: mọi phần tử (chip kho · pill lọc · Xoá lọc · nút Kế hoạch) cùng cao 32px,
    cùng cỡ chữ — chuẩn pill .mfilters dùng chung toàn dự án, hết cảnh cái to cái nhỏ */
@@ -534,9 +541,20 @@ body.an-chan .footbar{display:none}
 .qtctbl td{white-space:nowrap}
 .qtctbl td.qtcnum{font-weight:750;color:var(--ink);font-variant-numeric:tabular-nums}
 .qtctbl tr.qtccu td{opacity:.62}   /* lượt kiểm CŨ hơn của cùng vị trí — mờ đi, có badge "kiểm cũ" */
+/* Dòng phụ UIDgr lệch (25/08/2026 chiều — yêu cầu user): hàng quản lý UID group (vải) mà lệch thì
+   chỉ ra NHÓM NÀO lệch, SL hệ thống → SL đếm. Nguồn: tab kiemke-uidgr đã tải sẵn (UIDGR.map). */
+.qtctbl tr.qtcug td{background:color-mix(in srgb,var(--warn) 7%,var(--surface));border-bottom:1px solid var(--border);
+  padding:5px 11px 7px 26px;white-space:normal;font-size:11.5px;color:var(--ink2)}
+.qtcug1{display:block;line-height:1.7}
+.qtcug1 b{font-variant-numeric:tabular-nums;letter-spacing:.02em}
 @media(max-width:768px){
   .qtcwrap:has(table.mbcard){overflow:visible;border:0;border-radius:0;max-height:none}
   .qtctbl td.qtcnum{font-size:15px}
+  /* Chế độ thẻ: dòng UIDgr DÍNH LIỀN đáy thẻ của dòng chính (gỡ khuôn td[colspan] "thông báo rỗng") */
+  table.mbcard.qtctbl tr:has(+tr.qtcug){margin-bottom:0;border-radius:12px 12px 0 0;border-bottom:0}
+  table.mbcard.qtctbl tr.qtcug{padding:7px 12px 9px;margin:0 0 8px;border:1px solid var(--line);border-top:1px dashed var(--border);
+    border-radius:0 0 12px 12px;background:color-mix(in srgb,var(--warn) 7%,var(--panel))}
+  table.mbcard.qtctbl tr.qtcug td[colspan]{text-align:left !important;font-size:11px;background:0;border:0;padding:0}
 }
 /* Pop-up camera quét mã (dùng chung vỏ .modal/.modalbox — thừa hưởng sheetIn + kính mờ + Escape) */
 .qtcqrbox{width:min(520px,94vw)}
@@ -2967,11 +2985,13 @@ body.side-anim{overflow-x:clip}
 
 <!-- ===== TAB 2: Kiểm kê — 2 khối song song: theo SKU & theo mã vị trí ===== -->
 <div id="viewKK" hidden>
-  <!-- HÀNG ĐIỀU KHIỂN 1 DÒNG: chip lọc KHO đứng trước → bộ lọc trường (Ngày/Request/Type) → nút Kế hoạch
-       (nút chuẩn chung 2 tab — không icon, màn hẹp rút gọn còn "Kế hoạch"); các segment display:contents để wrap chung 1 dòng -->
-  <div class="kkbar kkonebar" style="margin-bottom:12px">
+  <!-- HÀNG ĐIỀU KHIỂN 1 DÒNG: chip lọc KHO + bộ lọc trường (Ngày/Request/Type) THU GỌN sau nút
+       "Bộ lọc" (yêu cầu user 25/08/2026 — mặc định ẩn, số trên nút = số bộ lọc đang bật, bộ lọc
+       đang chọn vẫn ÁP DỤNG khi thu); nút Kế hoạch GIỮ NGUYÊN không làm gọn. -->
+  <div class="kkbar kkonebar" id="kkOneBar" style="margin-bottom:12px">
     <span id="kkWhBar"></span>
     <span class="mfilters kkmf kkfbar" id="kkFilters" hidden></span>
+    <button class="kktab kkfltbtn" id="kkFltBtn" onclick="kkLocThu()" title="Thu/xổ bộ lọc của tab: chip kho · ngày kiểm · request · type — bộ lọc đang chọn vẫn áp dụng khi thu gọn, số trên nút là số bộ lọc đang bật">Bộ lọc <span class="n" id="kkFltBtnN"></span><span id="kkFltBtnCh">▾</span></button>
     <button class="kktab kkplan" onclick="plOpen()" title="Lệnh kiểm kê tạo từ dashboard nằm ở 'sổ kế hoạch' WMS trước khi thành phiếu — Pending = chờ push · Processing = đã push · đọc trực tiếp từ WMS"><span class="pt">Kế hoạch chờ push (WMS)</span><span class="ps">Kế hoạch</span></button>
   </div>
   <div class="grid2 even">
@@ -5056,9 +5076,12 @@ var TIP={
     'Processing = đã push.',
   qtc:'Tra lại cột "Quantity count" của Physical Count Detail trên WMS mà không cần đăng nhập WMS: '+
     'dữ liệu từ phiếu kiểm loại Full location - Factory (cửa sổ 90 ngày) do cụm sync chép về '+
-    'Google Sheet. Mỗi vị trí hiện lượt kiểm mới nhất (lượt cũ hơn xem bằng nút riêng); bấm mã '+
-    'phiếu để mở phiếu đó trên WMS. Icon trong ô SKU = quét mã vạch/QR bằng camera — cần '+
-    'Chrome/Edge trên Android.',
+    'Google Sheet. Dòng thuộc phiếu đã kiểm mà WMS không ghi số đếm (hủy đếm / không thấy hàng) '+
+    'được tính là 0. Mỗi vị trí hiện lượt kiểm mới nhất (lượt cũ hơn xem bằng nút riêng); dòng lệch '+
+    'của hàng quản lý UID group (vải) liệt kê luôn UIDgr nào lệch, số hệ thống → số đếm; bấm mã '+
+    'phiếu để mở phiếu đó trên WMS. Icon trong ô SKU = quét mã vạch/QR bằng camera (cần Chrome/Edge '+
+    'trên Android). Máy có súng quét gắn sẵn (EDA52…): đang mở tab này cứ bóp cò là tra, không cần '+
+    'chạm vào ô.',
   abn:'Chỉ số "bất thường" đọc từ báo cáo stock-inventory-beta: chỉ lấy SKU có Product Type = Normal '+
     'và có ít nhất 1 loại lớn hơn 0 — Conflict, UID Temp, Not Found, Unsuitable product, Committed, '+
     'Committed Outbound.',
@@ -6399,6 +6422,27 @@ function plgDongModal(id){
 
 /* ===== Tab Kiểm kê (Physical Count) — port nguyên logic từ QC, đọc tab kiemke-sku / kiemke-location ===== */
 var KK={loadedOnce:false,data:{sku:[],loc:[]},loaded:0,tab:'sku',wh:'',st:'',range:'all',q:'',refDay:0};
+/* Thu gọn bộ lọc tab (25/08/2026): mặc định THU — nhớ lựa chọn trên máy này */
+try{ KK.fltThu=localStorage.getItem('kk-flt-thu')!=='0'; }catch(e){ KK.fltThu=true; }
+function kkLocThu(){
+  KK.fltThu=!KK.fltThu;
+  try{ localStorage.setItem('kk-flt-thu',KK.fltThu?'1':'0'); }catch(e){}
+  kkLocThuVe();
+}
+function kkLocThuVe(){
+  var bar=document.getElementById('kkOneBar'); if(!bar) return;
+  bar.classList.toggle('thu',!!KK.fltThu);
+  var ch=document.getElementById('kkFltBtnCh'); if(ch) ch.textContent=KK.fltThu?'▾':'▴';
+  kkLocThuBadge();
+}
+/* Badge = số bộ lọc ĐANG BẬT (kho + ngày + các combo) — thu gọn rồi vẫn thấy mình đang lọc gì đó */
+function kkLocThuBadge(){
+  var n=0;
+  if(KK.wh) n++;
+  if(KKF.s||KKF.e) n++;
+  document.querySelectorAll('#kkFilters .combo input').forEach(function(i2){ if(i2.value.trim()) n++; });
+  var b=document.getElementById('kkFltBtnN'); if(b) b.textContent=n?String(n):'';
+}
 var KK_TABS={sku:'kiemke-sku',loc:'kiemke-location'};
 var KK_STATUSES=['PENDING','CANCELED','PROCESSING','VERIFIED','REJECTED','APPROVED','NOT COUNT','WAITING FOR APPROVE'];
 var KK_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17L17 7M17 7H9M17 7V15"/></svg>';
@@ -6588,6 +6632,17 @@ function kkIdLink(id,kind){
 var QTC={dang:false,kq:null,sku:'',taCa:false,bd:null,quetTimer:null,quetStream:null};
 var QTC_TAB='kiemke-qtycount';
 function qtcChuan(s){ return String(s==null?'':s).trim().replace(/\.0$/,''); }
+/* Bóc MÃ từ chuỗi quét được (QR có thể kèm chữ/URL, súng quét bắn nguyên payload):
+   ưu tiên cụm ĐÚNG 9 chữ số (khuôn SKU nội bộ 42x-xxx-xxx), không có thì lấy cụm số DÀI NHẤT,
+   không có cụm số nào thì trả nguyên chuỗi (SKU chữ hiếm gặp vẫn tra được). */
+function qtcTachMa(s){
+  s=String(s==null?'':s).trim();
+  var runs=s.match(/\d{6,}/g)||[];
+  if(!runs.length) return s;
+  for(var i=0;i<runs.length;i++) if(runs[i].length===9) return runs[i];
+  runs.sort(function(a,b){ return b.length-a.length; });
+  return runs[0];
+}
 async function qtcFetch(sku){
   var ck='slf-qtc-'+sku, hit=cacheGet(ck);
   if(hit) return {rows:hit,err:false};
@@ -6614,19 +6669,53 @@ async function qtcFetch(sku){
   return {rows:[],err:!coLuotThanh};
 }
 async function qtcTra(boCache){
-  var inp=document.getElementById('qtcSku'), sku=qtcChuan(inp?inp.value:'');
+  var inp=document.getElementById('qtcSku'), sku=qtcTachMa(qtcChuan(inp?inp.value:''));
   if(!sku){ toast('Gõ SKU (hoặc bấm icon quét mã) trước đã.','warn'); if(inp) inp.focus(); return; }
+  if(inp&&inp.value!==sku) inp.value=sku;   // quét ra payload dài -> ô hiện đúng MÃ đã bóc, người dùng thấy máy hiểu gì
   if(QTC.dang) return;
   QTC.dang=true;
   var btn=document.getElementById('qtcGo'); if(btn) btn.disabled=true;
   if(boCache===true){ try{ sessionStorage.removeItem('slf-qtc-'+sku); }catch(e){} }
   document.getElementById('qtcKq').innerHTML='<div class="sk" style="height:72px;border-radius:10px;margin-top:10px"></div>';
   try{
-    var kq=await qtcFetch(sku);
-    QTC.kq=kq; QTC.sku=sku; QTC.taCa=false;
+    // uidgrLoad chạy kèm (không bao giờ reject): dòng lệch cần chỉ ra UIDgr nào lệch ngay dưới
+    var rr=await Promise.all([qtcFetch(sku),uidgrLoad()]);
+    QTC.kq=rr[0]; QTC.sku=sku; QTC.taCa=false;
     qtcVe();
   }finally{ QTC.dang=false; if(btn) btn.disabled=false; }   // treo mạng không được khoá nút vĩnh viễn
 }
+/* ---- Súng quét GẮN MÁY (EDA52…) — 25/08/2026 chiều: máy quét phần cứng gõ như BÀN PHÍM rất nhanh
+   rồi kết bằng Enter. Trước đây không ô nào focus là tia quét rơi vào khoảng không -> "kết quả trống
+   hoàn toàn". Nay đang mở tab Kiểm kê thì cứ bóp cò là tra, KHÔNG cần chạm vào ô:
+   gom phím gõ dồn dập (≤100ms/phím — người gõ tay không nhanh vậy), gặp Enter là bóc mã + tra.
+   Không cướp phím khi đang gõ trong ô nhập khác hoặc khi pop-up khác đang mở. */
+var QTC_SUNG={buf:'',t:0};
+document.addEventListener('keydown',function(e){
+  if(typeof TOPTAB==='undefined'||TOPTAB!=='kk') return;
+  var tg=e.target, tag=tg&&tg.tagName;
+  if(tag==='INPUT'||tag==='TEXTAREA'||(tg&&tg.isContentEditable)) return;   // ô qtcSku đã có Enter riêng; ô khác không cướp
+  if(document.querySelector('.modal.show:not(#qtcqrmodal)')) return;         // pop-up khác đang mở — không tra ngầm sau lưng
+  var now=Date.now();
+  if(now-QTC_SUNG.t>100) QTC_SUNG.buf='';
+  QTC_SUNG.t=now;
+  if(e.key==='Enter'){
+    if(QTC_SUNG.buf.length>=6){
+      var ma=qtcTachMa(QTC_SUNG.buf);
+      QTC_SUNG.buf='';
+      if(ma){
+        e.preventDefault();
+        if(QTC.quetStream) qtcQuetDong();   // đang mở camera mà bóp cò súng quét -> ưu tiên súng
+        var o=document.getElementById('qtcSku'); if(o) o.value=ma;
+        toast('Súng quét: '+ma+' — đang tra…','ok');
+        qtcTra();
+      }
+      return;
+    }
+    QTC_SUNG.buf='';
+    return;
+  }
+  if(e.key&&e.key.length===1) QTC_SUNG.buf+=e.key;
+});
 function qtcVe(){
   var el=document.getElementById('qtcKq'); if(!el) return;
   var kq=QTC.kq, sku=QTC.sku;
@@ -6640,8 +6729,10 @@ function qtcVe(){
   }
   var rows=kq.rows.slice();
   if(!rows.length){
-    el.innerHTML='<div class="state" style="padding:14px;white-space:normal">Không thấy SKU <b>'+esc(sku)+'</b> trong dữ liệu kiểm '+
-      'Full location - Factory (cửa sổ 90 ngày). SKU chưa được kiểm theo loại phiếu này, hoặc mã gõ chưa đúng.</div>';
+    // Mã 16 số là UID group (tem cuộn vải), không phải SKU — nói thẳng thay vì "không thấy" chung chung
+    el.innerHTML='<div class="state" style="padding:14px;white-space:normal">'+(/^\d{15,17}$/.test(sku)
+      ?'Mã <b>'+esc(sku)+'</b> có dạng <b>UID group</b> (tem cuộn), không phải SKU — tra bằng MÃ SKU in trên tem; dòng nào lệch sẽ tự liệt kê UIDgr lệch ngay bên dưới.'
+      :'Không thấy SKU <b>'+esc(sku)+'</b> trong dữ liệu kiểm Full location - Factory (cửa sổ 90 ngày). SKU chưa được kiểm theo loại phiếu này, hoặc mã gõ chưa đúng.')+'</div>';
     return;
   }
   rows.sort(function(a,b){ return (kkCountMs(b)||0)-(kkCountMs(a)||0); });
@@ -6660,7 +6751,7 @@ function qtcVe(){
   hien.sort(function(a,b){ return (kkCountMs(b)||0)-(kkCountMs(a)||0); });
   thu.sort(function(a,b){ return (kkCountMs(b)||0)-(kkCountMs(a)||0); });
   var tong=0,daDem=0;
-  hien.forEach(function(r){ if(r.cnt!=null){ tong+=r.cnt; daDem++; } });
+  hien.forEach(function(r){ var c2=qtcCnt(r); if(c2!=null){ tong+=c2; daDem++; } });
   var pn=''; rows.some(function(r){ if(r.pn){ pn=r.pn; return true; } return false; });
   var h='<div class="qtcsum"><span class="t">'+esc(sku)+'</span>'+(pn?'<span class="pn" title="'+esc(pn)+'">'+esc(pn)+'</span>':'')+
     '<span>Tổng SL đếm: <b>'+nf(tong)+'</b>'+(daDem<hien.length?' ('+nf(daDem)+'/'+nf(hien.length)+' vị trí có số đếm)':' · '+nf(hien.length)+' vị trí')+'</span>'+
@@ -6670,10 +6761,12 @@ function qtcVe(){
   h+='<div class="qtcwrap"><table class="mtbl mbcard qtctbl"><thead><tr><th>Vị trí</th><th class="num">SL đếm</th><th class="num">Tồn HT</th><th class="num">Lệch</th><th>Phiếu</th><th>Ngày kiểm</th><th>Người kiểm</th><th>Trạng thái</th></tr></thead><tbody>';
   all.forEach(function(r,i){
     var cu=(i>=hien.length);
-    var d=(r.diff==null&&r.cnt!=null&&r.inv!=null)?(r.cnt-r.inv):r.diff;
+    var c2=qtcCnt(r);
+    var d=(r.diff==null&&c2!=null&&r.inv!=null)?(c2-r.inv):r.diff;
     h+='<tr'+(cu?' class="qtccu"':'')+'>'+
       '<td class="mb-hd">'+esc(r.loc||'—')+(cu?' <span class="badge b-pend">kiểm cũ</span>':'')+'</td>'+
-      '<td class="num mb-tag qtcnum" data-lb="SL đếm">'+(r.cnt==null?'chưa đếm':nf(r.cnt))+'</td>'+   /* "—" trần là ô không mang tin (luật ③) — dòng chưa đếm phải NÓI là chưa đếm */
+      '<td class="num mb-tag qtcnum" data-lb="SL đếm">'+(c2==null?'chưa đếm'
+        :(r.cnt==null?'<span title="WMS không ghi số đếm cho dòng này (đếm bị hủy / không thấy hàng) — phiếu đã kiểm nên tính là 0 (chốt 25/08)">0</span>':nf(c2)))+'</td>'+
       '<td class="num'+(r.inv==null?' mb-0':'')+'" data-lb="Tồn HT">'+(r.inv==null?'—':nf(r.inv))+'</td>'+
       (d==null?'<td class="num mb-0" data-lb="Lệch">—</td>'
         :'<td class="num '+(d<0?'d-am':d>0?'d-duong':'d-khop')+'" data-lb="Lệch">'+(d>0?'+':'')+nf(d)+'</td>')+
@@ -6681,9 +6774,35 @@ function qtcVe(){
       '<td data-lb="Ngày kiểm">'+kkFmtD(kkCountMs(r))+'</td>'+
       '<td'+(r.by?'':' class="mb-0"')+' data-lb="Người kiểm">'+kkByShort(r.by)+'</td>'+
       '<td data-lb="Trạng thái"><span class="badge '+kkBadge(r.st)+'">'+(r.st?esc(r.st):'—')+'</span></td></tr>';
+    /* Hàng quản lý UID group (vải) mà lệch -> chỉ ra NHÓM NÀO lệch (yêu cầu user 25/08 chiều).
+       Nguồn: tab kiemke-uidgr đã tải (chỉ chứa nhóm đếm ≠ tồn của phiếu, nên có dòng nào là dòng đó lệch). */
+    var ug=qtcUgRows(r.cid,r.sku||sku);
+    if(ug.length) h+='<tr class="qtcug'+(cu?' qtccu':'')+'"><td colspan="8">'+ug.map(qtcUgLine).join('')+'</td></tr>';
   });
   h+='</tbody></table></div>';
   el.innerHTML=h;
+}
+/* SL đếm HIỆU LỰC của 1 dòng (chốt user 25/08): WMS không ghi số đếm mà PHIẾU ĐÃ KIỂM
+   (dòng bị hủy đếm / không thấy hàng khi đếm full vị trí) = đếm 0 — tính vào tổng, lệch = 0 − tồn.
+   Chỉ phiếu CHƯA đếm (PENDING / NOT COUNT / PROCESSING) mới thật sự là "chưa đếm" (null). */
+function qtcCnt(r){
+  if(r.cnt!=null) return r.cnt;
+  return /PENDING|NOT COUNT|PROCESSING/.test(String(r.st||'').toUpperCase())?null:0;
+}
+/* Các dòng UID group lệch của (phiếu, SKU) — UIDGR.map do uidgrLoad dựng; uid rỗng là dòng đại diện
+   hàng thường (không quản UID group) thì bỏ, vì số của nó trùng số dòng chính. */
+function qtcUgRows(cid,sku){
+  var ds=(UIDGR.map&&!UIDGR.err&&UIDGR.map[String(cid)])||[];
+  return ds.filter(function(u){ return String(u.sku)===String(sku)&&String(u.uid)!==''; });
+}
+function qtcUgLine(u){
+  var qu=(u.qu===''||u.qu==null)?null:Number(u.qu)||0;
+  var qs=(u.qs===''||u.qs==null)?null:Number(u.qs)||0;
+  var d=(qu||0)-(qs||0);
+  var giua=(qs==null?'chưa có trên HT':nf(qs))+' → '+(qu==null?'đếm không thấy':nf(qu));
+  return '<span class="qtcug1">UIDgr <b>'+esc(u.uid)+'</b> · '+giua+
+    ' <span class="'+(d<0?'d-am':d>0?'d-duong':'d-khop')+'">('+(d>0?'+':'')+nf(d)+')</span>'+
+    (u.gst?' · '+kkUidStBadge(String(u.gst)):'')+'</span>';
 }
 /* --- Quét mã: camera + BarcodeDetector (Edge/Chrome Android — cùng đường với tab Nhận diện SKU) --- */
 function qtcQuetMo(){
@@ -6708,8 +6827,7 @@ function qtcQuetMo(){
         dangDo=false;
         var raw=(kq&&kq[0]&&String(kq[0].rawValue||'').trim())||'';
         if(!raw||!QTC.quetStream) return;
-        var m=raw.match(/\d{6,}/);   // tem kho in SKU toàn số; QR có thể kèm chữ → lấy cụm số dài
-        var ma=m?m[0]:raw;
+        var ma=qtcTachMa(raw);   // QR có thể kèm chữ/URL — bóc mã cùng luật với súng quét (ưu tiên cụm 9 số)
         document.getElementById('qtcSku').value=ma;
         qtcQuetDong();
         toast('Đã quét được mã '+ma+' — đang tra…','ok');
@@ -6790,6 +6908,7 @@ function kkRender(){
   if(!document.getElementById('kkStrip-sku')) return;
   kkfBuild();   // thanh lọc cấp tab dựng 1 lần khi dữ liệu về (giữ nguyên giá trị đang gõ giữa các lần render)
   kkRenderWhBar();
+  kkLocThuVe();   // trạng thái thu/xổ + badge số bộ lọc đang bật (mọi đường đổi lọc đều đi qua kkRender)
   kkRenderPanel('sku');
   kkRenderPanel('loc');
   kkRenderWh();
