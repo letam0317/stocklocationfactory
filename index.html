@@ -562,6 +562,25 @@ body.an-chan .footbar{display:none}
 .qtcvidwrap{position:relative}
 .qtcvidwrap video{width:100%;aspect-ratio:4/3;background:#000;border-radius:12px;object-fit:cover;display:block}
 .qtcaim{position:absolute;inset:14% 16%;border:2px solid rgba(255,255,255,.85);border-radius:12px;pointer-events:none}
+/* Pop-up hiển thị mã QR (Tra cứu SL đếm: SKU / Vị trí / UIDgr) — kích thước 1/2 màn hình điện thoại, 2/4 màn hình web */
+.qtc-qrlink{cursor:pointer;display:inline-flex;align-items:center;gap:3px;border-radius:4px;padding:0 3px;margin:0 -2px;transition:background .15s,color .15s;user-select:none}
+.qtc-qrlink:hover{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}
+.qtc-qrlink:active{transform:scale(.98)}
+.qtc-qrico{width:13px;height:13px;opacity:.6;flex-shrink:0;vertical-align:-2px}
+.qtc-qrlink:hover .qtc-qrico{opacity:1}
+.qtcsum .t.qtc-qrlink{border-bottom:1px dashed color-mix(in srgb,var(--accent) 40%,transparent);margin-right:2px}
+.modalbox.qtcshowqrbox{width:min(440px,50vw);max-height:85vh}
+.qtcshowqrbody{padding:16px 20px 20px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.qtcqrsvgwrap{background:#fff;padding:12px;border-radius:12px;border:1px solid var(--line);box-shadow:0 2px 10px rgba(0,0,0,.08);display:flex;align-items:center;justify-content:center;width:min(240px,70vw);aspect-ratio:1/1}
+.qtcqrsvgwrap svg{width:100%;height:100%;display:block}
+.qtcshowqrvalwrap{display:flex;align-items:center;gap:8px;background:var(--bg2,#f3f4f6);border:1px solid var(--border);padding:5px 12px;border-radius:8px;max-width:100%}
+.qtcshowqrval{font-family:var(--font-mono,monospace);font-weight:750;font-size:13.5px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qtcshowqrcopy{padding:3px 10px;font-size:12px;height:26px;border-radius:6px;cursor:pointer}
+@media(max-width:640px){
+  .modalbox.qtcshowqrbox{width:min(340px,88vw);max-height:55vh}
+  .qtcqrsvgwrap{width:min(180px,55vw);padding:8px}
+  .qtcshowqrbody{padding:12px 14px 16px;gap:8px}
+}
 /* Số phiếu = hyperlink SANG WMS (tab mới), KHÔNG mở pop-up chi tiết trong dashboard nữa (31/07):
    cả con số + icon ↗ nằm trong 1 thẻ <a>, bấm đâu cũng sang WMS */
 .pid{font-variant-numeric:tabular-nums}
@@ -3743,6 +3762,27 @@ body.side-anim{overflow-x:clip}
   </div>
 </div>
 
+<!-- Pop-up hiển thị mã QR cho SKU / Vị trí / UID group (Tra cứu SL đếm, 25/08/2026) -->
+<div id="qtcshowqrmodal" class="modal" onclick="if(event.target===this)qtcQrPopDong()">
+  <div class="modalbox qtcshowqrbox">
+    <div class="modalhd">
+      <div>
+        <div class="mt" id="qtcShowQrTitle">Mã QR</div>
+        <div class="mtsub" id="qtcShowQrSub">Nhấn hoặc nhấp đúp để xem mã QR</div>
+      </div>
+      <button class="mclose" onclick="qtcQrPopDong()">&times;</button>
+    </div>
+    <div class="modalbody qtcshowqrbody">
+      <div class="qtcqrsvgwrap" id="qtcShowQrSvg"></div>
+      <div class="qtcshowqrvalwrap">
+        <code class="qtcshowqrval" id="qtcShowQrVal"></code>
+        <button type="button" class="fcg qtcshowqrcopy" id="qtcShowQrCopyBtn" onclick="qtcQrCopy()">Sao chép</button>
+      </div>
+      <div class="hint" style="text-align:center;margin-top:2px">Quét trực tiếp bằng camera hoặc súng quét mã</div>
+    </div>
+  </div>
+</div>
+
 <!-- Modal "Phiếu kiểm kê #…" (Physical Count Detail) ĐÃ GỠ 31/07/2026: mã phiếu trong mọi bảng là
      HYPERLINK mở thẳng trang phiếu trên WMS ở tab mới (kkIdLink + kkWmsUrl) — hết cảnh pop-up nổ
      lên pop-up, nhưng vẫn trỏ sang WMS xem chi tiết được khi cần.
@@ -4743,6 +4783,8 @@ document.addEventListener('keydown',function(e){
   if(fm && fm.classList.contains('show')){ closeFcModal(); return; }
   var qqm=document.getElementById('qtcqrmodal');   // camera quét mã (Tra SL đếm) — đóng là TẮT camera
   if(qqm && qqm.classList.contains('show')){ qtcQuetDong(); return; }
+  var sqm=document.getElementById('qtcshowqrmodal'); // pop-up hiển thị mã QR (Tra SL đếm)
+  if(sqm && sqm.classList.contains('show')){ qtcQrPopDong(); return; }
   var km=document.getElementById('kkmodal');
   if(km && km.classList.contains('show')){ closeKkModal(); return; }
   if(document.querySelector('#abnmFilters .combo-menu.show')){ abnmCloseCombos(); return; }
@@ -6753,7 +6795,7 @@ function qtcVe(){
   var tong=0,daDem=0;
   hien.forEach(function(r){ var c2=qtcCnt(r); if(c2!=null){ tong+=c2; daDem++; } });
   var pn=''; rows.some(function(r){ if(r.pn){ pn=r.pn; return true; } return false; });
-  var h='<div class="qtcsum"><span class="t">'+esc(sku)+'</span>'+(pn?'<span class="pn" title="'+esc(pn)+'">'+esc(pn)+'</span>':'')+
+  var h='<div class="qtcsum"><span class="t qtc-qrlink" onclick="qtcQrPop(\''+esc(sku)+'\',\'SKU\')" ondblclick="qtcQrPop(\''+esc(sku)+'\',\'SKU\')" title="Bấm/nhấp đúp để xem mã QR của SKU '+esc(sku)+'">'+esc(sku)+'<svg class="qtc-qrico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><rect x="7.5" y="7.5" width="4" height="4" rx=".8"/><rect x="13" y="13" width="4" height="4" rx=".8"/></svg></span>'+(pn?'<span class="pn" title="'+esc(pn)+'">'+esc(pn)+'</span>':'')+
     '<span>Tổng SL đếm: <b>'+nf(tong)+'</b>'+(daDem<hien.length?' ('+nf(daDem)+'/'+nf(hien.length)+' vị trí có số đếm)':' · '+nf(hien.length)+' vị trí')+'</span>'+
     (thu.length?'<button type="button" class="fcg'+(QTC.taCa?' on':'')+'" onclick="QTC.taCa=!QTC.taCa;qtcVe()">'+(QTC.taCa?'Ẩn':'Hiện')+' '+nf(thu.length)+' lượt kiểm cũ hơn</button>':'')+
     '</div>';
@@ -6764,7 +6806,7 @@ function qtcVe(){
     var c2=qtcCnt(r);
     var d=(r.diff==null&&c2!=null&&r.inv!=null)?(c2-r.inv):r.diff;
     h+='<tr'+(cu?' class="qtccu"':'')+'>'+
-      '<td class="mb-hd">'+esc(r.loc||'—')+(cu?' <span class="badge b-pend">kiểm cũ</span>':'')+'</td>'+
+      '<td class="mb-hd">'+(r.loc?'<span class="qtc-qrlink" onclick="qtcQrPop(\''+esc(r.loc)+'\',\'Vị trí\')" ondblclick="qtcQrPop(\''+esc(r.loc)+'\',\'Vị trí\')" title="Bấm/nhấp đúp để xem mã QR của vị trí '+esc(r.loc)+'">'+esc(r.loc)+'<svg class="qtc-qrico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><rect x="7.5" y="7.5" width="4" height="4" rx=".8"/><rect x="13" y="13" width="4" height="4" rx=".8"/></svg></span>':'—')+(cu?' <span class="badge b-pend">kiểm cũ</span>':'')+'</td>'+
       '<td class="num mb-tag qtcnum" data-lb="SL đếm">'+(c2==null?'chưa đếm'
         :(r.cnt==null?'<span title="WMS không ghi số đếm cho dòng này (đếm bị hủy / không thấy hàng) — phiếu đã kiểm nên tính là 0 (chốt 25/08)">0</span>':nf(c2)))+'</td>'+
       '<td class="num'+(r.inv==null?' mb-0':'')+'" data-lb="Tồn HT">'+(r.inv==null?'—':nf(r.inv))+'</td>'+
@@ -6800,7 +6842,7 @@ function qtcUgLine(u){
   var qs=(u.qs===''||u.qs==null)?null:Number(u.qs)||0;
   var d=(qu||0)-(qs||0);
   var giua=(qs==null?'chưa có trên HT':nf(qs))+' → '+(qu==null?'đếm không thấy':nf(qu));
-  return '<span class="qtcug1">UIDgr <b>'+esc(u.uid)+'</b> · '+giua+
+  return '<span class="qtcug1">UIDgr <b class="qtc-qrlink" onclick="qtcQrPop(\''+esc(u.uid)+'\',\'UID group\')" ondblclick="qtcQrPop(\''+esc(u.uid)+'\',\'UID group\')" title="Bấm/nhấp đúp để xem mã QR của UIDgr '+esc(u.uid)+'">'+esc(u.uid)+'<svg class="qtc-qrico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><rect x="7.5" y="7.5" width="4" height="4" rx=".8"/><rect x="13" y="13" width="4" height="4" rx=".8"/></svg></b> · '+giua+
     ' <span class="'+(d<0?'d-am':d>0?'d-duong':'d-khop')+'">('+(d>0?'+':'')+nf(d)+')</span>'+
     (u.gst?' · '+kkUidStBadge(String(u.gst)):'')+'</span>';
 }
@@ -6844,6 +6886,401 @@ function qtcQuetDong(){
   if(QTC.quetStream){ try{ QTC.quetStream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){} QTC.quetStream=null; }
   var v=document.getElementById('qtcVideo'); if(v) v.srcObject=null;
   plgDongModal('qtcqrmodal');
+}
+
+/* ===== TẠO MÃ QR THUẦN SVG (không thư viện ngoài, không canvas) ==================================
+   Phục vụ pop-up hiển thị mã QR khi nhấn/nhấp đúp vào SKU, Vị trí hoặc UID group.
+   Chuẩn ISO/IEC 18004 — Byte mode UTF-8, ECC mức M (15% phục hồi), 8 mặt nạ chuẩn. */
+function qtcQrMatrix(text, eccLevel){
+  var ECC_MAP = { L: 1, M: 0, Q: 3, H: 2 };
+  var ecc = ECC_MAP[eccLevel] !== undefined ? ECC_MAP[eccLevel] : 0;
+
+  var GF_EXP = new Uint8Array(512), GF_LOG = new Uint8Array(256), x = 1;
+  for(var i = 0; i < 255; i++){
+    GF_EXP[i] = x; GF_LOG[x] = i;
+    x = (x << 1) ^ (x >= 128 ? 0x11d : 0);
+  }
+  for(var i = 255; i < 512; i++) GF_EXP[i] = GF_EXP[i - 255];
+
+  function gfMul(a, b){ return (!a || !b) ? 0 : GF_EXP[GF_LOG[a] + GF_LOG[b]]; }
+
+  function rsGenPoly(n){
+    var poly = [1];
+    for(var i = 0; i < n; i++){
+      var next = new Array(poly.length + 1).fill(0);
+      for(var j = 0; j < poly.length; j++){
+        next[j] ^= poly[j];
+        next[j + 1] ^= gfMul(poly[j], GF_EXP[i]);
+      }
+      poly = next;
+    }
+    return poly;
+  }
+
+  function rsCalc(data, n){
+    var gen = rsGenPoly(n), res = new Array(n).fill(0);
+    for(var i = 0; i < data.length; i++){
+      var coef = data[i] ^ res[0];
+      for(var j = 0; j < n - 1; j++) res[j] = res[j + 1];
+      res[n - 1] = 0;
+      if(coef !== 0){
+        for(var j = 0; j < n; j++) res[j] ^= gfMul(gen[j + 1], coef);
+      }
+    }
+    return res;
+  }
+
+  var QR_TABLE = {
+    1:  [[19,  7, 1, 19, 0,  0], [16, 10, 1, 16, 0,  0], [13, 13, 1, 13, 0,  0], [9,  17, 1,  9, 0,  0]],
+    2:  [[34, 10, 1, 34, 0,  0], [28, 16, 1, 28, 0,  0], [22, 22, 1, 22, 0,  0], [16, 28, 1, 16, 0,  0]],
+    3:  [[55, 15, 1, 55, 0,  0], [44, 26, 1, 44, 0,  0], [34, 18, 2, 17, 0,  0], [26, 22, 2, 13, 0,  0]],
+    4:  [[80, 20, 1, 80, 0,  0], [64, 18, 2, 32, 0,  0], [48, 26, 2, 24, 0,  0], [36, 16, 4,  9, 0,  0]],
+    5:  [[108,26, 1,108, 0,  0], [86, 24, 2, 43, 0,  0], [62, 18, 2, 15, 2, 16], [46, 22, 2, 11, 2, 12]],
+    6:  [[136,18, 2, 68, 0,  0], [108,16, 4, 27, 0,  0], [76, 24, 4, 19, 0,  0], [60, 28, 4, 15, 0,  0]],
+    7:  [[156,20, 2, 78, 0,  0], [124,18, 4, 31, 0,  0], [88, 18, 2, 14, 4, 15], [66, 26, 4, 13, 1, 14]],
+    8:  [[194,24, 2, 97, 0,  0], [154,22, 2, 38, 2, 39], [110,22, 4, 18, 2, 19], [86, 26, 4, 14, 2, 15]],
+    9:  [[232,30, 2,116, 0,  0], [182,22, 3, 36, 2, 37], [132,20, 4, 16, 4, 17], [100,24, 4, 12, 4, 13]],
+    10: [[274,18, 2, 68, 2, 69], [216,26, 4, 43, 1, 44], [154,24, 6, 19, 2, 20], [122,28, 6, 15, 2, 16]],
+  };
+
+  var ALIGN_POS = {
+    1: [], 2: [6, 18], 3: [6, 22], 4: [6, 26], 5: [6, 30],
+    6: [6, 34], 7: [6, 22, 38], 8: [6, 24, 42], 9: [6, 26, 46], 10: [6, 28, 50],
+  };
+
+  var utf8 = [];
+  var s = String(text == null ? '' : text);
+  for(var i = 0; i < s.length; i++){
+    var c = s.charCodeAt(i);
+    if(c < 128) utf8.push(c);
+    else if(c < 2048) utf8.push(192 | (c >> 6), 128 | (c & 63));
+    else if(c < 55296 || c >= 57344) utf8.push(224 | (c >> 12), 128 | ((c >> 6) & 63), 128 | (c & 63));
+    else {
+      i++;
+      c = 65536 + (((c & 1023) << 10) | (s.charCodeAt(i) & 1023));
+      utf8.push(240 | (c >> 18), 128 | ((c >> 12) & 63), 128 | ((c >> 6) & 63), 128 | (c & 63));
+    }
+  }
+
+  var version = 1;
+  for(; version <= 10; version++){
+    var te = QR_TABLE[version][ecc];
+    var cap = te[0], countBits = version < 10 ? 8 : 16;
+    var totalBits = 4 + countBits + utf8.length * 8;
+    if(Math.ceil(totalBits / 8) <= cap) break;
+  }
+  if(version > 10) version = 10;
+
+  var te = QR_TABLE[version][ecc];
+  var totalCap = te[0], ecWords = te[1], g1B = te[2], g1D = te[3], g2B = te[4], g2D = te[5];
+
+  var bitBuf = [];
+  function putBits(val, len){
+    for(var i = len - 1; i >= 0; i--) bitBuf.push((val >>> i) & 1);
+  }
+
+  putBits(0b0100, 4);
+  putBits(utf8.length, version < 10 ? 8 : 16);
+  for(var i = 0; i < utf8.length; i++) putBits(utf8[i], 8);
+
+  var totalDataBits = totalCap * 8;
+  var termLen = Math.min(4, totalDataBits - bitBuf.length);
+  putBits(0, termLen);
+  while(bitBuf.length % 8 !== 0) bitBuf.push(0);
+
+  var padBytes = [0xec, 0x11], padIdx = 0;
+  while(bitBuf.length < totalDataBits){ putBits(padBytes[padIdx % 2], 8); padIdx++; }
+
+  var dataCodewords = [];
+  for(var i = 0; i < bitBuf.length; i += 8){
+    var b = 0; for(var j = 0; j < 8; j++) b = (b << 1) | bitBuf[i + j];
+    dataCodewords.push(b);
+  }
+
+  var blocks = [], offset = 0;
+  for(var i = 0; i < g1B; i++){
+    var d = dataCodewords.slice(offset, offset + g1D); offset += g1D;
+    blocks.push({ data: d, ec: rsCalc(d, ecWords) });
+  }
+  for(var i = 0; i < g2B; i++){
+    var d = dataCodewords.slice(offset, offset + g2D); offset += g2D;
+    blocks.push({ data: d, ec: rsCalc(d, ecWords) });
+  }
+
+  var finalCodewords = [];
+  var maxDataLen = Math.max(g1D, g2D);
+  for(var i = 0; i < maxDataLen; i++){
+    for(var b = 0; b < blocks.length; b++){
+      if(i < blocks[b].data.length) finalCodewords.push(blocks[b].data[i]);
+    }
+  }
+  for(var i = 0; i < ecWords; i++){
+    for(var b = 0; b < blocks.length; b++){
+      if(i < blocks[b].ec.length) finalCodewords.push(blocks[b].ec[i]);
+    }
+  }
+
+  var size = 17 + 4 * version;
+  var matrix = Array.from({ length: size }, function(){ return new Array(size).fill(null); });
+  var isFunction = Array.from({ length: size }, function(){ return new Array(size).fill(false); });
+
+  function setModule(r, c, val, isFunc){
+    if(r < 0 || r >= size || c < 0 || c >= size) return;
+    matrix[r][c] = val ? 1 : 0;
+    if(isFunc) isFunction[r][c] = true;
+  }
+
+  function placeFinder(row, col){
+    for(var r = -1; r <= 7; r++){
+      for(var c = -1; c <= 7; c++){
+        var qr = row + r, qc = col + c;
+        if(qr < 0 || qr >= size || qc < 0 || qc >= size) continue;
+        if(r === -1 || r === 7 || c === -1 || c === 7) setModule(qr, qc, 0, true);
+        else if(r === 0 || r === 6 || c === 0 || c === 6 || (r >= 2 && r <= 4 && c >= 2 && c <= 4)) setModule(qr, qc, 1, true);
+        else setModule(qr, qc, 0, true);
+      }
+    }
+  }
+  placeFinder(0, 0); placeFinder(0, size - 7); placeFinder(size - 7, 0);
+
+  for(var i = 8; i < size - 8; i++){
+    if(!isFunction[6][i]) setModule(6, i, i % 2 === 0 ? 1 : 0, true);
+    if(!isFunction[i][6]) setModule(i, 6, i % 2 === 0 ? 1 : 0, true);
+  }
+
+  var alignPos = ALIGN_POS[version] || [];
+  for(var a = 0; a < alignPos.length; a++){
+    for(var b = 0; b < alignPos.length; b++){
+      var r = alignPos[a], c = alignPos[b];
+      if(isFunction[r][c]) continue;
+      for(var dr = -2; dr <= 2; dr++){
+        for(var dc = -2; dc <= 2; dc++){
+          setModule(r + dr, c + dc, Math.max(Math.abs(dr), Math.abs(dc)) !== 1 ? 1 : 0, true);
+        }
+      }
+    }
+  }
+
+  setModule(4 * version + 9, 8, 1, true);
+  for(var i = 0; i <= 8; i++){
+    if(!isFunction[8][i]) isFunction[8][i] = true;
+    if(!isFunction[i][8]) isFunction[i][8] = true;
+  }
+  for(var i = 0; i <= 7; i++){
+    if(!isFunction[8][size - 1 - i]) isFunction[8][size - 1 - i] = true;
+    if(!isFunction[size - 1 - i][8]) isFunction[size - 1 - i][8] = true;
+  }
+
+  if(version >= 7){
+    for(var r = 0; r < 6; r++){
+      for(var c = 0; c < 3; c++){
+        isFunction[r][size - 11 + c] = true;
+        isFunction[size - 11 + c][r] = true;
+      }
+    }
+  }
+
+  var bitIdx = 0, allBits = [];
+  for(var i = 0; i < finalCodewords.length; i++){
+    for(var j = 7; j >= 0; j--) allBits.push((finalCodewords[i] >>> j) & 1);
+  }
+  var remainderBitsCount = { 1: 0, 2: 7, 3: 7, 4: 7, 5: 7, 6: 7, 7: 0, 8: 0, 9: 0, 10: 0 }[version] || 0;
+  for(var i = 0; i < remainderBitsCount; i++) allBits.push(0);
+
+  var right = size - 1, upward = true;
+  while(right > 0){
+    if(right === 6) right--;
+    for(var vert = 0; vert < size; vert++){
+      var r = upward ? size - 1 - vert : vert;
+      for(var c = right; c > right - 2; c--){
+        if(!isFunction[r][c]) matrix[r][c] = bitIdx < allBits.length ? allBits[bitIdx++] : 0;
+      }
+    }
+    upward = !upward; right -= 2;
+  }
+
+  var MASKS = [
+    function(r, c){ return (r + c) % 2 === 0; },
+    function(r, c){ return r % 2 === 0; },
+    function(r, c){ return c % 3 === 0; },
+    function(r, c){ return (r + c) % 3 === 0; },
+    function(r, c){ return (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0; },
+    function(r, c){ return ((r * c) % 2) + ((r * c) % 3) === 0; },
+    function(r, c){ return (((r * c) % 2) + ((r * c) % 3)) % 2 === 0; },
+    function(r, c){ return (((r + c) % 2) + ((r * c) % 3)) % 2 === 0; },
+  ];
+
+  function applyMask(maskIdx){
+    var fn = MASKS[maskIdx];
+    return matrix.map(function(row, r){
+      return row.map(function(val, c){ return isFunction[r][c] ? val : val ^ (fn(r, c) ? 1 : 0); });
+    });
+  }
+
+  function getFormatBits(eccCode, maskIdx){
+    var data = (eccCode << 3) | maskIdx, rem = data << 10, G = 0x537;
+    for(var i = 14; i >= 10; i--) if((rem >>> i) & 1) rem ^= G << (i - 10);
+    return ((data << 10) | rem) ^ 0x5412;
+  }
+
+  function writeFormatInfo(m, eccCode, maskIdx){
+    var fmt = getFormatBits(eccCode, maskIdx);
+    for(var i = 0; i < 15; i++){
+      var bit = (fmt >>> (14 - i)) & 1;
+      if(i < 6) m[8][i] = bit;
+      else if(i < 8) m[8][i + 1] = bit;
+      else if(i === 8) m[7][8] = bit;
+      else m[14 - i][8] = bit;
+
+      if(i < 8) m[size - 1 - i][8] = bit;
+      else m[8][size - 15 + i] = bit;
+    }
+  }
+
+  function writeVersionInfo(m, ver){
+    if(ver < 7) return;
+    var rem = ver << 12, G = 0x1f25;
+    for(var i = 17; i >= 12; i--) if((rem >>> i) & 1) rem ^= G << (i - 12);
+    var verBits = (ver << 12) | rem;
+    for(var i = 0; i < 18; i++){
+      var bit = (verBits >>> i) & 1;
+      var r = Math.floor(i / 3), c = i % 3;
+      m[r][size - 11 + c] = bit;
+      m[size - 11 + c][r] = bit;
+    }
+  }
+
+  function calcPenalty(m){
+    var penalty = 0;
+    for(var r = 0; r < size; r++){
+      var count = 1, last = m[r][0];
+      for(var c = 1; c < size; c++){
+        if(m[r][c] === last) count++;
+        else { if(count >= 5) penalty += 3 + (count - 5); count = 1; last = m[r][c]; }
+      }
+      if(count >= 5) penalty += 3 + (count - 5);
+    }
+    for(var c = 0; c < size; c++){
+      var count = 1, last = m[0][c];
+      for(var r = 1; r < size; r++){
+        if(m[r][c] === last) count++;
+        else { if(count >= 5) penalty += 3 + (count - 5); count = 1; last = m[r][c]; }
+      }
+      if(count >= 5) penalty += 3 + (count - 5);
+    }
+    for(var r = 0; r < size - 1; r++){
+      for(var c = 0; c < size - 1; c++){
+        var val = m[r][c];
+        if(val === m[r + 1][c] && val === m[r][c + 1] && val === m[r + 1][c + 1]) penalty += 3;
+      }
+    }
+    var pat1 = [1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0], pat2 = [0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1];
+    for(var r = 0; r < size; r++){
+      for(var c = 0; c <= size - 11; c++){
+        let m1 = true, m2 = true;
+        for(var k = 0; k < 11; k++){
+          if(m[r][c + k] !== pat1[k]) m1 = false;
+          if(m[r][c + k] !== pat2[k]) m2 = false;
+        }
+        if(m1 || m2) penalty += 40;
+      }
+    }
+    for(var c = 0; c < size; c++){
+      for(var r = 0; r <= size - 11; r++){
+        var m1 = true, m2 = true;
+        for(var k = 0; k < 11; k++){
+          if(m[r + k][c] !== pat1[k]) m1 = false;
+          if(m[r + k][c] !== pat2[k]) m2 = false;
+        }
+        if(m1 || m2) penalty += 40;
+      }
+    }
+    var darkCount = 0;
+    for(var r = 0; r < size; r++) for(var c = 0; c < size; c++) if(m[r][c] === 1) darkCount++;
+    var percent = (darkCount * 100) / (size * size);
+    var prev5 = Math.floor(percent / 5) * 5, next5 = prev5 + 5;
+    penalty += Math.min(Math.abs(prev5 - 50) / 5, Math.abs(next5 - 50) / 5) * 10;
+    return penalty;
+  }
+
+  var bestMask = 0, minPenalty = Infinity, bestMatrix = null;
+  for(var maskIdx = 0; maskIdx < 8; maskIdx++){
+    var masked = applyMask(maskIdx);
+    writeFormatInfo(masked, ecc, maskIdx);
+    if(version >= 7) writeVersionInfo(masked, version);
+    var p = calcPenalty(masked);
+    if(p < minPenalty){ minPenalty = p; bestMask = maskIdx; bestMatrix = masked; }
+  }
+
+  return { matrix: bestMatrix, size: size, version: version };
+}
+
+function qtcQrSvg(text, opt){
+  opt = opt || {};
+  var res = qtcQrMatrix(text, opt.ecc || 'M');
+  var matrix = res.matrix, size = res.size;
+  var pad = opt.pad !== undefined ? opt.pad : 4;
+  var viewBoxSize = size + pad * 2;
+  var rects = '';
+  for(var r = 0; r < size; r++){
+    var start = -1;
+    for(var c = 0; c < size; c++){
+      if(matrix[r][c] === 1){
+        if(start === -1) start = c;
+      } else {
+        if(start !== -1){
+          rects += '<rect x="' + (start + pad) + '" y="' + (r + pad) + '" width="' + (c - start) + '" height="1"/>';
+          start = -1;
+        }
+      }
+    }
+    if(start !== -1) rects += '<rect x="' + (start + pad) + '" y="' + (r + pad) + '" width="' + (size - start) + '" height="1"/>';
+  }
+  var widthAttr = opt.size ? ' width="' + opt.size + '" height="' + opt.size + '"' : '';
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + viewBoxSize + ' ' + viewBoxSize + '"' + widthAttr + ' shape-rendering="crispEdges">' +
+    '<rect width="100%" height="100%" fill="#ffffff"/>' +
+    '<g fill="#000000">' + rects + '</g>' +
+    '</svg>';
+}
+
+var QTC_POP_VAL = '';
+function qtcQrPop(val, loai){
+  val = String(val == null ? '' : val).trim();
+  if(!val) return;
+  QTC_POP_VAL = val;
+  loai = loai || 'Mã';
+  var tEl = document.getElementById('qtcShowQrTitle');
+  if(tEl) tEl.textContent = 'Mã QR · ' + loai;
+  var subEl = document.getElementById('qtcShowQrSub');
+  if(subEl) subEl.textContent = loai + ': ' + val;
+  var vEl = document.getElementById('qtcShowQrVal');
+  if(vEl) vEl.textContent = val;
+  var svgWrap = document.getElementById('qtcShowQrSvg');
+  if(svgWrap){
+    try {
+      svgWrap.innerHTML = qtcQrSvg(val, { pad: 3 });
+    } catch(e) {
+      svgWrap.innerHTML = '<div class="hint" style="color:var(--bad)">Lỗi tạo mã QR: ' + esc(e.message) + '</div>';
+    }
+  }
+  plgMoModal('qtcshowqrmodal');
+}
+
+function qtcQrPopDong(){
+  plgDongModal('qtcshowqrmodal');
+}
+
+function qtcQrCopy(){
+  if(!QTC_POP_VAL) return;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(QTC_POP_VAL).then(function(){
+      toast('Đã sao chép: ' + QTC_POP_VAL, 'ok');
+    }).catch(function(){
+      toast('Không thể sao chép tự động.', 'warn');
+    });
+  } else {
+    toast('Đã chọn: ' + QTC_POP_VAL, 'info');
+  }
 }
 
 /* 1 dòng "có số liệu đếm dùng được" — CHỈ dùng cho diff/drill-down (kkDiffOf).
