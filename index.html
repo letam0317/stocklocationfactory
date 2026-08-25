@@ -7890,9 +7890,14 @@ function kkFcOpen(kind){
     var homNay=(function(){ var t=new Date(kkTodayMsVN()); function p(n){ return (n<10?'0':'')+n; } return t.getUTCFullYear()+'-'+p(t.getUTCMonth()+1)+'-'+p(t.getUTCDate()); })();
     var gChips=''; for(var g2 in fc.nhomTong){ if(fc.nhomTong[g2]) gChips+='<button class="fcg on" data-g="'+g2+'" onclick="this.classList.toggle(\'on\');kkFcSim()">'+KK_NHOM_TEN[g2]+' · '+nf(fc.nhom[g2]||0)+'</button>'; }
     var baseItems=[{v:'conlai',t:'Còn lại chưa kiểm'},{v:'tong',t:'Toàn bộ — kiểm lại từ đầu'}];
+    var rateSrcItems=[
+      {v:'252161',t:'Chuẩn đợt 252161 (≈78.8s/SKU · PL: 45.6s · NVL: 82.4s · Vị trí: 260.2s)'},
+      {v:'measured',t:'Theo thực đo gần nhất của phạm vi lọc'}
+    ];
     return '<div class="fcsec"><h3>② Người chọn — mô phỏng phương án nhân sự</h3>'+
       '<div class="fcref">💡 <b>Số tham khảo đợt 252161:</b> SKU trung bình <b>78.8s/mã</b> (Phụ liệu: <b>45.6s</b> · Vải/NVL: <b>82.4s</b>) · Vị trí đếm trọn: <b>260.2s/vị trí</b> (~4.3 phút) · Vị trí đếm điểm: <b>136.6s/vị trí</b> (~2.3 phút).</div>'+
       (fc.muon?'<div class="fcref">Giây/mã &amp; nhịp làm việc mượn từ '+esc(fc.muon)+' làm THAM CHIẾU — sẽ tự thay bằng số đo tại chỗ khi phạm vi này có phiếu kiểm kèm giờ.</div>':'')+
+      '<div class="fcctl" style="grid-template-columns:1fr"><label>Tiêu chuẩn tốc độ áp dụng'+fcComboHtml('fcRateSrc',rateSrcItems,'252161')+'</label></div>'+
       '<div class="fcctl">'+
       '<label>Số nhân sự kiểm'+fcComboHtml('fcN',nItems,nMac)+'</label>'+
       '<label>Thời lượng kiểm / người / ngày'+fcComboHtml('fcH',hItems,hDo)+'</label>'+
@@ -7993,8 +7998,20 @@ function kkFcSim(){
   document.querySelectorAll('#fcG .fcg').forEach(function(x){ var g=x.getAttribute('data-g'); x.textContent=KK_NHOM_TEN[g]+' · '+nf(cnt[g]||0); });
   var N=fcComboV('fcN')||1;
   var secNguoi=fcComboV('fcH')||Math.max(60,fc.phutNguoi*60);
+  var rateSrcInp = document.querySelector('#fcBody .fccombo[data-id="fcRateSrc"] input');
+  var rateSrc = (rateSrcInp && rateSrcInp.getAttribute('data-v')) || '252161';
+  var secG = (rateSrc === '252161')
+    ? (KK_FC.kind === 'loc'
+      ? { ALL: KK_BENCHMARK_252161.loc.FULL_LOCATION_FACTORY }
+      : { PL: KK_BENCHMARK_252161.sku.PL, NVL: KK_BENCHMARK_252161.sku.NVL, KHAC: KK_BENCHMARK_252161.sku.KHAC, ALL: KK_BENCHMARK_252161.sku.all })
+    : (fc.secG || {});
   var load=0, nMa=0;
-  document.querySelectorAll('#fcG .fcg.on').forEach(function(x){ var g=x.getAttribute('data-g'); load+=(cnt[g]||0)*(fc.secG[g]||0); nMa+=cnt[g]||0; });
+  document.querySelectorAll('#fcG .fcg.on').forEach(function(x){
+    var g=x.getAttribute('data-g');
+    var sG=secG[g]||secG['ALL']||78.8;
+    load+=(cnt[g]||0)*sG;
+    nMa+=cnt[g]||0;
+  });
   if(!nMa){ out.innerHTML='<span class="n">Chọn ít nhất 1 nhóm hàng để mô phỏng.</span>'; need.textContent=''; return; }
   /* Thời gian đợt kiểm từ BỘ CHỌN KHOẢNG NGÀY (bắt đầu → hạn chót) -> tính KẾT THÚC (né CN) */
   var startMs=FC_DP.start?Date.parse(FC_DP.start+'T00:00:00Z'):kkTodayMsVN(); if(isNaN(startMs)) startMs=kkTodayMsVN();
