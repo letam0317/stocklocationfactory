@@ -7219,11 +7219,13 @@ function qtcQrMatrix(text, eccLevel){
     if(!isFunction[i][6]) setModule(i, 6, i % 2 === 0 ? 1 : 0, true);
   }
 
+  // Alignment patterns
   var alignPos = ALIGN_POS[version] || [];
   for(var a = 0; a < alignPos.length; a++){
     for(var b = 0; b < alignPos.length; b++){
       var r = alignPos[a], c = alignPos[b];
-      if(isFunction[r][c]) continue;
+      // Bỏ qua nếu trùng 3 góc Finder Pattern (Top-Left, Top-Right, Bottom-Left)
+      if((r <= 7 && c <= 7) || (r <= 7 && c >= size - 8) || (r >= size - 8 && c <= 7)) continue;
       for(var dr = -2; dr <= 2; dr++){
         for(var dc = -2; dc <= 2; dc++){
           setModule(r + dr, c + dc, Math.max(Math.abs(dr), Math.abs(dc)) !== 1 ? 1 : 0, true);
@@ -7296,15 +7298,21 @@ function qtcQrMatrix(text, eccLevel){
 
   function writeFormatInfo(m, eccCode, maskIdx){
     var fmt = getFormatBits(eccCode, maskIdx);
+    // Góc trên - trái (Top-Left): MSB -> LSB
     for(var i = 0; i < 15; i++){
       var bit = (fmt >>> (14 - i)) & 1;
       if(i < 6) m[8][i] = bit;
       else if(i < 8) m[8][i + 1] = bit;
       else if(i === 8) m[7][8] = bit;
       else m[14 - i][8] = bit;
-
-      if(i < 8) m[size - 1 - i][8] = bit;
-      else m[8][size - 15 + i] = bit;
+    }
+    // Góc dưới - trái (Bottom-Left: bits 0..6, bit 0 ở đáy)
+    for(var i = 0; i < 7; i++){
+      m[size - 1 - i][8] = (fmt >>> i) & 1;
+    }
+    // Góc trên - phải (Top-Right: bits 7..14, bit 14 ở mép phải)
+    for(var i = 0; i < 8; i++){
+      m[8][size - 8 + i] = (fmt >>> (7 + i)) & 1;
     }
   }
 
@@ -7429,7 +7437,7 @@ function qtcQrPop(val, loai){
   var svgWrap = document.getElementById('qtcShowQrSvg');
   if(svgWrap){
     try {
-      svgWrap.innerHTML = qtcQrSvg(val, { pad: 3 });
+      svgWrap.innerHTML = qtcQrSvg(val, { pad: 4 });
     } catch(e) {
       svgWrap.innerHTML = '<div class="hint" style="color:var(--bad)">Lỗi tạo mã QR: ' + esc(e.message) + '</div>';
     }
