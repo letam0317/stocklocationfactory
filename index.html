@@ -6846,41 +6846,212 @@ function qtcUgLine(u){
     ' <span class="'+(d<0?'d-am':d>0?'d-duong':'d-khop')+'">('+(d>0?'+':'')+nf(d)+')</span>'+
     (u.gst?' · '+kkUidStBadge(String(u.gst)):'')+'</span>';
 }
-/* --- Quét mã: camera + BarcodeDetector (Edge/Chrome Android — cùng đường với tab Nhận diện SKU) --- */
+/* --- Quét mã: camera + BarcodeDetector / Canvas Fallback (hỗ trợ cả iPhone/iOS Safari & Android/Chrome/Edge) --- */
 function qtcQuetMo(){
-  if(!('BarcodeDetector' in window)){ toast('Trình duyệt chưa hỗ trợ quét mã (cần Chrome/Edge trên Android) — gõ SKU tay.','warn'); return; }
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ toast('Trình duyệt không cho mở camera — gõ SKU tay.','warn'); return; }
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    toast('Trình duyệt không cho mở camera (cần dùng HTTPS hoặc cấp quyền Camera) — gõ SKU tay.','warn');
+    return;
+  }
   if(QTC.quetStream) return;   // đã mở rồi (bấm đúp)
   plgMoModal('qtcqrmodal');
   document.getElementById('qtcQrHint').textContent='Đang mở camera…';
-  navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ ideal:'environment' }, width:{ ideal:1920 }, height:{ ideal:1440 },
-    advanced:[{ focusMode:'continuous' }] }, audio:false }).then(function(stream){
-    QTC.quetStream=stream;
-    var v=document.getElementById('qtcVideo');
-    v.srcObject=stream;
-    v.play().catch(function(){});
-    document.getElementById('qtcQrHint').textContent='Đưa mã vạch / QR vào khung — bắt được là tự điền ô SKU và tra luôn.';
-    if(!QTC.bd) QTC.bd=new window.BarcodeDetector({ formats:['qr_code','code_128','code_39','ean_13','ean_8','itf','upc_a','upc_e','data_matrix'] });
-    var dangDo=false;
-    QTC.quetTimer=setInterval(function(){
-      if(dangDo||!QTC.quetStream) return;
-      dangDo=true;
-      QTC.bd.detect(v).then(function(kq){
-        dangDo=false;
-        var raw=(kq&&kq[0]&&String(kq[0].rawValue||'').trim())||'';
-        if(!raw||!QTC.quetStream) return;
-        var ma=qtcTachMa(raw);   // QR có thể kèm chữ/URL — bóc mã cùng luật với súng quét (ưu tiên cụm 9 số)
-        document.getElementById('qtcSku').value=ma;
+
+  var constraints = {
+    video: {
+      facingMode: { ideal: 'environment' },
+      width: { ideal: 1280 },
+      height: { ideal: 720 }
+    },
+    audio: false
+  };
+
+  navigator.mediaDevices.getUserMedia(constraints).then(function(stream){
+    QTC.quetStream = stream;
+    var v = document.getElementById('qtcVideo');
+    if(v){
+      v.setAttribute('playsinline', '');
+      v.setAttribute('webkit-playsinline', '');
+      v.setAttribute('muted', '');
+      v.srcObject = stream;
+      v.play().catch(function(){});
+    }
+    document.getElementById('qtcQrHint').textContent = 'Đưa mã vạch / QR vào khung — bắt được là tự điền ô SKU và tra luôn.';
+    var dangDo = false;
+    QTC.quetTimer = setInterval(function(){
+      if(dangDo || !QTC.quetStream) return;
+      dangDo = true;
+      qtcQuetDoc(v).then(function(raw){
+        dangDo = false;
+        raw = String(raw || '').trim();
+        if(!raw || !QTC.quetStream) return;
+        var ma = qtcTachMa(raw);   // QR có thể kèm chữ/URL — bóc mã cùng luật với súng quét (ưu tiên cụm 9 số)
+        document.getElementById('qtcSku').value = ma;
         qtcQuetDong();
-        toast('Đã quét được mã '+ma+' — đang tra…','ok');
+        toast('Đã quét được mã ' + ma + ' — đang tra…', 'ok');
         qtcTra();
-      }).catch(function(){ dangDo=false; /* khung hình chưa sẵn sàng — thử lượt sau */ });
-    },350);
+      }).catch(function(){
+        dangDo = false; /* khung hình chưa sẵn sàng — thử lượt sau */
+      });
+    }, 280);
   }).catch(function(e){
     qtcQuetDong();
-    toast('Không mở được camera ('+(e&&(e.name||e.message)||'?')+') — gõ SKU tay.','err');
+    toast('Không mở được camera (' + (e && (e.name || e.message) || '?') + ') — gõ SKU tay.', 'err');
   });
 }
+
+function qtcQuetDoc(v){
+  if('BarcodeDetector' in window){
+    try {
+      if(!QTC.bd) QTC.bd = new window.BarcodeDetector({ formats:['qr_code','code_128','code_39','ean_13','ean_8','itf','upc_a','upc_e','data_matrix'] });
+      return QTC.bd.detect(v).then(function(kq){
+        var raw = (kq && kq[0] && String(kq[0].rawValue || '').trim()) || '';
+        if(raw) return raw;
+        return qtcDocCanvas(v);
+      }).catch(function(){
+        return qtcDocCanvas(v);
+      });
+    } catch(e) {
+      return Promise.resolve(qtcDocCanvas(v));
+    }
+  }
+  return Promise.resolve(qtcDocCanvas(v));
+}
+
+function qtcDocCanvas(v){
+  if(!v || v.readyState < 2) return '';
+  var vw = v.videoWidth || 0, vh = v.videoHeight || 0;
+  if(!vw || !vh) return '';
+  if(!QTC.can) QTC.can = document.createElement('canvas');
+  var cw = Math.min(640, vw), ch = Math.round(vh * (cw / vw));
+  if(QTC.can.width !== cw || QTC.can.height !== ch){
+    QTC.can.width = cw; QTC.can.height = ch;
+  }
+  var ctx = QTC.can.getContext('2d', { willReadFrequently: true });
+  if(!ctx) return '';
+  ctx.drawImage(v, 0, 0, cw, ch);
+  var imgData;
+  try { imgData = ctx.getImageData(0, 0, cw, ch); } catch(e){ return ''; }
+  var d = imgData.data;
+
+  // Quét 1D Barcode (Code 128 / EAN / Code 39) qua các đường cắt ngang vùng ngắm
+  var scanY = [0.35, 0.45, 0.50, 0.55, 0.65];
+  for(var sy = 0; sy < scanY.length; sy++){
+    var y = Math.round(ch * scanY[sy]);
+    var rowStart = y * cw * 4;
+    var grays = new Uint8Array(cw);
+    var minG = 255, maxG = 0;
+    for(var x = 0; x < cw; x++){
+      var idx = rowStart + (x * 4);
+      var g = Math.round((d[idx] * 299 + d[idx + 1] * 587 + d[idx + 2] * 114) / 1000);
+      grays[x] = g;
+      if(g < minG) minG = g;
+      if(g > maxG) maxG = g;
+    }
+    if(maxG - minG < 38) continue; // Độ tương phản quá thấp — không có mã ở dòng này
+    var mid = (minG + maxG) / 2;
+    var bin = new Uint8Array(cw);
+    for(var x = 0; x < cw; x++){
+      bin[x] = (grays[x] < mid) ? 1 : 0;
+    }
+    var raw128 = qtcDocCode128(bin);
+    if(raw128) return raw128;
+  }
+  return '';
+}
+
+var QTC_C128_RUNS = null;
+function qtcInitC128Runs(){
+  if(QTC_C128_RUNS) return;
+  var c128Str = '11011001100110011011001100110011010010011000100100011001000100110010011001000100110001001000110010011001001000110010001001100010010010110011100100110111001001100111010111001100100111011001001110011011001110010110010111001100100111011011100100110011101001110110111011101001100111001011001110010011011101100100111001101001110011001011011011000110110001101100011011010100011000100010110001000100011010110001000100011010001000110001011010001000110001010001100010001010110111000101100011101000110111010111011000101110001101000111011011101110110110100011101100010111011011101000110111000101101110111011101011000111010001101110001011011101101000111011000101110001101011101111010110010000101111000101010100110000101000011001001011000010010000110100001011001000010011010110010000101100001001001101000010011000010100001101001000011001011000010010110010100001111011101011000010100100011110101010011110010010111100100100111101011110010010011110100100111100101111010010011110010100111100100101101101111011011110110111101101101010111100010100011110100010111101011110100010111100010111101010001111010001010111011110101111011101110101111011110101110110100001001101001000011010011100';
+  function parseRuns(s){
+    var r = [], c = s[0], l = 1;
+    for(var i = 1; i < s.length; i++){
+      if(s[i] === c) l++;
+      else { r.push(l); c = s[i]; l = 1; }
+    }
+    r.push(l);
+    return r;
+  }
+  QTC_C128_RUNS = [];
+  for(var i = 0; i < 106; i++) QTC_C128_RUNS.push(parseRuns(c128Str.substr(i * 11, 11)));
+  QTC_C128_RUNS.push(parseRuns('1100011101011'));
+}
+
+function qtcDocCode128(pixels){
+  if(!pixels || pixels.length < 50) return null;
+  qtcInitC128Runs();
+  var runs = [], curColor = pixels[0], curLen = 1;
+  for(var i = 1; i < pixels.length; i++){
+    if(pixels[i] === curColor) curLen++;
+    else { runs.push(curLen); curColor = pixels[i]; curLen = 1; }
+  }
+  runs.push(curLen);
+
+  function matchPat(rSlice){
+    if(rSlice.length < 6) return -1;
+    var total = 0; for(var k = 0; k < 6; k++) total += rSlice[k];
+    if(total === 0) return -1;
+    var mod = total / 11, bestVal = -1, bestDiff = Infinity;
+    for(var val = 0; val < 106; val++){
+      var pat = QTC_C128_RUNS[val], diff = 0;
+      for(var k = 0; k < 6; k++) diff += Math.abs(rSlice[k] - pat[k] * mod);
+      if(diff < bestDiff){ bestDiff = diff; bestVal = val; }
+    }
+    return (bestDiff / total < 0.22) ? bestVal : -1;
+  }
+
+  function matchStop(rSlice){
+    if(rSlice.length < 7) return false;
+    var total = 0; for(var k = 0; k < 7; k++) total += rSlice[k];
+    var mod = total / 13, pat = QTC_C128_RUNS[106], diff = 0;
+    for(var k = 0; k < 7; k++) diff += Math.abs(rSlice[k] - pat[k] * mod);
+    return (diff / total < 0.22);
+  }
+
+  var startIdx = (pixels[0] === 0) ? 1 : 0;
+  for(var i = startIdx; i <= runs.length - 13; i += 2){
+    var startCode = matchPat(runs.slice(i, i + 6));
+    if(startCode === 103 || startCode === 104 || startCode === 105){
+      var totalStart = 0; for(var k = 0; k < 6; k++) totalStart += runs[i + k];
+      var mod = totalStart / 11;
+      var codes = [startCode], pos = i + 6, valid = false;
+
+      while(pos <= runs.length - 6){
+        var isSt = matchStop(runs.slice(pos, pos + 7));
+        if(codes.length >= 3 && isSt && (pos + 7 >= runs.length - 2 || runs[pos + 7] >= 4 * mod)){
+          valid = true;
+          break;
+        }
+        var val = matchPat(runs.slice(pos, pos + 6));
+        if(val === -1) break;
+        codes.push(val);
+        pos += 6;
+      }
+
+      if(valid && codes.length >= 3){
+        var checkVal = codes[codes.length - 1];
+        var sum = codes[0];
+        for(var j = 1; j < codes.length - 1; j++) sum += j * codes[j];
+        if(sum % 103 === checkVal){
+          var mode = codes[0] === 105 ? 'C' : (codes[0] === 104 ? 'B' : 'A');
+          var text = '';
+          for(var j = 1; j < codes.length - 1; j++){
+            var c = codes[j];
+            if(c === 99){ mode = 'C'; continue; }
+            if(c === 100){ mode = 'B'; continue; }
+            if(c === 101){ mode = 'A'; continue; }
+            if(mode === 'C') text += (c < 10 ? '0' : '') + c;
+            else if(mode === 'B') text += String.fromCharCode(c + 32);
+            else text += String.fromCharCode(c < 64 ? c + 32 : c - 64);
+          }
+          return text;
+        }
+      }
+    }
+  }
+  return null;
+}
+
 function qtcQuetDong(){
   if(QTC.quetTimer){ clearInterval(QTC.quetTimer); QTC.quetTimer=null; }
   if(QTC.quetStream){ try{ QTC.quetStream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){} QTC.quetStream=null; }
