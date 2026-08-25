@@ -508,6 +508,42 @@ body.an-chan .footbar{display:none}
 .b-ok{background:#d1faf3;color:var(--good)} .b-proc{background:#fdecd0;color:#b45309} .b-pend{background:#eceff3;color:#6b7280} .b-rej{background:#fdecea;color:#b42318}
 .wlink{color:var(--brand2);text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:3px}
 .wlink:hover{text-decoration:underline} .wlink svg{width:11px;height:11px}
+/* ===== Tra cứu SL đếm theo SKU (tab Kiểm kê, 25/08/2026) ========================================
+   Ô gõ SKU + icon quét mã NẰM TRONG Ô (yêu cầu user) + bảng kết quả đi khuôn thẻ mbcard.
+   Input/focus ring/nút theo đúng bộ chung: viền --border, focus --accent + box-shadow 3px color-mix,
+   nút hành động dùng .kktab — không control trần. */
+.qtcrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:2px}
+.qtcbox{position:relative;flex:1;min-width:200px;max-width:430px}
+.qtcbox input{width:100%;height:38px;border:1px solid var(--border);border-radius:10px;background:var(--surface);
+  color:var(--ink);padding:0 46px 0 12px;font-size:14px;font-family:inherit;outline:none;
+  font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.qtcbox input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}
+.qtcbox input::placeholder{color:var(--ink3);opacity:.75}
+/* Nút quét trong ô: vùng chạm 40×34 thật (luật ⑤), icon SVG nét vẽ (không emoji) */
+.qtcqrbtn{position:absolute;right:2px;top:50%;transform:translateY(-50%);width:40px;height:34px;border:0;
+  border-radius:8px;background:transparent;color:var(--ink2);cursor:pointer;display:flex;align-items:center;
+  justify-content:center;padding:0}
+.qtcqrbtn svg{width:21px;height:21px}
+.qtcqrbtn:hover{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent)}
+.qtcqrbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.qtcgo{height:38px;border-radius:10px;padding:0 18px;font-size:13px}
+.qtcsum{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;margin:12px 2px 8px;font-size:12.5px;color:var(--ink2)}
+.qtcsum .t{font-size:15px;font-weight:750;color:var(--ink);font-variant-numeric:tabular-nums}
+.qtcsum .pn{color:var(--ink3);flex:1 1 100%;line-height:1.45;white-space:normal;word-break:break-word}   /* tên hàng XUỐNG DÒNG, không ellipsis (luật ⑦ — bộ đo đã bắn bản đầu) */
+.qtcwrap{overflow:auto;border:1px solid var(--line);border-radius:10px;max-height:420px}
+.qtctbl td{white-space:nowrap}
+.qtctbl td.qtcnum{font-weight:750;color:var(--ink);font-variant-numeric:tabular-nums}
+.qtctbl tr.qtccu td{opacity:.62}   /* lượt kiểm CŨ hơn của cùng vị trí — mờ đi, có badge "kiểm cũ" */
+@media(max-width:768px){
+  .qtcwrap:has(table.mbcard){overflow:visible;border:0;border-radius:0;max-height:none}
+  .qtctbl td.qtcnum{font-size:15px}
+}
+/* Pop-up camera quét mã (dùng chung vỏ .modal/.modalbox — thừa hưởng sheetIn + kính mờ + Escape) */
+.qtcqrbox{width:min(520px,94vw)}
+.qtcqrbody{padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px}
+.qtcvidwrap{position:relative}
+.qtcvidwrap video{width:100%;aspect-ratio:4/3;background:#000;border-radius:12px;object-fit:cover;display:block}
+.qtcaim{position:absolute;inset:14% 16%;border:2px solid rgba(255,255,255,.85);border-radius:12px;pointer-events:none}
 /* Số phiếu = hyperlink SANG WMS (tab mới), KHÔNG mở pop-up chi tiết trong dashboard nữa (31/07):
    cả con số + icon ↗ nằm trong 1 thẻ <a>, bấm đâu cũng sang WMS */
 .pid{font-variant-numeric:tabular-nums}
@@ -2483,16 +2519,19 @@ body.side-anim{overflow-x:clip}
    rule [hidden]{display:none} cua trinh duyet -> thuoc tinh `hidden` mat tac dung lang le. */
 #viewCd [hidden]{display:none!important}
 /* So lieu can BEN TRAI, ket qua BEN PHAI -- sua mot o la thay ket qua doi ngay, khong phai cuon */
-.cd-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:16px;align-items:start}
+/* 24/08 đợt 2: chia lại 6/6 (trước 5/7). Dải gợi ý nay nằm NGANG HÀNG nhãn nên cột bước 1 cần
+   thêm chỗ — cột 5fr (~500px) chỉ đủ nhãn + ô nhập, ba số gợi ý bị gom hết vào "Khác…" tức mất
+   đúng thứ user muốn thấy. Cột kết quả 6fr vẫn thừa sức xếp 3 thẻ một hàng (thẻ min 150px). */
+.cd-grid{display:grid;grid-template-columns:minmax(0,11fr) minmax(0,13fr);gap:16px;align-items:start}
 /* `minmax(0,1fr)` chu KHONG `1fr`: 1fr = minmax(auto,1fr), ma min-width:auto cua grid item an theo
    min-content cua ruot — dai chip Tex nowrap ~900px se banh panel ra va keo ca trang ngang
    (bo do bat duoc dung vay tren iPhone SE truoc khi len live). Ban desktop o tren da ne san. */
 @media(max-width:900px){.cd-grid{grid-template-columns:minmax(0,1fr)}}
 /* Nhan nam TREN o nhap: cau chu thich cua may dong nay dai (vd "khong bao gom chi"), de cung
    hang voi o thi tren dien thoai o nhap bi bop con mot mau. */
-.cd-f{margin-top:12px}
+.cd-f{margin-top:10px}
 .cd-f.dau{margin-top:0}
-.cd-f>label{display:block;font-size:12px;font-weight:700;color:var(--ink2);margin-bottom:5px}
+.cd-f>label,.cd-hd>label{display:block;font-size:12px;font-weight:700;color:var(--ink2);margin-bottom:5px}
 .cd-qc{display:flex;flex-wrap:wrap;gap:6px}
 .cd-qc .kktab{font-variant-numeric:tabular-nums}
 /* "go bang GRAM" phai dap vao mat NHUNG khong duoc trung mau voi chip dang chon (user bat duoc:
@@ -2504,12 +2543,9 @@ body.side-anim{overflow-x:clip}
 /* Danh muc that co ~10 gia tri Tex -> tren dien thoai dai chip vo 5 hang cao 164px (25% man
    iPhone SE — bo do rang cua bat duoc truoc khi len live). Chua bang dung khuon chip-strip cua
    du an (.pg-whbar / #kkWhBar): MOT hang cuon ngang + min-width:0 de overflow-x an trong flex. */
-@media(max-width:640px){
-  #cdTexKhoBar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;min-width:0;max-width:100%;
-    -webkit-overflow-scrolling:touch;padding-bottom:2px}
-  #cdTexKhoBar::-webkit-scrollbar{display:none}
-  #cdTexKhoBar>*{flex:0 0 auto;white-space:nowrap}
-}
+/* 24/08/2026: dải Tex chỉ còn 3 chip GỢI Ý (chip "Khác…" đã bỏ — ô nhập lúc nào cũng có), nên
+   khung cuộn ngang thành đồ thừa: 3 chip vừa một hàng 390px, thiếu chỗ thì `.cd-goi` tự xuống dòng.
+   Giữ lại khung cuộn là mời gọi chip trốn ra ngoài mép mà không ai biết. */
 .cd-in{display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
 .cd-in input{flex:1;min-width:90px;height:36px;border:1px solid var(--border);border-radius:8px;
   background:var(--surface);color:var(--ink);padding:0 11px;font-size:14px;font-family:inherit;outline:none;
@@ -2517,14 +2553,77 @@ body.side-anim{overflow-x:clip}
 .cd-in input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}
 .cd-in input.xau{border-color:var(--bad);box-shadow:0 0 0 3px color-mix(in srgb,var(--bad) 14%,transparent)}
 .cd-in .dv{font-size:12px;font-weight:700;color:var(--ink3);flex:none;min-width:26px}
+/* ═══ MỘT KHUÔN CHO MỌI Ô CÓ GỢI Ý (24/08/2026, user) ═══
+   Nhãn và ô nhập NGANG HÀNG, dải chip xuống dưới mang chữ "Gợi ý:". Ô nhập lúc nào cũng ở đó nên
+   chip "Khác…" biến mất — nó vốn chỉ để mở ô đang ẩn ("buộc nhập vào ô rồi thì thể hiện chữ
+   Khác… ở đó làm gì?"). Không có gợi ý nào ⇒ ẩn luôn cả dòng, không để lại một chữ vô nghĩa. */
+.cd-hd{display:flex;align-items:center;gap:10px;flex-wrap:nowrap}
+.cd-hd>label{margin-bottom:0;flex:0 0 auto;white-space:nowrap}
+/* min-width:0 + input min-width:0 la BAT BUOC: o nhap co be rong noi tai ~177px (input mac dinh
+   size=20 ky tu) nen min-content cua .cd-in day flex-basis 136px len ~252px, an het cho cua dai
+   goi y -> chip bi gom vao "Khac..." oan (bay da dinh, do bang probe moi thay). */
+.cd-hd>.cd-in{flex:0 0 136px;max-width:45%;margin-left:auto;min-width:0}
+.cd-hd>.cd-in>input{min-width:0}
+/* DẢI GỢI Ý (và cụm "cân cả lõi / riêng hàng") NẰM NGAY HÀNG TIÊU ĐỀ — user 24/08 đợt 2:
+   "đem các dòng gợi ý lên ngang hàng với tên mục". Nó ăn phần trống giữa nhãn và ô nhập, và
+   KHÔNG được xuống dòng: chip nào không còn chỗ thì `cdVuaMotDong` gom vào chip "Khác…" (bấm để
+   mở nốt). Điện thoại thì cho xuống dòng — nhãn + 3 chip + ô nhập không có cách nào vừa 330px,
+   mà bóp chip nhỏ hơn nữa là phá sàn vùng chạm. */
+.cd-hd>.cd-goi{margin-top:0;flex:1 1 auto;min-width:0;overflow:hidden}
+/* Dải nút "Loại hàng" đứng ngay hàng nhãn như dải gợi ý (user 24/08 đợt 3) */
+.cd-hd>.cd-qc{flex:1 1 auto;min-width:0}
+/* Cụm nut "can ca loi / rieng hang" KHONG duoc bop: chu bi cat la vi pham luat nhan cua bo do
+   dien thoai ("rien..."). No la 2 nut co dinh -> flex:0 0 auto, phan con lai de cho o nhap. */
+.cd-hd>.cd-in.seg{margin-top:0;flex:0 0 auto;overflow:visible}
+.cd-goi{display:flex;align-items:center;flex-wrap:nowrap;gap:6px;margin-top:6px}
+.cd-goi>.g{font-size:11px;font-weight:700;color:var(--ink3);flex:none}
+.cd-chips{display:flex;flex-wrap:nowrap;gap:6px;min-width:0}
+/* Chip gợi ý GỌN hơn chip thường để 3 số vừa một dòng, nhưng vẫn ≥28px cho ngón tay */
+.cd-goi .kktab{height:28px;padding:0 9px;font-size:11.5px;flex:0 0 auto}
+.cd-goi .kktab[hidden]{display:none}
+/* Bấm "Khác…" = mở nốt phần bị gom: cho hàng này xuống dòng và hiện lại mọi chip */
+.cd-goi.mo{flex-wrap:wrap}
+.cd-hd:has(>.cd-goi.mo){flex-wrap:wrap}
+/* DIEN THOAI: dai goi y VAN o ngang hang ten muc (dung y user), con O NHAP xuong dong rieng —
+   nhan + goi y + o nhap khong the cung 330px. Chip duoc xuong dong khi qua dai (bo gom "Khac..."
+   nghi o be rong nay), tha 2 hang chip con hon an mat so goi y sau mot chip "Khac...". */
+@media(max-width:520px){
+  .cd-hd{flex-wrap:wrap}
+  .cd-hd>label{flex:0 0 auto;white-space:normal}
+  .cd-hd>.cd-goi{order:2;flex:1 1 auto;overflow:visible;flex-wrap:wrap;justify-content:flex-end}
+  .cd-hd>.cd-in{order:3;flex:1 1 100%;max-width:none;margin-left:0}
+  .cd-hd>.cd-in.seg{order:2;flex:0 0 auto;margin-left:auto}
+  .cd-goi,.cd-chips{flex-wrap:wrap}
+}
+/* ĐƠN VỊ NẰM TRONG Ô (24/08/2026, user: "đem tất cả đơn vị gr, cuộn vào trong ô nhập").
+   Số trong ô căn PHẢI nên đơn vị đứng sát mép phải và chữ số chạy trước nó — đọc liền một mạch
+   "9,500 gr". Chừa chỗ bằng `--dvw` khai ngay tại ô (mỗi đơn vị một bề rộng khác nhau).
+   Hai đơn vị ĐỔI ĐƯỢC (cm⇄inch · m⇄yard) vẫn là NÚT đứng cạnh ô: chúng là vùng chạm thật, nhét
+   vào trong ô thì cao chưa tới 30px — dưới sàn 40px của luật điện thoại. */
+.cd-in.trong{position:relative}
+.cd-in.trong>input{padding-right:var(--dvw,34px)}
+.cd-in.trong>.cd-dv.tinh{position:absolute;right:10px;top:50%;transform:translateY(-50%);height:auto;padding:0}
+/* Cặp hai-ô-một-hàng mà một ô bị ẩn theo loại hàng (vải/thun không có "số cuộn thừa", vải không có
+   lõi) ⇒ ô còn lại trải hết bề ngang, không để lại nửa hàng trống. */
+.cd-doi.mot{grid-template-columns:minmax(0,1fr)}
 /* ═══ HAI Ô MỘT HÀNG (23/08/2026, user: "1 bên dài sọc, 1 bên trống quá nhiều") ═══
    Ô nào giá trị NGẮN (mã, số cân, số cuộn) thì đi cặp — cột trái ngắn lại gần một nửa mà không mất
    ô nào. Điện thoại vẫn 1 cột: 2 ô cạnh nhau ở 390px là bóp cả hai. */
 .cd-doi{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 14px;align-items:start}
-/* Ô khổ có thêm dải chip nên cần rộng hơn ô định lượng — để 50/50 thì chip vỡ xuống hai hàng */
-#cdVaiF{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}
+/* Khối định danh gấp lại (23/08/2026): mượn nguyên khuôn .nds-more, chỉ chỉnh khoảng cách cho khớp
+   nhịp các hàng .cd-f xung quanh, và cho ô đầu tiên bên trong hết margin-top kép. */
+.cd-dd{margin-top:12px;border-top:1px dashed var(--line);padding-top:6px}
+.cd-dd>summary{padding:4px 0}
+.cd-dd .cd-doi>.cd-f{margin-top:8px}
+/* Tóm tắt khi đang gấp: hiện mã đã nhập để người dùng không phải bung ra mới biết mình gõ gì. */
+.cd-ddtt{font-size:11px;font-weight:700;color:var(--accent);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cd-dd[open] .cd-ddtt{display:none}
+/* Luật điện thoại: đây là VÙNG CHẠM thật (bấm để xổ) nên phải cao ≥40px, không để 11px chữ trần. */
+@media(max-width:520px){ .cd-dd>summary{min-height:40px} }
+/* Khổ + định lượng KHÔNG còn đi cặp (24/08/2026): mỗi ô nay có nhãn ngang hàng + dải "Gợi ý:" nên
+   nhét hai ô vào một hàng là bóp cả hai (cột trái panel chỉ ~500px, chia đôi còn 240px). */
 .cd-doi>.cd-f{margin-top:12px}
-@media(max-width:520px){ .cd-doi,#cdVaiF{grid-template-columns:minmax(0,1fr)} }
+@media(max-width:520px){ .cd-doi{grid-template-columns:minmax(0,1fr)} }
 /* ═══ CHIP ĐƠN VỊ (23/08/2026) ═══
    Đơn vị bày MỘT chỗ duy nhất: ở đây. Chip số phía trên vì thế là SỐ TRẦN (150 · 152 · 190) —
    trước đây mỗi chip lặp lại "cm" rồi ô nhập lại thêm một chữ "cm" nữa, ba lần cùng một chữ.
@@ -2552,7 +2651,7 @@ body.side-anim{overflow-x:clip}
 .cd-in .pg-seg{flex:none}
 /* "Doc la ..." -- o nhan ca 2.500.000 / 2,500,000 / 2500000 nen phai soi lai con so may hieu duoc.
    Cho nay lech mot dau la lech 1.000 lan, khong co dong soi thi sai cung khong ai thay. */
-.cd-doc{font-size:11px;color:var(--ink3);margin-top:4px;min-height:15px;font-variant-numeric:tabular-nums;line-height:1.35}
+.cd-doc{font-size:11px;color:var(--ink3);margin-top:3px;min-height:15px;font-variant-numeric:tabular-nums;line-height:1.35}
 .cd-doc b{color:var(--ink2);font-weight:700}
 .cd-doc.xau{color:var(--bad)}
 /* The ket qua: be nguyen .abntile cua tab Ton kho bat thuong, chi bo con tro bam (khong mo gi) */
@@ -2876,6 +2975,21 @@ body.side-anim{overflow-x:clip}
     <button class="kktab kkplan" onclick="plOpen()" title="Lệnh kiểm kê tạo từ dashboard nằm ở 'sổ kế hoạch' WMS trước khi thành phiếu — Pending = chờ push · Processing = đã push · đọc trực tiếp từ WMS"><span class="pt">Kế hoạch chờ push (WMS)</span><span class="ps">Kế hoạch</span></button>
   </div>
   <div class="grid2 even">
+    <!-- ===== TRA CỨU SL ĐẾM THEO SKU (25/08/2026) — tra lại "Quantity count" của Physical Count
+         Detail: gõ SKU hoặc bấm icon trong ô để quét mã vạch/QR bằng camera. Nguồn: tab Sheet
+         kiemke-qtycount (push-pc-to-sheet ghi mọi dòng tracking của phiếu Full location - Factory);
+         tra bằng gviz tq where theo SKU nên KHÔNG tải cả tab về điện thoại. -->
+    <section class="panel span2 qtcpanel">
+      <h2>Tra cứu SL đếm theo SKU<span class="h2tip-slot" data-tip-key="qtc"></span> <span class="hint">(Quantity count · phiếu Full location - Factory)</span></h2>
+      <div class="qtcrow">
+        <div class="qtcbox">
+          <input id="qtcSku" inputmode="numeric" autocomplete="off" placeholder="Gõ SKU, Enter để tra…" onkeydown="if(event.key==='Enter')qtcTra()">
+          <button type="button" class="qtcqrbtn" onclick="qtcQuetMo()" title="Quét mã vạch / QR trên tem bằng camera — bắt được mã là tự điền ô SKU và tra luôn" aria-label="Quét mã bằng camera"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><rect x="7.5" y="7.5" width="4" height="4" rx=".8"/><rect x="13" y="13" width="4" height="4" rx=".8"/><path d="M13 9.5h2M9.5 13v2M15.5 9.5v1.5"/></svg></button>
+        </div>
+        <button type="button" class="kktab qtcgo" id="qtcGo" onclick="qtcTra()">Tra cứu</button>
+      </div>
+      <div id="qtcKq"></div>
+    </section>
     <section class="panel">
       <h2>Kiểm kê theo SKU<span class="h2tip-slot" data-tip-key="kk"></span> <span class="hint">(Type: SKU · SKU Factory)</span> <span class="kkscope" id="kkScope-sku" hidden></span></h2>
       <div class="kkstrip" id="kkStrip-sku"></div>
@@ -3051,43 +3165,59 @@ body.side-anim{overflow-x:clip}
              Vải  → định lượng (g/m²) × khổ (m)      · 49% SKU có sẵn 2 số này trong tên hàng
              Thun → g/m, phải CÂN mới biết (không SKU nào ghi) — xem CHUYEN-DOI-CAN-VAI-THUN.md -->
       <div class="cd-f dau">
+        <div class="cd-hd">
         <label>Loại hàng</label>
         <div class="cd-qc" id="cdLoaiBar" role="group" aria-label="Loại hàng">
           <button type="button" class="kktab active" data-loai="chi" onclick="cdChonLoai('chi')" title="Thước là chỉ số Tex trên tem">Chỉ</button>
           <button type="button" class="kktab" data-loai="vai" onclick="cdChonLoai('vai')" title="Thước là định lượng (gsm) × khổ vải">Vải</button>
           <button type="button" class="kktab" data-loai="thun" onclick="cdChonLoai('thun')" title="Thước là g/m — cân cuộn nguyên hoặc lấy từ sổ tay">Thun</button>
         </div>
+        </div>
       </div>
 
       <!-- HAI Ô ĐỊNH DANH ĐI CẶP (23/08/2026, user: "1 bên dài sọc, 1 bên trống quá nhiều").
            Chúng đều là mã ngắn, để mỗi ô một hàng là kéo cột trái dài gấp đôi mà chẳng thêm gì.
            Câu giải nghĩa dài đã BỎ (user) — cái gì cần nói thì dòng soi dưới ô nói, khi có số. -->
-      <div class="cd-doi">
-        <div class="cd-f">
-          <label for="cdSku">Mã SKU</label>
-          <div class="cd-in">
-            <input id="cdSku" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="422273473" oninput="cdSkuGo()">
+      <!-- GẤP LẠI MẶC ĐỊNH (23/08/2026, user): hai ô này KHÔNG bắt buộc — chúng chỉ tra hộ quy cách
+           /Tex/khổ từ danh mục. Người cân tại chỗ phần lớn gõ thẳng số cân, nên để chúng mở sẵn là
+           bắt mắt phải lướt qua hai ô trống trước khi tới việc chính. Dùng ĐÚNG khuôn gấp sẵn có
+           `details.nds-more` (mũi tên ▸/▾ ở `.nds-sumt::before`) chứ không đẻ nút xổ riêng.
+           Tự BUNG khi có sẵn số (giá trị nhớ lại / vừa tra ra) — gấp mất một ô đang có dữ liệu là
+           giấu thông tin, đúng bẫy đã dính ở tab khác. -->
+      <details class="nds-more cd-dd" id="cdDinhDanh" ontoggle="cdDDGap(this)">
+        <summary><span class="nds-sumt">Mã SKU · UIDgr code</span><span class="cd-ddtt" id="cdDDTom"></span></summary>
+        <div class="cd-doi">
+          <div class="cd-f">
+            <label for="cdSku">Mã SKU</label>
+            <div class="cd-in">
+              <input id="cdSku" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="422273473" oninput="cdSkuGo()">
+            </div>
+            <div class="cd-doc" id="cdSkuDoc"></div>
           </div>
-          <div class="cd-doc" id="cdSkuDoc"></div>
-        </div>
-        <div class="cd-f">
-          <label for="cdUid">UIDgr code</label>
-          <div class="cd-in">
-            <input id="cdUid" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="1028260605000316" oninput="cdUidGo()">
+          <div class="cd-f">
+            <label for="cdUid">UIDgr code</label>
+            <div class="cd-in">
+              <input id="cdUid" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="1028260605000316" oninput="cdUidGo()">
+            </div>
+            <div class="cd-doc" id="cdUidDoc"></div>
           </div>
-          <div class="cd-doc" id="cdUidDoc"></div>
         </div>
-      </div>
+      </details>
 
       <!-- QUY CÁCH: chip là SỐ TRẦN, đơn vị nằm ở CHIP ĐVT cạnh ô nhập (user 23/08: "không để thừa
            đơn vị kế bên ô chip"). Chip ĐVT có mũi tên sổ xuống vì đổi được m ⇄ yard — 85 SKU vải
            trong danh mục khai bằng yard. -->
       <div class="cd-f">
-        <label>Quy cách cuộn nguyên</label>
-        <div class="cd-qc" id="cdQCBar" role="group" aria-label="Quy cách cuộn nguyên"></div>
-        <div class="cd-in" id="cdQCRow" hidden style="margin-top:8px">
-          <input id="cdQC" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="1,000" oninput="cdTinh()" aria-label="Quy cách khác">
-          <button type="button" class="cd-dv" id="cdQCDv" onclick="cdDoiDv('qc')" aria-label="Đổi đơn vị quy cách">m<i></i></button>
+        <div class="cd-hd">
+          <label for="cdQC">Quy cách cuộn nguyên</label>
+          <div class="cd-goi" id="cdQCGoi" data-o="cdQC" data-dv="qc" hidden>
+            <span class="g">Gợi ý:</span><span class="cd-chips" id="cdQCBar" role="group" aria-label="Quy cách gợi ý"></span>
+            <button type="button" class="kktab cd-khac" onclick="cdMoKhac(this)" hidden title="Còn số gợi ý chưa vừa một dòng — bấm để mở nốt">Khác…</button>
+          </div>
+          <div class="cd-in">
+            <input id="cdQC" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="5,000" oninput="cdOGo()">
+            <button type="button" class="cd-dv" id="cdQCDv" onclick="cdDoiDv('qc')" aria-label="Đổi đơn vị quy cách">m<i></i></button>
+          </div>
         </div>
         <div class="cd-doc" id="cdQCDoc"></div>
       </div>
@@ -3098,13 +3228,16 @@ body.side-anim{overflow-x:clip}
            tay nên offline/không có danh mục vẫn nhập Tex được. Bấm lại chip đang sáng = bỏ chọn
            (Tex là thứ KHÔNG bắt buộc — khác hàng quy cách luôn phải có 1 nút sáng). -->
       <div class="cd-f" id="cdTexKho">
-        <label>Chỉ số Tex trên tem</label>
-        <div class="cd-qc" id="cdTexKhoBar" role="group" aria-label="Chỉ số Tex trên tem">
-          <button type="button" class="kktab" data-tex="0" onclick="cdChonTex(this)" title="Tex khác — gõ tay">Khác…</button>
-        </div>
-        <div class="cd-in" id="cdTexRow" hidden style="margin-top:8px">
-          <input id="cdTex" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="27" oninput="cdTinh()" aria-label="Chỉ số Tex khác (gõ tay)">
-          <span class="cd-dv tinh">Tex</span>
+        <div class="cd-hd">
+          <label for="cdTex">Chỉ số Tex trên tem</label>
+          <div class="cd-goi" id="cdTexGoi" data-o="cdTex" hidden>
+            <span class="g">Gợi ý:</span><span class="cd-chips" id="cdTexKhoBar" role="group" aria-label="Chỉ số Tex gợi ý"></span>
+            <button type="button" class="kktab cd-khac" onclick="cdMoKhac(this)" hidden title="Còn số gợi ý chưa vừa một dòng — bấm để mở nốt">Khác…</button>
+          </div>
+          <div class="cd-in trong" style="--dvw:34px">
+            <input id="cdTex" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="27" oninput="cdOGo()">
+            <span class="cd-dv tinh">Tex</span>
+          </div>
         </div>
         <div class="cd-doc" id="cdTexDoc"></div>
       </div>
@@ -3113,26 +3246,32 @@ body.side-anim{overflow-x:clip}
            Khổ làm CHIP (150 · 152 · 190 phủ ~40% danh mục), còn định lượng thì KHÔNG: đếm thật có
            60+ giá trị rời rạc, giá trị đầu bảng chỉ phủ 9%. Đường đúng của định lượng là ĐỌC TỪ SKU.
            Chip ĐVT của khổ đổi được cm ⇄ inch — danh mục có 92 SKU ghi khổ bằng inch. -->
-      <div class="cd-doi" id="cdVaiF" hidden>
+      <div id="cdVaiF" hidden>
         <div class="cd-f">
-          <label>Khổ vải</label>
-          <div class="cd-qc" id="cdKhoBar" role="group" aria-label="Khổ vải">
-            <button type="button" class="kktab" data-kho="150" onclick="cdChonKho(150)">150</button>
-            <button type="button" class="kktab" data-kho="152" onclick="cdChonKho(152)">152</button>
-            <button type="button" class="kktab" data-kho="190" onclick="cdChonKho(190)">190</button>
-            <button type="button" class="kktab" data-kho="0" onclick="cdChonKho(0)" title="Khổ khác — gõ tay">Khác…</button>
-          </div>
-          <div class="cd-in" id="cdKhoRow" hidden style="margin-top:8px">
-            <input id="cdKho" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="165" oninput="cdTinh()" aria-label="Khổ khác">
-            <button type="button" class="cd-dv" id="cdKhoDv" onclick="cdDoiDv('kho')" aria-label="Đổi đơn vị khổ">cm<i></i></button>
+          <div class="cd-hd">
+            <label for="cdKho">Khổ vải</label>
+            <div class="cd-goi" id="cdKhoGoi" data-o="cdKho" data-dv="kho" hidden>
+              <span class="g">Gợi ý:</span><span class="cd-chips" id="cdKhoBar" role="group" aria-label="Khổ vải gợi ý"></span>
+              <button type="button" class="kktab cd-khac" onclick="cdMoKhac(this)" hidden title="Còn số gợi ý chưa vừa một dòng — bấm để mở nốt">Khác…</button>
+            </div>
+            <div class="cd-in">
+              <input id="cdKho" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="165" oninput="cdOGo()">
+              <button type="button" class="cd-dv" id="cdKhoDv" onclick="cdDoiDv('kho')" aria-label="Đổi đơn vị khổ">cm<i></i></button>
+            </div>
           </div>
           <div class="cd-doc" id="cdKhoDoc"></div>
         </div>
         <div class="cd-f">
-          <label for="cdGsm">Định lượng</label>
-          <div class="cd-in">
-            <input id="cdGsm" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="220" oninput="cdTinh()">
-            <span class="cd-dv tinh">gsm</span>
+          <div class="cd-hd">
+            <label for="cdGsm">Định lượng</label>
+            <div class="cd-goi" id="cdGsmGoi" data-o="cdGsm" hidden>
+              <span class="g">Gợi ý:</span><span class="cd-chips" id="cdGsmBar" role="group" aria-label="Định lượng gợi ý"></span>
+              <button type="button" class="kktab cd-khac" onclick="cdMoKhac(this)" hidden title="Còn số gợi ý chưa vừa một dòng — bấm để mở nốt">Khác…</button>
+            </div>
+            <div class="cd-in trong" style="--dvw:36px">
+              <input id="cdGsm" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="220" oninput="cdOGo()">
+              <span class="cd-dv tinh">gsm</span>
+            </div>
           </div>
           <div class="cd-doc" id="cdGsmDoc"></div>
         </div>
@@ -3144,10 +3283,12 @@ body.side-anim{overflow-x:clip}
            NHỚ vào sổ tay theo SKU để lần sau khỏi cân lại. Tên hàng nào có sẵn hệ số ("1kg-6700m")
            thì máy tự điền — xem `heSoCan` trong lõi. -->
       <div class="cd-f" id="cdThunF" hidden>
-        <label for="cdGm">Định lượng dài</label>
-        <div class="cd-in">
-          <input id="cdGm" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="4,8" oninput="cdTinh()">
-          <span class="cd-dv tinh">g/m</span>
+        <div class="cd-hd">
+          <label for="cdGm">Định lượng dài</label>
+          <div class="cd-in trong" style="--dvw:36px">
+            <input id="cdGm" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="4,8" oninput="cdTinh()">
+            <span class="cd-dv tinh">g/m</span>
+          </div>
         </div>
         <div class="cd-doc" id="cdGmDoc"></div>
         <div class="cd-doc" id="cdSoTay"></div>
@@ -3156,51 +3297,73 @@ body.side-anim{overflow-x:clip}
       <!-- BỐN Ô CÂN, XẾP THÀNH HAI CẶP. Ô tổng CHỈ NHẬN GRAM (user 22/08/2026 chiều: bỏ hẳn nút kg;
            chốt lại 23/08 cho cả 3 loại hàng). Dòng "Đọc là" vẫn quy ra kg để người cân bằng cân kg
            soi lại — gõ 10 mà ý là 10 kg thì thấy ngay "0.01 kg" sai sai. -->
-      <div class="cd-doi">
+      <!-- MỌI Ô NHẬP THẲNG MỘT CỘT (24/08 đợt 3, user: "chỗ này sao trống dữ" + "cần cân đối"):
+           bỏ hẳn lối xếp cặp hai-ô-một-hàng, mỗi ô một hàng theo đúng khuôn `nhãn ⟷ (gợi ý / nút
+           chọn) ⟷ ô nhập`. Ô nhập cùng bề rộng, mép phải thẳng hàng nhau từ trên xuống — hết cảnh
+           một hàng đầy chữ, hàng kế bên trống một khoảng giữa nhãn và ô. -->
+      <div id="cdDoiCan">
         <div class="cd-f">
-          <label for="cdTong">Tổng khối lượng <span class="cd-th">chỉ</span> trả về</label>
-          <div class="cd-in">
-            <input id="cdTong" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="9,500" oninput="cdTinh()">
-            <span class="cd-dv tinh">gr</span>
+          <div class="cd-hd">
+            <label for="cdTong">Tổng khối lượng <span class="cd-th">chỉ</span> trả về</label>
+            <div class="cd-in trong" style="--dvw:28px">
+              <input id="cdTong" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="9,500" oninput="cdTinh()">
+              <span class="cd-dv tinh">gr</span>
+            </div>
           </div>
           <div class="cd-doc" id="cdTongDoc"></div>
         </div>
-        <div class="cd-f">
-          <label for="cdCuon">Số cuộn thừa</label>
-          <div class="cd-in">
-            <input id="cdCuon" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="10" oninput="cdTinh()">
-            <span class="cd-dv tinh">cuộn</span>
+        <!-- SỐ CUỘN THỪA chỉ có ở CHỈ MAY (user 24/08/2026): vải trả về là một tấm, thun một cuộn —
+             hỏi "mấy cuộn" ở đó là hỏi một câu không có nghĩa. Ẩn thì máy tính như 1 cuộn. -->
+        <div class="cd-f" id="cdCuonF">
+          <div class="cd-hd">
+            <label for="cdCuon">Số cuộn thừa</label>
+            <div class="cd-in trong" style="--dvw:44px">
+              <input id="cdCuon" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="10" oninput="cdTinh()">
+              <span class="cd-dv tinh">cuộn</span>
+            </div>
           </div>
           <div class="cd-doc" id="cdCuonDoc"></div>
         </div>
       </div>
 
-      <div class="cd-doi">
-        <div class="cd-f">
-          <label for="cdLoi">Khối lượng 1 lõi</label>
-          <div class="cd-in">
-            <input id="cdLoi" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="50" oninput="cdTinh()">
-            <span class="cd-dv tinh">gr</span>
+      <!-- SỔ CÂN CAN-LOI-CHI (24/08/2026, user: "tra xem trong CAN-LOI-CHI có chỉ số của SKU đó
+           chưa — có rồi thì ẩn hai ô lõi/cuộn nguyên, chỉ hỏi khi chưa có"). Dòng này thay chỗ hai
+           ô đó: nói rõ số ở đâu ra, và có nút mở lại để cân tay khi cần. -->
+      <div class="cd-doc" id="cdSoCanBox" hidden style="margin-top:12px"></div>
+
+      <!-- LÕI + CUỘN NGUYÊN THÔI ĐI CẶP (24/08 đợt 2, user): cụm "cân cả lõi / riêng hàng" nay nằm
+           NGAY HÀNG TIÊU ĐỀ của ô cuộn nguyên — nhét cả nhãn + cụm nút + ô nhập vào nửa hàng 250px
+           là bóp cả ba, nên hai ô này trải hết bề ngang. -->
+      <div id="cdDoiLoi">
+        <div class="cd-f" id="cdLoiF">
+          <div class="cd-hd">
+            <label for="cdLoi">Khối lượng 1 lõi</label>
+            <div class="cd-in trong" style="--dvw:28px">
+              <input id="cdLoi" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="50" oninput="cdTinh()">
+              <span class="cd-dv tinh">gr</span>
+            </div>
           </div>
           <div class="cd-doc" id="cdLoiDoc"></div>
         </div>
         <!-- Cái thước mật độ thứ hai, bên cạnh thước khai ở trên: CÂN 1 cuộn nguyên. Có cái nào dùng
              cái đó; đủ cả hai thì lấy CÂN làm thước chính và đem thước khai ra đối chứng chéo —
              lệch >5% là dán cờ đỏ vì gần như chắc có một bên sai. -->
-        <div class="cd-f">
-          <label for="cdNguyen">Khối lượng 1 cuộn nguyên</label>
-          <div class="cd-in">
-            <input id="cdNguyen" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="120" oninput="cdTinh()">
-            <span class="cd-dv tinh">gr</span>
-          </div>
+        <div class="cd-f" id="cdNguyenF">
+          <div class="cd-hd">
+            <label for="cdNguyen">Khối lượng 1 cuộn nguyên</label>
           <!-- "Cuộn nguyên 120gr" là cân CẢ LÕI hay riêng phần hàng? Hai cách đọc lệch nhau 1,7 lần.
                CHỐT 19/08/2026: kho mình cân CẢ LÕI -> để nguyên mặc định. Giữ nút thứ hai vì bảng
                quy cách của nhà cung cấp lại ghi khối lượng riêng phần hàng. -->
-          <div class="cd-in" style="margin-top:7px">
+          <div class="cd-in seg" id="cdNgSeg">
             <span class="pg-seg sm" role="group" aria-label="Cách hiểu khối lượng cuộn nguyên">
               <button type="button" id="cdNgCa" class="on" onclick="cdDoiNguyen(1)" title="Đặt cả cuộn lên cân: lõi + hàng — đúng cách kho mình cân (mặc định)">cân cả lõi</button>
               <button type="button" id="cdNgChi" onclick="cdDoiNguyen(0)" title="Chỉ dùng khi lấy số từ bảng quy cách nhà cung cấp: khối lượng riêng phần hàng">riêng hàng</button>
             </span>
+          </div>
+          <div class="cd-in trong" style="--dvw:28px">
+            <input id="cdNguyen" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="120" oninput="cdTinh()">
+            <span class="cd-dv tinh">gr</span>
+          </div>
           </div>
           <div class="cd-doc" id="cdNguyenDoc"></div>
         </div>
@@ -3547,6 +3710,19 @@ body.side-anim{overflow-x:clip}
   </div>
 </div>
 
+<!-- Pop-up camera cho mục "Tra cứu SL đếm theo SKU" (tab Kiểm kê, 25/08/2026): quét QR / Code 128
+     bằng BarcodeDetector — cùng đường nhận mã vạch với tab Nhận diện SKU, không tải thư viện ngoài.
+     Đóng pop-up = TẮT camera (qtcQuetDong) — không để đèn camera sáng vô cớ. -->
+<div id="qtcqrmodal" class="modal" onclick="if(event.target===this)qtcQuetDong()">
+  <div class="modalbox qtcqrbox">
+    <div class="modalhd"><div><div class="mt">Quét mã SKU</div><div class="mtsub">QR / Code 128 trên tem — bắt được là tự điền ô SKU và tra luôn</div></div><button class="mclose" onclick="qtcQuetDong()">&times;</button></div>
+    <div class="qtcqrbody">
+      <div class="qtcvidwrap"><video id="qtcVideo" autoplay playsinline muted></video><div class="qtcaim"></div></div>
+      <div class="hint" id="qtcQrHint" style="white-space:normal"></div>
+    </div>
+  </div>
+</div>
+
 <!-- Modal "Phiếu kiểm kê #…" (Physical Count Detail) ĐÃ GỠ 31/07/2026: mã phiếu trong mọi bảng là
      HYPERLINK mở thẳng trang phiếu trên WMS ở tab mới (kkIdLink + kkWmsUrl) — hết cảnh pop-up nổ
      lên pop-up, nhưng vẫn trỏ sang WMS xem chi tiết được khi cần.
@@ -3626,6 +3802,203 @@ function tbKhoa(){ try{ return localStorage.getItem('tb-khoa')||''; }catch(e){ r
     }
   }catch(e){ /* localStorage bị chặn (duyệt riêng tư) — các action ghi sẽ báo "chưa được cấp quyền" */ }
 })();
+
+/* ===== XIN QUYỀN BẰNG MÃ OTP 4 SỐ (24/08/2026 — user chốt) =====================================
+ * Máy chưa có khoá bấm In tem / đọc tem AI / sửa UID group bị GAS trả canKhoa=1 → tbSoiKhoa() mở
+ * pop-up XIN CẤP QUYỀN: tự khai tên, trang sinh MÃ MÁY (localStorage tb-may) + đọc IP công cộng
+ * của mình rồi gọi GAS (tb_xin). GAS kiểm ĐANG Ở MẠNG CÔNG TY, sinh OTP 4 số hạn 60' và TỰ bắn
+ * Telegram cho quản trị — không đi qua máy trạm laptop, nên laptop đóng / quản trị nghỉ vẫn nhận
+ * được tin. Người dùng gõ 4 số quản trị nhắn cho (tb_otp) → có quyền ngay, bấm lại thao tác là chạy.
+ * · Vẫn giữ vòng chờ tb_tra 30": laptop sống thì quản trị bấm /duyet_<mã> cho nhanh, trang tự vào.
+ * · Máy ĐÃ có quyền báo IP về 1 lượt/ngày (tb_ip) → sổ mẫu "mạng công ty" của GAS tự theo IP động.
+ * · Cùng khuôn hàm với hasaki-planogram.js (kiemsoatkho) — lệ đồng bộ 2 dashboard. */
+function tbMayId(){
+  try{
+    var id=localStorage.getItem('tb-may');
+    if(!id || !/^m[a-z0-9]{7,19}$/.test(id)){
+      id='m'+Math.random().toString(36).slice(2,12)+Date.now().toString(36).slice(-4);
+      localStorage.setItem('tb-may', id);
+    }
+    return id;
+  }catch(e){ return ''; }   // chế độ riêng tư chặn localStorage — báo ở lượt gửi
+}
+function tbGoiGasXin_(body, cb){
+  fetch(APPSCRIPT_URL,{ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify(body),
+    signal:(typeof AbortSignal!=='undefined'&&AbortSignal.timeout)?AbortSignal.timeout(45000):undefined })
+  .then(function(r){ return r.text(); })
+  .then(function(t){   // GAS lỗi chập chờn trả HTML — đừng r.json() thẳng (bẫy 12/08/2026)
+    t=String(t||'').trim();
+    cb(t.charAt(0)==='{' ? JSON.parse(t) : { status:'error', message:'Apps Script trả trang HTML (lỗi chập chờn) — bấm lại.' });
+  })
+  .catch(function(e){ cb({ status:'error', message:'Không gửi được: '+((e&&e.message)||e) }); });
+}
+/* IP công cộng của máy đang mở trang — GAS không thấy IP client nên TRANG phải tự khai. Hai nguồn
+   nối tiếp (cloudflare trace → ipify): chỉ trả IP của CHÍNH người gọi, không gửi gì của mình đi.
+   Nhớ trong sessionStorage: mỗi phiên chỉ đi hỏi một lần. */
+function tbLayIp_(cb){
+  var nho=''; try{ nho=sessionStorage.getItem('tb-ip')||''; }catch(e){}
+  if(nho) return cb(nho);
+  var xong=false;
+  var tra=function(ip){ if(xong) return; xong=true; ip=String(ip||'').trim();
+    if(ip){ try{ sessionStorage.setItem('tb-ip', ip); }catch(e){} } cb(ip); };
+  var het=function(){ return (typeof AbortSignal!=='undefined'&&AbortSignal.timeout)?AbortSignal.timeout(8000):undefined; };
+  fetch('https://www.cloudflare.com/cdn-cgi/trace',{ signal:het() })
+    .then(function(r){ return r.text(); })
+    .then(function(t){ var m=String(t).match(/^ip=(.+)$/m); if(m) tra(m[1]); else throw new Error('khong co ip'); })
+    .catch(function(){
+      fetch('https://api.ipify.org?format=json',{ signal:het() })
+        .then(function(r){ return r.json(); })
+        .then(function(j){ tra(j&&j.ip); })
+        .catch(function(){ tra(''); });   // không đọc được → gửi rỗng, GAS quyết (có mẫu thì từ chối)
+    });
+}
+/* Máy ĐÃ có quyền: báo IP về 1 lượt/ngày để sổ mẫu mạng công ty của GAS luôn theo kịp IP động.
+   Hãm bằng localStorage nên không tốn thêm lượt gọi nào trong ngày. */
+function tbBaoIpNeuCan_(){
+  var k=tbKhoa(); if(!k) return;
+  /* file:// = bản nội bộ trên đĩa / bộ đo: đừng đi hỏi IP (mạng bị chặn sạch trong bộ đo,
+     và IP của máy đang mở bản đĩa không nói được gì về mạng công ty). */
+  if (location.protocol === 'file:') return;
+  var nay=new Date().toISOString().slice(0,10), cu='';
+  try{ cu=localStorage.getItem('tb-ip-ngay')||''; }catch(e){ return; }
+  if(cu===nay) return;
+  tbLayIp_(function(ip){
+    if(!ip) return;
+    try{ localStorage.setItem('tb-ip-ngay', nay); }catch(e){}
+    tbGoiGasXin_({ action:'tb_ip', tb:k, ip:ip }, function(){ /* im lặng — việc nền, hỏng thì mai báo lại */ });
+  });
+}
+function tbXinGui_(ten, cb){
+  var id=tbMayId();
+  if(!id) return cb({ status:'error', message:'Trình duyệt đang chặn lưu trữ (cửa sổ riêng tư?) — mở cửa sổ thường rồi thử lại.' });
+  tbLayIp_(function(ip){
+    tbGoiGasXin_({ action:'tb_xin', tb:id, ten:ten, ip:ip, trang:'factory',
+      ua:(navigator.userAgent||'').slice(0,160) }, cb);
+  });
+}
+setTimeout(function(){ try{ tbBaoIpNeuCan_(); }catch(e){} }, 6000);   // sau khi trang đã dựng xong
+
+var _tbPoll=0,_tbPollN=0;
+/* Dừng vòng chờ (24/08/2026): khi được cấp quyền bằng ĐƯỜNG OTP thì vòng chờ tb_tra thành vô
+   nghĩa — không tắt là máy đã có quyền vẫn hỏi GAS mỗi 30 giây tới hết trần 60 lượt. */
+function tbXinDungPoll_(){ if(_tbPoll){ clearInterval(_tbPoll); _tbPoll=0; } }
+function tbXinPoll(onDuyet,onTuChoi){
+  if(_tbPoll) return;   // đã có vòng chờ — không dựng vòng thứ hai
+  _tbPollN=0;
+  _tbPoll=setInterval(function(){
+    if(++_tbPollN>60){ clearInterval(_tbPoll); _tbPoll=0; return; }   // trần 30' — không hỏi GAS vô hạn
+    tbGoiGasXin_({ action:'tb_tra', tb:tbMayId() }, function(j){
+      if(j&&j.duyet){
+        clearInterval(_tbPoll); _tbPoll=0;
+        try{ localStorage.setItem('tb-khoa', tbMayId()); }catch(e){}
+        onDuyet&&onDuyet();
+      } else if(j&&j.tuChoi){ clearInterval(_tbPoll); _tbPoll=0; onTuChoi&&onTuChoi(); }
+      /* lỗi/HTML chập chờn → im lặng, lượt sau hỏi lại */
+    });
+  },30000);
+}
+/* Soi phản hồi GAS: bị chặn vì khoá thiết bị thì mở pop-up xin — CHỈ cho thao tác người bấm,
+ * lượt tự động (hâm nóng AI…) im lặng để pop-up không tự nổ lúc mới mở trang. */
+function tbSoiKhoa(j){ if(j&&j.canKhoa) tbMoXinQuyen(); return j; }
+function tbDongXinQuyen(){
+  var m=document.getElementById('tbxinmodal'); if(!m) return;
+  m.classList.remove('show');
+  setTimeout(function(){ m.style.display='none'; },240);
+}
+function tbMoXinQuyen(){
+  var m=document.getElementById('tbxinmodal');
+  if(!m){
+    m=document.createElement('div'); m.id='tbxinmodal'; m.className='modal';
+    m.innerHTML=
+      /* Form: input 16px (iOS không zoom), nút ≥40px, focus ring theo lệ dự án */
+      '<style>#tbXinQ{display:flex;flex-wrap:wrap;gap:8px}'+
+      '#tbXinQ input{flex:1 1 200px;min-width:0;min-height:40px;padding:8px 12px;font-size:16px;'+
+      'border:1px solid var(--line,#d1d5db);border-radius:10px;background:var(--bg,#fff);color:var(--text,#1f2937)}'+
+      '#tbXinQ input:focus{outline:none;border-color:var(--accent,#2563eb);box-shadow:0 0 0 3px rgba(37,99,235,.16)}'+
+      '#tbXinQ button{flex:0 0 auto;min-height:40px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;'+
+      'border:1px solid var(--accent,#2563eb);border-radius:10px;background:var(--accent,#2563eb);color:#fff}'+
+      '#tbXinQ button:disabled{opacity:.55;cursor:default}'+
+      '#tbXinTT{flex:1 1 100%;font-size:12.5px;color:var(--muted,#6b7280);min-height:1em}'+
+      /* Hàng OTP: ẩn tới khi xin xong. Ô 4 số to + giãn chữ cho dễ đọc số quản trị nhắn qua. */
+      '#tbOtpQ{display:none;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center}'+
+      '#tbOtpQ.mo{display:flex}'+
+      '#tbOtpQ input{flex:0 0 132px;min-width:0;min-height:40px;padding:8px 12px;font-size:20px;font-weight:700;'+
+      'letter-spacing:.32em;text-align:center;border:1px solid var(--line,#d1d5db);border-radius:10px;'+
+      'background:var(--bg,#fff);color:var(--text,#1f2937)}'+
+      '#tbOtpQ input:focus{outline:none;border-color:var(--accent,#2563eb);box-shadow:0 0 0 3px rgba(37,99,235,.16)}'+
+      '#tbOtpQ button{flex:0 0 auto;min-height:40px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;'+
+      'border:1px solid var(--accent,#2563eb);border-radius:10px;background:var(--accent,#2563eb);color:#fff}'+
+      '#tbOtpQ button:disabled{opacity:.55;cursor:default}'+
+      '#tbOtpQ .nl{flex:1 1 150px;font-size:12.5px;color:var(--muted,#6b7280);min-width:0}</style>'+
+      '<div class="modalbox" style="max-width:460px">'+
+      '<div class="modalhd"><div><div class="mt">Xin cấp quyền</div>'+
+      '<div class="mtsub">Khai tên → bấm Xin mã OTP → liên hệ quản trị lấy 4 số (chỉ xin được khi đang dùng Wi-Fi công ty)</div></div>'+
+      '<button class="mclose" type="button" onclick="tbDongXinQuyen()">&times;</button></div>'+
+      '<div class="modalbody" style="padding-top:14px"><div id="tbXinQ">'+
+      '<input id="tbXinTen" maxlength="60" placeholder="Bạn là ai? (tên · bộ phận)">'+
+      '<button id="tbXinBtn" type="button">Xin mã OTP</button><div id="tbXinTT"></div></div>'+
+      '<div id="tbOtpQ"><input id="tbOtpMa" inputmode="numeric" autocomplete="one-time-code" maxlength="4" '+
+      'placeholder="&bull;&bull;&bull;&bull;" aria-label="Mã OTP 4 số">'+
+      '<button id="tbOtpBtn" type="button">Kích hoạt</button>'+
+      '<span class="nl">Gõ 4 số quản trị nhắn cho bạn</span></div></div></div>';
+    m.addEventListener('click', function(ev){ if(ev.target===m) tbDongXinQuyen(); });
+    document.body.appendChild(m);
+    var inp=m.querySelector('#tbXinTen'), btn=m.querySelector('#tbXinBtn'), tt=m.querySelector('#tbXinTT');
+    var noi=function(msg,mau){ tt.textContent=msg; tt.style.color=mau||'var(--muted,#6b7280)'; };
+    var duyetXong=function(){
+      noi('✓ Đã được cấp quyền — bấm lại thao tác vừa rồi là chạy.','var(--text,#1f2937)');
+      setTimeout(tbDongXinQuyen, 2200);
+    };
+    var oq=m.querySelector('#tbOtpQ'), oi=m.querySelector('#tbOtpMa'), ob=m.querySelector('#tbOtpBtn');
+    var capKhoa=function(){ try{ localStorage.setItem('tb-khoa', tbMayId()); }catch(e){} };
+    /* Mở ô OTP + vòng chờ tb_tra: người dùng gõ 4 số là xong, mà nếu quản trị bấm /duyet_ (laptop
+       sống) thì vòng chờ cũng đưa họ vào — hai đường song song, đường nào tới trước thì thắng. */
+    var moOtp=function(loi){
+      if(oq) oq.classList.add('mo');
+      if(loi) noi(loi);
+      if(oi) setTimeout(function(){ try{ oi.focus(); }catch(e){} },60);
+      tbXinPoll(function(){ capKhoa(); duyetXong(); }, function(){ noi('Quản trị đã từ chối lượt xin này.','#b91c1c'); });
+    };
+    var gui=function(){
+      var ten=(inp.value||'').replace(/\s+/g,' ').trim();
+      if(ten.length<2){ noi('Cho quản trị biết bạn là ai (tên · bộ phận) thì mới cấp mã được.','#b91c1c'); inp.focus(); return; }
+      btn.disabled=true; noi('Đang gửi…');
+      tbXinGui_(ten, function(j){
+        btn.disabled=false;   // trả nút trong MỌI nhánh — tbGoiGasXin_ luôn gọi cb (kể cả timeout 45s)
+        if(!j || j.status!=='success'){ noi((j&&j.message)||'Không gửi được — bấm lại.','#b91c1c'); return; }
+        if(j.duyet){ capKhoa(); duyetXong(); return; }
+        moOtp((j.message||'Đã gửi yêu cầu cho quản trị.')+' Nhận được 4 số thì gõ vào ô bên dưới.');
+      });
+    };
+    var kichHoat=function(){
+      if(!oi||!ob) return;
+      var ma=(oi.value||'').replace(/[^0-9]/g,'');
+      if(ma.length!==4){ noi('Mã OTP gồm 4 số.','#b91c1c'); oi.focus(); return; }
+      ob.disabled=true; noi('Đang kiểm mã…');
+      tbGoiGasXin_({ action:'tb_otp', tb:tbMayId(), otp:ma }, function(j){
+        ob.disabled=false;
+        if(j && j.duyet){ tbXinDungPoll_(); capKhoa(); duyetXong(); return; }
+        noi((j&&j.message)||'Không kiểm được mã — bấm lại.','#b91c1c');
+        oi.value=''; oi.focus();
+      });
+    };
+    btn.addEventListener('click', gui);
+    inp.addEventListener('keydown', function(ev){ if(ev.key==='Enter') gui(); });
+    if(ob) ob.addEventListener('click', kichHoat);
+    if(oi){
+      oi.addEventListener('keydown', function(ev){ if(ev.key==='Enter') kichHoat(); });
+      /* Gõ đủ 4 số là tự kích hoạt — thủ kho đứng giữa kho, bớt được một cú bấm. */
+      oi.addEventListener('input', function(){
+        oi.value=(oi.value||'').replace(/[^0-9]/g,'').slice(0,4);
+        if(oi.value.length===4) kichHoat();
+      });
+    }
+  }
+  m.style.display='flex';
+  requestAnimationFrame(function(){ m.classList.add('show'); });
+}
+
 /* SERVICE WORKER (audit 23/08/2026): mất mạng + F5 không còn trắng trang — sw.js network-first,
  * có mạng thì y như không có SW (luôn bản mới nhất), mất mạng mới rơi về bản đã cất.
  * file:// (mở bản nội bộ trên đĩa) không đăng ký được SW — bỏ qua êm. */
@@ -4348,6 +4721,8 @@ document.addEventListener('keydown',function(e){
   if(document.querySelector('#fcBody .combo-menu.show')){ fcCloseMenus(); return; }
   var fm=document.getElementById('fcmodal');
   if(fm && fm.classList.contains('show')){ closeFcModal(); return; }
+  var qqm=document.getElementById('qtcqrmodal');   // camera quét mã (Tra SL đếm) — đóng là TẮT camera
+  if(qqm && qqm.classList.contains('show')){ qtcQuetDong(); return; }
   var km=document.getElementById('kkmodal');
   if(km && km.classList.contains('show')){ closeKkModal(); return; }
   if(document.querySelector('#abnmFilters .combo-menu.show')){ abnmCloseCombos(); return; }
@@ -4679,6 +5054,11 @@ var TIP={
   kk:'Kiểm kê THẬT từ phiếu physical-count của WMS. "Kế hoạch chờ push" là lệnh kiểm kê tạo từ '+
     'dashboard, còn nằm ở sổ kế hoạch WMS trước khi thành phiếu — Pending = chờ push, '+
     'Processing = đã push.',
+  qtc:'Tra lại cột "Quantity count" của Physical Count Detail trên WMS mà không cần đăng nhập WMS: '+
+    'dữ liệu từ phiếu kiểm loại Full location - Factory (cửa sổ 90 ngày) do cụm sync chép về '+
+    'Google Sheet. Mỗi vị trí hiện lượt kiểm mới nhất (lượt cũ hơn xem bằng nút riêng); bấm mã '+
+    'phiếu để mở phiếu đó trên WMS. Icon trong ô SKU = quét mã vạch/QR bằng camera — cần '+
+    'Chrome/Edge trên Android.',
   abn:'Chỉ số "bất thường" đọc từ báo cáo stock-inventory-beta: chỉ lấy SKU có Product Type = Normal '+
     'và có ít nhất 1 loại lớn hơn 0 — Conflict, UID Temp, Not Found, Unsuitable product, Committed, '+
     'Committed Outbound.',
@@ -4720,6 +5100,7 @@ function showTab(t){
   /* 2 tab "Công cụ kho" không có thanh chân trang (xem body.an-chan trong CSS) */
   document.body.classList.toggle('an-chan', t==='sku'||t==='cd');
   if(t!=='sku') ndsRoiTab();   // rời tab thì tắt camera (đèn camera sáng vô cớ + hao pin)
+  if(t!=='kk'&&QTC.quetStream) qtcQuetDong();   // camera quét mã của mục Tra SL đếm cũng vậy
   if(t==='kk' && !KK.loadedOnce){ KK.loadedOnce=true; kkLoad(); }    // lazy-load lần đầu mở tab
   if(t==='abn' && !ABN.loadedOnce){ ABN.loadedOnce=true; abnLoad(); }
   if(t==='plg' && !PLG.loadedOnce){ PLG.loadedOnce=true; plgLoad(); }
@@ -6050,7 +6431,9 @@ function kkEval(inv,cnt){ if(cnt==null||cnt==='') return {d:0,counted:false}; va
 var CACHE_TTL=10*60*1000;
 function cacheGet(k){ try{ var o=JSON.parse(sessionStorage.getItem(k)||'null'); if(o&&(Date.now()-o.at)<CACHE_TTL) return o.d; }catch(e){} return null; }
 function cacheSet(k,d){ try{ sessionStorage.setItem(k,JSON.stringify({at:Date.now(),d:d})); }catch(e){ /* quá quota -> bỏ qua, không cache */ } }
-function clearCaches(){ try{ ['slf-kk-sku','slf-kk-loc','slf-kk3-sku','slf-kk3-loc','slf-hist','slf-hist2','slf-abn3','slf-adj','slf-uidgr','slf-uide','slf-tvt','slf-tvt2'].forEach(function(k){ sessionStorage.removeItem(k); }); }catch(e){} }
+function clearCaches(){ try{ ['slf-kk-sku','slf-kk-loc','slf-kk3-sku','slf-kk3-loc','slf-hist','slf-hist2','slf-abn3','slf-adj','slf-uidgr','slf-uide','slf-tvt','slf-tvt2'].forEach(function(k){ sessionStorage.removeItem(k); });
+  Object.keys(sessionStorage).filter(function(k){ return k.indexOf('slf-qtc-')===0; }).forEach(function(k){ sessionStorage.removeItem(k); });   // cache tra SL đếm: khoá theo SKU nên xoá theo prefix
+}catch(e){} }
 function gvizP(sheet,params,cb){
   return new Promise(function(res){
     // null = LỖI TẢI (mạng/treo/chặn) — khác "tab rỗng"; caller phân biệt để không hiển thị nhầm "không có dữ liệu"
@@ -6189,6 +6572,162 @@ function kkIdLink(id,kind){
   return '<a class="wlink pid" href="'+kkWmsUrl(id,kind)+'" target="_blank" rel="noopener" title="Mở phiếu '+esc(id)+' trên WMS (tab mới)">'+esc(id)+KK_ICON+'</a>'+
     (adjHasCid(id)?'<span class="adjflag" title="Phiếu có số lượng điều chỉnh lưu trên Sheet">✎</span>':'');
 }
+/* ===== TRA CỨU SL ĐẾM THEO SKU (25/08/2026) =====================================================
+   Yêu cầu user: tra cứu lại "Quantity count" của Physical Count Detail ngay trên tab Kiểm kê —
+   gõ SKU (hoặc bấm icon trong ô để quét mã vạch/QR bằng camera) là thấy SKU đó được đếm bao nhiêu
+   ở vị trí nào (vd 422302174 @ F0-KHO-HM-01-04-01 → 3.800).
+   NGUỒN: tab Sheet kiemke-qtycount — push-pc-to-sheet ghi TOÀN BỘ dòng tracking (kể cả dòng khớp)
+   của phiếu Full location - Factory, cửa sổ 90 ngày. Người xem đọc gviz, KHÔNG cần token WMS.
+   NHẸ TẢI: tab có thể hàng chục nghìn dòng nên KHÔNG tải cả tab về máy — tra bằng gviz
+   `tq=select * where F=<sku>` (cột F = SKU, hợp đồng cột khai ở push-pc-to-sheet.mjs), mỗi lượt
+   chỉ về đúng vài dòng khớp. SKU trên Sheet là Ô SỐ (setValues ép kiểu như gõ tay) nên so SỐ
+   trước; 0 dòng mới thử so CHUỖI (SKU không thuần số / cột bị ép text).
+   Bẫy đã né: ① gviz trả TAB ĐẦU TIÊN khi tab chưa tồn tại → kiểm HỢP ĐỒNG NHÃN (sku + quantity
+   count) trước khi tin; ② so số với cột chuỗi (và ngược lại) làm gviz báo lỗi → chỉ coi là LỖI
+   TẢI khi KHÔNG lượt thử nào thành công. */
+var QTC={dang:false,kq:null,sku:'',taCa:false,bd:null,quetTimer:null,quetStream:null};
+var QTC_TAB='kiemke-qtycount';
+function qtcChuan(s){ return String(s==null?'':s).trim().replace(/\.0$/,''); }
+async function qtcFetch(sku){
+  var ck='slf-qtc-'+sku, hit=cacheGet(ck);
+  if(hit) return {rows:hit,err:false};
+  var laSo=/^\d{1,15}$/.test(sku);
+  var tqs=laSo?['select * where F = '+sku,"select * where F = '"+sku+"'"]
+              :["select * where F = '"+sku.replace(/'/g,'')+"'"];
+  var coLuotThanh=false;
+  for(var i=0;i<tqs.length;i++){
+    var resp=await gvizP(QTC_TAB,'&headers=1&tq='+encodeURIComponent(tqs[i]),'qtcgv'+i);
+    if(!resp||resp.status==='error') continue;   // so số/chuỗi lệch kiểu cột cũng rơi vào đây — thử kiểu còn lại
+    var H=(resp.table&&resp.table.cols||[]).map(function(c){ return String((c&&c.label)||'').replace(/\s+/g,' ').trim().toLowerCase(); });
+    if(H.indexOf('sku')<0||H.indexOf('quantity count')<0) return {rows:[],err:true,thieuTab:true};
+    coLuotThanh=true;
+    var raw=(resp.table&&resp.table.rows||[]).map(function(r){ return (r.c||[]).map(function(c){ return c?(c.v==null?'':c.v):''; }); });
+    if(!raw.length) continue;   // 0 dòng ở kiểu so này — thử kiểu còn lại rồi mới kết luận "chưa kiểm"
+    var c={cid:kkIdx(H,['Checklist ID']),req:kkIdx(H,['Request code']),wh:kkIdx(H,['Warehouse']),loc:kkIdx(H,['Location']),sku:kkIdx(H,['SKU']),pn:kkIdx(H,['Product Name']),cnt:kkIdx(H,['Quantity Count']),inv:kkIdx(H,['Inventory']),diff:kkIdx(H,['Diff']),lst:kkIdx(H,['Line Status']),cst:kkIdx(H,['Checklist Status']),by:kkIdx(H,['Counted by']),cdate:kkIdx(H,['Counted date']),upd:kkIdx(H,['Updated At'])};
+    var g=function(r,j){ return j>=0&&r[j]!=null?r[j]:''; };
+    var out=raw.map(function(r){ return {cid:qtcChuan(g(r,c.cid)),req:qtcChuan(g(r,c.req)),wh:String(g(r,c.wh)),loc:String(g(r,c.loc)),sku:qtcChuan(g(r,c.sku)),pn:String(g(r,c.pn)),
+      cnt:(g(r,c.cnt)===''?null:Number(g(r,c.cnt))||0),inv:(g(r,c.inv)===''?null:Number(g(r,c.inv))||0),diff:(g(r,c.diff)===''?null:Number(g(r,c.diff))||0),
+      lst:String(g(r,c.lst)),st:String(g(r,c.cst)),by:String(g(r,c.by)),cdate:String(g(r,c.cdate)),upd:String(g(r,c.upd))}; });
+    cacheSet(ck,out);
+    return {rows:out,err:false};
+  }
+  return {rows:[],err:!coLuotThanh};
+}
+async function qtcTra(boCache){
+  var inp=document.getElementById('qtcSku'), sku=qtcChuan(inp?inp.value:'');
+  if(!sku){ toast('Gõ SKU (hoặc bấm icon quét mã) trước đã.','warn'); if(inp) inp.focus(); return; }
+  if(QTC.dang) return;
+  QTC.dang=true;
+  var btn=document.getElementById('qtcGo'); if(btn) btn.disabled=true;
+  if(boCache===true){ try{ sessionStorage.removeItem('slf-qtc-'+sku); }catch(e){} }
+  document.getElementById('qtcKq').innerHTML='<div class="sk" style="height:72px;border-radius:10px;margin-top:10px"></div>';
+  try{
+    var kq=await qtcFetch(sku);
+    QTC.kq=kq; QTC.sku=sku; QTC.taCa=false;
+    qtcVe();
+  }finally{ QTC.dang=false; if(btn) btn.disabled=false; }   // treo mạng không được khoá nút vĩnh viễn
+}
+function qtcVe(){
+  var el=document.getElementById('qtcKq'); if(!el) return;
+  var kq=QTC.kq, sku=QTC.sku;
+  if(!kq){ el.innerHTML=''; return; }
+  if(kq.err){
+    el.innerHTML='<div class="state" style="padding:14px;white-space:normal">⚠ '+(kq.thieuTab
+      ?'Tab <code>kiemke-qtycount</code> chưa có trên Google Sheet — chờ cụm sync kế (push-pc-to-sheet) tạo tab rồi tra lại.'
+      :'Không tải được dữ liệu tra cứu (mạng / Google Sheet) — đây là LỖI TẢI, không phải "SKU chưa kiểm".')+
+      ' <button class="fcg" onclick="qtcTra(true)">Thử lại</button></div>';
+    return;
+  }
+  var rows=kq.rows.slice();
+  if(!rows.length){
+    el.innerHTML='<div class="state" style="padding:14px;white-space:normal">Không thấy SKU <b>'+esc(sku)+'</b> trong dữ liệu kiểm '+
+      'Full location - Factory (cửa sổ 90 ngày). SKU chưa được kiểm theo loại phiếu này, hoặc mã gõ chưa đúng.</div>';
+    return;
+  }
+  rows.sort(function(a,b){ return (kkCountMs(b)||0)-(kkCountMs(a)||0); });
+  /* 1 vị trí kiểm nhiều lần → dòng ĐẠI DIỆN = lượt kiểm MỚI NHẤT, phiếu hợp lệ thắng
+     REJECTED/CANCELED — cùng luật khử trùng phiếu của kkLatestOf. Lượt cũ cất vào `thu`,
+     xem bằng nút "Hiện lượt kiểm cũ hơn" (mờ + badge "kiểm cũ"). */
+  var map={}, thu=[];
+  rows.forEach(function(r){
+    var k=r.wh+'|'+r.loc, st=String(r.st||'').toUpperCase(), bad=(st==='REJECTED'||st==='CANCELED');
+    var cur=map[k];
+    if(!cur){ map[k]={r:r,bad:bad}; return; }
+    if(cur.bad&&!bad){ thu.push(cur.r); map[k]={r:r,bad:bad}; return; }
+    thu.push(r);
+  });
+  var hien=Object.keys(map).map(function(k){ return map[k].r; });
+  hien.sort(function(a,b){ return (kkCountMs(b)||0)-(kkCountMs(a)||0); });
+  thu.sort(function(a,b){ return (kkCountMs(b)||0)-(kkCountMs(a)||0); });
+  var tong=0,daDem=0;
+  hien.forEach(function(r){ if(r.cnt!=null){ tong+=r.cnt; daDem++; } });
+  var pn=''; rows.some(function(r){ if(r.pn){ pn=r.pn; return true; } return false; });
+  var h='<div class="qtcsum"><span class="t">'+esc(sku)+'</span>'+(pn?'<span class="pn" title="'+esc(pn)+'">'+esc(pn)+'</span>':'')+
+    '<span>Tổng SL đếm: <b>'+nf(tong)+'</b>'+(daDem<hien.length?' ('+nf(daDem)+'/'+nf(hien.length)+' vị trí có số đếm)':' · '+nf(hien.length)+' vị trí')+'</span>'+
+    (thu.length?'<button type="button" class="fcg'+(QTC.taCa?' on':'')+'" onclick="QTC.taCa=!QTC.taCa;qtcVe()">'+(QTC.taCa?'Ẩn':'Hiện')+' '+nf(thu.length)+' lượt kiểm cũ hơn</button>':'')+
+    '</div>';
+  var all=QTC.taCa?hien.concat(thu):hien;
+  h+='<div class="qtcwrap"><table class="mtbl mbcard qtctbl"><thead><tr><th>Vị trí</th><th class="num">SL đếm</th><th class="num">Tồn HT</th><th class="num">Lệch</th><th>Phiếu</th><th>Ngày kiểm</th><th>Người kiểm</th><th>Trạng thái</th></tr></thead><tbody>';
+  all.forEach(function(r,i){
+    var cu=(i>=hien.length);
+    var d=(r.diff==null&&r.cnt!=null&&r.inv!=null)?(r.cnt-r.inv):r.diff;
+    h+='<tr'+(cu?' class="qtccu"':'')+'>'+
+      '<td class="mb-hd">'+esc(r.loc||'—')+(cu?' <span class="badge b-pend">kiểm cũ</span>':'')+'</td>'+
+      '<td class="num mb-tag qtcnum" data-lb="SL đếm">'+(r.cnt==null?'chưa đếm':nf(r.cnt))+'</td>'+   /* "—" trần là ô không mang tin (luật ③) — dòng chưa đếm phải NÓI là chưa đếm */
+      '<td class="num'+(r.inv==null?' mb-0':'')+'" data-lb="Tồn HT">'+(r.inv==null?'—':nf(r.inv))+'</td>'+
+      (d==null?'<td class="num mb-0" data-lb="Lệch">—</td>'
+        :'<td class="num '+(d<0?'d-am':d>0?'d-duong':'d-khop')+'" data-lb="Lệch">'+(d>0?'+':'')+nf(d)+'</td>')+
+      '<td data-lb="Phiếu">'+kkIdLink(r.cid,'loc')+'</td>'+
+      '<td data-lb="Ngày kiểm">'+kkFmtD(kkCountMs(r))+'</td>'+
+      '<td'+(r.by?'':' class="mb-0"')+' data-lb="Người kiểm">'+kkByShort(r.by)+'</td>'+
+      '<td data-lb="Trạng thái"><span class="badge '+kkBadge(r.st)+'">'+(r.st?esc(r.st):'—')+'</span></td></tr>';
+  });
+  h+='</tbody></table></div>';
+  el.innerHTML=h;
+}
+/* --- Quét mã: camera + BarcodeDetector (Edge/Chrome Android — cùng đường với tab Nhận diện SKU) --- */
+function qtcQuetMo(){
+  if(!('BarcodeDetector' in window)){ toast('Trình duyệt chưa hỗ trợ quét mã (cần Chrome/Edge trên Android) — gõ SKU tay.','warn'); return; }
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ toast('Trình duyệt không cho mở camera — gõ SKU tay.','warn'); return; }
+  if(QTC.quetStream) return;   // đã mở rồi (bấm đúp)
+  plgMoModal('qtcqrmodal');
+  document.getElementById('qtcQrHint').textContent='Đang mở camera…';
+  navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ ideal:'environment' }, width:{ ideal:1920 }, height:{ ideal:1440 },
+    advanced:[{ focusMode:'continuous' }] }, audio:false }).then(function(stream){
+    QTC.quetStream=stream;
+    var v=document.getElementById('qtcVideo');
+    v.srcObject=stream;
+    v.play().catch(function(){});
+    document.getElementById('qtcQrHint').textContent='Đưa mã vạch / QR vào khung — bắt được là tự điền ô SKU và tra luôn.';
+    if(!QTC.bd) QTC.bd=new window.BarcodeDetector({ formats:['qr_code','code_128','code_39','ean_13','ean_8','itf','upc_a','upc_e','data_matrix'] });
+    var dangDo=false;
+    QTC.quetTimer=setInterval(function(){
+      if(dangDo||!QTC.quetStream) return;
+      dangDo=true;
+      QTC.bd.detect(v).then(function(kq){
+        dangDo=false;
+        var raw=(kq&&kq[0]&&String(kq[0].rawValue||'').trim())||'';
+        if(!raw||!QTC.quetStream) return;
+        var m=raw.match(/\d{6,}/);   // tem kho in SKU toàn số; QR có thể kèm chữ → lấy cụm số dài
+        var ma=m?m[0]:raw;
+        document.getElementById('qtcSku').value=ma;
+        qtcQuetDong();
+        toast('Đã quét được mã '+ma+' — đang tra…','ok');
+        qtcTra();
+      }).catch(function(){ dangDo=false; /* khung hình chưa sẵn sàng — thử lượt sau */ });
+    },350);
+  }).catch(function(e){
+    qtcQuetDong();
+    toast('Không mở được camera ('+(e&&(e.name||e.message)||'?')+') — gõ SKU tay.','err');
+  });
+}
+function qtcQuetDong(){
+  if(QTC.quetTimer){ clearInterval(QTC.quetTimer); QTC.quetTimer=null; }
+  if(QTC.quetStream){ try{ QTC.quetStream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){} QTC.quetStream=null; }
+  var v=document.getElementById('qtcVideo'); if(v) v.srcObject=null;
+  plgDongModal('qtcqrmodal');
+}
+
 /* 1 dòng "có số liệu đếm dùng được" — CHỈ dùng cho diff/drill-down (kkDiffOf).
    Thẻ chỉ số + chart + anti-join đều dùng kkIsChecked (thống nhất 25/07/2026). */
 function kkIsCounted(kind,r){
@@ -8553,7 +9092,7 @@ function pcGas(body){
          đã chạy — r.json() thẳng sẽ nổ SyntaxError khó hiểu. Bẫy này đã vá ở prGoiGas/ndsGoiGas, đây
          là chỗ sót. */
       t=String(t||'').trim();
-      if(t.charAt(0)==='{'||t.charAt(0)==='[') return JSON.parse(t);
+      if(t.charAt(0)==='{'||t.charAt(0)==='[') return tbSoiKhoa(JSON.parse(t));   // bị khoá thiết bị chặn → mở pop-up xin cấp quyền
       throw new Error(/^<!DOCTYPE|^<html/i.test(t)?'Apps Script trả về trang HTML (lỗi chập chờn) — bấm lại.':'Phản hồi lạ từ Apps Script: '+t.slice(0,60));
     });
 }
@@ -12338,7 +12877,9 @@ async function ndsGoiGas(body, tuDong){
     } finally { clearTimeout(het); if (NDS.huy===ctl) NDS.huy=null; ndsBoKhoiBay(ctl); }
     var t=String(txt||'').trim();
     if (t.charAt(0)==='{' || t.charAt(0)==='['){
-      try{ return JSON.parse(t); }
+      /* Bị khoá thiết bị chặn → mở pop-up xin cấp quyền, TRỪ lượt tự động (hâm nóng/đọc nền):
+         pop-up tự nổ lúc người dùng chưa bấm gì là dọa người ta. */
+      try{ var jKq=JSON.parse(t); return tuDong ? jKq : tbSoiKhoa(jKq); }
       catch(e){ cuoi='phản hồi không phải JSON hợp lệ'; continue; }
     }
     /* Không phải JSON -> gần như chắc là trang HTML của chặng 2 */
@@ -13637,7 +14178,9 @@ function clTim(pn){
   var dungMet = met ? ds.filter(function(r){ return r.met === met; }) : [];
   var r = dungMet[0] || ds[0];
   var net = (r.gross > 0 && r.loi > 0) ? r.gross - r.loi : 0;
-  return { nhan: r.nhan, co: r.co, met: r.met, loi: r.loi,
+  /* `gross` = cân CẢ CUỘN NGUYÊN (có lõi) — tab Chuyển đổi cân cần chính con số này để điền hộ ô
+     "khối lượng 1 cuộn nguyên"; pop-up Cân → SL chỉ dùng `loi` + `mmg`. */
+  return { nhan: r.nhan, co: r.co, met: r.met, loi: r.loi, gross: r.gross,
     /* mật độ mm/gr là thuộc tính của SỢI — không phụ thuộc cuộn đem cân dài bao nhiêu.
        GIỮ SỐ THỰC, chỉ làm tròn ở mm cuối: cân đúng 1 cuộn nguyên phải ra đúng quy cách. */
     mmg: (net > 0 && r.met > 0) ? (r.met * 1000 / net) : 0 };
@@ -14532,7 +15075,7 @@ async function prGoiGas(body){
     }catch(e){ cuoi = String(e && e.message || e); continue; }
     var t = String(txt || '').trim();
     if (t.charAt(0) === '{' || t.charAt(0) === '['){
-      try{ return JSON.parse(t); }catch(e){ cuoi = 'phản hồi không phải JSON'; continue; }
+      try{ return tbSoiKhoa(JSON.parse(t)); }catch(e){ cuoi = 'phản hồi không phải JSON'; continue; }   // bị khoá chặn → pop-up xin cấp quyền
     }
     cuoi = /^<!DOCTYPE|^<html/i.test(t) ? 'Apps Script trả về trang HTML' : ('phản hồi lạ: ' + t.slice(0, 60));
   }
@@ -14620,8 +15163,12 @@ loadData();
  *      không để con số sai đi thẳng vào phiếu kiểm kê.
  * KHÔNG gọi mạng, không đọc Sheet, không đụng WMS -> đúng ràng buộc "nhẹ tải upstream".
  * ============================================================================================ */
-var CD={ qc:5000000, tuDo:false, caLoi:true, tex:0, texTuDo:false, loadedOnce:false, mm:0,
-  loai:'chi', sku:'', pn:'', kho:0, khoTuDo:false, uid:'', gMet:0,
+/* 24/08/2026: hết `tuDo/texTuDo/khoTuDo/tex/kho/qc` — quy cách, Tex, khổ, định lượng nay chỉ nằm
+   TRONG Ô NHẬP (chip là gợi ý điền hộ). `qc` còn lại là số mm của lượt tính gần nhất, để dòng ghi
+   nhớ và bộ đo soi lại. `soCan` = số cân thật của nhãn chỉ này lấy từ sổ CAN-LOI-CHI; `soCanMo` =
+   người dùng bấm "cân lại" nên hai ô lõi/cuộn nguyên hiện ra dù đã có sổ. */
+var CD={ qc:0, caLoi:true, loadedOnce:false, mm:0,
+  loai:'chi', sku:'', pn:'', uid:'', gMet:0, soCan:null, soCanKey:'', soCanMo:false,
   dvKho:'cm', dvQc:'m', tuDien:{} };
 var CD_SOTAY='cd-gm-sotay';        // sổ tay g/m của THUN: cân một lần, nhớ theo SKU
 /* Đơn vị của HAI ô đổi được (23/08/2026). Máy vẫn tính bằng mm/cm như cũ — đây chỉ là đơn vị NGƯỜI
@@ -14674,39 +15221,51 @@ function cdF(x,d){
 /* Bỏ số 0 thập phân vô ích: 9,500 gr đẹp hơn 9,500.0 gr */
 function cdFg(x){ return cdF(x, (Math.abs(x-Math.round(x))<1e-9)?0:1); }
 
-/* ---------- 2. NHẬN NÚT ---------- */
-function cdChonQC(mm,imLang){
-  CD.tuDo=(mm===0); if(!CD.tuDo) CD.qc=mm;
-  cdVeQCChon();
-  var row=document.getElementById('cdQCRow');
-  row.hidden=!CD.tuDo;
-  /* imLang = lúc khôi phục quy cách đã lưu: KHÔNG focus, kỉo điện thoại vừa mở tab đã bật bàn phím.
-     Ô gõ tay nhận MÉT (CD.qc vẫn giữ mm) — cùng quy ước hiển thị gọn của các nút. */
-  if(CD.tuDo){ var o=document.getElementById('cdQC'); if(!o.value) o.value=String(CD.qc/1000); if(!imLang){ o.focus(); o.select(); } }
-  cdTinh();
+/* ---------- 2. NHẬN NÚT ----------
+ * CHIP LÀ GỢI Ý, KHÔNG PHẢI TRẠNG THÁI (24/08/2026, user). Trước đây mỗi hàng chip có một ô nhập
+ * TÀNG HÌNH nằm sau chip "Khác…", nên tab phải giữ ba cờ `tuDo/texTuDo/khoTuDo` và người đọc phải
+ * hỏi "số đang tính nằm ở chip hay ở ô?". Nay ô nhập LUÔN hiện, chip chỉ điền hộ vào ô — một nguồn
+ * số duy nhất, chip "Khác…" biến mất theo, và bấm lại chip đang sáng = xoá ô. */
+function cdGoi(id, gt, dv){
+  var o=document.getElementById(id); if(!o) return;
+  var dangCo=cdSo(o.value), goc=!dv || ((dv==='qc'?CD.dvQc:CD.dvKho)===CD_DV[dv].ds[0]);
+  if(goc && isFinite(dangCo) && Math.abs(dangCo-gt)<1e-9) o.value='';     // bấm lại chip đang sáng = bỏ
+  else{
+    /* Chip mang số của DANH MỤC nên luôn tính bằng đơn vị gốc (m · cm). Đang gõ bằng yard/inch mà
+       bấm chip thì phải kéo chip ĐVT về gốc, kỉo "150" bị hiểu là 150 inch. */
+    if(dv && !goc){ if(dv==='qc') CD.dvQc=CD_DV.qc.ds[0]; else CD.dvKho=CD_DV.kho.ds[0]; cdVeDv(); }
+    o.value=String(gt);
+  }
+  delete CD.tuDien[id];              // số này là của NGƯỜI (họ bấm chip), không phải máy đoán hộ
+  cdOGo();
 }
-/* Chip Tex: bấm chip = chọn; bấm LẠI chip đang sáng = bỏ chọn (Tex không bắt buộc);
-   chip "Khác…" (data-tex=0) mở/đóng ô gõ tay — đúng nếp ô "Khác…" của hàng quy cách. */
-function cdChonTex(btn){
-  var v=Number(btn.getAttribute('data-tex'));
-  if(v===0){ CD.texTuDo=!CD.texTuDo; if(CD.texTuDo) CD.tex=0; }
-  else{ CD.texTuDo=false; CD.tex=(CD.tex===v)?0:v; }
-  cdVeTexChon();
-  if(CD.texTuDo){ var o=document.getElementById('cdTex'); o.focus(); o.select(); }
-  cdTinh();
-}
-function cdVeTexChon(){
-  document.getElementById('cdTexRow').hidden=!CD.texTuDo;
-  document.getElementById('cdTexKhoBar').querySelectorAll('.kktab').forEach(function(b){
-    var v=Number(b.getAttribute('data-tex'));
-    b.classList.toggle('active', CD.texTuDo ? v===0 : (v>0 && v===CD.tex));
+/* Mọi ô có dải gợi ý dùng chung một handler: tô lại chip trùng số rồi tính. */
+function cdOGo(){ cdVeGoiChon(); cdTinh(); }
+function cdVeGoiChon(){
+  document.querySelectorAll('#viewCd .cd-goi').forEach(function(bar){
+    var id=bar.getAttribute('data-o'), dv=bar.getAttribute('data-dv');
+    var o=document.getElementById(id); if(!o) return;
+    var v=cdSo(o.value), goc=!dv || ((dv==='qc'?CD.dvQc:CD.dvKho)===CD_DV[dv].ds[0]);
+    bar.querySelectorAll('.kktab').forEach(function(b){
+      var g=Number(b.getAttribute('data-v'));
+      b.classList.toggle('active', goc && isFinite(v) && Math.abs(v-g)<1e-9);
+    });
   });
 }
-function cdDoiNguyen(caLoi){
+/* Vẽ một dải gợi ý. `ds` rỗng ⇒ ẩn CẢ DÒNG (user 24/08: "không có chỉ số gợi ý thì xoá chữ Khác
+   luôn") — thà trống hẳn còn hơn để lại một chữ không dẫn tới đâu. */
+function cdVeGoi(barId, ds, veChip){
+  var bar=document.getElementById(barId); if(!bar) return;
+  var dong=bar.closest('.cd-goi');
+  bar.innerHTML=(ds||[]).map(veChip).join('');
+  if(dong){ dong.hidden=!(ds||[]).length; dong.classList.remove('mo'); }
+  cdVeGoiChon(); cdVuaMotDong();
+}
+function cdDoiNguyen(caLoi, imLang){
   CD.caLoi=!!caLoi;
   document.getElementById('cdNgCa').classList.toggle('on',CD.caLoi);
   document.getElementById('cdNgChi').classList.toggle('on',!CD.caLoi);
-  cdTinh();
+  if(!imLang) cdTinh();
 }
 
 /* ═══════════════════ LOẠI HÀNG · SKU · UIDgr · THƯỚC VẢI/THUN (23/08/2026) ═══════════════════ */
@@ -14723,15 +15282,36 @@ function cdChonLoai(l, imLang){
   document.querySelectorAll('.cd-th').forEach(function(e){ e.textContent=CD_LOAI[l].ten; });
   document.querySelectorAll('.cd-thuoc').forEach(function(e){ e.textContent=CD_LOAI[l].thuoc; });
   if(l==='thun') cdSoTayVe();
-  cdNapQuyCach(l);
+  cdNapQuyCach(l, imLang);
+  cdApSoCan(true);            // đổi loại hàng thì sổ cân (chỉ có ở CHỈ) cũng tính lại
   if(!imLang) cdTinh();
 }
 /* Nạp quy cách của loại hàng đang chọn từ danh mục (cache chung, 0 lượt mạng). CHỈ MAY giữ nguyên
-   3 chip user đã chốt 22/08; hai loại kia đếm từ danh mục, không có số thì chỉ còn "Khác…". */
-function cdNapQuyCach(l){
-  if(l==='chi'){ cdVeQuyCach(CD_QC_CHI.map(function(mm){ return { m:mm/1000, n:0 }; })); return; }
-  var ds=cdDanhMuc();
-  cdVeQuyCach(ds ? cdGomQuyCach(ds, l) : []);
+   3 số user đã chốt 22/08; hai loại kia đếm từ danh mục, không có số thì DÒNG GỢI Ý ẨN HẲN. */
+function cdDsQuyCach(l){
+  if(l==='chi') return CD_QC_CHI.map(function(mm){ return { m:mm/1000, n:0 }; });
+  var dm=cdDanhMuc();
+  return dm ? cdGomQuyCach(dm, l) : [];
+}
+function cdNapQuyCach(l, giu){ cdVeQuyCach(cdDsQuyCach(l), giu, false); }
+/* Ô nào CÓ, ô nào KHÔNG — quyết ở đúng một chỗ (user 24/08/2026):
+     · "Số cuộn thừa" chỉ có ở CHỈ MAY — vải trả về là một tấm, thun một cuộn.
+     · "Khối lượng 1 lõi" không có ở VẢI — vải không cuốn lõi.
+     · CHỈ MAY mà sổ cân CAN-LOI-CHI đã có lõi + cuộn nguyên của nhãn đó ⇒ ẩn cả hai ô, chỉ hỏi khi
+       sổ chưa có. Bấm "cân lại" thì hai ô hiện ra để gõ tay.
+   Ẩn một ô của cặp thì ô còn lại trải hết bề ngang (class `mot`) — không để lại nửa hàng trống. */
+function cdVeAnHien(){
+  var coSo=!!CD.soCan && !CD.soCanMo;
+  var anCuon=(CD.loai!=='chi');
+  var anLoi =(CD.loai==='vai') || (CD.loai==='chi' && coSo);
+  var anNgu =(CD.loai==='chi' && coSo);
+  document.getElementById('cdCuonF').hidden=anCuon;
+  document.getElementById('cdLoiF').hidden=anLoi;
+  document.getElementById('cdNguyenF').hidden=anNgu;
+  document.getElementById('cdNgSeg').hidden=anLoi;      // không có lõi thì "cân cả lõi / riêng hàng" vô nghĩa
+  var doiLoi=document.getElementById('cdDoiLoi');
+  doiLoi.hidden = anLoi && anNgu;
+  cdVuaMotDong();                                       // ô ẩn/hiện ⇒ bề ngang đổi ⇒ gom lại chip
 }
 /* Ô SKU: tra danh mục (cache chung với tab Nhận diện SKU, 0 lượt mạng) rồi TỰ ĐIỀN thông số.
    Cố ý KHÔNG đoán bừa: chỉ nhận khi mã khớp ĐÚNG một dòng. */
@@ -14740,20 +15320,46 @@ function cdDanhMuc(){
   var c=(typeof ndsDocCache==='function')?ndsDocCache():null;
   return (c&&c.rows)?c.rows:null;
 }
+/* Khối "Mã SKU · UIDgr code" gấp mặc định (23/08/2026): tự BUNG khi có số, và khi đang gấp thì
+   nhắc lại mã ngay trên dòng summary — gấp mà giấu luôn cái đã nhập là bắt người mở ra để nhớ. */
+function cdDDCapNhat(){
+  var d=document.getElementById('cdDinhDanh'); if(!d) return;
+  var s=String((document.getElementById('cdSku')||{}).value||'').trim();
+  var u=String((document.getElementById('cdUid')||{}).value||'').trim();
+  var tt=document.getElementById('cdDDTom');
+  if(tt) tt.textContent=[s&&('SKU '+s), u&&('UIDgr '+u)].filter(Boolean).join(' · ');
+  if(s||u){ if(!d.open && !d.dataset.tuGap) d.open=true; }   // có số thì mở, TRỪ khi người đã tự gấp
+  else {
+    d.dataset.tuGap='';                                      // sạch số ⇒ quên ý định gấp tay của lượt trước
+    /* Rỗng thì gấp về — TRỪ khi con trỏ đang nằm trong đó: xoá hết chữ để gõ lại mà khối tự sập
+       xuống dưới tay là cướp ô đang gõ (bẫy "dọn ô trước khi vẽ lại" đã dính ở màn In tem). */
+    if(!d.contains(document.activeElement)) d.open=false;
+  }
+}
+/* Người CHỦ ĐỘNG gấp khối lại trong lúc đang có mã: tôn trọng, đừng bung lên lại ở lượt gõ sau.
+   Chỉ nhớ khi CÓ số — nếu không, cú gấp tự động lúc "Lô tiếp theo" sẽ bị hiểu nhầm là ý người. */
+function cdDDGap(d){
+  var co=String((document.getElementById('cdSku')||{}).value||'').trim()
+       ||String((document.getElementById('cdUid')||{}).value||'').trim();
+  d.dataset.tuGap=(!d.open && co)?'1':'';
+}
 function cdSkuGo(){
+  cdDDCapNhat();
   var v=String(document.getElementById('cdSku').value||'').replace(/[^0-9A-Za-z]/g,'');
   var doc=document.getElementById('cdSkuDoc');
   CD.sku=v; CD.pn='';
-  if(!v){ doc.className='cd-doc'; doc.innerHTML=''; cdTinh(); return; }
+  /* Hết tên hàng ⇒ hết sổ cân: hai ô lõi/cuộn nguyên phải HIỆN LẠI, kỉo người dùng cân lô khác mà
+     máy vẫn lặng lẽ dùng số của nhãn cũ. */
+  if(!v){ doc.className='cd-doc'; doc.innerHTML=''; cdApSoCan(true); cdTinh(); return; }
   var ds=cdDanhMuc();
-  if(!ds){ doc.className='cd-doc'; doc.innerHTML='Chưa tải được danh mục — vẫn tính bình thường, chỉ là không tự điền thông số được.'; cdTinh(); return; }
+  if(!ds){ doc.className='cd-doc'; doc.innerHTML='Chưa tải được danh mục — vẫn tính bình thường, chỉ là không tự điền thông số được.'; cdApSoCan(true); cdTinh(); return; }
   var hit=null, dem=0;
   for(var i=0;i<ds.length;i++){ if(String(ds[i].sku)===v){ hit=ds[i]; dem=1; break; } }
   if(!hit && v.length>=5){ for(var j=0;j<ds.length;j++){ if(String(ds[j].sku).indexOf(v)===0){ dem++; hit=ds[j]; if(dem>1) break; } } }
   if(!hit || dem>1){
     doc.className='cd-doc';
     doc.innerHTML = dem>1 ? ('Còn '+dem+' SKU bắt đầu bằng “'+esc(v)+'” — gõ thêm cho đủ.') : 'Không thấy mã này trong danh mục.';
-    cdTinh(); return;
+    cdApSoCan(true); cdTinh(); return;
   }
   CD.sku=String(hit.sku); CD.pn=hit.pn||'';
   /* Tên hàng nói nó là loại gì thì chuyển thước theo — đỡ cho người dùng một thao tác, và tránh
@@ -14765,15 +15371,10 @@ function cdSkuGo(){
   var them='';
   if(CD.loai==='vai' && typeof NDS_ENGINE!=='undefined'){
     var k=NDS_ENGINE.khoVai(CD.pn), g=NDS_ENGINE.dinhLuong(CD.pn);
-    /* ĐẶT khổ, KHÔNG bấm chip. `cdChonKho` là hành vi của NGÓN TAY: bấm lại chip đang sáng = bỏ
-       chọn. Gọi nó để tự điền thì SKU thứ hai có khổ cũng "Khác…" sẽ TẮT ô đang bật — khổ biến mất
-       không một lời nào, kết quả tụt về "còn thiếu". (Bẫy này bị bộ đo điện thoại bắt được: màn mới
-       bị bỏ qua vì tab không vẽ nổi kết quả.) */
-    if(k){
-      if(cdKhoChip(k.cm)){ CD.khoTuDo=false; CD.kho=k.cm; }
-      else { CD.khoTuDo=true; CD.kho=0; CD.dvKho='cm'; cdDatTuDien('cdKho', k.cm); cdVeDv(); }
-      cdVeKhoChon();
-    }
+    /* ĐIỀN THẲNG VÀO Ô (24/08/2026): chip nay chỉ là gợi ý nên không còn cảnh "bấm chip hộ người
+       dùng" — cái bẫy cũ là gọi `cdChonKho` để tự điền, mà nó là hành vi của NGÓN TAY (bấm lại chip
+       đang sáng = bỏ chọn) nên SKU thứ hai làm khổ biến mất không một lời nào. */
+    if(k){ CD.dvKho=CD_DV.kho.ds[0]; cdDatTuDien('cdKho', k.cm); cdVeDv(); }
     if(g) cdDatTuDien('cdGsm', g.gsm);
     them = ' · ' + (k? ('khổ <b>'+cdF(k.cm,(k.cm%1?1:0))+' cm</b>'+(k.nguon==='inch'||k.nguon==='inch-khoang'?' (đổi từ inch)':'')+(k.nguon==='cm-thua-so-0'?' <b style="color:var(--warn)">— tên hàng ghi thừa một số 0, kiểm lại</b>':'')) : '<b style="color:var(--warn)">tên hàng không ghi khổ</b>')
          + ' · ' + (g? ('định lượng <b>'+g.gsm+' gsm</b>'+(g.nguon==='oz'?' (đổi từ oz)':'')) : '<b style="color:var(--warn)">tên hàng không ghi định lượng</b>');
@@ -14792,6 +15393,14 @@ function cdSkuGo(){
       them=' · tên hàng ghi <b>'+esc(hs.chu)+'</b> → <b>'+cdF(hs.gMet,3)+' g/m</b>';
     }
     cdSoTayVe();
+  }else if(CD.loai==='chi'){
+    /* SỔ CÂN CAN-LOI-CHI: có số cân thật của nhãn này thì máy điền lõi + cuộn nguyên + quy cách rồi
+       ẩn hai ô đó (user 24/08/2026). Sổ nạp một lần rồi cất 6 giờ; lượt đầu chưa có thì nạp xong
+       gọi lại — chứ không bắt người dùng gõ lại SKU. */
+    clNap(function(){ if(CD.sku && CD.loai==='chi') cdApSoCan(); });
+    cdApSoCan(true);
+    /* KHÔNG nhắc lại số sổ cân ở đây: dòng riêng nằm đúng chỗ hai ô vừa ẩn đã nói đủ cả nhãn, cỡ,
+       quy cách và hai con số — in lần nữa ở đây là hai dòng cùng một tin. */
   }
   /* Hệ số cân↔dài của VẢI chỉ để SOI, không tự dùng: đo thật trên danh mục thấy nó chọi nhau với
      định lượng (SKU 422462136 ghi "Mỏng 7m 1kg" = 143 g/m trong khi "228gsm, W160cm" = 365 g/m,
@@ -14811,6 +15420,7 @@ function cdSkuGo(){
   cdTinh();
 }
 function cdUidGo(){
+  cdDDCapNhat();
   var v=String(document.getElementById('cdUid').value||'').replace(/\s+/g,'');
   CD.uid=v;
   var doc=document.getElementById('cdUidDoc');
@@ -14859,22 +15469,48 @@ function cdDatTuDien(id, gt){
   var o=document.getElementById(id); if(!o) return;
   o.value=String(gt); CD.tuDien[id]=String(gt);
 }
-function cdKhoChip(cm){ return [150,152,190].indexOf(Number(cm))>=0; }
-function cdChonKho(cm, imLang){
-  cm=Number(cm)||0;
-  if(cm===0){ CD.khoTuDo=!CD.khoTuDo; if(CD.khoTuDo) CD.kho=0; }
-  else{ CD.khoTuDo=false; CD.kho=(CD.kho===cm)?0:cm; }
-  cdVeKhoChon();
-  if(CD.khoTuDo && !imLang){ var o=document.getElementById('cdKho'); o.focus(); o.select(); }
+/* ── SỔ CÂN CAN-LOI-CHI trong tab này (24/08/2026, user) ─────────────────────────────────────
+ * Người kho đã cân lõi rỗng + cả cuộn nguyên của từng nhãn chỉ vào tab CAN-LOI-CHI (mỗi nhóm
+ * nhãn + cỡ + quy cách một dòng). Nhãn nào có số rồi thì ĐỪNG HỎI LẠI: máy điền lõi + cuộn nguyên
+ * + quy cách của ĐÚNG cuộn đã cân, rồi ẩn hai ô đó; chưa có số mới hỏi người dùng.
+ * Dùng lại nguyên khối `CL` (clNap/clTim) mà pop-up "Cân → Số lượng" đang dùng — cùng một sổ, cùng
+ * một cách khớp nhãn/cỡ/quy cách, không đẻ đường đọc thứ hai để rồi hai nơi khớp lệch nhau.
+ * ⚠ Cặp (lõi, cuộn nguyên) chỉ có nghĩa cùng ĐÚNG quy cách r.met — điền cân mà để nguyên quy cách
+ *   của lô trước là ra mật độ sai, nên quy cách điền kèm luôn. */
+function cdApSoCan(imLang){
+  var th=(CD.loai==='chi' && CD.pn && typeof clTim==='function') ? clTim(CD.pn) : null;
+  if(!(th && th.loi>0 && th.gross>0 && th.met>0)) th=null;
+  var key=th ? [th.nhan,th.co,th.met,th.loi,th.gross].join('|') : '';
+  var moi=(key!==CD.soCanKey);
+  CD.soCan=th; CD.soCanKey=key;
+  if(!th) CD.soCanMo=false;
+  /* Chỉ điền khi sổ ĐỔI SANG NHÃN KHÁC — clTim trả về object mới mỗi lượt, so bằng object là điền
+     lại ở từng nhịp gõ và đè mất số người dùng vừa sửa. */
+  if(th && moi && !CD.soCanMo){
+    cdDatTuDien('cdLoi', th.loi);
+    cdDatTuDien('cdNguyen', th.gross);
+    CD.dvQc=CD_DV.qc.ds[0]; cdVeDv();
+    cdDatTuDien('cdQC', th.met);
+    cdDoiNguyen(true, true);                 // sổ cân ghi CẢ CUỘN (có lõi)
+  }
+  cdSoCanVe(); cdVeAnHien(); cdVeGoiChon();
   if(!imLang) cdTinh();
 }
-function cdVeKhoChon(){
-  document.getElementById('cdKhoRow').hidden=!CD.khoTuDo;
-  document.getElementById('cdKhoBar').querySelectorAll('.kktab').forEach(function(b){
-    var v=Number(b.getAttribute('data-kho'));
-    b.classList.toggle('active', CD.khoTuDo ? v===0 : (v>0 && v===CD.kho));
-  });
+function cdSoCanVe(){
+  var box=document.getElementById('cdSoCanBox'); if(!box) return;
+  var s=CD.soCan;
+  if(!s){ box.hidden=true; box.innerHTML=''; return; }
+  box.hidden=false; box.className='cd-doc';
+  box.innerHTML = CD.soCanMo
+    ? ('Đang gõ tay hai ô dưới. Sổ cân <b>'+esc(s.nhan)+' · '+esc(s.co)+' · cuộn '+cdF(s.met)+' m</b> ghi lõi <b>'+
+       cdFg(s.loi)+' gr</b> · cuộn nguyên <b>'+cdFg(s.gross)+' gr</b>. '+
+       '<button type="button" class="fcg" onclick="cdSoCanDung()">Dùng lại số sổ cân</button>')
+    : ('Lõi + cuộn nguyên lấy từ <b>sổ cân CAN-LOI-CHI</b> ('+esc(s.nhan)+' · '+esc(s.co)+' · cuộn '+cdF(s.met)+
+       ' m): lõi <b>'+cdFg(s.loi)+' gr</b> · cuộn nguyên <b>'+cdFg(s.gross)+' gr</b> → mỗi cuộn còn <b>'+
+       cdFg(s.gross-s.loi)+' gr</b> chỉ. <button type="button" class="fcg" onclick="cdSoCanMo()">Cân lại cuộn này</button>');
 }
+function cdSoCanMo(){ CD.soCanMo=true; cdSoCanVe(); cdVeAnHien(); cdTinh(); }
+function cdSoCanDung(){ CD.soCanMo=false; CD.soCanKey=''; cdApSoCan(); }
 /* ---- Sổ tay g/m của THUN: cân một lần, nhớ theo SKU (khuôn sổ tay tem của tab Nhận diện SKU) ---- */
 function cdSoTayDoc(){ try{ return JSON.parse(localStorage.getItem(CD_SOTAY)||'{}')||{}; }catch(e){ return {}; } }
 function cdSoTayGhi(sku,gm){
@@ -14902,15 +15538,18 @@ function cdXoaLo(){
   CD.sku=''; CD.pn=''; CD.uid='';
   ['cdSkuDoc','cdUidDoc'].forEach(function(id){ var o=document.getElementById(id); o.className='cd-doc'; o.innerHTML=''; });
   document.getElementById('cdTong').focus();
+  cdDDCapNhat();                                        // hết mã → khối định danh gấp về như ban đầu
+  cdApSoCan(true);                                      // hết SKU → hết sổ cân, hai ô lõi/nguyên hiện lại
   cdTinh();
 }
 function cdXoaHet(){
   ['cdTong','cdCuon','cdLoi','cdNguyen','cdTex','cdQC','cdSku','cdUid','cdKho','cdGsm','cdGm'].forEach(function(id){ document.getElementById(id).value=''; });
-  CD.qc=5000000; CD.tuDo=false; CD.tex=0; CD.texTuDo=false; CD.sku=''; CD.pn=''; CD.uid='';
-  CD.kho=0; CD.khoTuDo=false; CD.dvKho='cm'; CD.dvQc='m'; CD.tuDien={}; cdVeDv();
+  CD.qc=0; CD.sku=''; CD.pn=''; CD.uid=''; CD.soCan=null; CD.soCanKey=''; CD.soCanMo=false;
+  CD.dvKho='cm'; CD.dvQc='m'; CD.tuDien={}; cdVeDv();
   ['cdSkuDoc','cdUidDoc','cdKhoDoc','cdGsmDoc','cdGmDoc'].forEach(function(id){ var o=document.getElementById(id); o.className='cd-doc'; o.innerHTML=''; });
-  cdVeTexChon(); cdVeKhoChon(); cdChonQC(5000000); cdChonLoai('chi',true); cdDoiNguyen(1);
+  cdSoCanVe(); cdChonLoai('chi',true); cdDoiNguyen(1,true); cdDDCapNhat(); cdVeGoiChon();
   try{ localStorage.removeItem(CD_KEY); }catch(e){}
+  cdTinh();
   toast('Đã xoá sạch ô nhập và quy cách đã lưu.','ok');
 }
 /* ĐẨY SANG IN TEM (23/08/2026, user chốt): cùng đường mà pop-up "Cân → Số lượng" của chỉ may vẫn
@@ -14948,16 +15587,15 @@ function cdCopy(){
  * Quy cách/lõi/cuộn nguyên là thuộc tính của LOẠI CHỈ, lặp lại ở mọi lô -> nhố lại.
  * Tổng kg/số cuộn là của RIÊNG lô đó -> KHÔNG nhố, tránh lô sau vô tình dùng số cũ của lô trước. */
 function cdLuu(){
+  var v=function(id){ return document.getElementById(id).value; };
   try{
     localStorage.setItem(CD_KEY, JSON.stringify({
-      qc:CD.qc, tuDo:CD.tuDo, caLoi:CD.caLoi, tex:CD.tex, texTuDo:CD.texTuDo,
-      loi:document.getElementById('cdLoi').value, nguyen:document.getElementById('cdNguyen').value,
-      texGo:document.getElementById('cdTex').value,
-      /* Thước của VẢI/THUN cũng là thuộc tính của LOẠI HÀNG (lặp lại ở mọi lô) nên nhớ như Tex.
-         SKU + UIDgr thì KHÔNG nhớ: chúng là của riêng cuộn/lô, nhớ lại là in nhầm tem. */
-      loai:CD.loai, kho:CD.kho, khoTuDo:CD.khoTuDo, dvKho:CD.dvKho, dvQc:CD.dvQc,
-      khoGo:document.getElementById('cdKho').value, gsm:document.getElementById('cdGsm').value,
-      gm:document.getElementById('cdGm').value
+      /* 24/08/2026: nhớ CHỮ TRONG Ô, không nhớ "chip nào đang sáng" nữa — chip chỉ là gợi ý điền hộ.
+         `loi` giữ nguyên tên vì pop-up "Cân → Số lượng" (csMo) đọc đúng khoá này.
+         SKU + UIDgr KHÔNG nhớ: chúng là của riêng cuộn/lô, nhớ lại là in nhầm tem. */
+      caLoi:CD.caLoi, loai:CD.loai, dvKho:CD.dvKho, dvQc:CD.dvQc,
+      loi:v('cdLoi'), nguyen:v('cdNguyen'), texGo:v('cdTex'), qcGo:v('cdQC'),
+      khoGo:v('cdKho'), gsm:v('cdGsm'), gm:v('cdGm')
     }));
   }catch(e){}
 }
@@ -14965,33 +15603,23 @@ function cdLoad(){
   var d=null;
   try{ d=JSON.parse(localStorage.getItem(CD_KEY)||'null'); }catch(e){}
   if(d){
-    if(d.loi) document.getElementById('cdLoi').value=d.loi;
-    if(d.nguyen) document.getElementById('cdNguyen').value=d.nguyen;
-    /* Tex: bản cũ (sáng 22/08) lưu `tex` là CHỮ trong ô gõ -> hiểu là gõ tay để không thành
-       trạng thái tàng hình (số áp vào phép tính mà không chip nào sáng). Bản mới lưu tex SỐ
-       (chip đang chọn) + texTuDo + texGo (chữ trong ô gõ tay). */
-    if(typeof d.tex==='string' && d.tex){ CD.texTuDo=true; document.getElementById('cdTex').value=d.tex; }
-    else{
-      CD.texTuDo=(d.texTuDo===true);
-      CD.tex=(Number(d.tex)>0)?Number(d.tex):0;
-      if(d.texGo) document.getElementById('cdTex').value=d.texGo;
-    }
-    cdVeTexChon();
-    if(d.gsm) document.getElementById('cdGsm').value=d.gsm;
-    if(d.gm) document.getElementById('cdGm').value=d.gm;
-    if(d.khoGo) document.getElementById('cdKho').value=d.khoGo;
-    CD.khoTuDo=(d.khoTuDo===true); CD.kho=(Number(d.kho)>0)?Number(d.kho):0;
+    var dat=function(id,gt){ if(gt!==undefined && gt!==null && String(gt)!=='') document.getElementById(id).value=String(gt); };
+    dat('cdLoi', d.loi); dat('cdNguyen', d.nguyen); dat('cdGsm', d.gsm); dat('cdGm', d.gm);
+    /* ĐỌC ĐƯỢC CẢ BẢN CŨ: trước 24/08 tab nhớ "chip nào sáng" (`qc` mm · `tex`/`kho` số) chứ không
+       nhớ chữ trong ô. Nay chỉ có ô nhập, nên số chip cũ được rót thẳng vào ô — nếu đọc chệch thì
+       người dùng mất quy cách/Tex đã lưu mà không hiểu vì sao. */
+    dat('cdTex', d.texGo || (Number(d.tex)>0 ? d.tex : (typeof d.tex==='string' ? d.tex : '')));
+    dat('cdKho', d.khoGo || (Number(d.kho)>0 ? d.kho : ''));
+    dat('cdQC',  d.qcGo  || (Number(d.qc)>0  ? (d.qc/1000) : ''));
     if(CD_DV.kho.ds.indexOf(d.dvKho)>=0) CD.dvKho=d.dvKho;
     if(CD_DV.qc.ds.indexOf(d.dvQc)>=0) CD.dvQc=d.dvQc;
-    cdVeKhoChon();
-    if(d.tuDo && d.qc){ CD.qc=d.qc; document.getElementById('cdQC').value=String(d.qc/1000); cdChonQC(0,true); }
-    else if(d.qc) cdChonQC(Number(d.qc),true);
-    cdDoiNguyen(d.caLoi!==false);
+    cdDoiNguyen(d.caLoi!==false, true);
   }
   cdVeDv();
   cdChonLoai((d&&CD_LOAI[d.loai])?d.loai:'chi', true);
+  cdVeGoiChon();
   cdTinh();
-  cdNapTexKho();
+  cdNapChip();
 }
 
 /* ---------- 3b. TEX CÓ TRONG DANH MỤC KHO (22/08/2026) ----------
@@ -15038,6 +15666,7 @@ var CD_TEX_GIU=[27,24,60];
  * ⚠ Phải BÓC BỎ hệ số cân↔dài trước khi đếm: "1kg-6700m" có chữ "6700m" nhưng đó là TỈ LỆ CÂN, không
  *   phải chiều dài một cuộn — nhận nhầm là sai kết quả hàng nghìn lần. */
 var CD_QC_CHI=[2500000,3000000,5000000];
+var CD_QC_MAC=5000;                        // mét — cuộn chỉ hay gặp nhất (343 SKU), số điền sẵn
 function cdGomQuyCach(rows, loai){
   var dau = (loai==='vai') ? 'vai' : (loai==='thun' ? 'thun' : 'chi');
   var gom={}, re=/\b(\d{2,5})\s*(m|met|yard)\b/g;
@@ -15063,30 +15692,54 @@ function cdGomQuyCach(rows, loai){
   return Object.keys(gom).map(function(k){ return { m:Number(k), n:gom[k] }; })
     .sort(function(a,b){ return (b.n-a.n)||(a.m-b.m); }).slice(0,3);
 }
-/* Vẽ lại hàng chip quy cách. `ds` rỗng ⇒ chỉ còn "Khác…" — offline/không có danh mục cũng vẫn gõ được. */
-function cdVeQuyCach(ds){
-  var bar=document.getElementById('cdQCBar'); if(!bar) return;
-  bar.innerHTML = (ds||[]).map(function(d){
+/* Vẽ dải gợi ý quy cách. `ds` rỗng (vd VẢI — không SKU nào ghi quy cách) ⇒ ẩn cả dòng. */
+function cdVeQuyCach(ds, giu, khongDien){
+  cdVeGoi('cdQCBar', ds, function(d){
     /* SỐ TRẦN trên chip — đơn vị đã có ở chip ĐVT cạnh ô nhập (user 23/08: đừng lặp lại đơn vị) */
-    return '<button type="button" class="kktab" data-mm="'+(d.m*1000)+'" onclick="cdChonQC('+(d.m*1000)+')" title="'+
+    return '<button type="button" class="kktab" data-v="'+d.m+'" onclick="cdGoi(\'cdQC\','+d.m+',\'qc\')" title="'+
       (d.n?(d.n+' SKU trong danh mục · '):'')+nf(d.m)+' m = '+nf(d.m*1000)+' mm">'+nf(d.m)+'</button>';
-  }).join('')+
-  '<button type="button" class="kktab" data-mm="0" onclick="cdChonQC(0)" title="Quy cách khác — gõ tay, đơn vị MÉT">Khác…</button>';
-  /* Quy cách đang chọn KHÔNG còn trong hàng chip của loại mới (vd đang 5.000 m của chỉ mà chuyển
-     sang Thun) ⇒ bỏ chọn, chuyển sang ô gõ tay. Giữ nguyên là lặng lẽ tính bằng cuộn chỉ. */
-  var con = (ds||[]).some(function(d){ return d.m*1000===CD.qc; });
-  if(!CD.tuDo && !con){ CD.qc=0; CD.tuDo=true; document.getElementById('cdQCRow').hidden=false; }
-  cdVeQCChon();
-}
-function cdVeQCChon(){
-  document.getElementById('cdQCBar').querySelectorAll('.kktab').forEach(function(b){
-    var v=Number(b.getAttribute('data-mm'));
-    b.classList.toggle('active', CD.tuDo ? v===0 : (v>0 && v===CD.qc));
   });
+  /* Số trong ô là quy cách của LOẠI HÀNG KHÁC (vd 5.000 m của chỉ mà vừa chuyển sang Thun) ⇒ xoá.
+     Giữ lại là lặng lẽ tính cuộn thun bằng cuộn chỉ — đúng lỗi user báo 23/08. `giu` = lúc khôi
+     phục từ localStorage: số đó chính là của loại hàng đang khôi phục, đừng xoá. */
+  var o=document.getElementById('cdQC'), v=cdSo(o.value);
+  if(!giu){
+    var con=(ds||[]).some(function(d){ return Math.abs(d.m-v)<1e-9; });
+    if(isFinite(v) && v>0 && !con && CD.dvQc===CD_DV.qc.ds[0]){ o.value=''; delete CD.tuDien.cdQC; v=NaN; }
+  }
+  /* ĐIỀN SẴN quy cách PHỔ BIẾN NHẤT của loại hàng khi ô đang trống — giữ đúng sự tiện của bản cũ
+     (chip 5.000 m của chỉ vốn sáng sẵn) mà không quay lại lối "chip là trạng thái": số nằm trong ô,
+     mang dấu ✓ MÁY ĐIỀN nên nhìn là biết đây là số máy đoán, gõ đè được.
+     CHỈ điền ở lượt ĐỔI LOẠI HÀNG (kể cả lượt dựng đầu tiên). Lượt "danh mục vừa về" thì
+     `khongDien` — nếu không, người dùng vừa xoá ô xong là bị nhồi số lại ngay dưới tay. Ngược lại,
+     ĐỪNG khoá theo "mỗi loại một lần": đi chỉ → vải → chỉ thì lượt về phải có số như lúc đầu, chứ
+     không phải ô trống không lời giải thích (bẫy này bộ đo bắt được ngay khi vừa viết). */
+  if(!khongDien && !o.value.trim() && (ds||[]).length){
+    /* Số điền sẵn là quy cách PHỔ BIẾN NHẤT của loại đó, KHÔNG phải chip đứng đầu dải: dải chip của
+       chỉ xếp tăng dần cho dễ đọc (2.500 · 3.000 · 5.000) nhưng cuộn hay gặp nhất là 5.000 m (343
+       SKU, so với 59 SKU của 2.500). Vải/thun thì dải vốn đã xếp theo số SKU giảm dần ⇒ chip đầu. */
+    var mac=(CD.loai==='chi') ? CD_QC_MAC : ds[0].m;
+    CD.dvQc=CD_DV.qc.ds[0]; cdVeDv(); cdDatTuDien('cdQC', mac);
+  }
+  cdVeGoiChon();
 }
-function cdNapTexKho(){
-  if(CD.texNap) return; CD.texNap=true;
-  var ve=function(rows){ if(rows&&rows.length) cdVeTexKho(cdGomTex(rows)); };
+/* Nạp MỌI dải gợi ý đếm từ danh mục (Tex · quy cách · khổ · định lượng) — cùng một lượt đọc,
+   dùng CHUNG cache 'nds-master-v1' của tab Nhận diện SKU nên thường 0 lượt mạng. */
+function cdNapChip(){
+  if(CD.chipNap) return; CD.chipNap=true;
+  /* Vẽ NGAY dải khổ bằng 3 số quen (150 · 152 · 190) trước khi biết có danh mục hay không: mất mạng
+     lượt đầu thì thủ kho vẫn có chỗ với tay, danh mục về thì ghi đè bằng số đếm thật. */
+  cdVeKho(null);
+  var ve=function(rows){
+    if(!rows || !rows.length) return;
+    cdVeTexKho(cdGomTex(rows));
+    var kg=cdGomKhoGsm(rows);
+    cdVeKho(kg.kho); cdVeGsm(kg.gsm);
+    /* Quy cách của vải/thun cũng đếm từ danh mục — nhưng KHÔNG điền hộ ở lượt này: người dùng có
+       thể đang gõ dở, danh mục về mà nhồi số vào ô là giật tay họ. */
+    cdVeQuyCach(cdDsQuyCach(CD.loai), true, true);
+    cdVeGoiChon();
+  };
   if(window.NDS && NDS.ds && NDS.ds.length){ ve(NDS.ds); return; }
   var c=(typeof ndsDocCache==='function')?ndsDocCache():null;
   if(c&&c.rows){ ve(c.rows); return; }
@@ -15097,18 +15750,50 @@ function cdNapTexKho(){
     }).catch(function(){});
   }catch(e){}
 }
-/* Vẽ chip danh mục vào TRƯỚC chip "Khác…" (chip này nằm sẵn trong markup nên offline vẫn gõ tay
-   được). Danh mục rỗng thì thôi — hàng Tex vẫn còn nguyên đường "Khác…". */
+/* Trên chip chỉ còn "Tex 27" cho gọn (user 22/08/2026) — số SKU dùng Tex đó dời vào tooltip */
 function cdVeTexKho(ds){
-  if(!ds||!ds.length) return;
-  /* Trên chip chỉ còn "Tex 27" cho gọn (user 22/08/2026) — số SKU dùng Tex đó dời vào tooltip */
-  document.getElementById('cdTexKhoBar').innerHTML=ds.map(function(d){
-    return '<button type="button" class="kktab" data-tex="'+d.tex+'" onclick="cdChonTex(this)" '+
+  cdVeGoi('cdTexKhoBar', ds, function(d){
+    return '<button type="button" class="kktab" data-v="'+d.tex+'" onclick="cdGoi(\'cdTex\','+d.tex+')" '+
       'title="'+d.n+' SKU trong danh mục · ví dụ: '+esc(String(d.vd).slice(0,140))+'">Tex '+
       cdF(d.tex,(d.tex%1?1:0))+'</button>';
-  }).join('')+
-  '<button type="button" class="kktab" data-tex="0" onclick="cdChonTex(this)" title="Tex khác — gõ tay">Khác…</button>';
-  cdVeTexChon();
+  });
+}
+/* ═══ KHỔ + ĐỊNH LƯỢNG: GỢI Ý THEO TẦN SUẤT THẬT TRONG TÊN HÀNG (24/08/2026, user) ═══
+ * Trước đây khổ CHÔN CỨNG 150/152/190 và định lượng không có gợi ý nào. Nay cả hai đếm từ chính
+ * danh mục vải, nhiều SKU nhất đứng trái — đo 24/08 trên 972 SKU vải:
+ *     khổ (cm) : 150 (122 SKU) · 152 (96) · 190 (66) · 140 (58) · 170 (54) …  [53 giá trị]
+ *     định lượng: 160 gsm (57) · 220 (42) · 170 (40) · 280 (34) · 157 (32) …  [75 giá trị]
+ * Ba chip đầu là chỗ với tay nhanh, phần đuôi tản mát thì gõ thẳng vào ô (ô lúc nào cũng ở đó).
+ * Không có danh mục (offline lượt đầu) ⇒ khổ rơi về 3 số quen, định lượng ẩn dòng gợi ý. */
+function cdGomKhoGsm(rows){
+  var kho={}, gsm={};
+  if(typeof NDS_ENGINE==='undefined') return { kho:[], gsm:[] };
+  for(var i=0;i<rows.length;i++){
+    var pn=String(rows[i].pn||'');
+    if(NDS_ENGINE.boDau(pn).toLowerCase().trim().indexOf('vai')!==0) continue;
+    var k=NDS_ENGINE.khoVai(pn), g=NDS_ENGINE.dinhLuong(pn);
+    if(k && k.cm>0) kho[k.cm]=(kho[k.cm]||0)+1;
+    if(g && g.gsm>0) gsm[g.gsm]=(gsm[g.gsm]||0)+1;
+  }
+  var top=function(o){
+    return Object.keys(o).map(function(k){ return { v:Number(k), n:o[k] }; })
+      .sort(function(a,b){ return (b.n-a.n)||(a.v-b.v); }).slice(0,3);
+  };
+  return { kho:top(kho), gsm:top(gsm) };
+}
+var CD_KHO_GIU=[150,152,190];                 // đường lùi khi chưa có danh mục (offline lượt đầu)
+function cdVeKho(ds){
+  if(!ds || !ds.length) ds=CD_KHO_GIU.map(function(v){ return { v:v, n:0 }; });
+  cdVeGoi('cdKhoBar', ds, function(d){
+    return '<button type="button" class="kktab" data-v="'+d.v+'" onclick="cdGoi(\'cdKho\','+d.v+',\'kho\')" title="'+
+      (d.n?(d.n+' SKU vải khổ này trong danh mục'):'khổ hay gặp')+'">'+cdF(d.v,(d.v%1?1:0))+'</button>';
+  });
+}
+function cdVeGsm(ds){
+  cdVeGoi('cdGsmBar', ds, function(d){
+    return '<button type="button" class="kktab" data-v="'+d.v+'" onclick="cdGoi(\'cdGsm\','+d.v+')" title="'+
+      d.n+' SKU vải ghi '+d.v+' gsm trong tên hàng">'+cdF(d.v,(d.v%1?1:0))+'</button>';
+  });
 }
 
 /* ---------- 4. TÍNH + VẼ ---------- */
@@ -15117,45 +15802,45 @@ function cdTinh(){
   /* Ô "Khác…" gõ bằng ĐƠN VỊ ĐANG CHỌN ở chip ĐVT (m hoặc yard) — quy về mét rồi mới ra mm.
      Máy vẫn tính bằng mm như cũ; chip ĐVT chỉ đổi cách NGƯỜI GÕ, không đổi kết quả. */
   var heQc = CD_DV.qc.he[CD.dvQc] || 1;
-  var qcGo = CD.tuDo ? cdSo(document.getElementById('cdQC').value) : NaN;
-  var qcM  = CD.tuDo ? qcGo*heQc : NaN;                                     // mét
-  var qc   = CD.tuDo ? qcM*1000 : CD.qc;                                    // tính toán vẫn bằng mm
+  var qcGo = cdSo(document.getElementById('cdQC').value);                   // 24/08: quy cách CHỈ nằm trong ô
+  var qcM  = qcGo*heQc;                                                     // mét
+  var qc   = qcM*1000;                                                      // tính toán vẫn bằng mm
+  CD.qc = (qc>0) ? qc : 0;
   var tong = cdSo(document.getElementById('cdTong').value);                 // CHỈ NHẬN GRAM (cả 3 loại)
-  var cuon = cdSo(document.getElementById('cdCuon').value);
-  var loi  = cdSo(document.getElementById('cdLoi').value);
+  /* HAI Ô ẨN THEO LOẠI HÀNG (user 24/08/2026) — ẩn thì máy tự hiểu, không bỏ trống phép tính:
+       "số cuộn thừa" chỉ có ở CHỈ MAY  → vải/thun coi như 1 cuộn (một tấm / một cuộn)
+       "khối lượng 1 lõi" không có ở VẢI → vải coi lõi 0 gr (vải không cuốn lõi)
+     Ô ẩn vì SỔ CÂN (chỉ may đã có số) thì VẪN đọc trong ô — số ở đó là số sổ cân máy vừa điền. */
+  var coCuon = (CD.loai==='chi'), coLoi = (CD.loai!=='vai');
+  var cuon = coCuon ? cdSo(document.getElementById('cdCuon').value) : 1;
+  var loi  = coLoi  ? cdSo(document.getElementById('cdLoi').value)  : 0;
   var ngu  = cdSo(document.getElementById('cdNguyen').value);
-  var texIn= CD.texTuDo ? cdSo(document.getElementById('cdTex').value) : (CD.tex>0?CD.tex:NaN);
+  var texIn= cdSo(document.getElementById('cdTex').value);
   var heKho= CD_DV.kho.he[CD.dvKho] || 1;
-  var khoGo= CD.khoTuDo ? cdSo(document.getElementById('cdKho').value) : NaN;
-  var khoCm= CD.khoTuDo ? khoGo*heKho : (CD.kho>0?CD.kho:NaN);              // luôn quy về cm
+  var khoGo= cdSo(document.getElementById('cdKho').value);
+  var khoCm= khoGo*heKho;                                                   // luôn quy về cm
   var gsm  = cdSo(document.getElementById('cdGsm').value);
   var gmIn = cdSo(document.getElementById('cdGm').value);
 
   /* Dòng "Đọc là …" cho từng ô — soi lại con số máy hiểu, kể cả khi còn thiếu ô khác */
-  if(CD.tuDo) cdDoc('cdQCDoc', qcGo, CD.dvQc+(CD.dvQc==='m'?'':' = '+(isFinite(qcM)?cdF(qcM,1):'—')+' m')+
-    ' = '+(isFinite(qcM)?cdF(qcM*1000,0):'—')+' mm mỗi cuộn nguyên', 1);
-  else document.getElementById('cdQCDoc').innerHTML='';   // preset đã in sẵn số trên nút, soi lại là nhiễu mắt
+  /* Ô quy cách KHÔNG còn dòng "Đọc là … mm mỗi cuộn nguyên" (user 24/08 đợt 2: "bỏ"): số đang nằm
+     ngay trong ô, mà mm thì phiếu tính bên phải đã lần lại từng bước. Chỉ giữ đúng một việc — gõ chữ
+     không ra số thì báo đỏ, kỉo máy lặng lẽ tính bằng số cũ. */
+  cdSoiLoi('cdQCDoc', qcGo);
   /* Quy ngược ra kg để người quen cân kg soi: gõ 10 mà ý là 10 kg thì thấy ngay "0.01 kg" sai sai */
   cdDoc('cdTongDoc', tong, 'gr = '+(isFinite(tong)?cdFg(tong/1000):'—')+' kg cả lô', 1);
-  cdDoc('cdCuonDoc', cuon, 'cuộn', 0);
-  cdDoc('cdLoiDoc', loi, isFinite(loi)&&isFinite(cuon)&&cuon>0?('gr/lõi → '+cdFg(loi*cuon)+' gr lõi cho cả lô'):'gr', 1);
-  cdDoc('cdNguyenDoc', ngu, CD.caLoi
+  if(coCuon) cdDoc('cdCuonDoc', cuon, 'cuộn', 0);
+  if(coLoi) cdDoc('cdLoiDoc', loi, isFinite(loi)&&isFinite(cuon)&&cuon>0?('gr/lõi → '+cdFg(loi*cuon)+' gr lõi cho cả lô'):'gr', 1);
+  /* Vải không có lõi (user 24/08) nên đừng nói "cả lõi − lõi" ở đây: câu đó chỉ có nghĩa khi có lõi. */
+  cdDoc('cdNguyenDoc', ngu, !coLoi ? ('gr mỗi cuộn '+ten+' nguyên') : (CD.caLoi
       ? (isFinite(ngu)&&isFinite(loi) ? ('gr cả lõi → '+ten+' trong cuộn nguyên còn '+cdFg(ngu-loi)+' gr') : 'gr (cả lõi)')
-      : 'gr riêng phần '+ten, 1);
-  /* Chip mode mà chưa chọn gì thì dòng soi để TRỐNG hẳn — đừng để cdDoc soi ô gõ tay đang ẩn
-     (nó có thể còn chữ cũ của lần "Khác…" trước, soi vào là báo lỗi ma). */
-  if(!CD.texTuDo && !(CD.tex>0)){
-    var oTd=document.getElementById('cdTexDoc'); oTd.className='cd-doc'; oTd.innerHTML='';
-    document.getElementById('cdTex').classList.remove('xau');
-  }else{
-    cdDoc('cdTexDoc', texIn, isFinite(texIn)&&texIn>0
-        ? ('gr mỗi 1,000 m → 1 gr chỉ dài '+cdF(1000000/texIn,0)+' mm')
-        : 'gr mỗi 1,000 m chỉ', 1);
-  }
-  if(!CD.khoTuDo && !(CD.kho>0)){
-    var oKd=document.getElementById('cdKhoDoc'); oKd.className='cd-doc'; oKd.innerHTML='';
-    document.getElementById('cdKho').classList.remove('xau');
-  }else cdDoc('cdKhoDoc', khoGo, CD.dvKho+(CD.dvKho==='cm'?'' : ' = '+(isFinite(khoCm)?cdF(khoCm,1):'—')+' cm')+' bề ngang cuộn', 1);
+      : 'gr riêng phần '+ten), 1);
+  /* 24/08: không còn "chip mode / ô tàng hình" nên dòng soi cứ soi thẳng ô — cdDoc tự để trống khi
+     ô rỗng, và tự báo đỏ khi trong ô có chữ không đọc ra số. */
+  cdDoc('cdTexDoc', texIn, isFinite(texIn)&&texIn>0
+      ? ('gr mỗi 1,000 m → 1 gr chỉ dài '+cdF(1000000/texIn,0)+' mm')
+      : 'gr mỗi 1,000 m chỉ', 1);
+  cdDoc('cdKhoDoc', khoGo, CD.dvKho+(CD.dvKho==='cm'?'' : ' = '+(isFinite(khoCm)?cdF(khoCm,1):'—')+' cm')+' bề ngang cuộn', 1);
   cdDoc('cdGsmDoc', gsm, isFinite(gsm)&&isFinite(khoCm)&&gsm>0&&khoCm>0
       ? ('g/m² × khổ '+cdF(khoCm,(khoCm%1?1:0))+' cm → <b>'+cdF(gsm*khoCm/100,1)+' g mỗi mét vải</b>')
       : 'g mỗi m²', 1);
@@ -15182,8 +15867,8 @@ function cdTinh(){
   var canQc = (CD.loai==='chi') || !(gMetKhai>0);   // vải/thun đã có thước khai thì quy cách là tuỳ chọn
   if(canQc && !(qc>0)) thieu.push('quy cách cuộn nguyên');
   if(!(tong>0)) thieu.push('tổng khối lượng');
-  if(!(cuon>0)) thieu.push('số cuộn');
-  if(!(loi>=0) || !isFinite(loi)) thieu.push('khối lượng lõi');
+  if(coCuon && !(cuon>0)) thieu.push('số cuộn');
+  if(coLoi && (!(loi>=0) || !isFinite(loi))) thieu.push('khối lượng lõi');
   if(!(ngu>0) && !(gMetKhai>0)){
     thieu.push(CD.loai==='chi' ? 'cuộn nguyên hoặc chỉ số Tex (một trong hai là đủ)'
       : (CD.loai==='vai' ? 'cuộn nguyên, hoặc khổ + định lượng (một trong hai là đủ)'
@@ -15193,15 +15878,15 @@ function cdTinh(){
      khỏi đọc câu "Còn thiếu:" rồi dò ngược lên. */
   var thieuId=[];
   if(!(tong>0)) thieuId.push('cdTong');
-  if(!(cuon>0)) thieuId.push('cdCuon');
-  if(!(loi>=0) || !isFinite(loi)) thieuId.push('cdLoi');
+  if(coCuon && !(cuon>0)) thieuId.push('cdCuon');
+  if(coLoi && (!(loi>=0) || !isFinite(loi))) thieuId.push('cdLoi');
   if(!(ngu>0) && !(gMetKhai>0)){
     thieuId.push('cdNguyen');
-    if(CD.loai==='chi' && CD.texTuDo) thieuId.push('cdTex');
-    if(CD.loai==='vai'){ if(!(gsm>0)) thieuId.push('cdGsm'); if(!(khoCm>0) && CD.khoTuDo) thieuId.push('cdKho'); }
+    if(CD.loai==='chi') thieuId.push('cdTex');
+    if(CD.loai==='vai'){ if(!(gsm>0)) thieuId.push('cdGsm'); if(!(khoCm>0)) thieuId.push('cdKho'); }
     if(CD.loai==='thun') thieuId.push('cdGm');
   }
-  if(canQc && !(qc>0) && CD.tuDo) thieuId.push('cdQC');
+  if(canQc && !(qc>0)) thieuId.push('cdQC');
   cdDanhDau(thieuId);
   if(thieu.length){ cdTrong('Còn thiếu: <b>'+thieu.join('</b> · <b>')+'</b>.'); return; }
   cdLuu();
@@ -15254,26 +15939,39 @@ function cdTinh(){
 
   var tiles=document.getElementById('cdTiles');
   tiles.hidden=false; tiles.classList.remove('mo');
-  tiles.innerHTML=
-    cdTile('to','var(--accent)', cdF(mm)+' <small>mm</small>', 'Tổng số lượng quy đổi', 'số để nhập phiếu kiểm kê · '+cdF(cuon)+' cuộn thừa')+
-    cdTile('','var(--info)', cdF(mm/1000,1)+' <small>m</small>', 'Quy ra mét', '1 kg ≈ '+cdF(1000/gMet,2)+' m')+
+  var yardThe=cdTile('','var(--warn)', cdF(mm/914.4,1)+' <small>yard</small>', 'Quy ra yard', '1 yard = 914,4 mm');
+  var the=[
+    cdTile('to','var(--accent)', cdF(mm)+' <small>mm</small>', 'Tổng số lượng quy đổi',
+      'số để nhập phiếu kiểm kê'+(coCuon?(' · '+cdF(cuon)+' cuộn thừa'):'')),
+    cdTile('','var(--info)', cdF(mm/1000,1)+' <small>m</small>', 'Quy ra mét', '1 kg ≈ '+cdF(1000/gMet,2)+' m'),
     (coQc
       ? cdTile('','var(--good)', cdF(tuongDuong,2)+' <small>cuộn</small>', 'Tương đương cuộn nguyên', cdF(qc)+' mm mỗi cuộn')
-      : cdTile('','var(--good)', cdF(mm/914.4,1)+' <small>yard</small>', 'Quy ra yard', '1 yard = 914,4 mm'))+
-    cdTile('','var(--warn)', cdF(tbMm,0)+' <small>mm</small>', 'Trung bình 1 cuộn thừa', coQc?(cdF(tbPct,1)+'% cuộn nguyên'):(cdF(tbMm/1000,1)+' m mỗi cuộn'));
+      : cdTile('','var(--good)', cdF(mm/914.4,1)+' <small>yard</small>', 'Quy ra yard', '1 yard = 914,4 mm'))
+  ];
+  /* Thẻ "Trung bình 1 cuộn thừa" chỉ có nghĩa khi lô có NHIỀU cuộn (chỉ may). Vải/thun là một tấm /
+     một cuộn nên nó bằng đúng con số ở thẻ đầu — bày lại là nói hai lần một điều. Thay bằng yard
+     (85 SKU vải trong danh mục khai bằng yard); yard đã nằm ở thẻ 3 rồi thì ba thẻ là đủ. */
+  if(coCuon) the.push(cdTile('','var(--warn)', cdF(tbMm,0)+' <small>mm</small>', 'Trung bình 1 cuộn thừa',
+    coQc?(cdF(tbPct,1)+'% cuộn nguyên'):(cdF(tbMm/1000,1)+' m mỗi cuộn')));
+  else if(coQc) the.push(yardThe);
+  tiles.innerHTML=the.join('');
 
-  /* Phiếu tính: để người kiểm lần lại được bằng máy tính cầm tay, không phải tin suông */
-  var st=document.getElementById('cdSteps');
+  /* Phiếu tính: để người kiểm lần lại được bằng máy tính cầm tay, không phải tin suông.
+     Không có lõi (vải) thì BỎ hai bước trừ lõi — in "− 0 gr" rồi "còn lại 25,000 gr" là hai dòng
+     không nói gì, mà phiếu tính dài ra thì người kiểm bỏ đọc. */
+  var st=document.getElementById('cdSteps'), b=[], n=0;
+  b.push(cdStep(++n,'Cân cả lô ('+cdFg(gTong/1000)+' kg)', cdFg(gTong)+' gr'));
+  if(gLoi>0){
+    b.push(cdStep(++n,'Trừ lõi — '+cdF(cuon)+' cuộn × '+cdFg(loi)+' gr', '− '+cdFg(gLoi)+' gr'));
+    b.push(cdStep(++n,'Còn lại là <b>'+ten+' thật</b>', cdFg(gHang)+' gr'));
+  }
+  b.push(cdStep(++n, thuocCan
+      ? ('Cuộn nguyên '+cdF(qc)+' mm có '+cdFg(gNgu)+' gr '+ten+(CD.caLoi?(' ('+cdFg(ngu)+' gr cả lõi − '+cdFg(loi)+' gr lõi)'):' (số nhà cung cấp ghi)'))
+      : motaKhai,
+    cdF(mmTrenG,soLeMd)+' mm/gr'));
+  b.push(cdStep('=', '<b>'+cdFg(gHang)+' gr × '+cdF(mmTrenG,soLeMd)+' mm/gr</b>', cdF(mm)+' mm', true));
   st.hidden=false;
-  st.innerHTML=
-    cdStep(1,'Cân cả lô ('+cdFg(gTong/1000)+' kg)', cdFg(gTong)+' gr')+
-    cdStep(2,'Trừ lõi — '+cdF(cuon)+' cuộn × '+cdFg(loi)+' gr', '− '+cdFg(gLoi)+' gr')+
-    cdStep(3,'Còn lại là <b>'+ten+' thật</b>', cdFg(gHang)+' gr')+
-    cdStep(4, thuocCan
-        ? ('Cuộn nguyên '+cdF(qc)+' mm có '+cdFg(gNgu)+' gr '+ten+(CD.caLoi?(' ('+cdFg(ngu)+' gr cả lõi − '+cdFg(loi)+' gr lõi)'):' (số nhà cung cấp ghi)'))
-        : motaKhai,
-      cdF(mmTrenG,soLeMd)+' mm/gr')+
-    cdStep('=', '<b>'+cdFg(gHang)+' gr × '+cdF(mmTrenG,soLeMd)+' mm/gr</b>', cdF(mm)+' mm', true);
+  st.innerHTML=b.join('');
 
   /* CỜ đỏ kiểm tra chéo: cuộn thừa thì phải NGẮN hơn cuộn nguyên. Dài hơn = số cân / số
      cuộn / khối lượng cuộn nguyên đang sai ở đâu đó — nói thẳng bằng số để đi cân/đếm lại. */
@@ -15282,15 +15980,23 @@ function cdTinh(){
   if(coQc){
     var gNguCa = thuocCan ? (CD.caLoi?ngu:(ngu+loi)) : (qc*gMet/1000 + loi);   // cân CẢ LÕI của 1 cuộn nguyên
     var tran = cuon*gNguCa;
-    if(tbMm>qc){
+    if(tbMm>qc && coCuon){
       note.innerHTML='<div class="pcdnote" style="background:color-mix(in srgb,var(--bad) 12%,var(--surface));color:var(--bad)">'+
         '<b>Số liệu vô lý — đừng nhập phiếu ngay.</b> Mỗi cuộn thừa đang ra '+cdF(tbMm,0)+' mm, <b>dài hơn cả cuộn nguyên</b> '+
         cdF(qc)+' mm ('+cdF(tbPct,0)+'%). '+cdF(cuon)+' cuộn <i>còn nguyên</i> chỉ cân được '+cdFg(tran/1000)+' kg mà lô này cân '+
         cdFg(gTong/1000)+' kg. Kiểm lại theo thứ tự: ô tổng cân <b>gõ bằng GRAM chưa</b> (10 kg = 10,000 gr) → '+
         '<b>số cuộn</b> đếm đủ chưa → <b>khối lượng cuộn nguyên</b> có đúng quy cách '+cdF(qc)+' mm không.</div>';
+    }else if(tbMm>qc){
+      /* Vải/thun KHÔNG đếm cuộn (user 24/08) nên dài hơn một cuộn nguyên là chuyện có thật: cân
+         nhiều tấm một lượt. Báo đỏ ở đây là báo oan — nói bằng giọng nhắc, kèm cả hai lối giải thích. */
+      note.innerHTML='<div class="pcdnote">Số này ra <b>'+cdF(mm)+' mm</b>, dài hơn <b>một cuộn nguyên</b> '+cdF(qc)+
+        ' mm ('+cdF(tbPct,0)+'%) — bình thường nếu bạn đang cân <b>nhiều tấm/cuộn một lượt</b>. Còn nếu chỉ cân '+
+        '<b>một</b> thì kiểm lại: ô tổng cân <b>gõ bằng GRAM chưa</b> (10 kg = 10,000 gr) và <b>khối lượng cuộn nguyên</b> '+
+        'có đúng quy cách '+cdF(qc)+' mm không.</div>';
     }else if(tbPct>=99.5){
-      note.innerHTML='<div class="pcdnote">Lô này gần như <b>còn nguyên</b> ('+cdF(tbPct,1)+'% mỗi cuộn) — nếu đúng là cuộn chưa dùng thì nhập thẳng '+
-        cdF(qc)+' mm × '+cdF(cuon)+' cuộn, không cần quy đổi qua cân.</div>';
+      note.innerHTML='<div class="pcdnote">Lô này gần như <b>còn nguyên</b> ('+cdF(tbPct,1)+'%'+(coCuon?' mỗi cuộn':'')+
+        ') — nếu đúng là cuộn chưa dùng thì nhập thẳng '+cdF(qc)+' mm'+(coCuon?(' × '+cdF(cuon)+' cuộn'):'')+
+        ', không cần quy đổi qua cân.</div>';
     }
   }
 
@@ -15317,6 +16023,52 @@ function cdTinh(){
   }
 }
 /* --- mấy hàm vẽ nhỏ --- */
+/* Soi ô mà KHÔNG in dòng "Đọc là …": dùng cho ô đã tự nói hết bằng con số trong ô. */
+function cdSoiLoi(id,v){
+  var o=document.getElementById(id); if(!o) return;
+  var oNhap=document.getElementById(id.replace('Doc',''));
+  var raw=oNhap?String(oNhap.value||'').trim():'';
+  var xau=!isFinite(v) && !!raw;
+  o.className='cd-doc'+(xau?' xau':'');
+  o.innerHTML=xau?('Không đọc được số từ “'+esc(raw)+'”'):'';
+  if(oNhap) oNhap.classList.toggle('xau',xau);
+}
+/* ═══ DẢI GỢI Ý PHẢI VỪA MỘT DÒNG (user 24/08 đợt 2) ═══
+ * Dải nằm ngay hàng tiêu đề, giữa nhãn và ô nhập — chỗ trống còn lại tuỳ bề ngang panel và tuỳ
+ * nhãn dài ngắn, nên không thể chốt cứng "mấy chip thì vừa". Đo THẬT: chip nào tràn thì ẩn đi và
+ * hiện chip "Khác…" (bấm là mở nốt, hàng đó cho xuống dòng). Điện thoại thì bỏ qua — ở đó dải vốn
+ * được xuống dòng riêng, gom hết vào "Khác…" chỉ làm mất chỗ với tay.
+ */
+function cdVuaMotDong(){
+  var dt = window.matchMedia && window.matchMedia('(max-width:520px)').matches;
+  document.querySelectorAll('#viewCd .cd-goi').forEach(function(bar){
+    var chips=[].slice.call(bar.querySelectorAll('.cd-chips .kktab'));
+    var khac=bar.querySelector('.cd-khac');
+    chips.forEach(function(c){ c.hidden=false; });
+    if(khac) khac.hidden=true;
+    if(dt || bar.classList.contains('mo') || !chips.length || bar.hidden) return;
+    var nhan=bar.querySelector('.g');
+    if(nhan) nhan.hidden=false;
+    var i=chips.length-1;
+    while(bar.scrollWidth > bar.clientWidth+1 && i>=0){
+      if(khac && khac.hidden){ khac.hidden=false; continue; }   // chừa chỗ cho "Khác…" trước đã
+      chips[i].hidden=true; i--;
+    }
+    if(khac && !chips.some(function(c){ return c.hidden; })) khac.hidden=true;
+    /* Hết chip mà vẫn tràn ⇒ bỏ chữ "Gợi ý:" cho chip "Khác…" đủ chỗ: chip bị cắt mất chữ là
+       đúng cái luật nhãn-không-được-cắt mà bộ đo điện thoại canh. */
+    if(nhan && bar.scrollWidth > bar.clientWidth+1) nhan.hidden=true;
+  });
+}
+window.addEventListener('resize', function(){
+  clearTimeout(CD._fit); CD._fit=setTimeout(cdVuaMotDong, 120);
+});
+function cdMoKhac(b){
+  var bar=b.closest('.cd-goi'); if(!bar) return;
+  bar.classList.add('mo');
+  bar.querySelectorAll('.cd-chips .kktab').forEach(function(c){ c.hidden=false; });
+  b.hidden=true;
+}
 function cdDoc(id,v,duoi,d){
   var o=document.getElementById(id); if(!o) return;
   var oNhap=document.getElementById(id.replace('Doc',''));
@@ -15340,7 +16092,9 @@ function cdTrong(html,loai){
   CD.mm=0;
   document.getElementById('cdBtnCopy').disabled=true;
   document.getElementById('cdBtnTem').disabled=true;
-  /* 4 thẻ MỜ giữ chỗ đúng 4 con số sắp hiện — xem ghi chú `.cd-tiles.mo` ở CSS */
+  /* Thẻ MỜ giữ chỗ đúng chỗ những con số sắp hiện — xem ghi chú `.cd-tiles.mo` ở CSS. Số thẻ phải
+     KHỚP với lúc có kết quả: vải/thun không có "trung bình 1 cuộn thừa" nên chỗ đó là "Quy ra yard",
+     kỉo bố cục nhảy một ô khi số vừa hiện ra. */
   var tiles=document.getElementById('cdTiles');
   tiles.hidden=false; tiles.classList.add('mo');
   var ten=(CD_LOAI[CD.loai]||CD_LOAI.chi).ten;
@@ -15348,7 +16102,7 @@ function cdTrong(html,loai){
     cdTile('to','var(--line)','—','Tổng số lượng quy đổi','số để nhập phiếu kiểm kê')+
     cdTile('','var(--line)','—','Quy ra mét','1 kg ≈ … m')+
     cdTile('','var(--line)','—','Tương đương cuộn nguyên','')+
-    cdTile('','var(--line)','—','Trung bình 1 cuộn thừa','');
+    cdTile('','var(--line)','—',(CD.loai==='chi')?'Trung bình 1 cuộn thừa':'Quy ra yard','');
   document.getElementById('cdSteps').hidden=true;
   document.getElementById('cdKQHint').textContent='máy tính lại ngay mỗi lần gõ';
   document.getElementById('cdNote').innerHTML = (loai==='bad')
