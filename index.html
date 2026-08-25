@@ -448,24 +448,22 @@ body.an-chan .footbar{display:none}
 @media(min-width:769px){#kkfDpBack{display:none}}
 .kkfbar .fclr{height:32px;display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--brand2);font-weight:650;font-size:12px;cursor:pointer;white-space:nowrap;padding:0 12px;font-family:inherit}
 .kkfbar .fclr:hover{border-color:var(--brand2);background:var(--hover)}
-/* Hàng điều khiển 1 DÒNG đầu tab Kiểm kê: chip kho + pill lọc + nút Kế hoạch chảy chung 1 hàng flex (tự wrap khi hẹp);
-   segment display:contents để con của chúng đứng NGANG HÀNG nhau thay vì thành 2 khối riêng */
-.kkonebar{row-gap:6px}
-.kkonebar>#kkWhBar{display:contents}
-/* Thu gọn bộ lọc tab Kiểm kê (25/08/2026): mặc định chip kho + ô lọc ẨN sau nút "Bộ lọc" — bộ lọc
-   đang chọn vẫn áp dụng, badge số trên nút cho biết đang lọc mấy trường. !important để thắng cả
-   display:contents (desktop) lẫn display:grid (khối mobile bên dưới). */
-#kkOneBar.thu>#kkWhBar,#kkOneBar.thu>#kkFilters{display:none !important}
+/* Hàng điều khiển 1 DÒNG đầu tab Kiểm kê: chip kho (bên trái) + cụm nút Bộ lọc & Kế hoạch (cố định bên phải) */
+.kkonebar{display:flex;flex-direction:column;gap:8px}
+.kkbar-top{display:flex;align-items:center;gap:8px;width:100%;min-width:0}
+#kkWhBar{display:flex;align-items:center;gap:6px;flex:1 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+#kkWhBar::-webkit-scrollbar{display:none}
+#kkWhBar .kktab{flex:0 0 auto;white-space:nowrap}
+.kkbar-actions{display:inline-flex;align-items:center;gap:8px;margin-left:auto;flex:0 0 auto}
+.kkbar-actions .kktab{height:32px;display:inline-flex;align-items:center;padding:0 14px;font-size:12.5px;white-space:nowrap}
 .kkfltbtn .n{display:inline-block;min-width:16px;padding:0 5px;margin-left:1px;border-radius:99px;
   font-size:10px;font-weight:750;background:var(--accent);color:var(--accent-text);line-height:1.6}
 .kkfltbtn .n:empty{display:none}
-.kkonebar>#kkFilters:not([hidden]){display:contents}
-/* ĐỒNG BỘ KÍCH THƯỚC cả hàng: mọi phần tử (chip kho · pill lọc · Xoá lọc · nút Kế hoạch) cùng cao 32px,
-   cùng cỡ chữ — chuẩn pill .mfilters dùng chung toàn dự án, hết cảnh cái to cái nhỏ */
-.kkonebar .kktab{height:32px;display:inline-flex;align-items:center;padding:0 14px;font-size:12.5px}
-.kkonebar .kkplan{margin-left:auto;white-space:nowrap;flex:0 0 auto}
 .kkplan .ps{display:none}
-@media(max-width:1420px){.kkonebar .kkplan .pt{display:none}.kkonebar .kkplan .ps{display:inline}}   /* màn hẹp: nút rút gọn còn chữ "Kế hoạch" (tooltip giữ đủ chữ) */
+@media(max-width:1420px){.kkplan .pt{display:none}.kkplan .ps{display:inline}}   /* màn hẹp: nút rút gọn còn chữ "Kế hoạch" (tooltip giữ đủ chữ) */
+/* Bộ lọc cấp tab khi mở: trượt xuống hàng bên dưới, không làm nhảy vị trí các nút ở trên */
+#kkFilters:not([hidden]){display:flex;flex-wrap:wrap;align-items:center;gap:8px;width:100%;padding-top:4px;border-top:1px dashed var(--line)}
+#kkOneBar.thu #kkFilters,#kkFilters[hidden]{display:none !important}
 #kkmodal .kkwrap{overflow-x:auto}
 /* Bảng UID group (.packed) — chỉ thị 27/07: cột BÓ KHÍT dữ liệu (hết khoảng trống thừa), chữ to hơn.
    width:1% + nowrap = mỗi cột co đúng nội dung; slack dồn hết vào cột Action (th cuối). */
@@ -555,6 +553,11 @@ body.an-chan .footbar{display:none}
   table.mbcard.qtctbl tr.qtcug{padding:7px 12px 9px;margin:0 0 8px;border:1px solid var(--line);border-top:1px dashed var(--border);
     border-radius:0 0 12px 12px;background:color-mix(in srgb,var(--warn) 7%,var(--panel))}
   table.mbcard.qtctbl tr.qtcug td[colspan]{text-align:left !important;font-size:11px;background:0;border:0;padding:0}
+  /* Bảng tra cứu QTC: Mã phiếu ngang hàng với Mã vị trí */
+  table.mbcard.qtctbl td.mb-hd{order:1;flex:0 1 auto;font-size:14.5px;font-weight:700}
+  table.mbcard.qtctbl td.qtc-cid-cell{order:1;flex:0 0 auto;margin-left:6px;font-size:12.5px;align-self:center}
+  table.mbcard.qtctbl td.qtc-cid-cell::before{display:none !important}
+  table.mbcard.qtctbl td.mb-tag{order:2;margin-left:auto;flex:1 0 auto;text-align:right !important}
 }
 /* Pop-up camera quét mã (dùng chung vỏ .modal/.modalbox — thừa hưởng sheetIn + kính mờ + Escape) */
 .qtcqrbox{width:min(520px,94vw)}
@@ -2764,18 +2767,14 @@ body.side-anim{overflow-x:clip}
      Bốn ô lọc để GRID 2 cột đều nhau, không để flex tự thương lượng: `.kkfbar .fld` có basis 152px
      và `.fld.dt` có 182px + min-width 160px, ba con số đó đánh nhau trong 351px nên ra hàng 1 ô,
      hàng 2 ô, hàng 2 ô — răng cưa. Grid thì hết chỗ cho thương lượng. */
-  .kkonebar{flex-wrap:wrap;align-items:center;row-gap:8px}
-  /* `min-width:0` KHÔNG PHẢI trang trí: flex item mặc định `min-width:auto` nên nó phình theo nội
-     dung và `overflow-x:auto` mất tác dụng — bộ đo bắt được đúng vậy: #kkWhBar rộng 490px trên màn
-     375px, kéo cả trang ngang 127px. Đây là bẫy flex kinh điển, quên là vỡ. */
-  .kkonebar>#kkWhBar{display:flex;flex:1 1 0;flex-wrap:nowrap;gap:6px;overflow-x:auto;
-    scrollbar-width:none;min-width:0;padding-bottom:2px;-webkit-overflow-scrolling:touch}
-  .kkonebar>#kkWhBar::-webkit-scrollbar{display:none}
-  .kkonebar>#kkWhBar .kktab{flex:0 0 auto}
-  .kkonebar .kkplan{margin-left:8px;flex:0 0 auto;order:0}
+  .kkonebar{row-gap:6px}
+  .kkbar-top{gap:6px}
+  #kkWhBar{flex:1 1 0;min-width:0}
+  .kkbar-actions{gap:6px;margin-left:6px;flex:0 0 auto}
+  .kkbar-actions .kktab{padding:0 10px;font-size:12px}
   /* Bốn ô lọc: GRID 2 cột, chiếm cả bề rộng, xuống hàng sau chip kho */
-  .kkonebar>#kkFilters:not([hidden]){display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;
-    flex:1 1 100%;order:1;min-width:0;padding:0}
+  #kkFilters:not([hidden]){display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;
+    width:100%;flex:1 1 100%;min-width:0;padding-top:6px}
   .kkfbar .fld,.kkfbar .fld.dt{flex:none;min-width:0}
   /* Ô bọc nút "Xoá lọc": trải hết hàng rồi dồn phải — không chiếm một nửa ô lọc.
      VÀ: nút này mặc định `hidden` (chỉ hiện khi đang lọc gì đó) nhưng Ô BỌC nó thì không — trong
@@ -2907,6 +2906,9 @@ body.side-anim{overflow-x:clip}
   /* Ghi đè `white-space:nowrap` của bản bảng: trong thẻ thì chữ phải ngắt dòng được */
   table.mbcard td{display:block;border:0;padding:0;min-width:0;max-width:100%;white-space:normal;
     order:5;font-size:11.5px;color:var(--ink2);text-align:left !important}
+  table.mbcard td.d-am, table.mbcard .d-am{color:var(--bad) !important;font-weight:700}
+  table.mbcard td.d-duong, table.mbcard .d-duong{color:var(--brand2) !important;font-weight:700}
+  table.mbcard td.d-khop, table.mbcard .d-khop{color:var(--ink3) !important}
   table.mbcard td[data-lb]::before{content:attr(data-lb) " ";color:var(--ink3);font-size:10.5px;font-weight:650}
   table.mbcard td.mb-hd{order:1;flex:1 1 auto;font-size:15px;font-weight:700;color:var(--ink);
     font-variant-numeric:tabular-nums}
@@ -3008,10 +3010,14 @@ body.side-anim{overflow-x:clip}
        "Bộ lọc" (yêu cầu user 25/08/2026 — mặc định ẩn, số trên nút = số bộ lọc đang bật, bộ lọc
        đang chọn vẫn ÁP DỤNG khi thu); nút Kế hoạch GIỮ NGUYÊN không làm gọn. -->
   <div class="kkbar kkonebar" id="kkOneBar" style="margin-bottom:12px">
-    <span id="kkWhBar"></span>
+    <div class="kkbar-top">
+      <span id="kkWhBar"></span>
+      <div class="kkbar-actions">
+        <button class="kktab kkfltbtn" id="kkFltBtn" onclick="kkLocThu()" title="Thu/xổ bộ lọc của tab: ngày kiểm · request · type — bộ lọc đang chọn vẫn áp dụng khi thu gọn, số trên nút là số bộ lọc đang bật">Bộ lọc <span class="n" id="kkFltBtnN"></span><span id="kkFltBtnCh">▾</span></button>
+        <button class="kktab kkplan" onclick="plOpen()" title="Lệnh kiểm kê tạo từ dashboard nằm ở 'sổ kế hoạch' WMS trước khi thành phiếu — Pending = chờ push · Processing = đã push · đọc trực tiếp từ WMS"><span class="pt">Kế hoạch chờ push (WMS)</span><span class="ps">Kế hoạch</span></button>
+      </div>
+    </div>
     <span class="mfilters kkmf kkfbar" id="kkFilters" hidden></span>
-    <button class="kktab kkfltbtn" id="kkFltBtn" onclick="kkLocThu()" title="Thu/xổ bộ lọc của tab: chip kho · ngày kiểm · request · type — bộ lọc đang chọn vẫn áp dụng khi thu gọn, số trên nút là số bộ lọc đang bật">Bộ lọc <span class="n" id="kkFltBtnN"></span><span id="kkFltBtnCh">▾</span></button>
-    <button class="kktab kkplan" onclick="plOpen()" title="Lệnh kiểm kê tạo từ dashboard nằm ở 'sổ kế hoạch' WMS trước khi thành phiếu — Pending = chờ push · Processing = đã push · đọc trực tiếp từ WMS"><span class="pt">Kế hoạch chờ push (WMS)</span><span class="ps">Kế hoạch</span></button>
   </div>
   <div class="grid2 even">
     <!-- ===== TRA CỨU SL ĐẾM THEO SKU (25/08/2026) — tra lại "Quantity count" của Physical Count
@@ -6474,6 +6480,15 @@ function kkLocThu(){
 function kkLocThuVe(){
   var bar=document.getElementById('kkOneBar'); if(!bar) return;
   bar.classList.toggle('thu',!!KK.fltThu);
+  var flt=document.getElementById('kkFilters');
+  if(flt){
+    if(KK.fltThu){
+      flt.hidden=true;
+    } else {
+      flt.hidden=false;
+      if(!flt.dataset.built && typeof kkfBuild==='function') kkfBuild();
+    }
+  }
   var ch=document.getElementById('kkFltBtnCh'); if(ch) ch.textContent=KK.fltThu?'▾':'▴';
   kkLocThuBadge();
 }
@@ -6800,19 +6815,20 @@ function qtcVe(){
     (thu.length?'<button type="button" class="fcg'+(QTC.taCa?' on':'')+'" onclick="QTC.taCa=!QTC.taCa;qtcVe()">'+(QTC.taCa?'Ẩn':'Hiện')+' '+nf(thu.length)+' lượt kiểm cũ hơn</button>':'')+
     '</div>';
   var all=QTC.taCa?hien.concat(thu):hien;
-  h+='<div class="qtcwrap"><table class="mtbl mbcard qtctbl"><thead><tr><th>Vị trí</th><th class="num">SL đếm</th><th class="num">Tồn HT</th><th class="num">Lệch</th><th>Phiếu</th><th>Ngày kiểm</th><th>Người kiểm</th><th>Trạng thái</th></tr></thead><tbody>';
+  h+='<div class="qtcwrap"><table class="mtbl mbcard qtctbl"><thead><tr><th>Vị trí</th><th>Phiếu</th><th class="num">SL đếm</th><th class="num">Tồn HT</th><th class="num">Lệch</th><th>Ngày kiểm</th><th>Người kiểm</th><th>Trạng thái</th></tr></thead><tbody>';
   all.forEach(function(r,i){
     var cu=(i>=hien.length);
     var c2=qtcCnt(r);
-    var d=(r.diff==null&&c2!=null&&r.inv!=null)?(c2-r.inv):r.diff;
+    var invVal=(r.inv==null||r.inv==='')?0:(Number(r.inv)||0);
+    var d=(r.diff!=null)?r.diff:(c2!=null?(c2-invVal):null);
     h+='<tr'+(cu?' class="qtccu"':'')+'>'+
       '<td class="mb-hd">'+(r.loc?'<span class="qtc-qrlink" onclick="qtcQrPop(\''+esc(r.loc)+'\',\'Vị trí\')" ondblclick="qtcQrPop(\''+esc(r.loc)+'\',\'Vị trí\')" title="Bấm/nhấp đúp để xem mã QR của vị trí '+esc(r.loc)+'">'+esc(r.loc)+'<svg class="qtc-qrico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><rect x="7.5" y="7.5" width="4" height="4" rx=".8"/><rect x="13" y="13" width="4" height="4" rx=".8"/></svg></span>':'—')+(cu?' <span class="badge b-pend">kiểm cũ</span>':'')+'</td>'+
+      '<td class="mb-subhd qtc-cid-cell" data-lb="Phiếu">'+kkIdLink(r.cid,'loc')+'</td>'+
       '<td class="num mb-tag qtcnum" data-lb="SL đếm">'+(c2==null?'chưa đếm'
         :(r.cnt==null?'<span title="WMS không ghi số đếm cho dòng này (đếm bị hủy / không thấy hàng) — phiếu đã kiểm nên tính là 0 (chốt 25/08)">0</span>':nf(c2)))+'</td>'+
-      '<td class="num'+(r.inv==null?' mb-0':'')+'" data-lb="Tồn HT">'+(r.inv==null?'—':nf(r.inv))+'</td>'+
-      (d==null?'<td class="num mb-0" data-lb="Lệch">—</td>'
+      '<td class="num" data-lb="Tồn HT">'+nf(invVal)+'</td>'+
+      (d==null?'<td class="num" data-lb="Lệch">—</td>'
         :'<td class="num '+(d<0?'d-am':d>0?'d-duong':'d-khop')+'" data-lb="Lệch">'+(d>0?'+':'')+nf(d)+'</td>')+
-      '<td data-lb="Phiếu">'+kkIdLink(r.cid,'loc')+'</td>'+
       '<td data-lb="Ngày kiểm">'+kkFmtD(kkCountMs(r))+'</td>'+
       '<td'+(r.by?'':' class="mb-0"')+' data-lb="Người kiểm">'+kkByShort(r.by)+'</td>'+
       '<td data-lb="Trạng thái"><span class="badge '+kkBadge(r.st)+'">'+(r.st?esc(r.st):'—')+'</span></td></tr>';
