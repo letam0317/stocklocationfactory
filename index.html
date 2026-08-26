@@ -510,7 +510,7 @@ body.an-chan .footbar{display:none}
 .kkwrap .pn2{white-space:normal;max-width:280px;color:var(--ink2);line-height:1.35;font-size:11.5px}
 .d-am{color:var(--bad);font-weight:700} .d-duong{color:var(--brand2);font-weight:700} .d-khop{color:var(--ink3)}
 .badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:10px;font-weight:750}
-.b-ok{background:#d1faf3;color:var(--good)} .b-proc{background:#fdecd0;color:#b45309} .b-pend{background:#eceff3;color:#6b7280} .b-rej{background:#fdecea;color:#b42318}
+.b-ok{background:#d1faf3;color:var(--good)} .b-proc{background:#fdecd0;color:#b45309} .b-pend{background:#eceff3;color:#6b7280} .b-rej{background:#fdecea;color:#b42318} .b-new{background:#dbeafe;color:#1d4ed8}   /* b-new: UID group "New" — xanh dương như cột Group status pop-up Detail WMS (26/08/2026) */
 .wlink{color:var(--brand2);text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:3px}
 .wlink:hover{text-decoration:underline} .wlink svg{width:11px;height:11px}
 /* ===== Tra cứu SL đếm theo SKU (tab Kiểm kê, 25/08/2026) ========================================
@@ -535,6 +535,51 @@ body.an-chan .footbar{display:none}
 .qtcsum{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;margin:12px 2px 8px;font-size:12.5px;color:var(--ink2)}
 .qtcsum .t{font-size:15px;font-weight:750;color:var(--ink);font-variant-numeric:tabular-nums}
 .qtcsum .pn{color:var(--ink3);flex:1 1 100%;line-height:1.45;white-space:normal;word-break:break-word}   /* tên hàng XUỐNG DÒNG, không ellipsis (luật ⑦ — bộ đo đã bắn bản đầu) */
+/* Bộ lọc UIDgr (26/08/2026, yêu cầu user; trưa: GỌN + 3 chế độ): pill kiểu .kktab có biểu tượng PHỄU + "UIDgr: tất cả /
+   chỉ lệch / ẩn" + mũi tên ▾ — cùng ngôn ngữ với nút "Bộ lọc" của tab; menu = .combo-menu popIn dùng chung;
+   đang lọc (≠ tất cả) thì viền/chữ accent. Điện thoại cao 40px cho vùng chạm. */
+.qtcsum .combo.qtcugcb{flex:0 0 auto;min-width:0}
+.qtcugbtn{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px 0 9px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink2);font-family:inherit;font-size:12px;font-weight:650;cursor:pointer;white-space:nowrap;transition:border-color .15s var(--ease),background .15s var(--ease),color .15s var(--ease)}
+.qtcugbtn:hover{border-color:var(--accent);color:var(--accent)}
+.qtcugbtn:focus-visible{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}
+.qtcugcb.on .qtcugbtn{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--surface))}
+.qtcugico{width:13px;height:13px;flex:none}
+.qtcugbtn .ch{font-size:10px;opacity:.75;transition:transform .2s var(--ease)}
+.qtcugcb.open .qtcugbtn .ch{transform:rotate(180deg)}
+.qtcugcb .combo-menu{width:max-content;min-width:100%;right:auto;max-width:calc(100vw - 24px)}
+/* Menu ẨN bằng visibility vẫn CHIẾM LAYOUT: rộng max-content neo trái vào nút phễu sát mép phải → trang kéo ngang 70px
+   (QC máy hẹp 26/08). Ẩn thì bó bằng nút; mở mà thò khỏi mép phải thì JS gắn .flip để neo phải. */
+.qtcugcb .combo-menu:not(.show){width:auto;min-width:0;left:0;right:0}
+.qtcugcb .combo-menu.show.flip{left:auto;right:0}
+.qtcsum .fcg{height:28px;padding:0 12px;display:inline-flex;align-items:center}
+/* Dải "Đếm/Tồn HT" (user 26/08 chiều): to như mã SKU, số đếm highlight theo lệch */
+.qtcsum .qtcsl{font-size:15px;font-weight:750;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.qtcsum .qtcsl i{font-style:normal;font-weight:500;color:var(--ink3);margin:0 3px}
+.qtcsum .qtcsl small{font-size:11px;font-weight:500;color:var(--ink3);margin-left:6px}
+.qtcsum .pn .vt{display:none}   /* web: "n/m vị trí" đứng cạnh số; điện thoại: sang dòng tên hàng (xem @media) */
+.qtcug1 .badge .ngan{display:none}   /* web: tên trạng thái đủ */
+@media(max-width:768px){
+  .qtcugbtn,.qtcsum .fcg{height:40px}
+  .qtcugbtn{padding:0 10px;min-width:44px;justify-content:center;gap:3px}
+  .qtcsum .combo.qtcugcb{margin-left:auto}   /* pill lọc CHÔN sát mép phải hàng SKU (user 26/08 chiều) */
+  .qtcsum .qtcsl{font-size:13.5px}           /* Đếm/Tồn HT nhỏ hơn mã SKU (15px) một bậc */
+  .qtcsum .qtcsl small{display:none} .qtcsum .pn .vt{display:inline}   /* 360px: hàng SKU chật → "n/m vị trí" xuống dòng tên hàng, pill giữ được mép phải */
+  .qtcugbtn .lb{display:none}   /* điện thoại: nút lọc chỉ còn phễu + ▾ (user 26/08 chiều) — aria-label + title giữ nghĩa */
+  .qtcug1 .badge .full{display:none} .qtcug1 .badge .ngan{display:inline}   /* điện thoại: trạng thái viết tắt */
+}
+/* Dòng UIDgr: MỘT dòng, không gãy (user 26/08 trưa) — trạng thái viết tắt (Avail… / Cancel…), tooltip giữ tên đủ.
+   Điện thoại 390px đo được dòng dài nhất 315px / khung 310px → hạ chữ về sàn 10,5px, bỏ letter-spacing mã, badge bớt đệm
+   (≈ −25px) để badge không bị "…" nuốt (ellipsis bỏ NGUYÊN inline-block, không cắt từng chữ). */
+.qtcug1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:768px){
+  /* Điện thoại (đo 360/375/390px — iPhone SE/Android hẹp vẫn thiếu ~20px): badge GHIM góc phải dòng phụ (absolute),
+     phần số được xuống dòng bình thường thay vì cắt "…" (bộ đo bắt "nhãn bị cắt"); badge không bao giờ lẻ loi một dòng. */
+  table.mbcard.qtctbl tr.qtcug td[colspan] .qtcug1{font-size:10.5px;white-space:normal;overflow:visible;text-overflow:clip;position:relative;padding-right:60px;line-height:1.5;margin:3px 0}
+  .qtcug1 b{letter-spacing:0}
+  .qtcug1 .badge{position:absolute;right:0;top:0;padding:2px 6px}
+  .qtcug1 .sep{display:none}
+  .qtcug1 .qtc-qrico{display:none}   /* icon QR trên dòng phụ ẩn (mã vẫn bấm được) — dành chỗ cho số */
+}
 .qtcwrap{overflow:auto;border:1px solid var(--line);border-radius:10px;max-height:420px}
 .qtctbl td{white-space:nowrap}
 .qtctbl td.qtcnum{font-weight:750;color:var(--ink);font-variant-numeric:tabular-nums}
@@ -2769,8 +2814,11 @@ body.side-anim{overflow-x:clip}
      hàng 2 ô, hàng 2 ô — răng cưa. Grid thì hết chỗ cho thương lượng. */
   .kkonebar{row-gap:6px}
   .kkbar-top{gap:6px}
-  #kkWhBar{flex:1 1 0;min-width:0}
-  .kkbar-actions{gap:6px;margin-left:6px;flex:0 0 auto}
+  /* 26/08/2026 (đo thật 390px: nút Bộ lọc từng dịch 208px ngang + 35px dọc khi xổ): chip kho MỘT hàng cuộn ngang
+     (không wrap — rule 249 `flex-wrap:wrap` là của desktop), nút Bộ lọc/Kế hoạch ghim góc phải bằng margin-left:auto
+     cả khi thu (không có chip) lẫn khi xổ → đứng yên tuyệt đối, đúng ý đồ "hàng 1 chip kho — nút ghim phải". */
+  #kkWhBar{flex:1 1 0;min-width:0;flex-wrap:nowrap}
+  .kkbar-actions{gap:6px;margin-left:auto;flex:0 0 auto}
   .kkbar-actions .kktab{padding:0 10px;font-size:12px}
   /* Bốn ô lọc: GRID 2 cột, chiếm cả bề rộng, xuống hàng sau chip kho */
   #kkFilters:not([hidden]){display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;
@@ -4787,6 +4835,7 @@ document.addEventListener('keydown',function(e){
   if(document.querySelector('#fcBody .combo-menu.show')){ fcCloseMenus(); return; }
   var fm=document.getElementById('fcmodal');
   if(fm && fm.classList.contains('show')){ closeFcModal(); return; }
+  if(document.querySelector('#qtcKq .combo-menu.show')){ qtcUgMenuDong(); return; }   // combo bộ lọc UIDgr (Tra SL đếm) đóng trước
   var qqm=document.getElementById('qtcqrmodal');   // camera quét mã (Tra SL đếm) — đóng là TẮT camera
   if(qqm && qqm.classList.contains('show')){ qtcQuetDong(); return; }
   var sqm=document.getElementById('qtcshowqrmodal'); // pop-up hiển thị mã QR (Tra SL đếm)
@@ -4815,6 +4864,7 @@ document.addEventListener('click',function(e){
   /* Combo mẫu tem trong modal In tem: bấm ra ngoài thì đóng — dùng CHÍNH handler chung này, không
      dựng thêm listener riêng (mỗi listener rời là một chỗ có thể quên tháo). */
   if(document.querySelector('#prmodal .combo-menu.show') && !(e.target.closest && e.target.closest('#prmodal .prcb'))) prCbDong();
+  if(document.querySelector('#qtcKq .combo-menu.show') && !(e.target.closest && e.target.closest('#qtcKq .qtcugcb'))) qtcUgMenuDong();   // combo bộ lọc UIDgr của mục Tra SL đếm
 });
 
 /* ================= Đồng bộ WMS on-demand + cooldown 4h ================= */
@@ -5126,7 +5176,9 @@ var TIP={
     'dữ liệu từ phiếu kiểm loại Full location - Factory (cửa sổ 90 ngày) do cụm sync chép về '+
     'Google Sheet. Dòng thuộc phiếu đã kiểm mà WMS không ghi số đếm (hủy đếm / không thấy hàng) '+
     'được tính là 0. Mỗi vị trí hiện lượt kiểm mới nhất (lượt cũ hơn xem bằng nút riêng); dòng lệch '+
-    'của hàng quản lý UID group (vải) liệt kê luôn UIDgr nào lệch, số hệ thống → số đếm; bấm mã '+
+    'của hàng quản lý UID group (vải) liệt kê UIDgr ngay bên dưới, số hệ thống → số đếm — bộ lọc '+
+    '"UIDgr: tất cả / chỉ lệch / ẩn" nhớ trên máy này; trạng thái UIDgr là trạng thái HIỆN TẠI của '+
+    'group trên danh sách Group UID của WMS (New / Available / Blocked…), cập nhật mỗi lượt sync; bấm mã '+
     'phiếu để mở phiếu đó trên WMS. Icon trong ô SKU = quét mã vạch/QR bằng camera (cần Chrome/Edge '+
     'trên Android). Máy có súng quét gắn sẵn (EDA52…): đang mở tab này cứ bóp cò là tra, không cần '+
     'chạm vào ô.',
@@ -6686,7 +6738,10 @@ function kkIdLink(id,kind){
    Bẫy đã né: ① gviz trả TAB ĐẦU TIÊN khi tab chưa tồn tại → kiểm HỢP ĐỒNG NHÃN (sku + quantity
    count) trước khi tin; ② so số với cột chuỗi (và ngược lại) làm gviz báo lỗi → chỉ coi là LỖI
    TẢI khi KHÔNG lượt thử nào thành công. */
-var QTC={dang:false,kq:null,sku:'',taCa:false,bd:null,quetTimer:null,quetStream:null};
+var QTC={dang:false,kq:null,sku:'',taCa:false,bd:null,quetTimer:null,quetStream:null,ugMode:'all'};   // ugMode: 'all' = mọi UIDgr tại vị trí · 'lech' = chỉ UIDgr đếm ≠ HT
+try{ var _ugm=localStorage.getItem('qtc-ug-mode'); QTC.ugMode=(_ugm==='lech'||_ugm==='an')?_ugm:'all'; }catch(e){}
+var QTC_UG_MODES=[{v:'all',t:'Tất cả UIDgr',ng:'tất cả'},{v:'lech',t:'Chỉ UIDgr lệch',ng:'chỉ lệch'},{v:'an',t:'Không hiển thị UIDgr',ng:'ẩn'}];   // 3 chế độ (user 26/08 trưa)
+var QTC_ICO_LOC='<svg class="qtcugico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4-2v-4z"/></svg>';   // phễu = bộ lọc (nét vẽ SVG, không emoji)
 var QTC_TAB='kiemke-qtycount';
 function qtcChuan(s){ return String(s==null?'':s).trim().replace(/\.0$/,''); }
 /* Bóc MÃ từ chuỗi quét được (QR có thể kèm chữ/URL, súng quét bắn nguyên payload):
@@ -6807,15 +6862,22 @@ function qtcVe(){
   var hien=Object.keys(map).map(function(k){ return map[k].r; });
   hien.sort(function(a,b){ return (kkCountMs(b)||0)-(kkCountMs(a)||0); });
   thu.sort(function(a,b){ return (kkCountMs(b)||0)-(kkCountMs(a)||0); });
-  var tong=0,daDem=0;
-  hien.forEach(function(r){ var c2=qtcCnt(r); if(c2!=null){ tong+=c2; daDem++; } });
+  var tong=0,daDem=0,tonHT=0;
+  hien.forEach(function(r){ var c2=qtcCnt(r); if(c2!=null){ tong+=c2; daDem++; } tonHT+=(r.inv==null||r.inv==='')?0:(Number(r.inv)||0); });
   var pn=''; rows.some(function(r){ if(r.pn){ pn=r.pn; return true; } return false; });
-  var h='<div class="qtcsum"><span class="t qtc-qrlink" onclick="qtcQrPop(\''+esc(sku)+'\',\'SKU\')" ondblclick="qtcQrPop(\''+esc(sku)+'\',\'SKU\')" title="Bấm/nhấp đúp để xem mã QR của SKU '+esc(sku)+'">'+esc(sku)+'<svg class="qtc-qrico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><rect x="7.5" y="7.5" width="4" height="4" rx=".8"/><rect x="13" y="13" width="4" height="4" rx=".8"/></svg></span>'+(pn?'<span class="pn" title="'+esc(pn)+'">'+esc(pn)+'</span>':'')+
-    '<span>Tổng SL đếm: <b>'+nf(tong)+'</b>'+(daDem<hien.length?' ('+nf(daDem)+'/'+nf(hien.length)+' vị trí có số đếm)':' · '+nf(hien.length)+' vị trí')+'</span>'+
-    (thu.length?'<button type="button" class="fcg'+(QTC.taCa?' on':'')+'" onclick="QTC.taCa=!QTC.taCa;qtcVe()">'+(QTC.taCa?'Ẩn':'Hiện')+' '+nf(thu.length)+' lượt kiểm cũ hơn</button>':'')+
-    '</div>';
+  var vt=(daDem<hien.length)?nf(daDem)+'/'+nf(hien.length)+' vị trí':'';   // chưa đếm hết mới nói (luật ③)
   var all=QTC.taCa?hien.concat(thu):hien;
-  h+='<div class="qtcwrap"><table class="mtbl mbcard qtctbl"><thead><tr><th>Vị trí</th><th>Phiếu</th><th class="num">SL đếm</th><th class="num">Tồn HT</th><th class="num">Lệch</th><th>Ngày kiểm</th><th>Người kiểm</th><th>Trạng thái</th></tr></thead><tbody>';
+  /* Bộ lọc UIDgr (26/08/2026): đếm số UIDgr (tất cả / lệch) trên các dòng ĐANG hiển thị để ghi lên combo */
+  var ugN={all:0,lech:0};
+  all.forEach(function(r){ qtcUgRows(r.cid,r.sku||sku,'all').forEach(function(u){ ugN.all++; if(qtcUgLech(u)) ugN.lech++; }); });
+  var h='<div class="qtcsum"><span class="t qtc-qrlink" onclick="qtcQrPop(\''+esc(sku)+'\',\'SKU\')" ondblclick="qtcQrPop(\''+esc(sku)+'\',\'SKU\')" title="Bấm/nhấp đúp để xem mã QR của SKU '+esc(sku)+'">'+esc(sku)+'<svg class="qtc-qrico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><rect x="7.5" y="7.5" width="4" height="4" rx=".8"/><rect x="13" y="13" width="4" height="4" rx=".8"/></svg></span>'+
+    /* "Số lượng đếm / Tồn hệ thống" (user 26/08 chiều): 16,700/17,000 — số đếm tô màu theo lệch (đỏ thiếu · xanh thừa · xanh lá khớp) */
+    '<span class="qtcsl" title="SL đếm / Tồn hệ thống — tổng các vị trí đang hiện (lượt kiểm mới nhất mỗi vị trí)'+(vt?'; '+vt+' có số đếm':'')+'"><b class="'+(tong<tonHT?'d-am':tong>tonHT?'d-duong':'d-khop')+'">'+nf(tong)+'</b><i>/</i><b>'+nf(tonHT)+'</b>'+(vt?'<small>'+vt+'</small>':'')+'</span>'+
+    (ugN.all?qtcUgComboHtml(ugN):'')+   // chỉ hiện bộ lọc khi có UIDgr để lọc (luật ③: không bày control không mang tin)
+    (thu.length?'<button type="button" class="fcg'+(QTC.taCa?' on':'')+'" onclick="QTC.taCa=!QTC.taCa;qtcVe()">'+(QTC.taCa?'Ẩn':'Hiện')+' '+nf(thu.length)+' lượt kiểm cũ hơn</button>':'')+
+    ((pn||vt)?'<span class="pn" title="'+esc(pn)+'">'+esc(pn)+(vt?'<span class="vt">'+(pn?' · ':'')+vt+' có số đếm</span>':'')+'</span>':'')+   // tên hàng xuống hàng RIÊNG dưới dải SKU · tổng · bộ lọc (user 26/08 trưa); .vt = "n/m vị trí" chỉ hiện trên điện thoại
+    '</div>';
+  h+='<div class="qtcwrap"><table class="mtbl mbcard qtctbl"><thead><tr><th>Vị trí</th><th class="num">SL đếm</th><th class="num">Tồn HT</th><th class="num">Lệch</th><th>Ngày kiểm</th><th>Người kiểm</th><th>Trạng thái</th><th>Phiếu</th></tr></thead><tbody>';
   all.forEach(function(r,i){
     var cu=(i>=hien.length);
     var c2=qtcCnt(r);
@@ -6823,17 +6885,18 @@ function qtcVe(){
     var d=(r.diff!=null)?r.diff:(c2!=null?(c2-invVal):null);
     h+='<tr'+(cu?' class="qtccu"':'')+'>'+
       '<td class="mb-hd">'+(r.loc?'<span class="qtc-qrlink" onclick="qtcQrPop(\''+esc(r.loc)+'\',\'Vị trí\')" ondblclick="qtcQrPop(\''+esc(r.loc)+'\',\'Vị trí\')" title="Bấm/nhấp đúp để xem mã QR của vị trí '+esc(r.loc)+'">'+esc(r.loc)+'<svg class="qtc-qrico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><rect x="7.5" y="7.5" width="4" height="4" rx=".8"/><rect x="13" y="13" width="4" height="4" rx=".8"/></svg></span>':'—')+(cu?' <span class="badge b-pend">kiểm cũ</span>':'')+'</td>'+
-      '<td class="mb-subhd qtc-cid-cell" data-lb="Phiếu">'+kkIdLink(r.cid,'loc')+'</td>'+
       '<td class="num mb-tag qtcnum" data-lb="SL đếm">'+(c2==null?'chưa đếm'
         :(r.cnt==null?'<span title="WMS không ghi số đếm cho dòng này (đếm bị hủy / không thấy hàng) — phiếu đã kiểm nên tính là 0 (chốt 25/08)">0</span>':nf(c2)))+'</td>'+
       '<td class="num" data-lb="Tồn HT">'+nf(invVal)+'</td>'+
-      (d==null?'<td class="num" data-lb="Lệch">—</td>'
+      (d==null?'<td class="num mb-0" data-lb="Lệch">—</td>'
         :'<td class="num '+(d<0?'d-am':d>0?'d-duong':'d-khop')+'" data-lb="Lệch">'+(d>0?'+':'')+nf(d)+'</td>')+
       '<td data-lb="Ngày kiểm">'+kkFmtD(kkCountMs(r))+'</td>'+
       '<td'+(r.by?'':' class="mb-0"')+' data-lb="Người kiểm">'+kkByShort(r.by)+'</td>'+
-      '<td data-lb="Trạng thái"><span class="badge '+kkBadge(r.st)+'">'+(r.st?esc(r.st):'—')+'</span></td></tr>';
-    /* Hàng quản lý UID group (vải) mà lệch -> chỉ ra NHÓM NÀO lệch (yêu cầu user 25/08 chiều).
-       Nguồn: tab kiemke-uidgr đã tải (chỉ chứa nhóm đếm ≠ tồn của phiếu, nên có dòng nào là dòng đó lệch). */
+      '<td data-lb="Trạng thái"><span class="badge '+kkBadge(r.st)+'">'+(r.st?esc(r.st):'—')+'</span></td>'+
+      '<td class="mb-subhd qtc-cid-cell" data-lb="Phiếu">'+kkIdLink(r.cid,'loc')+'</td></tr>';   // web: cột Phiếu CUỐI bảng (user 26/08 chiều); điện thoại: CSS order:1 kéo về cạnh Vị trí
+    /* Hàng quản lý UID group (vải): liệt kê UIDgr tại vị trí ngay dưới dòng chính (yêu cầu user 25/08 chiều;
+       26/08 sáng: hiện MỌI UIDgr kể cả khớp; 26/08 trưa: thêm bộ lọc Tất cả / Chỉ lệch — QTC.ugMode).
+       Nguồn: tab kiemke-uidgr đã tải (v6+ chứa mọi UID group tại vị trí của phiếu). */
     var ug=qtcUgRows(r.cid,r.sku||sku);
     if(ug.length) h+='<tr class="qtcug'+(cu?' qtccu':'')+'"><td colspan="8">'+ug.map(qtcUgLine).join('')+'</td></tr>';
   });
@@ -6847,21 +6910,48 @@ function qtcCnt(r){
   if(r.cnt!=null) return r.cnt;
   return /PENDING|NOT COUNT|PROCESSING/.test(String(r.st||'').toUpperCase())?null:0;
 }
-/* Các dòng UID group lệch của (phiếu, SKU) — UIDGR.map do uidgrLoad dựng; uid rỗng là dòng đại diện
-   hàng thường (không quản UID group) thì bỏ, vì số của nó trùng số dòng chính. */
-function qtcUgRows(cid,sku){
+/* Các dòng UID group của (phiếu, SKU) — UIDGR.map do uidgrLoad dựng; uid rỗng là dòng đại diện
+   hàng thường (không quản UID group) thì bỏ, vì số của nó trùng số dòng chính.
+   mode 'lech' (hoặc QTC.ugMode) = chỉ giữ nhóm đếm ≠ hệ thống. */
+function qtcUgRows(cid,sku,mode){
   var ds=(UIDGR.map&&!UIDGR.err&&UIDGR.map[String(cid)])||[];
-  return ds.filter(function(u){ return String(u.sku)===String(sku)&&String(u.uid)!==''; });
+  var m=(mode||QTC.ugMode); if(m==='an') return [];   // "Không hiển thị UIDgr"
+  var chiLech=(m==='lech');
+  return ds.filter(function(u){ return String(u.sku)===String(sku)&&String(u.uid)!==''&&(!chiLech||qtcUgLech(u)); });
 }
+function qtcUgLech(u){ return (Number(u.qu)||0)!==(Number(u.qs)||0); }   // '' (đếm không thấy / chưa có trên HT) tính 0 — cùng luật kkUidNets
+/* Pill bộ lọc UIDgr trong dải tóm tắt (gọn — user 26/08 trưa): phễu + "UIDgr: <chế độ> (n)" + ▾; menu .combo-menu popIn dùng chung */
+function qtcUgComboHtml(n){
+  var cur=QTC_UG_MODES.filter(function(o){ return o.v===QTC.ugMode; })[0]||QTC_UG_MODES[0];
+  var dem=function(o){ return o.v==='all'?nf(n.all):o.v==='lech'?nf(n.lech):''; };
+  return '<div class="combo qtcugcb'+(QTC.ugMode!=='all'?' on':'')+'" title="Bộ lọc dòng UIDgr dưới mỗi vị trí: tất cả UID group tại vị trí · chỉ UID group có số đếm khác số hệ thống · không hiển thị">'+
+    '<button type="button" class="qtcugbtn" aria-haspopup="listbox" aria-label="Bộ lọc UIDgr" onclick="qtcUgMenuToggle(this.parentNode)">'+QTC_ICO_LOC+'<span class="lb">UIDgr: '+esc(cur.ng)+(dem(cur)!==''?' ('+dem(cur)+')':'')+'</span><span class="ch">▾</span></button>'+
+    '<div class="combo-menu" role="listbox">'+QTC_UG_MODES.map(function(o){ var c=dem(o); return '<div class="combo-item'+(o.v===QTC.ugMode?' active':'')+'" role="option" data-v="'+o.v+'" onclick="qtcUgPick(this.getAttribute(\'data-v\'))"><span class="nm">'+esc(o.t)+'</span>'+(c!==''?'<span class="c">'+c+'</span>':'')+'</div>'; }).join('')+'</div></div>';
+}
+function qtcUgMenuDong(){ document.querySelectorAll('#qtcKq .combo-menu.show').forEach(function(m){ m.classList.remove('show'); m.parentNode.classList.remove('open'); }); }
+function qtcUgMenuToggle(combo){
+  var m=combo.querySelector('.combo-menu'), dang=m.classList.contains('show'); qtcUgMenuDong();
+  if(!dang){
+    m.classList.remove('flip'); m.classList.add('show'); combo.classList.add('open');
+    if(m.getBoundingClientRect().right>window.innerWidth-8) m.classList.add('flip');   // nút sát mép phải (điện thoại, chỉ còn phễu) → menu neo phải, không thò khỏi màn
+  }
+}
+function qtcUgPick(v){ QTC.ugMode=(v==='lech'||v==='an')?v:'all'; try{ localStorage.setItem('qtc-ug-mode',QTC.ugMode); }catch(e){} qtcVe(); }
 function qtcUgLine(u){
   var qu=(u.qu===''||u.qu==null)?null:Number(u.qu)||0;
   var qs=(u.qs===''||u.qs==null)?null:Number(u.qs)||0;
   var d=(qu||0)-(qs||0);
-  var giua=(qs==null?'chưa có trên HT':(qu==null?'đếm không thấy':(qs===qu?nf(qs)+' (khớp)':nf(qs)+' → '+nf(qu))));
-  return '<span class="qtcug1"><b class="qtc-qrlink" onclick="qtcQrPop(\''+esc(u.uid)+'\',\'UID group\')" ondblclick="qtcQrPop(\''+esc(u.uid)+'\',\'UID group\')" title="Bấm/nhấp đúp để xem mã QR của UIDgr '+esc(u.uid)+'">'+esc(u.uid)+'<svg class="qtc-qrico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><rect x="7.5" y="7.5" width="4" height="4" rx=".8"/><rect x="13" y="13" width="4" height="4" rx=".8"/></svg></b> · '+giua+
-    ' <span class="'+(d<0?'d-am':d>0?'d-duong':'d-khop')+'">('+(d>0?'+':'')+nf(d)+')</span>'+
-    ' · '+kkUidStBadge(u.gst || (u.uid ? 'Available' : ''))+'</span>';
+  /* Không có trên HT = tồn 0, đếm không thấy = đếm 0 → ghi THẲNG số (user 26/08 chiều: chữ dài làm mã tràn dòng) */
+  var giua=nf(qs||0)+' → '+nf(qu||0);   // khớp cũng ghi số: 5,000 → 5,000 (0) — nhất quán, không thêm chữ
+  return '<span class="qtcug1"><b class="qtc-qrlink" onclick="qtcQrPop(\''+esc(u.uid)+'\',\'UID group\')" ondblclick="qtcQrPop(\''+esc(u.uid)+'\',\'UID group\')" title="Bấm/nhấp đúp để xem mã QR của UIDgr '+esc(u.uid)+'">'+esc(u.uid)+'<svg class="qtc-qrico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><rect x="7.5" y="7.5" width="4" height="4" rx=".8"/><rect x="13" y="13" width="4" height="4" rx=".8"/></svg></b><span class="mid"> · '+giua+
+    ' <span class="'+(d<0?'d-am':d>0?'d-duong':'d-khop')+'">('+(d>0?'+':'')+nf(d)+')</span></span>'+
+    (u.gst?'<span class="sep"> · </span>'+qtcUgStBadge(String(u.gst)):'')+'</span>';   // trạng thái = trạng thái HIỆN TẠI của group trên danh sách Group UID WMS (tab kiemke-uidgr v7, push-pc-to-sheet gstApDong) — KHÔNG tự gán Available nữa (26/08)
 }
+/* Badge trạng thái RÚT GỌN cho dòng UIDgr (user 26/08 trưa: "Available" làm gãy dòng số trên điện thoại → "Avail…"); tooltip giữ tên đủ */
+var QTC_ST_NGAN={'Available':'Avail…','Canceled':'Cancel…','Processing':'Proc…','Transferred':'Transf…','Picklisted':'Pickl…','Editing':'Edit…','Not found':'N/found','Matched':'Match…'};
+function qtcUgStBadge(st){ st=String(st||''); if(!st) return ''; var ng=QTC_ST_NGAN[st]||(st.length>7?st.slice(0,5)+'…':st);
+  /* web: tên đủ (user 26/08 chiều); điện thoại: bản rút gọn (.ngan) — CSS đổi chỗ theo khổ màn */
+  return '<span class="badge '+kkUidStCls(st)+'" title="'+esc(st)+'"><span class="full">'+esc(st)+'</span>'+(ng!==st?'<span class="ngan">'+esc(ng)+'</span>':'')+'</span>'; }
 /* --- Quét mã: camera + BarcodeDetector / Canvas Fallback (hỗ trợ cả iPhone/iOS Safari & Android/Chrome/Edge) --- */
 function qtcQuetMo(){
   if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
@@ -9921,9 +10011,11 @@ async function uideLoad(force){
 function uideBuild(rows){ UIDE.map={}; (rows||[]).forEach(function(a){ UIDE.map[a.cid+'|'+a.tid+'|'+a.uid]=a; }); }
 function kkUidStBadge(st){
   if(!st) return '—';
-  var cls=(st==='Not found')?'b-rej':(st==='Available'||st==='Matched')?'b-ok':'b-proc';   // New = amber; Matched = tên cũ v1, giữ tương thích
-  return '<span class="badge '+cls+'">'+esc(st)+'</span>';
+  /* Màu theo trạng thái Group UID trên WMS (26/08/2026): New xanh dương · Available xanh lá · Blocked đỏ;
+     Canceled/Closed xám; Not found/Matched là tên cũ v1-v5 còn trong cache phiên — giữ tương thích */
+  return '<span class="badge '+kkUidStCls(st)+'">'+esc(st)+'</span>';
 }
+function kkUidStCls(st){ return (st==='Blocked'||st==='Not found')?'b-rej':(st==='Available'||st==='Matched')?'b-ok':(st==='New')?'b-new':(st==='Canceled'||st==='Closed')?'b-pend':'b-proc'; }
 /* Category của SKU không nằm trong tab uidgr -> join từ dữ liệu tồn kho (WH_DATA, đã tải lúc mở trang)
    + fallback phiếu kiemke-sku. Cache 1 lần mỗi lượt mở pop-up (kkOpen reset). */
 var _skuCat=null;
