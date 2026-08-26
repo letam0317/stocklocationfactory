@@ -6857,7 +6857,7 @@ function qtcUgLine(u){
   var qu=(u.qu===''||u.qu==null)?null:Number(u.qu)||0;
   var qs=(u.qs===''||u.qs==null)?null:Number(u.qs)||0;
   var d=(qu||0)-(qs||0);
-  var giua=(qs==null?'chưa có trên HT':nf(qs))+' → '+(qu==null?'đếm không thấy':nf(qu));
+  var giua=(qs==null?'chưa có trên HT':(qu==null?'đếm không thấy':(qs===qu?nf(qs)+' (khớp)':nf(qs)+' → '+nf(qu))));
   return '<span class="qtcug1"><b class="qtc-qrlink" onclick="qtcQrPop(\''+esc(u.uid)+'\',\'UID group\')" ondblclick="qtcQrPop(\''+esc(u.uid)+'\',\'UID group\')" title="Bấm/nhấp đúp để xem mã QR của UIDgr '+esc(u.uid)+'">'+esc(u.uid)+'<svg class="qtc-qrico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><rect x="7.5" y="7.5" width="4" height="4" rx=".8"/><rect x="13" y="13" width="4" height="4" rx=".8"/></svg></b> · '+giua+
     ' <span class="'+(d<0?'d-am':d>0?'d-duong':'d-khop')+'">('+(d>0?'+':'')+nf(d)+')</span>'+
     ' · '+kkUidStBadge(u.gst || (u.uid ? 'Available' : ''))+'</span>';
