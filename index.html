@@ -624,10 +624,31 @@ body.an-chan .footbar{display:none}
 .qtcshowqrvalwrap{display:flex;align-items:center;gap:8px;background:var(--bg2,#f3f4f6);border:1px solid var(--border);padding:5px 12px;border-radius:8px;max-width:100%}
 .qtcshowqrval{font-family:var(--font-mono,monospace);font-weight:750;font-size:13.5px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .qtcshowqrcopy{padding:3px 10px;font-size:12px;height:26px;border-radius:6px;cursor:pointer}
+/* Khối "In tem UIDgr" trong pop-up QR (26/08/2026) — chú thích ở HTML #qtcQrIn. Ảnh xem trước bên trái
+   giữ đúng tỉ lệ tem 40×60 (64×96px), thân bên phải: tiêu đề · SKU + số đếm/tồn · tên hàng (kẹp 2
+   dòng) · hàng [Số lượng][In tem] cùng cao 30px · dòng trạng thái in. */
+.qtcqrin{display:flex;gap:12px;align-items:stretch;width:100%;border-top:1px solid var(--line);padding-top:12px;text-align:left}
+.qtcqrin-prev{flex:0 0 64px;height:96px;border:1px solid var(--line);border-radius:6px}
+.qtcqrin-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.qtcqrin-hd{font-size:12.5px;font-weight:700;color:var(--ink)}
+.qtcqrin-sub{font-size:11.5px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.qtcqrin-sub b{color:var(--ink)}
+.qtcqrin-pn{font-size:11.5px;color:var(--ink3);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.qtcqrin-row{display:flex;align-items:center;gap:8px;margin-top:2px}
+.qtcqrin-lb{font-size:11.5px;font-weight:600;color:var(--ink2)}
+.qtcqrin-sl{height:30px;width:96px;border:1px solid var(--border);border-radius:8px;padding:0 10px;font-family:inherit;font-size:13px;font-weight:650;
+  text-align:right;background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums}
+.qtcqrin-sl:focus{outline:2px solid var(--accent);outline-offset:1px}
+.qtcqrin-row .kktab.nds-tem{animation:none}
+.qtcqrin-tt{min-height:14px;line-height:1.45}
 @media(max-width:640px){
   .modalbox.qtcshowqrbox{width:min(340px,88vw);max-height:55vh}
+  .modalbox.qtcshowqrbox.co-in{max-height:88vh}   /* có khối In tem UIDgr thì pop-up cao hơn, khỏi cuộn tìm nút */
   .qtcqrsvgwrap{width:min(180px,55vw);padding:8px}
   .qtcshowqrbody{padding:12px 14px 16px;gap:8px}
+  .qtcqrin-prev{flex-basis:56px;height:84px}
+  .qtcqrin-sl,.qtcqrin-row .kktab.nds-tem{min-height:42px}   /* vùng chạm ≥40px (luật ⑤ điện thoại) — cùng cỡ ô Số lượng của pop-up In tem */
+  .qtcqrin-sl{font-size:15px}
 }
 /* Số phiếu = hyperlink SANG WMS (tab mới), KHÔNG mở pop-up chi tiết trong dashboard nữa (31/07):
    cả con số + icon ↗ nằm trong 1 thẻ <a>, bấm đâu cũng sang WMS */
@@ -2429,24 +2450,51 @@ body.side-anim{overflow-x:clip}
 .nds-busy{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
   background:var(--overlay);color:#fff;font-size:12.5px;font-weight:650;animation:fadeIn .2s ease both}
 .nds-busy .spin{margin:0}
-/* VÒNG CHẠY KIỂU CH PLAY (23/08/2026, yêu cầu user) — thay vòng xoay + đồng hồ giây.
-   Vòng ĐẦY DẦN chứ không xoay tròn vô nghĩa: người ta đã quen nhìn nó lúc tải app, nên hiểu ngay
-   là "đang chạy, sắp xong". Con số giây thì bỏ hẳn (user chốt) — mốc "mạng yếu" ở giây 12 nay báo
-   bằng MÀU (vòng ngả --warn) chứ không bằng số. */
-.nds-vong{width:64px;height:64px;position:relative}
-.nds-vong svg{width:100%;height:100%;display:block;transform:rotate(-90deg)}   /* bắt đầu từ 12 giờ */
-.nds-vong circle{fill:none;stroke-width:5;stroke-linecap:round}
-.nds-vong .ray{stroke:rgba(255,255,255,.22)}
-.nds-vong .chay{stroke:var(--accent);transition:stroke-dashoffset .18s linear,stroke .35s ease}
-.nds-vong.lau .chay{stroke:var(--warn)}
-/* Vòng vừa đầy vừa quay chậm: đầy dần là "còn bao nhiêu", quay là "vẫn đang chạy" — thiếu cái sau
-   thì lúc đường cong tiến độ chững lại (mạng yếu) nhìn y như treo máy. */
-.nds-vong .quay{animation:ndsquay 2.6s linear infinite;transform-origin:24px 24px}
-@keyframes ndsquay{to{transform:rotate(360deg)}}
-/* Bóng chữ: lớp phủ chỉ mờ 50-72% nên câu này nằm trên ẢNH TEM — tem trắng loá thì chữ trắng biến mất */
-.nds-cho{font-size:13.5px;font-weight:800;letter-spacing:.2px;color:#fff;text-align:center;max-width:82%;
-  text-shadow:0 1px 4px rgba(0,0,0,.6)}
-@media(prefers-reduced-motion:reduce){ .nds-vong .quay{animation:none} }
+/* ICON BRAINSTORM + 3 HIỆU ỨNG RÚT NGẪU NHIÊN (28/08/2026 — user chọn "random A, B, D" sau khi xem
+   demo 7 phương án). Thay vòng chạy kiểu CH Play + câu "Đợi chút nhe cục dzàng" (23/08) và bản nảy
+   như logo DVD (sáng 28/08, đã bỏ). Icon bóng đèn-não đứng GIỮA khung; mỗi lượt quét rút một trong:
+     hu-song   · A · SÓNG NÃO: vệt điện chạy dọc nếp não, đèn thở nhẹ, tia nhấp nháy so le
+     hu-quydao · B · QUỸ ĐẠO Ý TƯỞNG: 3 hạt sáng bay quanh icon trên 3 quỹ đạo nghiêng 62°
+     hu-tuve   · D · TỰ VẼ NÉT: icon vẽ dần từng nét rồi mờ, vẽ lại (vòng 3,2s)
+   Không chữ, không số (giữ luật 23/08). Mốc "mạng yếu" 12 giây: class lau trên HỘP → nét, quầng, vệt
+   và hạt cùng ngả --warn. Nét TRẮNG + quầng drop-shadow màu accent (nét màu accent bị chìm trên lớp
+   phủ — đo bằng ảnh chụp). Chuyển động thuần CSS (transform/opacity/stroke-dashoffset), không JS
+   mỗi khung. */
+.nds-busy{overflow:hidden}
+.nds-brain{position:absolute;left:50%;top:50%;width:80px;height:70px;margin:-35px 0 0 -40px;color:#fff;
+  transition:color .35s ease;
+  filter:drop-shadow(0 0 7px var(--accent)) drop-shadow(0 1px 2px rgba(0,0,0,.6))}
+.nds-brain svg{width:100%;height:100%;display:block;overflow:visible}
+.nds-busy.lau .nds-brain{color:var(--warn);filter:drop-shadow(0 0 7px var(--warn)) drop-shadow(0 1px 2px rgba(0,0,0,.6))}
+/* Tia ý tưởng nhấp nháy so le (độ trễ khai ngay trên từng tia bằng --d, không nth-child) */
+.nds-brain .tia{animation:ndsTia 1.5s ease-in-out infinite;animation-delay:var(--d,0s);transform-origin:32px 23px}
+@keyframes ndsTia{0%,100%{opacity:.3;transform:scale(.92)}50%{opacity:1;transform:scale(1.1)}}
+/* A · sóng não: bản sao các nếp não (class syn) vẽ nét đứt màu accent chạy dọc nét trắng bên dưới */
+.hu-song .nds-brain{animation:ndsTho 2.4s ease-in-out infinite}
+@keyframes ndsTho{0%,100%{opacity:.85}50%{opacity:1}}
+.nds-brain .syn{stroke:var(--accent);stroke-dasharray:3 9;animation:ndsSyn 1.1s linear infinite}
+.nds-busy.lau .nds-brain .syn{stroke:var(--warn)}
+@keyframes ndsSyn{to{stroke-dashoffset:-12}}
+/* B · quỹ đạo: 3 vòng nghiêng, mỗi vòng một hạt ở đỉnh, chu kỳ khác nhau (--r đường kính · --t chu kỳ · --z pha) */
+.nds-orb{position:absolute;left:50%;top:50%;width:0;height:0;pointer-events:none}
+.nds-ring{position:absolute;left:0;top:0;width:var(--r);height:var(--r);margin:calc(var(--r)/-2) 0 0 calc(var(--r)/-2);
+  border-radius:50%;border:1px solid rgba(255,255,255,.18);transform:rotateX(62deg) rotateZ(var(--z,0deg));
+  animation:ndsOrbit var(--t) linear infinite}
+.nds-ring::after{content:"";position:absolute;left:50%;top:-4px;width:8px;height:8px;margin-left:-4px;border-radius:50%;
+  background:#fff;box-shadow:0 0 8px var(--accent),0 0 2px #fff}
+.nds-busy.lau .nds-ring::after{box-shadow:0 0 8px var(--warn),0 0 2px #fff}
+@keyframes ndsOrbit{to{transform:rotateX(62deg) rotateZ(calc(var(--z,0deg) + 360deg))}}
+/* D · tự vẽ nét: JS khai pathLength=100 cho mọi path nên nét dài nét ngắn cùng về đích; tia vẽ sau 0,9s */
+.hu-tuve .nds-brain path{stroke-dasharray:100;stroke-dashoffset:100;animation:ndsVe 3.2s cubic-bezier(.5,0,.3,1) infinite}
+.hu-tuve .nds-brain path.tia{animation:ndsVe 3.2s cubic-bezier(.5,0,.3,1) .9s infinite;transform:none}
+@keyframes ndsVe{0%{stroke-dashoffset:100;opacity:1}50%{stroke-dashoffset:0;opacity:1}78%{stroke-dashoffset:0;opacity:1}92%{stroke-dashoffset:0;opacity:0}100%{stroke-dashoffset:100;opacity:0}}
+/* prefers-reduced-motion: rule chung đầu file ép animation-duration .01ms — với vòng lặp vô hạn là
+   nhấp nháy, và với D là icon TRỐNG (đứng ở 0% = chưa vẽ nét nào) → tắt hẳn và vẽ đủ nét */
+@media(prefers-reduced-motion:reduce){
+  .nds-brain .tia,.nds-brain .syn,.nds-ring,.hu-song .nds-brain{animation:none}
+  .hu-tuve .nds-brain path,.hu-tuve .nds-brain path.tia{animation:none;stroke-dasharray:none;stroke-dashoffset:0;opacity:1}
+}
+@media(max-width:430px){ .nds-brain{width:64px;height:56px;margin:-28px 0 0 -32px} }
 
 /* Hàng zoom: 2 nút bước + thanh trượt + số. Nút bước để chỉnh nhanh bằng ngón cái khi một tay
    đang giữ tem; thanh trượt để chỉnh mịn. Tái dùng .kktab và .pg-chip, không chế control mới. */
@@ -3833,6 +3881,29 @@ body.side-anim{overflow-x:clip}
         <button type="button" class="fcg qtcshowqrcopy" id="qtcShowQrCopyBtn" onclick="qtcQrCopy()">Sao chép</button>
       </div>
       <div class="hint" style="text-align:center;margin-top:2px">Quét trực tiếp bằng camera hoặc súng quét mã</div>
+      <!-- IN TEM UIDgr (26/08/2026, user): chỉ hiện khi pop-up mở cho một UID group. Tem theo khuôn
+           In tem SKU nhưng mã to + mã vạch = mã group, thêm dòng SKU đậm, tên hàng, dưới cùng số lượng
+           + ngày in. Gửi thẳng vào hàng đợi in của kho (cùng đường pr_them với In tem SKU) — không đi
+           qua danh sách chờ in tem SKU vì danh sách đó khoá theo SKU, mà một SKU có nhiều group. Nút
+           "In tem" dùng lại khuôn .kktab.nds-tem (cùng chức năng → cùng màu cam), ô số lượng cùng
+           chiều cao nút (luật control cùng hàng cùng cỡ). Ảnh nhỏ bên trái là CHÍNH SVG sẽ ra máy in. -->
+      <div class="qtcqrin" id="qtcQrIn" style="display:none">
+        <div class="pr-tem qtcqrin-prev" id="qtcQrInPrev" title="Tem sẽ in — xem trước đúng bản máy in dựng"></div>
+        <div class="qtcqrin-body">
+          <div class="qtcqrin-hd">In tem UIDgr ở máy in kho</div>
+          <div class="qtcqrin-sub" id="qtcQrInSub"></div>
+          <div class="qtcqrin-pn" id="qtcQrInPn"></div>
+          <div class="qtcqrin-row">
+            <label class="qtcqrin-lb" for="qtcQrInSl">Số lượng</label>
+            <input id="qtcQrInSl" class="qtcqrin-sl" type="text" inputmode="numeric" autocomplete="off" spellcheck="false"
+              aria-label="Số lượng in trên tem" title="Con số in ở dòng chân tem — sẵn số đếm của group, sửa được"
+              oninput="qtcQrInVe()" onkeydown="if(event.key==='Enter'){event.preventDefault();qtcQrInGui();}">
+            <button type="button" class="kktab nds-tem qtcqrin-btn" id="qtcQrInBtn" onclick="qtcQrInGui()"
+              title="Gửi 1 tem UIDgr tới máy in tem của kho">In tem</button>
+          </div>
+          <div class="hint qtcqrin-tt" id="qtcQrInTT"></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -6943,7 +7014,8 @@ function qtcUgLine(u){
   var d=(qu||0)-(qs||0);
   /* Không có trên HT = tồn 0, đếm không thấy = đếm 0 → ghi THẲNG số (user 26/08 chiều: chữ dài làm mã tràn dòng) */
   var giua=nf(qs||0)+' → '+nf(qu||0);   // khớp cũng ghi số: 5,000 → 5,000 (0) — nhất quán, không thêm chữ
-  return '<span class="qtcug1"><b class="qtc-qrlink" onclick="qtcQrPop(\''+esc(u.uid)+'\',\'UID group\')" ondblclick="qtcQrPop(\''+esc(u.uid)+'\',\'UID group\')" title="Bấm/nhấp đúp để xem mã QR của UIDgr '+esc(u.uid)+'">'+esc(u.uid)+'<svg class="qtc-qrico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><rect x="7.5" y="7.5" width="4" height="4" rx=".8"/><rect x="13" y="13" width="4" height="4" rx=".8"/></svg></b><span class="mid"> · '+giua+
+  var goi='qtcQrPopUg(\''+esc(u.cid)+'\',\''+esc(u.uid)+'\',\''+esc(u.sku)+'\')';   // mở pop-up QR KÈM dữ liệu group → có khối In tem UIDgr (26/08)
+  return '<span class="qtcug1"><b class="qtc-qrlink" onclick="'+goi+'" ondblclick="'+goi+'" title="Bấm/nhấp đúp để xem mã QR của UIDgr '+esc(u.uid)+' — trong pop-up có nút in tem UIDgr">'+esc(u.uid)+'<svg class="qtc-qrico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><rect x="7.5" y="7.5" width="4" height="4" rx=".8"/><rect x="13" y="13" width="4" height="4" rx=".8"/></svg></b><span class="mid"> · '+giua+
     ' <span class="'+(d<0?'d-am':d>0?'d-duong':'d-khop')+'">('+(d>0?'+':'')+nf(d)+')</span></span>'+
     (u.gst?'<span class="sep"> · </span>'+qtcUgStBadge(String(u.gst)):'')+'</span>';   // trạng thái = trạng thái HIỆN TẠI của group trên danh sách Group UID WMS (tab kiemke-uidgr v7, push-pc-to-sheet gstApDong) — KHÔNG tự gán Available nữa (26/08)
 }
@@ -7176,11 +7248,21 @@ Minimum version required to store current data is: `+i+`.
 `;return typeof r=="function"&&r(null,d),d}});var gn=pe(),dn=Ce();window.qtcQrSvg=function(n,t){t=t||{};var e=gn.create(String(n??""),{errorCorrectionLevel:t.ecc||"M"});return dn.render(e,{margin:t.pad!==void 0?t.pad:4,width:t.size})};})();
 
 var QTC_POP_VAL = '';
-function qtcQrPop(val, loai){
+var QTC_POP_UG = null;   // dòng UID group đang mở trong pop-up QR (uid, sku, pn, qu, qs) — null khi pop-up mở cho SKU / Vị trí
+/* Mở pop-up QR cho MỘT UID group từ dòng UIDgr (Tra cứu SL đếm): tra lại dòng trong UIDGR.map để pop-up
+   có đủ SKU · tên hàng · số đếm/tồn cho khối "In tem UIDgr". onclick chỉ mang được chuỗi nên truyền
+   khoá (cid, uid, sku) rồi tra, không nhét cả object vào thuộc tính HTML. */
+function qtcQrPopUg(cid, uid, sku){
+  var ds=(UIDGR.map&&UIDGR.map[String(cid)])||[], u=null;
+  for(var i=0;i<ds.length;i++){ if(String(ds[i].uid)===String(uid)&&(!sku||String(ds[i].sku)===String(sku))){ u=ds[i]; break; } }
+  qtcQrPop(uid, 'UID group', u||{ cid:String(cid), uid:String(uid), sku:String(sku||''), pn:'', qu:'', qs:'' });
+}
+function qtcQrPop(val, loai, ug){
   val = String(val == null ? '' : val).trim();
   if(!val) return;
   QTC_POP_VAL = val;
   loai = loai || 'Mã';
+  QTC_POP_UG = (loai === 'UID group' && ug) ? Object.assign({}, ug, { uid: String(ug.uid || val) }) : null;
   var tEl = document.getElementById('qtcShowQrTitle');
   if(tEl) tEl.textContent = 'Mã QR · ' + loai;
   var subEl = document.getElementById('qtcShowQrSub');
@@ -7195,11 +7277,70 @@ function qtcQrPop(val, loai){
       svgWrap.innerHTML = '<div class="hint" style="color:var(--bad)">Lỗi tạo mã QR: ' + esc(e.message) + '</div>';
     }
   }
+  qtcQrInVe(true);          // khối In tem UIDgr: hiện + điền sẵn khi mở cho UID group, ẩn với SKU / Vị trí
   plgMoModal('qtcshowqrmodal');
 }
 
 function qtcQrPopDong(){
   plgDongModal('qtcshowqrmodal');
+}
+/* ── IN TEM UIDgr từ pop-up QR (26/08/2026, user chốt) ──────────────────────────────────────────────
+   Tem theo khuôn In tem SKU, đổi dữ liệu: mã to + mã vạch Code 128 = mã group · dòng SKU đậm · tên hàng
+   · số lượng + ngày in. Lõi vẽ nằm ở PR_TEM.svgTem (d.loai='ug') — pop-up xem trước và agent máy in
+   dùng chung. Gửi bằng prGuiDong (cùng nonce, cùng hàng đợi offline, cùng cách báo lỗi với In tem SKU). */
+/** Tên hàng của SKU trong group: dòng UIDgr (cột Product Name tab kiemke-uidgr) → dòng tra cứu đang
+ *  hiện → danh mục Nhận diện SKU (cache chung, 0 lượt mạng). Không có thì gửi rỗng — agent tự tra danh
+ *  mục trong máy in. */
+function qtcTenSku(sku, u){
+  var pn=String((u&&u.pn)||'').trim(); if(pn) return pn;
+  var rows=(QTC.kq&&QTC.kq.rows)||[];
+  for(var i=0;i<rows.length;i++){ if(String(rows[i].sku)===String(sku)&&rows[i].pn) return String(rows[i].pn); }
+  if(typeof prTimSku==='function'){ var r=null; try{ r=prTimSku(sku); }catch(e){} if(r&&r.pn) return String(r.pn); }
+  return '';
+}
+/** Vẽ/ẩn khối In tem UIDgr trong pop-up QR. moi=true là vừa mở pop-up: điền sẵn số lượng = số ĐẾM của
+ *  group (không có thì số hệ thống) — con số người kiểm vừa đếm là số đúng nhất để dán lên cuộn; sửa
+ *  được, ảnh xem trước vẽ lại theo từng phím. */
+function qtcQrInVe(moi){
+  var kh=document.getElementById('qtcQrIn'), box=document.querySelector('#qtcshowqrmodal .modalbox');
+  if(!kh) return;
+  var u=QTC_POP_UG;
+  if(!u||typeof PR_TEM==='undefined'){ kh.style.display='none'; if(box) box.classList.remove('co-in'); return; }
+  kh.style.display=''; if(box) box.classList.add('co-in');
+  var sl=document.getElementById('qtcQrInSl');
+  var qu=(u.qu===''||u.qu==null)?null:Number(u.qu), qs=(u.qs===''||u.qs==null)?null:Number(u.qs);
+  if(qu!=null&&isNaN(qu)) qu=null; if(qs!=null&&isNaN(qs)) qs=null;
+  if(moi){
+    sl.value=(qu!=null)?String(qu):((qs!=null)?String(qs):'');
+    var tt=document.getElementById('qtcQrInTT'); if(tt){ tt.innerHTML=''; tt.style.color=''; }
+    var b=document.getElementById('qtcQrInBtn'); if(b){ b.disabled=false; b.textContent='In tem'; }
+    document.getElementById('qtcQrInSub').innerHTML='SKU <b>'+esc(u.sku||'—')+'</b>'+
+      (qu!=null?' · SL đếm <b>'+nf(qu)+'</b>':'')+(qs!=null?' · Tồn HT '+nf(qs):'');
+    var pnEl=document.getElementById('qtcQrInPn'), pn=qtcTenSku(u.sku,u);
+    u._pn=pn; pnEl.textContent=pn; pnEl.style.display=pn?'':'none';   // ô không mang tin thì ẩn (luật ③)
+  }
+  var prev=document.getElementById('qtcQrInPrev');
+  try{
+    prev.innerHTML=PR_TEM.mau(PR_TEM.MAU_MAC_DINH).ve({ loai:'ug', uid:u.uid, sku:String(u.sku||''), pn:u._pn||'', sl:String(sl.value||'').trim(), ngay:PR_TEM.ngayTem() });
+  }catch(e){ prev.innerHTML=''; }
+}
+/** Gửi 1 tem UIDgr vào hàng đợi in của kho — cùng đường pr_them với In tem SKU (GAS chuyển tiếp dong
+ *  nguyên vẹn, không phải deploy lại; agent đọc loai:'ug' để dựng tem UIDgr). */
+async function qtcQrInGui(){
+  var u=QTC_POP_UG; if(!u||!u.uid) return;
+  var slEl=document.getElementById('qtcQrInSl'), sl=String(slEl.value||'').trim();
+  if(!/[0-9]/.test(sl)){ toast('Gõ số lượng in trên tem trước đã.','warn'); slEl.focus(); return; }
+  if(!u.sku){ toast('Group này chưa có SKU — không in được tem.','err'); return; }
+  var dong=[{ loai:'ug', uid:String(u.uid).slice(0,24), sku:String(u.sku), pn:String(u._pn||'').slice(0,140), slHang:sl, sl:1, mau:PR_TEM.MAU_MAC_DINH }];
+  var btn=document.getElementById('qtcQrInBtn'), chuCu=btn.textContent;
+  btn.disabled=true; btn.textContent='Đang gửi…';
+  prTrangThaiHtml('', '', 'qtcQrInTT');
+  var kq=null;
+  try{ kq=await prGuiDong(dong, 1, Date.now(), 'qtcQrInTT'); }
+  finally{ btn.disabled=false; btn.textContent=chuCu; }   // treo mạng không được khoá nút vĩnh viễn (luật 3)
+  if(kq&&kq.ok) return;
+  prTrangThaiHtml('✗ '+esc((kq&&kq.loi)||'Không gửi được tới máy in của kho')+'.', 'err', 'qtcQrInTT');
+  toast((kq&&kq.loi)||'Không gửi được lệnh in.','err');
 }
 
 function qtcQrCopy(){
@@ -13074,11 +13215,54 @@ function ndsDatTenMay(){
   toast(t ? ('Thiết bị này tên là "' + t + '".') : 'Đã bỏ tên tự đặt — dùng lại tên máy đoán được.', 'ok');
   if (typeof prVeTenMay === 'function') prVeTenMay();
 }
+/* Bóng đèn có bộ não bên trong + 5 tia ý tưởng — icon "brainstorm" vẽ bằng nét SVG (28/08/2026).
+   viewBox 64×54 (chừa lề trên 2): đèn tâm (32,23) bán kính 15, đui ở y 46-50, tia từ bán kính 18 tới 24.
+   class nao = các nét não (hiệu ứng sóng não sao chép chúng), class tia = 5 tia ý tưởng. */
+var NDS_SVG_BRAIN =
+  '<svg viewBox="0 -2 64 56" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M26 42v-1.5c0-2.2-.9-3.9-2.6-5.2A15 15 0 1 1 40.6 35.3c-1.7 1.3-2.6 3-2.6 5.2V42z"/>' +
+    '<path d="M27 46h10M28.5 50h7"/>' +
+    '<path class="nao" d="M32 13v19"/>' +
+    '<path class="nao" d="M32 13c-4-2-8 0-7.5 4c-3 1-3 6 0 7.5c-1.5 3.5 2 6.5 5 5.5c1 1.5 1.7 1.8 2.5 2M32 13c4-2 8 0 7.5 4c3 1 3 6 0 7.5c1.5 3.5-2 6.5-5 5.5c-1 1.5-1.7 1.8-2.5 2"/>' +
+    '<path class="tia" d="M32 5V0"/>' +
+    '<path class="tia" style="--d:.3s" d="M44.7 10.3L49 6"/>' +
+    '<path class="tia" style="--d:.6s" d="M19.3 10.3L15 6"/>' +
+    '<path class="tia" style="--d:.9s" d="M49.4 18.3l5.8-1.5"/>' +
+    '<path class="tia" style="--d:1.2s" d="M14.6 18.3l-5.8-1.5"/>' +
+  '</svg>';
+/* BA HIỆU ỨNG RÚT NGẪU NHIÊN mỗi lượt quét (user chọn "random A, B, D" 28/08/2026 sau khi xem demo 7
+   phương án). Không rút trùng hiệu ứng vừa dùng — hai lượt liền nhau phải nhìn khác nhau, không thì
+   "ngẫu nhiên" mà 3 lượt giống nhau người dùng tưởng không đổi. `NDS.epHieuUng` cho bộ đo ép một
+   hiệu ứng để đo bố cục từng cái. */
+var NDS_HIEU_UNG=['song','quydao','tuve'];
+function ndsRutHieuUng(){
+  if (NDS.epHieuUng && NDS_HIEU_UNG.indexOf(NDS.epHieuUng)>=0) return NDS.epHieuUng;
+  var ds=NDS_HIEU_UNG.filter(function(h){ return h!==NDS.hieuUngCu; });
+  var h=ds[Math.floor(Math.random()*ds.length)];
+  NDS.hieuUngCu=h; return h;
+}
+/* Dựng phần riêng của từng hiệu ứng vào hộp — icon đã nằm sẵn ở giữa, CSS theo class hu-<tên> lo chuyển động. */
+function ndsDungHieuUng(box, ic, h){
+  box.classList.add('hu-'+h);
+  if (h==='song'){                                  // A: bản sao các nét não → nét đứt màu accent chạy dọc
+    var nao=ic.querySelectorAll('.nao');
+    for (var i=0;i<nao.length;i++){ var q=nao[i].cloneNode(false); q.setAttribute('class','syn'); nao[i].parentNode.appendChild(q); }
+  } else if (h==='quydao'){                         // B: 3 vòng quỹ đạo nằm DƯỚI icon
+    var o=document.createElement('div'); o.className='nds-orb';
+    o.innerHTML='<i class="nds-ring" style="--r:130px;--t:3.4s;--z:0deg"></i>' +
+                '<i class="nds-ring" style="--r:170px;--t:5.1s;--z:60deg"></i>' +
+                '<i class="nds-ring" style="--r:210px;--t:7.3s;--z:120deg"></i>';
+    box.insertBefore(o, ic);
+  } else if (h==='tuve'){                           // D: pathLength=100 để mọi nét cùng về đích
+    var ps=ic.querySelectorAll('path');
+    for (var j=0;j<ps.length;j++) ps[j].setAttribute('pathLength','100');
+  }
+}
 function ndsBusy(on,chu){
   var st=document.getElementById('ndsStage'), cu=document.getElementById('ndsBusyBox');
   /* HỘP ĐÃ CÓ + vẫn đang chạy ⇒ KHÔNG dựng lại (21/08/2026). Một lượt quét giờ gọi ndsBusy(true) từ
-     nhiều chỗ (hai người đọc song song, lượt đua, lượt thử lại) — dựng lại hộp là vòng chạy tụt về
-     0, người dùng thấy như máy bắt đầu lại từ đầu. Vòng phải đo ĐÚNG một lượt quét. */
+     nhiều chỗ (hai người đọc song song, lượt đua, lượt thử lại) — dựng lại hộp là đổi hiệu ứng giữa
+     chừng, người dùng thấy như máy bắt đầu lại từ đầu. Hộp phải sống ĐÚNG một lượt quét. */
   if (on && cu && NDS.dongHo) return;
   if (NDS.dongHo){ clearInterval(NDS.dongHo); NDS.dongHo=null; }
   if (cu) cu.remove();
@@ -13087,35 +13271,26 @@ function ndsBusy(on,chu){
   if (!on) return;
   var d=document.createElement('div');
   d.id='ndsBusyBox'; d.className='nds-busy';
-  /* VÒNG CHẠY KIỂU CH PLAY + MỘT CÂU (đổi 23/08/2026, yêu cầu user). Lịch sử chỗ này: ban đầu là
-     vòng xoay + câu "đang nhờ ai đọc"; 20/08 bỏ hết chữ, chỉ còn đồng hồ giây; nay bỏ luôn số giây.
-     Người đứng trước kệ không cần biết máy gọi ai, cũng không cần con số — chỉ cần thấy nó ĐANG
-     CHẠY và SẮP XONG. Tham số `chu` vẫn giữ để mọi lời gọi cũ không phải sửa, nhưng không vẽ ra. */
-  d.innerHTML =
-    '<div class="nds-vong" id="ndsVong" role="progressbar" aria-label="Đang đọc tem" aria-valuemin="0" aria-valuemax="100">' +
-      '<svg viewBox="0 0 48 48" aria-hidden="true"><g class="quay">' +
-        '<circle class="ray" cx="24" cy="24" r="20"></circle>' +
-        '<circle class="chay" id="ndsVongArc" cx="24" cy="24" r="20" stroke-dasharray="125.7" stroke-dashoffset="125.7"></circle>' +
-      '</g></svg></div>' +
-    '<b class="nds-cho">Đợi chút nhe cục dzàng</b>';
+  d.setAttribute('role','status'); d.setAttribute('aria-label','Đang đọc tem');
+  /* Lịch sử chỗ này: vòng xoay + câu "đang nhờ ai đọc" → 20/08 chỉ còn đồng hồ giây → 23/08 vòng chạy
+     kiểu CH Play + "Đợi chút nhe cục dzàng" → 28/08 sáng icon brainstorm nảy như logo DVD → 28/08 chiều
+     icon đứng giữa + 3 hiệu ứng rút ngẫu nhiên (user chọn sau demo). Không chữ, không số. Tham số
+     `chu` vẫn giữ để mọi lời gọi cũ không phải sửa, nhưng không vẽ ra. */
+  d.innerHTML = '<div class="nds-brain" id="ndsBrain" aria-hidden="true">' + NDS_SVG_BRAIN + '</div>';
+  var h=ndsRutHieuUng();
+  ndsDungHieuUng(d, d.firstChild, h);
+  d.setAttribute('data-hieu-ung', h);
   st.appendChild(d);
-  /* VÒNG ĐẦY THEO ĐƯỜNG CONG TIỆM CẬN, KHÔNG PHẢI TUYẾN TÍNH — và cố ý KHÔNG chạm 100%.
-     Lượt đọc mất 4-8 giây nhưng đuôi có thể tới 17 (xem BA MỐC THỜI GIAN bên dưới): không có cách
-     nào biết trước còn bao lâu, nên vòng chạy nhanh lúc đầu rồi chậm dần, trần 94%. Vòng đứng ở
-     100% mà màn hình chưa đổi là kiểu nói dối mà ai cũng nhận ra ngay.
-     Con số giây bỏ khỏi màn hình nhưng vẫn ghi vào `data-giay` của hộp — bộ đo và lúc chẩn đoán
-     cần nó, người dùng thì không. */
-  var t0=Date.now(), CHU_VI=125.7;
+  /* Con số giây bỏ khỏi màn hình từ 23/08 nhưng vẫn ghi vào `data-giay` của hộp — bộ đo và lúc chẩn
+     đoán cần nó, người dùng thì không. Quá 12 giây thì ĐỔI MÀU thôi (class lau trên hộp), không thêm
+     chữ nào — mốc "mạng yếu" cũ vẫn còn, chỉ đổi cách nói. */
+  var t0=Date.now();
   NDS.dongHo=setInterval(function(){
-    var box=document.getElementById('ndsBusyBox'), v=document.getElementById('ndsVong');
-    if (!box || !v){ clearInterval(NDS.dongHo); NDS.dongHo=null; return; }
+    var box=document.getElementById('ndsBusyBox');
+    if (!box){ clearInterval(NDS.dongHo); NDS.dongHo=null; return; }
     var gy=(Date.now()-t0)/1000;
-    var p=0.94*(1-Math.exp(-gy/4.2));
     box.setAttribute('data-giay', gy.toFixed(1));
-    v.querySelector('.chay').setAttribute('stroke-dashoffset', (CHU_VI*(1-p)).toFixed(1));
-    v.setAttribute('aria-valuenow', Math.round(p*100));
-    /* Quá 12 giây thì ĐỔI MÀU thôi, không thêm chữ nào — mốc "mạng yếu" cũ vẫn còn, chỉ đổi cách nói. */
-    v.classList.toggle('lau', gy>12);
+    box.classList.toggle('lau', gy>12);
   },100);
 }
 /* ============================================================================================
@@ -14317,15 +14492,38 @@ var PR_TEM = (function(){
       '" shape-rendering="crispEdges" font-family="Arial, Helvetica, sans-serif">' +
       '<rect width="' + W + '" height="' + H + '" fill="#fff"/>' +
       '<rect x="' + (2 - lech) + '" y="2" width="' + (W - 4) + '" height="' + (H - 4) + '" fill="none" stroke="#000" stroke-width="2"/>';
+    /* TEM UIDgr (26/08/2026, user chốt — in từ pop-up "Mã QR · UID group"): CÙNG khuôn tem SKU nhưng
+       đổi dữ liệu — mã to + mã vạch là MÃ GROUP (16 chữ số), thêm một dòng "SKU …" in đậm ngay dưới
+       mã vạch, rồi tên hàng; dòng chân vẫn là số lượng + ngày in. d.loai === 'ug' là công tắc; không
+       có cờ thì tem giống HỆT bản cũ (agent chưa cập nhật vẫn in ra tem SKU + dòng UIDgr — xuống cấp
+       êm, không ra tem rác). */
+    var uid = String(d.uid == null ? '' : d.uid).trim();
+    var ug = (d.loai === 'ug') && !!uid;
+    var maTo = ug ? uid : String(d.sku == null ? '' : d.sku);
+    var vungW = W - le * 2;
+    /* Mã group 16 số không vừa cỡ 34 dot của mã SKU 9 số → co cho vừa bề ngang tem (ước 0,6 em một
+       chữ số + 1 dot letter-spacing), sàn 14 dot để còn đọc được. Mã SKU giữ cỡ CỐ ĐỊNH như trước. */
+    var coMa = coSku;
+    if (ug) coMa = Math.max(14, Math.min(coSku, Math.floor((vungW - maTo.length) / (maTo.length * 0.6))));
     /* ① MÃ SKU — TO, CANH GIỮA, NẰM TRÊN mã vạch (người dùng chốt 20/08/2026 sau khi soi tem thật) */
-    o += '<text x="' + giua + '" y="' + (y + coSku) + '" font-size="' + coSku + '" font-weight="bold"' +
-      ' text-anchor="middle" letter-spacing="1">' + escXml(d.sku) + '</text>';
-    y += coSku + Math.round(0.8 * dotMm);
-    /* ② MÃ VẠCH canh giữa, ngay dưới dãy số */
-    var v = vachRect(String(d.sku), { mm: 0.25, dotMm: dotMm, cao: caoVach, x: 0, y: y });
-    if (v){
+    o += '<text x="' + giua + '" y="' + (y + coMa) + '" font-size="' + coMa + '" font-weight="bold"' +
+      ' text-anchor="middle" letter-spacing="1">' + escXml(maTo) + '</text>';
+    y += coMa + Math.round(0.8 * dotMm);
+    /* ② MÃ VẠCH canh giữa, ngay dưới dãy số. Tem UIDgr: mã vạch dài quá bề ngang thì KHÔNG vẽ (vẽ cụt
+       là quét ra sai) — mã group thật 16 số (subset C: 123 module = 246 dot) vừa tem 40mm. */
+    var v = vachRect(maTo, { mm: 0.25, dotMm: dotMm, cao: caoVach, x: 0, y: y });
+    if (v && (!ug || v.rong <= vungW)){
       o += '<g transform="translate(' + (giua - v.rong / 2) + ',0)">' + v.rects + '</g>';
       y += caoVach + Math.round(0.7 * dotMm);
+    }
+    if (ug){
+      /* ②b DÒNG SKU in đậm (chỉ tem UIDgr): mã SKU của hàng trong group — người cầm tem biết group
+         này là hàng gì mà không phải tra WMS. Cỡ 2,6mm, dán mép trái, tiền tố "SKU" để không lẫn với
+         mã group ở trên. */
+      var coDongSku = Math.round(2.6 * dotMm);
+      o += '<text x="' + x + '" y="' + (y + coDongSku) + '" font-size="' + coDongSku + '" font-weight="bold">' +
+        escXml('SKU ' + String(d.sku == null ? '' : d.sku)) + '</text>';
+      y += coDongSku + Math.round(0.6 * dotMm);
     }
     /* ③ TÊN HÀNG — nguyên văn, cỡ chữ tự phủ đầy chỗ còn lại */
     /* Chỗ dành cho dòng chân: lấy theo cỡ số lượng LỚN NHẤT có thể (40 dot) chứ không theo cỡ thật —
@@ -14340,16 +14538,16 @@ var PR_TEM = (function(){
     /* DÒNG UIDgr (23/08/2026, user chốt): mã group của CUỘN đó, in ngay trên dòng chân.
        Có mã thì chừa thêm đúng một dòng cho nó — KHÔNG chừa sẵn khi không có, vì tem 40×30mm mà
        để trống một dòng là tên hàng bị bóp nhỏ đi ở MỌI con tem, kể cả tem chỉ may không có group. */
-    var uid = String(d.uid == null ? '' : d.uid).trim();
-    var coUid = uid ? Math.round(2.5 * dotMm) : 0;
-    var hUid = uid ? (coUid + Math.round(0.5 * dotMm)) : 0;
-    var vungH = H - y - hChan - hUid - le, vungW = W - le * 2;
+    /* Tem UIDgr: mã group đã là mã to ở đỉnh tem — KHÔNG in lại dòng "UIDgr …" trên dòng chân. */
+    var coUid = (uid && !ug) ? Math.round(2.5 * dotMm) : 0;
+    var hUid = (uid && !ug) ? (coUid + Math.round(0.5 * dotMm)) : 0;
+    var vungH = H - y - hChan - hUid - le;
     var fit = coChuVua(String(d.pn == null ? '' : d.pn), vungW, vungH, opt.coTenMax || 34, opt.coTenMin || 7);
     for (var i2 = 0; i2 < fit.dong.length; i2++){
       o += '<text x="' + x + '" y="' + (y + fit.co + i2 * Math.round(fit.co * 1.22)) + '" font-size="' + fit.co + '">' +
         escXml(fit.dong[i2]) + '</text>';
     }
-    if (uid){
+    if (uid && !ug){
       /* Cắt cho vừa bề ngang tem (mã group thật 16 chữ số — vừa; dài hơn thì cắt, KHÔNG để tràn
          ra ngoài mép rồi mất mấy số cuối mà nhìn tem không biết là đã mất). */
       var uidCat = cat('UIDgr ' + uid, Math.max(8, Math.floor(vungW / (coUid * 0.56))));
@@ -14522,11 +14720,11 @@ var PR_TEM = (function(){
     (ds || []).forEach(function(r){
       var l = tachSl(r.slHang);
       if (l.length > 1){
-        l.forEach(function(x){ ra.push({ sku: r.sku, pn: r.pn, slHang: x, mau: r.mau, uid: r.uid || '' }); });
+        l.forEach(function(x){ ra.push({ sku: r.sku, pn: r.pn, slHang: x, mau: r.mau, uid: r.uid || '', loai: r.loai || '' }); });
         return;
       }
       var n = Math.max(0, Number(r.sl) || 0);
-      for (var i = 0; i < n; i++) ra.push({ sku: r.sku, pn: r.pn, slHang: l.length ? l[0] : (r.slHang || ''), mau: r.mau, uid: r.uid || '' });
+      for (var i = 0; i < n; i++) ra.push({ sku: r.sku, pn: r.pn, slHang: l.length ? l[0] : (r.slHang || ''), mau: r.mau, uid: r.uid || '', loai: r.loai || '' });
     });
     return ra;
   }
@@ -15288,7 +15486,7 @@ function prMotTem(r){
     return '<div class="pr-tem" style="width:' + m.w + 'mm;height:' + m.h + 'mm">' +
       PR_TEM.svgTemDot({ nguoi: r.nguoi, luc: r.luc, soTem: r.soTem, soSku: r.soSku }, r.mau || PR_TEM.MAU_MAC_DINH) + '</div>';
   }
-  var d = { sku: r.sku, pn: r.pn, sl: r.slHang, ngay: PR_TEM.ngayTem(), uid: r.uid || '' };
+  var d = { sku: r.sku, pn: r.pn, sl: r.slHang, ngay: PR_TEM.ngayTem(), uid: r.uid || '', loai: r.loai || '' };
   /* SVG của con tem được nhúng NGUYÊN VẸN và chỉ định cỡ bằng mm — nhờ vậy thứ hiện trong pop-up là
      ĐÚNG cái mà agent in tem gửi cho máy in (cùng một hàm `svgTem`, xem lõi PR_TEM mục 1d). */
   return '<div class="pr-tem" style="width:' + m.w + 'mm;height:' + m.h + 'mm">' + m.ve(d) + '</div>';
@@ -15536,8 +15734,15 @@ async function prGuiHangDoi(ds, tong, tBam){
       mau: r.mau || PR_TEM.MAU_MAC_DINH, pn: String(r.pn || '').slice(0, 140),
       /* UIDgr đi kèm dòng in để agent in được dòng group lên tem. GAS chỉ chuyển tiếp nguyên vẹn
          `dong` (JSON.stringify) nên KHÔNG phải deploy lại Apps Script cho trường này. */
-      uid: String(r.uid || '').slice(0, 24) };
+      uid: String(r.uid || '').slice(0, 24),
+      loai: r.loai === 'ug' ? 'ug' : '' };
   });
+  return prGuiDong(dong, tong, tBam);
+}
+/** Gửi MỘT lệnh (mảng dong đã dựng) vào hàng đợi rồi theo dõi. Tách khỏi prGuiHangDoi (26/08/2026)
+ *  để pop-up QR gửi tem UIDgr đi CÙNG một đường: cùng nonce, cùng hàng đợi offline, cùng cách báo lỗi.
+ *  ttId = id phần tử nhận dòng trạng thái (mặc định #prTrangThai của pop-up In tem). */
+async function prGuiDong(dong, tong, tBam, ttId){
   /* Phân biệt HAI loại thất bại là bắt buộc: hàng đợi CHỐI (quá trần, sai dữ liệu) thì bấm lại vô
      nghĩa; còn mất mạng thì bấm lại là được. Nói sai loại là đẩy người dùng đi sai đường. */
   var kq;
@@ -15557,9 +15762,9 @@ async function prGuiHangDoi(ds, tong, tBam){
   if (!kq || kq.status !== 'success' || !kq.id){
     return { ok: false, mang: false, loi: (kq && kq.message) || 'Hàng đợi không nhận lệnh' };
   }
-  if (kq.trung){ prTrangThaiHtml('Lệnh này vừa gửi rồi — không gửi lại để tránh in trùng.', 'warn'); return { ok: true }; }
-  prTrangThaiHtml('Đã gửi <b>' + nf(tong) + ' tem</b> tới máy in của kho. ' + prMoTaCho(kq), prNguyCap(kq));
-  prTheoDoi(kq.id, tong, tBam || Date.now());
+  if (kq.trung){ prTrangThaiHtml('Lệnh này vừa gửi rồi — không gửi lại để tránh in trùng.', 'warn', ttId); return { ok: true }; }
+  prTrangThaiHtml('Đã gửi <b>' + nf(tong) + ' tem</b> tới máy in của kho. ' + prMoTaCho(kq), prNguyCap(kq), ttId);
+  prTheoDoi(kq.id, tong, tBam || Date.now(), ttId);
   return { ok: true };
 }
 /** Hỏi lại trạng thái lệnh: 20 lượt, mỗi 3 giây — đủ cho một đợt tem vài chục con. */
@@ -15570,7 +15775,7 @@ async function prGuiHangDoi(ds, tong, tBam){
  *  Có ĐẾM GIÂY trong dòng trạng thái: một dòng chữ đứng im là thứ làm người ta tưởng máy treo — mà
  *  đây đúng là chỗ đã bị phàn nàn "sao lâu vậy". Đếm giây cũng là cách tự đo: người dùng đọc được
  *  ngay đường in hôm nay nhanh chậm bao nhiêu. */
-async function prTheoDoi(id, tong, tBam){
+async function prTheoDoi(id, tong, tBam, ttId){
   var t0 = tBam || Date.now(), HAN = 120000;
   var giay = function(){ return Math.round((Date.now() - t0) / 1000); };
   while (Date.now() - t0 < HAN){
@@ -15583,14 +15788,14 @@ async function prTheoDoi(id, tong, tBam){
        Cứ chờ tới 6 phút, và dòng trạng thái nói rõ đang mắc gì. */
     if (kq.may && kq.may.co && !kq.may.ro && kq.may.chan) HAN = Math.max(HAN, 360000);
     if (kq.trangThai === 'xong'){
-      prTrangThaiHtml('✓ Đã in xong <b>' + nf(tong) + ' tem</b> — mất ' + giay() + ' giây.', 'ok');
+      prTrangThaiHtml('✓ Đã in xong <b>' + nf(tong) + ' tem</b> — mất ' + giay() + ' giây.', 'ok', ttId);
       toast('Máy in kho đã in xong ' + nf(tong) + ' tem (' + giay() + 's).', 'ok');
       return;
     }
     if (kq.trangThai === 'loi'){
-      prTrangThaiHtml('✗ Máy in báo lỗi: ' + esc(kq.ghiChu || 'không rõ') + '. Lệnh vẫn còn trong hàng đợi để in lại.', 'err');
+      prTrangThaiHtml('✗ Máy in báo lỗi: ' + esc(kq.ghiChu || 'không rõ') + '. Lệnh vẫn còn trong hàng đợi để in lại.', 'err', ttId);
       toast('Máy in kho báo lỗi — xem dòng trạng thái trong bảng in.', 'err');
-      prLui(true);
+      if (!ttId) prLui(true);   // nút "In bằng máy này" chỉ có ở pop-up In tem SKU
       return;
     }
     /* Đang chờ: nói RÕ chờ ai, kèm số giây đã trôi. */
@@ -15600,13 +15805,13 @@ async function prTheoDoi(id, tong, tBam){
     var mt = (kq.trangThai === 'dang_in')
       ? ('Máy in đang chạy đợt của bạn — <b>' + nf(tong) + ' tem</b>…')
       : (lau && !Number(kq.truoc)
-        ? 'Chưa ai nhặt lệnh sau ' + giay() + ' giây — <b>máy trạm chưa bật agent in tem</b>. Lệnh vẫn nằm trong hàng đợi, hoặc in tạm bằng máy này.'
+        ? 'Chưa ai nhặt lệnh sau ' + giay() + ' giây — <b>máy trạm chưa bật agent in tem</b>. Lệnh vẫn nằm trong hàng đợi' + (ttId ? '.' : ', hoặc in tạm bằng máy này.')
         : 'Đang chờ. ' + prMoTaCho(kq));
-    if (lau && kq.trangThai === 'cho' && !Number(kq.truoc)) prLui(true);
-    prTrangThaiHtml(mt + ' <span class="muted">(' + giay() + 's)</span>', prNguyCap(kq));
+    if (lau && kq.trangThai === 'cho' && !Number(kq.truoc)) if (!ttId) prLui(true);   // nút "In bằng máy này" chỉ có ở pop-up In tem SKU
+    prTrangThaiHtml(mt + ' <span class="muted">(' + giay() + 's)</span>', prNguyCap(kq), ttId);
   }
-  prTrangThaiHtml('Chưa thấy máy in phản hồi sau 2 phút — lệnh vẫn nằm trong hàng đợi và sẽ in khi máy trạm bật agent. Cần tem ngay thì in bằng máy này.', 'warn');
-  prLui(true);
+  prTrangThaiHtml('Chưa thấy máy in phản hồi sau 2 phút — lệnh vẫn nằm trong hàng đợi và sẽ in khi máy trạm bật agent.' + (ttId ? '' : ' Cần tem ngay thì in bằng máy này.'), 'warn', ttId);
+  if (!ttId) prLui(true);   // nút "In bằng máy này" chỉ có ở pop-up In tem SKU
 }
 
 /** Gọi GAS cho hàng đợi in — bản gọn của `ndsGoiGas`: không chạm giao diện "đang đọc tem", thử lại
@@ -15638,8 +15843,8 @@ async function prGoiGas(body){
   }
   throw new Error(cuoi || 'không gọi được Apps Script');
 }
-function prTrangThaiHtml(html, kieu){
-  var el = document.getElementById('prTrangThai');
+function prTrangThaiHtml(html, kieu, ttId){
+  var el = document.getElementById(ttId || 'prTrangThai');   // ttId (26/08): pop-up QR nhận trạng thái in tem UIDgr
   if (!el) return;
   el.innerHTML = html;
   el.style.color = kieu === 'err' ? 'var(--bad)' : (kieu === 'ok' ? 'var(--good)' : (kieu === 'warn' ? 'var(--warn)' : ''));
