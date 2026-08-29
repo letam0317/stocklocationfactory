@@ -2578,27 +2578,25 @@ body.side-anim{overflow-x:clip}
 .nds-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--cc,var(--brand2))}
 .nds-card.top{--cc:var(--good)} .nds-card.mid{--cc:var(--warn)} .nds-card.low{--cc:var(--muted)}
 .nds-card.nghi{--cc:var(--bad)}
-.nds-chead{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-/* Badge đầu thẻ nay là LOẠI SKU (Normal/Combo…) chứ không còn là số hạng 1 ký tự → bỏ width cứng
-   20px, để chữ tự giãn (21/08/2026). */
-.nds-rank{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:19px;
-  padding:0 5px;border-radius:5px;
-  background:color-mix(in srgb,var(--cc,var(--brand2)) 18%,transparent);color:var(--cc,var(--brand2));
-  font-size:10px;font-weight:780;flex:none}
-.nds-rank.cb{background:color-mix(in srgb,var(--warn) 20%,transparent);color:var(--warn)}
+.nds-chead{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+/* Cột chip 2 tầng ở đầu thẻ: Active/Inactive ở TRÊN, Normal/Combo ở DƯỚI -> siêu gọn hàng ngang */
+.nds-tags-col{display:inline-flex;flex-direction:column;gap:1.5px;flex:none;align-items:flex-start;justify-content:center}
+.nds-tags-col .badge{font-size:7.5px;font-weight:800;padding:1px 4px;border-radius:2.5px;line-height:1;letter-spacing:.02em;text-transform:uppercase;height:auto;flex:none}
+.nds-tags-col .nds-rank{display:inline-flex;align-items:center;justify-content:center;min-width:0;height:11px;padding:0 4px;border-radius:2.5px;font-size:8px;font-weight:750;line-height:1;background:color-mix(in srgb,var(--cc,var(--brand2)) 18%,transparent);color:var(--cc,var(--brand2));flex:none}
+.nds-tags-col .nds-rank.cb{background:color-mix(in srgb,var(--warn) 20%,transparent);color:var(--warn)}
 /* SKU là thứ phải đọc được từ xa nhất trên thẻ -> to hơn hẳn phần còn lại */
-.nds-sku{font-size:15.5px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:var(--ink);flex:none}
-.nds-pct{margin-left:auto;font-size:12.5px;font-weight:780;font-variant-numeric:tabular-nums;color:var(--cc,var(--brand2));flex:none}
+.nds-sku{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:var(--ink);flex:none;line-height:1.2}
 /* TỒN đứng ngay cạnh SKU: cùng hàng nhưng chữ nhỏ + xám như dòng phụ */
-.nds-ton{font-size:11px;color:var(--ink3);font-variant-numeric:tabular-nums;white-space:nowrap;flex:none}
-.nds-chead .badge{font-size:9.5px;padding:1px 5px;border-radius:4px;flex:none;line-height:1.2}
+.nds-ton{font-size:11.5px;color:var(--ink3);font-variant-numeric:tabular-nums;white-space:nowrap;flex:none}
 /* Nút gỡ ghi nhớ dùng lại đúng kiểu nút chữ nhỏ `fcg` của dòng chân (không dựng control mới) */
 .nds-chead .nds-quen{vertical-align:baseline}
 .nds-lech{font-size:11px;color:var(--bad);font-weight:650;white-space:nowrap}
 .nds-ok{font-size:11px;color:var(--good);font-weight:650}
 @media(max-width:640px){.nds-chead .nds-ok,.nds-chead .nds-lech{flex:1 0 100%;margin-top:1px}}
-.nds-bar{background:var(--surface2);border-radius:99px;height:6px;margin:8px 0 9px;overflow:hidden}
-.nds-fill{height:100%;border-radius:99px;width:0;background:var(--cc,var(--brand2));transition:width .9s var(--ease)}
+/* Thanh tiến trình: thanh mảnh + số % gắn chính xác ở cuối thanh màu */
+.nds-bar{position:relative;background:var(--surface2);border-radius:99px;height:5px;margin:8px 8px 10px 0;overflow:visible}
+.nds-fill{position:relative;height:100%;border-radius:99px;width:0;background:var(--cc,var(--brand2));transition:width .9s var(--ease)}
+.nds-pct{position:absolute;right:0;top:50%;transform:translate(50%,-50%);font-size:9.5px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--cc,var(--brand2));background:var(--surface);border:1px solid color-mix(in srgb,var(--cc,var(--brand2)) 40%,transparent);border-radius:99px;padding:0 3.5px;height:13px;line-height:11px;display:inline-flex;align-items:center;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.08);pointer-events:none;z-index:2}
 /* Tên hàng là thứ thứ HAI phải đọc; phần trùng khớp tô đậm hơn để mắt bắt ngay chỗ giống tem */
 .nds-pn{font-size:13.5px;line-height:1.62;color:var(--ink);word-break:break-word;font-weight:500}
 /* TÔ TRÙNG KHỚP (đổi 20/08/2026 theo yêu cầu user): `<span class="highlight-match">` với bộ màu cố
@@ -14080,26 +14078,23 @@ function ndsTheKetQua(r, hang){
   }
 
   var nhan='';
-  if (r.status==='INACTIVE') nhan+='<span class="badge b-pend" title="Không còn tồn, không có hàng đang về">INACTIVE</span>';
-  else nhan+='<span class="badge b-ok" title="Đang hoạt động">ACTIVE</span>';
+  if (r.status==='INACTIVE') nhan='<span class="badge b-pend" title="Không còn tồn, không có hàng đang về">INACTIVE</span>';
+  else nhan='<span class="badge b-ok" title="Đang hoạt động">ACTIVE</span>';
 
-  /* BADGE ĐẦU THẺ = LOẠI SKU thay cho số hạng 1·2·3 (21/08/2026, yêu cầu user). Số hạng không mang
-     tin — thẻ vốn đã xếp từ trên xuống; còn Normal/Combo là thứ quyết định "có đếm được không".
-     Loại lạ (nếu WMS thêm) hiện nguyên văn, viết hoa chữ đầu. Badge COMBO riêng phía sau đã bỏ vì
-     trùng tin với badge này. */
+  /* BADGE ĐẦU THẺ = CỘT 2 TẦNG (Active/Inactive ở trên, Normal/Combo ở dưới) -> cực gọn hàng ngang */
   var loai=String(r.type||'NORMAL');
   loai=loai.charAt(0).toUpperCase()+loai.slice(1).toLowerCase();
   var loaiTip=(r.type==='COMBO')?'Combo là cách đóng gói, không phải mặt hàng để đếm':'Loại SKU trên WMS';
+  var loaiBadge='<span class="nds-rank'+(r.type==='COMBO'?' cb':'')+'" title="'+loaiTip+'">'+esc(loai)+'</span>';
+  var chipCot='<div class="nds-tags-col">'+nhan+loaiBadge+'</div>';
 
   return '<div class="'+lop+'" role="button" tabindex="0" title="Bấm để copy mã SKU này"'+
       ' onclick="ndsChonSku(\''+esc(r.sku)+'\')"'+
       ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();ndsChonSku(\''+esc(r.sku)+'\');}">'+
-    '<div class="nds-chead">'+nhan+
-      '<span class="nds-rank'+(r.type==='COMBO'?' cb':'')+'" title="'+loaiTip+'">'+esc(loai)+'</span>'+
+    '<div class="nds-chead">'+chipCot+
       '<span class="nds-sku">'+esc(r.sku)+'</span>'+ton+
-      '<span class="nds-pct">'+r.pct+'%</span>'+
       canh+'</div>'+
-    '<div class="nds-bar"><div class="nds-fill" style="width:'+r.pct+'%"></div></div>'+
+    '<div class="nds-bar"><div class="nds-fill" style="width:'+r.pct+'%"><span class="nds-pct">'+r.pct+'%</span></div></div>'+
     '<div class="nds-pn">'+ndsToTrung(r.pn, r.khop)+'</div>'+
     chiTiet+
     '</div>';
