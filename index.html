@@ -2578,21 +2578,20 @@ body.side-anim{overflow-x:clip}
 .nds-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--cc,var(--brand2))}
 .nds-card.top{--cc:var(--good)} .nds-card.mid{--cc:var(--warn)} .nds-card.low{--cc:var(--muted)}
 .nds-card.nghi{--cc:var(--bad)}
-.nds-chead{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.nds-chead{display:flex;align-items:center;gap:6px;flex-wrap:nowrap}
 /* Badge đầu thẻ nay là LOẠI SKU (Normal/Combo…) chứ không còn là số hạng 1 ký tự → bỏ width cứng
    20px, để chữ tự giãn (21/08/2026). */
-.nds-rank{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;
-  padding:0 7px;border-radius:6px;
+.nds-rank{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:19px;
+  padding:0 5px;border-radius:5px;
   background:color-mix(in srgb,var(--cc,var(--brand2)) 18%,transparent);color:var(--cc,var(--brand2));
-  font-size:10.5px;font-weight:780;flex:none}
+  font-size:10px;font-weight:780;flex:none}
 .nds-rank.cb{background:color-mix(in srgb,var(--warn) 20%,transparent);color:var(--warn)}
 /* SKU là thứ phải đọc được từ xa nhất trên thẻ -> to hơn hẳn phần còn lại */
-.nds-sku{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:var(--ink)}
-.nds-pct{margin-left:auto;font-size:13px;font-weight:780;font-variant-numeric:tabular-nums;color:var(--cc,var(--brand2))}
-/* TỒN đứng ngay cạnh SKU: cùng hàng nhưng chữ nhỏ + xám như dòng phụ, để nó KHÔNG tranh chỗ đọc
-   với mã SKU. `nowrap` giữ con số + đơn vị liền khối; hàng đã `flex-wrap` nên máy hẹp thì nó tự
-   xuống dòng chứ không tràn. */
-.nds-ton{font-size:11.5px;color:var(--ink3);font-variant-numeric:tabular-nums;white-space:nowrap}
+.nds-sku{font-size:15.5px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:var(--ink);flex:none}
+.nds-pct{margin-left:auto;font-size:12.5px;font-weight:780;font-variant-numeric:tabular-nums;color:var(--cc,var(--brand2));flex:none}
+/* TỒN đứng ngay cạnh SKU: cùng hàng nhưng chữ nhỏ + xám như dòng phụ */
+.nds-ton{font-size:11px;color:var(--ink3);font-variant-numeric:tabular-nums;white-space:nowrap;flex:none}
+.nds-chead .badge{font-size:9.5px;padding:1px 5px;border-radius:4px;flex:none;line-height:1.2}
 /* Nút gỡ ghi nhớ dùng lại đúng kiểu nút chữ nhỏ `fcg` của dòng chân (không dựng control mới) */
 .nds-chead .nds-quen{vertical-align:baseline}
 .nds-bar{background:var(--surface2);border-radius:99px;height:6px;margin:8px 0 9px;overflow:hidden}
