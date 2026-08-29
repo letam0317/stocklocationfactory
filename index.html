@@ -13267,6 +13267,12 @@ function ndsBusy(on,chu){
  * ============================================================================================ */
 var NDS_T_OCR   = 2500;
 var NDS_T_DUA   = 6000;
+/* THỜI TIẾT XẤU (29/08/2026). Đo 6 tem liên tiếp trên trang thật: có buổi model lite miễn phí của Google TREO
+   9–30 s ở ~1/3 lượt (503 trả rất muộn, UrlFetchApp không đặt được timeout). Lượt đua ở giây 6 đi model KHÁC
+   (GAS xoay bậc cho `dua:1`) đã cứu được, nhưng cứu ở giây 8,8. Nếu lượt TRƯỚC vừa phải đua / vừa treo, lượt
+   này bắn đua ngay ở 0,4 s: p50 lúc nghẽn về ~3,5 s thay 8,8–11 s. Chỉ tốn thêm hạn mức trong đúng quãng
+   nghẽn — một lượt về lành ≤6 s không cần đua là "trời quang", tắt lại. */
+var NDS_T_DUA_XAU = 400;
 /* 11 GIÂY, không phải 9 (chốt sau khi đo OCR 21/08/2026): trên 6 lượt OCR thật, OCR lập được mã
    6/6 — nhưng với THẺ MẪU VIẾT TAY nó ra đúng SKU chỉ 1/2 (lượt kia ra 422423807, đúng cái bẫy
    "cuộn vải trong ô Thành phần vải" của §5b.21). Tức OCR "có mã" KHÔNG đồng nghĩa "đúng hàng", nên
@@ -13320,14 +13326,17 @@ function ndsLayAI(luot, tuDong){
           else loi1=m;
         };
         ndsGoiGas(b, tuDong).then(function(j){
-          if (j && j.status==='success'){ j.dua=!!dua; chot({ ok:true, j:j }); return; }
+          if (j && j.status==='success'){ thoiTiet(); j.dua=!!dua; chot({ ok:true, j:j }); return; }
           loiRa((j&&j.message)||'AI trả lỗi không rõ');
         }, function(e){ loiRa(String(e&&e.message||e)); });
       };
+      var tBatDau=Date.now(), choDua=NDS.thoiTietXau ? NDS_T_DUA_XAU : NDS_T_DUA;
       keo=setTimeout(function(){
         if (xong || !ndsConLuot(luot)) return;       // đã có kết quả / đã chụp tem khác -> khỏi tốn hạn mức
-        daDua=true; NDS.nDua=(NDS.nDua||0)+1; mot(true);
-      }, NDS_T_DUA);
+        daDua=true; NDS.nDua=(NDS.nDua||0)+1; NDS.thoiTietXau=true; mot(true);
+      }, choDua);
+      /* Trời quang lại khi một lượt về lành (không cần đua) trong dưới NDS_T_DUA; về sau 8 s là trời xấu. */
+      var thoiTiet=function(){ var d=Date.now()-tBatDau; if (!daDua && d<NDS_T_DUA) NDS.thoiTietXau=false; else if (d>8000) NDS.thoiTietXau=true; };
       mot(false);
     });
   }, function(e){ return { ok:false, loi:String(e&&e.message||e) }; });
