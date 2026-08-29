@@ -2578,7 +2578,7 @@ body.side-anim{overflow-x:clip}
 .nds-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--cc,var(--brand2))}
 .nds-card.top{--cc:var(--good)} .nds-card.mid{--cc:var(--warn)} .nds-card.low{--cc:var(--muted)}
 .nds-card.nghi{--cc:var(--bad)}
-.nds-chead{display:flex;align-items:center;gap:6px;flex-wrap:nowrap}
+.nds-chead{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 /* Badge đầu thẻ nay là LOẠI SKU (Normal/Combo…) chứ không còn là số hạng 1 ký tự → bỏ width cứng
    20px, để chữ tự giãn (21/08/2026). */
 .nds-rank{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:19px;
@@ -2594,6 +2594,9 @@ body.side-anim{overflow-x:clip}
 .nds-chead .badge{font-size:9.5px;padding:1px 5px;border-radius:4px;flex:none;line-height:1.2}
 /* Nút gỡ ghi nhớ dùng lại đúng kiểu nút chữ nhỏ `fcg` của dòng chân (không dựng control mới) */
 .nds-chead .nds-quen{vertical-align:baseline}
+.nds-lech{font-size:11px;color:var(--bad);font-weight:650;white-space:nowrap}
+.nds-ok{font-size:11px;color:var(--good);font-weight:650}
+@media(max-width:640px){.nds-chead .nds-ok,.nds-chead .nds-lech{flex:1 0 100%;margin-top:1px}}
 .nds-bar{background:var(--surface2);border-radius:99px;height:6px;margin:8px 0 9px;overflow:hidden}
 .nds-fill{height:100%;border-radius:99px;width:0;background:var(--cc,var(--brand2));transition:width .9s var(--ease)}
 /* Tên hàng là thứ thứ HAI phải đọc; phần trùng khớp tô đậm hơn để mắt bắt ngay chỗ giống tem */
@@ -14082,9 +14085,11 @@ function ndsTheKetQua(r, hang){
   return '<div class="'+lop+'" role="button" tabindex="0" title="Bấm để copy mã SKU này"'+
       ' onclick="ndsChonSku(\''+esc(r.sku)+'\')"'+
       ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();ndsChonSku(\''+esc(r.sku)+'\');}">'+
-    '<div class="nds-chead"><span class="nds-rank'+(r.type==='COMBO'?' cb':'')+'" title="'+loaiTip+'">'+esc(loai)+'</span>'+
-      '<span class="nds-sku">'+esc(r.sku)+'</span>'+ton+canh+nhan+
-      '<span class="nds-pct">'+r.pct+'%</span>'+'</div>'+
+    '<div class="nds-chead">'+nhan+
+      '<span class="nds-rank'+(r.type==='COMBO'?' cb':'')+'" title="'+loaiTip+'">'+esc(loai)+'</span>'+
+      '<span class="nds-sku">'+esc(r.sku)+'</span>'+ton+
+      '<span class="nds-pct">'+r.pct+'%</span>'+
+      canh+'</div>'+
     '<div class="nds-bar"><div class="nds-fill" style="width:'+r.pct+'%"></div></div>'+
     '<div class="nds-pn">'+ndsToTrung(r.pn, r.khop)+'</div>'+
     chiTiet+
