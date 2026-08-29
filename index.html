@@ -3227,7 +3227,7 @@ body.side-anim{overflow-x:clip}
              ngoài. Mấy nút hành động với KẾT QUẢ (quét mã vạch · đọc lại bằng AI) vẫn ở dưới. -->
         <div class="nds-tools">
           <button type="button" class="ndsib" id="ndsBtnCam" onclick="ndsCam()">Bật camera</button>
-          <label class="ndsib nds-file">Chọn ảnh
+          <label class="ndsib nds-file" onclick="ndsHamNongGas('chon-anh')">Chọn ảnh
             <input type="file" accept="image/*" hidden onchange="ndsChonFile(this)"></label>
           <span class="sp"></span>
           <button type="button" class="ndsib tron" onclick="ndsXoay(-90)" title="Xoay ngược chiều kim đồng hồ 90°" aria-label="Xoay trái">⟲</button>
@@ -4389,15 +4389,41 @@ function ndsHamNong(){
      (đo 19/08: có lượt 28,5s mà chỉ MỘT lượt POST, tức không phải thử lại mà là server khởi động
      nguội). Gõ một lượt rỗng `chuanDoan` lúc mở tab: KHÔNG ảnh, KHÔNG tốn hạn mức nào, chỉ để
      Google dựng sẵn instance trước khi thủ kho chụp tem. Hỏng thì im lặng — nó chỉ là hâm nóng. */
-  setTimeout(function(){
-    if (document.hidden || NDS.daHam) return;
-    NDS.daHam=true;
-    try{
-      fetch(APPSCRIPT_URL,{ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
-        body:JSON.stringify({ action:'sku_ocr', email:ndsEmail(), chuanDoan:1, tb:tbKhoa(), nonce:'ham-'+Date.now() }) })
-        .catch(function(){});
-    }catch(e){}
-  }, 1200);
+  setTimeout(function(){ ndsHamNongGas('mo-tab'); }, 1200);
+}
+/* HÂM NÓNG Apps Script — một hàm cho cả ba lúc: mở tab · bật camera · bấm "Chọn ảnh" (29/08/2026).
+   Đo pha A (do-toc-do-tem --chang): instance nóng p50 1,6s, để nguội 30–90s thì 1,9–2,0s. Mở tab hâm
+   một lần rồi thủ kho canh tem 1–2 phút mới chụp là instance nguội lại — bật camera mới là "sắp gửi ảnh
+   thật", hâm ở đó đúng lúc hơn. Giãn cách 75s để bấm nhiều lần không thành nhiều lượt gọi (miễn phí,
+   không tốn hạn mức AI/OCR, nhưng vẫn là một execution của GAS).
+   KIÊM CANARY: cổng chuanDoan nay trả `coKhoaAI` — false nghĩa là máy chủ KHÔNG có khoá Gemini, tức mọi
+   lượt AI sẽ chết ngay và tab lặng lẽ rớt xuống OCR. Chính ca này đã xảy ra 24→29/08/2026 (deploy GAS
+   làm rơi khoá) mà 5 ngày không ai thấy vì tab vẫn "ra kết quả" — chậm hơn 2× và kém chính xác hơn. */
+var NDS_HAM_GIAN = 75000;
+function ndsHamNongGas(lyDo){
+  if (document.hidden) return;
+  var nay=Date.now();
+  if (NDS.hamLuc && nay-NDS.hamLuc < NDS_HAM_GIAN) return;
+  NDS.hamLuc=nay; NDS.daHam=true;
+  try{
+    fetch(APPSCRIPT_URL,{ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({ action:'sku_ocr', email:ndsEmail(), chuanDoan:1, tb:tbKhoa(), nonce:'ham-'+nay+'-'+(lyDo||'') }) })
+      .then(function(r){ return r.text(); })
+      .then(function(t){
+        var j=null; try{ j=JSON.parse(t); }catch(e){ return; }         // trang HTML chặng 2 → bỏ, chỉ là hâm nóng
+        if (j && j.coKhoaAI===false) ndsBaoAITat('máy chủ chưa có khoá AI');
+      })
+      .catch(function(){});
+  }catch(e){}
+}
+/** AI đọc tem KHÔNG CHẠY vì lý do phía máy chủ (không có khoá · hết hạn mức · mọi model chết) — nói
+ *  MỘT lần mỗi phiên trang, để người dùng/quản trị biết kết quả đang là của OCR (kém chính xác hơn),
+ *  thay vì lặng lẽ tin một tab "vẫn ra kết quả". Lỗi mạng/abort/JSON sai khuôn lẻ tẻ KHÔNG qua đây. */
+function ndsBaoAITat(lyDo){
+  if (NDS.aiTat) return;
+  NDS.aiTat=String(lyDo||'lỗi máy chủ').split(' — ')[0].slice(0,70);
+  try{ console.warn('[NDS] AI đọc tem không chạy: '+NDS.aiTat); }catch(e){}
+  toast('AI đọc tem không chạy ('+NDS.aiTat+') — tab đang dùng OCR, có thể kém chính xác hơn. Báo quản trị.','warn');
 }
 /* ---------- Lịch sử snapshot theo ngày (tab "history": Date, Division, Warehouse, SkuShelf, SkuPend) ---------- */
 var HIST=[], _histDone=false;
@@ -12803,6 +12829,7 @@ function ndsLop(che){
 async function ndsCam(){
   var v=document.getElementById('ndsVideo');
   if (NDS.stream){ ndsTatCam(); return; }
+  ndsHamNongGas('camera');           // sắp có ảnh thật → dựng sẵn instance Apps Script (miễn phí, giãn cách 75s)
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
     toast('Trình duyệt không cho mở camera — dùng nút "Chọn ảnh" (điện thoại sẽ mở sẵn camera).','warn'); return;
   }
@@ -12948,7 +12975,7 @@ function ndsDatAnh(dataUrl){
   var bo=document.getElementById('ndsBtnOcr'); if (bo) bo.disabled=false;
   var bq=document.getElementById('ndsBtnMV'); if (bq) bq.disabled=false;
   /* Nén sẵn NGAY: chạy song song với bước quét mã vạch phía dưới nên tới lúc gửi là đã có. */
-  try{ ndsNenSan(NDS_MAX_CANH); }catch(e){ /* ảnh hỏng -> onerror lo */ }
+  try{ ndsNenSan(NDS_MAX_CANH, ndsMimeAI()); }catch(e){ /* ảnh hỏng -> onerror lo */ }
   /* CÓ ẢNH LÀ CHẠY LUÔN — không bắt bấm thêm nút nào (sửa 19/08/2026). */
   setTimeout(ndsTuDongNhanDien, 0);
 }
@@ -13013,19 +13040,38 @@ function ndsXoay(do_){
  *   · Gọi ngay lúc ĐẶT ẢNH thì việc nén (~70-130ms) chạy SONG SONG với bước quét mã vạch
  *     (~100-300ms), nên tới lúc cần gửi là đã có sẵn.
  *  Khoá có `NDS.luot` nên ảnh mới không bao giờ dùng lại bản nén của ảnh cũ (xem ndsLuotMoi). */
-function ndsNenSan(canh){
-  canh = canh || NDS_MAX_CANH;
-  var k = NDS.luot + ':' + NDS.xoay + ':' + canh;
-  if (NDS.nenCache && NDS.nenCache.k === k) return NDS.nenCache.p;
-  var p = ndsNenAnh(canh);
+/* WEBP CHO ẢNH GỬI AI (29/08/2026). Đo 4 ảnh mẫu 1400px bằng sharp: WebP nhẹ hơn JPEG cùng mức chất
+   lượng 57–62% (ảnh mô phỏng nền phẳng; ảnh chụp thật nhiều nhiễu ước 25–40%); gửi lên cổng thật thì
+   Gemini trả raw_text Y HỆT bản JPEG (thẻ tay-kho: JPEG 70KB vs WebP 34KB). Chặng đẩy ảnh là chặng
+   DUY NHẤT mình sở hữu trên 4G, nên byte cắt được là giây cắt được. Chỉ dùng khi trình duyệt THẬT SỰ
+   mã hoá được WebP: Safari xin 'image/webp' thì lén trả PNG — phải kiểm tiền tố data:image/webp của
+   kết quả, không tin tên định dạng đã xin. OCR của Drive vẫn nhận JPEG như cũ (chưa đo WebP trên Drive
+   OCR — không đổi thứ chưa đo). */
+var _ndsWebp = null;
+function ndsWebpOk(){
+  if (_ndsWebp !== null) return _ndsWebp;
+  try{ var c=document.createElement('canvas'); c.width=c.height=2; _ndsWebp = c.toDataURL('image/webp').indexOf('data:image/webp')===0; }
+  catch(e){ _ndsWebp=false; }
+  return _ndsWebp;
+}
+function ndsMimeAI(){ return ndsWebpOk() ? 'image/webp' : 'image/jpeg'; }
+/** Nén SẴN và NHỚ theo (lượt · góc xoay · cạnh dài · ĐỊNH DẠNG) — kho nhiều ngăn vì AI xin WebP còn
+ *  OCR xin JPEG cho cùng một tấm: mỗi định dạng nén đúng một lần, lượt đua/thử lại không nén lại. */
+function ndsNenSan(canh, mime){
+  canh = canh || NDS_MAX_CANH; mime = mime || 'image/jpeg';
+  var k = NDS.luot + ':' + NDS.xoay + ':' + canh + ':' + mime;
+  var kho = NDS.nenCache || (NDS.nenCache = {});
+  if (kho[k]) return kho[k];
+  var p = ndsNenAnh(canh, mime);
   /* Bắt lỗi RỜI để không sinh "unhandled rejection" khi nén sẵn mà chẳng ai đợi; lượt await thật
      vẫn nhận được lỗi của chính promise gốc. */
-  p.catch(function(){ if (NDS.nenCache && NDS.nenCache.k===k) NDS.nenCache=null; });
-  NDS.nenCache = { k:k, p:p };
+  p.catch(function(){ if (kho[k]===p) delete kho[k]; });
+  kho[k] = p;
   return p;
 }
-/** Thu nhỏ + áp góc xoay + nén JPEG → base64 (bỏ tiền tố data:) để gửi AI. */
-function ndsNenAnh(canh){
+/** Thu nhỏ + áp góc xoay + nén (WebP nếu xin và máy mã hoá được, không thì JPEG) → base64 (bỏ tiền tố data:). */
+function ndsNenAnh(canh, mime){
+  mime = (mime==='image/webp' && ndsWebpOk()) ? 'image/webp' : 'image/jpeg';
   return new Promise(function(res,rej){
     var img=new Image();
     img.onload=function(){
@@ -13042,13 +13088,15 @@ function ndsNenAnh(canh){
          kho có tem sạch (nhẹ) và tem nhiều chi tiết/nhiễu (nặng gấp 3-4 lần cùng độ phân giải). Hạ
          chất lượng dần trước khi hạ độ phân giải — chữ chịu nhiễu nén tốt hơn là chịu mất điểm ảnh. */
       var url='', b64='';
-      var mucCL=[0.72,0.6,0.5];
+      /* WebP q0,8 giữ nét chữ ngang JPEG q0,72 mà nhẹ hơn hẳn; bậc hạ chất lượng giữ nguyên tinh thần cũ. */
+      var mucCL = mime==='image/webp' ? [0.8,0.7,0.6] : [0.72,0.6,0.5];
       for (var z=0; z<mucCL.length; z++){
-        url=cv.toDataURL('image/jpeg',mucCL[z]);
+        url=cv.toDataURL(mime,mucCL[z]);
+        if (url.indexOf('data:'+mime)!==0){ mime='image/jpeg'; url=cv.toDataURL(mime,0.72); }   // máy lén trả định dạng khác → quay về JPEG
         b64=url.slice(url.indexOf(',')+1);
         if (b64.length<=NDS_TRAN_B64) break;
       }
-      res({ b64:b64, mime:'image/jpeg', w:cv.width, h:cv.height, kb:Math.round(b64.length*0.75/1024) });
+      res({ b64:b64, mime:mime, w:cv.width, h:cv.height, kb:Math.round(b64.length*0.75/1024) });
     };
     img.onerror=function(){ rej(new Error('ảnh không đọc được')); };
     img.src=NDS.anh;
@@ -13245,7 +13293,7 @@ function ndsLayAI(luot, tuDong){
      lần nữa (không tốn thêm hạn mức). Cờ "đang đọc" phía GAS cũng đã sửa để CÙNG NONCE thì cho đi —
      trước đây chính nó chặn oan lượt thử lại của chính mình. */
   var nonce='nds-'+Date.now()+'-'+Math.random().toString(36).slice(2,8);
-  return ndsNenSan(NDS_MAX_CANH).then(function(a){
+  return ndsNenSan(NDS_MAX_CANH, ndsMimeAI()).then(function(a){
     var goc={ action:'sku_vision', key:'', email:mail, mime:a.mime, anh:a.b64, nonce:nonce };
     return new Promise(function(res){
       var xong=false, daDua=false, loi1='', keo=null;
@@ -13334,6 +13382,7 @@ async function ndsHaiNguoiDoc(luot){
           if (ndsDuCanCu()) return true;                      // đủ căn cứ -> xong, khỏi cần OCR
         }
         if (!ai.ok && !NDS.loiAI) NDS.loiAI=ai.loi||'';
+        if (!ai.ok && /khoá AI|hạn mức|model AI/i.test(ai.loi||'')) ndsBaoAITat(ai.loi);
         /* AI xong mà chưa đủ căn cứ (hoặc chết) -> OCR là lưới đỡ; nó đang bay sẵn nên chờ nốt */
         if (ocr){
           if (ocr.ok && !ocr.daAp){ ocr.daAp=1; daAp=true; await ndsNhanVanBan(ocr.j.text,'ocr',ocr.j); }
@@ -14021,7 +14070,7 @@ function ndsTheKetQua(r, hang){
 
   var nhan='';
   if (r.status==='INACTIVE') nhan+='<span class="badge b-pend" title="Không còn tồn, không có hàng đang về">INACTIVE</span>';
-  else if (!NDS.chiActive) nhan+='<span class="badge b-ok">ACTIVE</span>';
+  else nhan+='<span class="badge b-ok" title="Đang hoạt động">ACTIVE</span>';
 
   /* BADGE ĐẦU THẺ = LOẠI SKU thay cho số hạng 1·2·3 (21/08/2026, yêu cầu user). Số hạng không mang
      tin — thẻ vốn đã xếp từ trên xuống; còn Normal/Combo là thứ quyết định "có đếm được không".
