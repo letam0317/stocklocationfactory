@@ -31,11 +31,23 @@ const PUSH_KEY = "wms_token_push";     // {at, token} lần đẩy GAS gần nh�
 const KHE = {
   wms: { key: KEY, push: PUSH_KEY, xacThuc: GET_ME, nhan: "WMS" },
   wshr: { key: "wshr_token", push: "wshr_token_push", xacThuc: XAC_THUC_WSHR, nhan: "work/hr" },
+  // v1.6.0 (25/09/2026): khe chat.hasaki.vn — xacThuc=null: KHÔNG verify get-me (chat không có
+  // endpoint kiểm rẻ chắc chắn, VÀ không có đường auto-login nào để "đá phiên" nếu token cũ) →
+  // token cũ chỉ làm bộ đọc rỗng, vô hại. Đẩy thẳng khi bắt được, để doc-chat-phancong.mjs tự
+  // xử 401 (thoát êm, không đăng nhập).
+  chat: { key: "chat_token", push: "chat_token_push", xacThuc: null, nhan: "chat" },
 };
 const LOAI = Object.keys(KHE);
 const kheCua = (loai) => KHE[loai] || KHE.wms;
+/* v1.5.0 (14/09/2026) — GÕ CÒ ÉP TƯƠI KHI VỪA ĐĂNG NHẬP.
+ * Trước đây máy trạm chỉ biết "có phiên mới" ở tick canh 2 phút, rồi còn phải qua cửa nhịp
+ * 15'/30'/45' của poller — người vừa đăng nhập mở dashboard vẫn gặp số của 40 phút trước.
+ * Nay: token MỚI + đã xác thực còn sống => bắn 1 POST rỗng nghĩa vào cò 127.0.0.1 của máy
+ * trạm, bộ đồng bộ bắt đầu chạy sau ~3-5 giây. KHÔNG gửi token qua cổng này (chỉ {kind,exp}),
+ * chỉ gọi 127.0.0.1 (máy của chính operator), máy tắt thì fetch hỏng và im lặng bỏ qua. */
+const CO_URL = "http://127.0.0.1:8790/dang-nhap";
 const KEEP_ALARM = "wmsKeepAlive";     // alarm tự kiểm + giữ token tươi (2')
-const CAP_V = 2;                       // version cache caps — tăng khi đổi hình dạng caps (v2: thêm khe wshr)
+const CAP_V = 3;                       // version cache caps — tăng khi đổi hình dạng caps (v2: khe wshr · v3: khe chat)
 const KEEP_MIN = 2;                    // phút: chu kỳ tự kiểm sống + đẩy lại
 let _lastHeard = "";                   // log gọn: token đổi mới log 1 dòng (reset khi SW ngủ — vô hại)
 let _lastVerifyAt = 0;                 // throttle verify khi capture cùng 1 token (in-memory, reset khi SW ngủ)
@@ -63,16 +75,17 @@ async function coBridgeCap() {
   // tới 30' sau khi Reload — ngồi chờ mà không hiểu vì sao.
   if (c && c.v === CAP_V && c.ok && Date.now() - c.at < 30 * 60 * 1000) return c;
   if (c && c.v === CAP_V && !c.ok && Date.now() - c.at < 90 * 1000) return c;
-  let ok = false, wshr = false;
+  let ok = false, wshr = false, chat = false;
   try {
     const r = await fetch(GAS_URL + "?action=bridgeCaps");
     const j = await r.json();
     ok = !!(j && j.bridgeToken);
     wshr = !!(j && j.bridgeWshr);   // GAS bản cũ không có → KHÔNG đẩy khe wshr (tránh ghi đè token WMS)
+    chat = !!(j && j.bridgeChat);   // v1.6.0
   } catch (e) { console.warn("[bridge] probe bridgeCaps LỖI (thử lại sau 90s):", e && e.message); }
   console.log("[bridge] probe bridgeCaps:", ok ? "GAS CÓ kênh bridge" : "GAS KHÔNG có kênh bridge",
-    "· khe wshr:", wshr ? "CÓ" : "chưa (GAS cần deploy bản mới)");
-  const cap = { v: CAP_V, ok, wshr, at: Date.now() };
+    "· khe wshr:", wshr ? "CÓ" : "chưa", "· khe chat:", chat ? "CÓ" : "chưa");
+  const cap = { v: CAP_V, ok, wshr, chat, at: Date.now() };
   await chrome.storage.session.set({ bridge_cap: cap });
   return cap;
 }
@@ -105,14 +118,32 @@ async function pushBridge(token, exp, loai) {
       console.log("[bridge] khe work/hr: GAS chưa có kênh (bridgeWshr) — CHƯA đẩy, chờ deploy.");
       return;
     }
+    if (loai === "chat" && !cap.chat) {
+      console.log("[bridge] khe chat: GAS chưa có kênh (bridgeChat) — CHƯA đẩy, chờ deploy.");
+      return;
+    }
     await chrome.storage.session.set({ [kh.push]: { at: now, token } });
     const r = await fetch(GAS_URL, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "bridgeToken", kind: loai === "wshr" ? "wshr" : "wms", token, exp: exp || 0 }),
+      body: JSON.stringify({ action: "bridgeToken", kind: loai, token, exp: exp || 0 }),
     });
     console.log("[bridge] đẩy token " + kh.nhan + " (đã xác thực OK) lên GAS:", r.status, (await r.text()).slice(0, 120));
   } catch (e) { console.warn("[bridge] đẩy token " + kh.nhan + " LỖI (lần sau thử lại):", e && e.message); }
+}
+
+/** Gõ cò ép tươi trên máy trạm. Fire-and-forget: máy tắt / cò chưa chạy -> im lặng bỏ qua,
+ *  đường dự phòng (watch-login-request.js bám jti) vẫn bắt được ở tick 2 phút. */
+async function goCoEpTuoi(loai, exp) {
+  try {
+    const r = await fetch(CO_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ kind: loai === "wshr" ? "wshr" : "wms", exp: exp || 0, at: Date.now() }),
+      signal: AbortSignal.timeout(2000),
+    });
+    console.log("[bridge] gõ cò ép tươi (" + loai + "):", r.status);
+  } catch (e) { /* máy trạm tắt hoặc cò chưa trực — không phải lỗi, nhịp 2' vẫn lo */ }
 }
 
 /* CỬA CHẶN sống/chết dùng chung cho cả 2 lối: alarm keep-alive + lúc capture token mới.
@@ -125,10 +156,14 @@ async function giuTokenSong(reason, loai = "wms") {
   const o = await chrome.storage.session.get(kh.key);
   const t = o && o[kh.key];
   if (!t || !t.token) return;
-  const tt = await kiemSong(t.token, loai);
+  // Khe không có endpoint verify (chat) → coi như alive, đẩy thẳng (token cũ vô hại, xem KHE.chat).
+  const tt = kh.xacThuc ? await kiemSong(t.token, loai) : "alive";
   if (tt === "alive") {
     await chrome.storage.session.set({ [kh.key]: { token: t.token, at: Date.now(), exp: t.exp || 0 } });
     await pushBridge(t.token, t.exp, loai);
+    // CHỈ gõ cò khi đây là token VỪA BẮT ĐƯỢC VÀ KHÁC token cũ (= vừa đăng nhập), không gõ ở
+    // mỗi nhịp keep-alive 2'. Khe chat KHÔNG gõ cò (cò 127.0.0.1 chỉ lo WMS/work-hr máy trạm).
+    if (reason === "capture-moi" && loai !== "chat") goCoEpTuoi(loai, t.exp);
   } else if (tt === "dead") {
     console.log("[bridge] token " + kh.nhan + " đã CHẾT (401) — ngừng đẩy, chờ SPA mint token mới. (" + reason + ")");
     if (loai === "wms") _lastHeard = "";
@@ -173,10 +208,13 @@ chrome.webRequest.onSendHeaders.addListener(
   (details) => {
     const h = (details.requestHeaders || []).find((x) => x.name.toLowerCase() === "authorization");
     if (h && h.value && /^Bearer\s+/i.test(h.value)) {
-      nhanToken(h.value, /^https:\/\/wshr\.hasaki\.vn\//.test(details.url || "") ? "wshr" : "wms");
+      const u = details.url || "";
+      const loai = /^https:\/\/api\.hasakichat\.com\//.test(u) ? "chat"
+        : /^https:\/\/wshr\.hasaki\.vn\//.test(u) ? "wshr" : "wms";
+      nhanToken(h.value, loai);
     }
   },
-  { urls: ["https://wms-gw.inshasaki.com/*", "https://wshr.hasaki.vn/*"] },
+  { urls: ["https://wms-gw.inshasaki.com/*", "https://wshr.hasaki.vn/*", "https://api.hasakichat.com/*"] },
   ["requestHeaders", "extraHeaders"]
 );
 

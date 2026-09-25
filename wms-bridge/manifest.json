@@ -1,26 +1,67 @@
 {
   "manifest_version": 3,
   "name": "Hasaki WMS Token Bridge — Factory",
-  "version": "1.4.1",
-  "description": "Đưa token phiên của CHÍNH BẠN (WMS + work/hr) cho dashboard Factory và cho máy trạm đồng bộ (khỏi re-login đá phiên) — không đăng nhập lại, không tab ẩn. v1.4.0: nghe thêm wshr.hasaki.vn (work/hr) — vừa cấp token cho bộ 5S/chấm công, vừa là tín hiệu CÓ NGƯỜI ĐANG LÀM để máy trạm không đăng nhập đè.",
-  "host_permissions": ["https://wms-gw.inshasaki.com/*", "https://wshr.hasaki.vn/*", "https://script.google.com/*", "https://script.googleusercontent.com/*"],
-  "permissions": ["webRequest", "storage", "alarms"],
-  "background": { "service_worker": "background.js" },
+  "version": "1.6.0",
+  "description": "Đưa token phiên của CHÍNH BẠN (WMS + work/hr + chat) cho dashboard Factory và cho máy trạm đồng bộ (khỏi re-login đá phiên) — không đăng nhập lại, không tab ẩn. v1.6.0: thêm khe 'chat' (api.hasakichat.com) để bộ đọc lịch phân công vệ sinh mượn token phiên chat đang sống, vì chat cũng 1-phiên như WMS.",
+  "host_permissions": [
+    "https://wms-gw.inshasaki.com/*",
+    "https://wshr.hasaki.vn/*",
+    "https://api.hasakichat.com/*",
+    "https://script.google.com/*",
+    "https://script.googleusercontent.com/*",
+    "http://127.0.0.1/*"
+  ],
+  "permissions": [
+    "webRequest",
+    "storage",
+    "alarms"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "content_scripts": [
     {
-      "matches": ["https://letam0317.github.io/stocklocationfactory/*", "https://letam0317.github.io/kiemsoatkho/*"],
-      "js": ["bridge.js"],
+      "matches": [
+        "https://letam0317.github.io/stocklocationfactory/*",
+        "https://letam0317.github.io/kiemsoatkho/*"
+      ],
+      "js": [
+        "bridge.js"
+      ],
       "run_at": "document_start"
     },
     {
-      "matches": ["https://wms.inshasaki.com/*", "https://work.hasaki.vn/*", "https://hr.hasaki.vn/*"],
-      "js": ["wms-main-hook.js"],
+      "matches": [
+        "https://wms.inshasaki.com/*",
+        "https://work.hasaki.vn/*",
+        "https://hr.hasaki.vn/*"
+      ],
+      "js": [
+        "wms-main-hook.js"
+      ],
       "run_at": "document_start",
       "world": "MAIN"
     },
     {
-      "matches": ["https://wms.inshasaki.com/*", "https://work.hasaki.vn/*", "https://hr.hasaki.vn/*"],
-      "js": ["wms-relay.js"],
+      "matches": [
+        "https://chat.hasaki.vn/*"
+      ],
+      "js": [
+        "chat-main-hook.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://wms.inshasaki.com/*",
+        "https://work.hasaki.vn/*",
+        "https://hr.hasaki.vn/*",
+        "https://chat.hasaki.vn/*"
+      ],
+      "js": [
+        "wms-relay.js"
+      ],
       "run_at": "document_start"
     }
   ]
