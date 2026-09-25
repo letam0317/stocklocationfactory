@@ -82,11 +82,17 @@
       // ưu tiên khoá tên có chat/token/auth/access + payload giống token chat, rồi tới bất kỳ JWT nào
       ung.sort((a, b) => (b.uu - a.uu) || (b.tok.length - a.tok.length));
       const pick = ung.find((x) => laTokenChat(x.tok)) || ung[0];
-      if (pick) bao(pick.tok);
+      // GỬI KHÔNG THROTTLE (khác bao()): lần post đầu ở document_start hay rơi mất vì relay isolated
+      // chưa gắn listener; nếu throttle "cùng token 60s" thì không bao giờ gửi lại. Đẩy mỗi nhịp,
+      // background tự khử trùng (pushBridge throttle 20s/2') nên không spam GAS.
+      if (pick) {
+        const tok = String(pick.tok).replace(/^Bearer\s+/i, "").trim();
+        if (tok.length >= 100) { try { window.postMessage({ __wmsBridgeTok: 1, tok, loai: "chat" }, window.location.origin); } catch (e) { /* bỏ qua */ } }
+      }
     } catch (e) { /* localStorage bị chặn thì thôi — các kênh khác vẫn chạy */ }
   }
-  quetLocalStorage();
-  setInterval(quetLocalStorage, 15000);
+  setTimeout(quetLocalStorage, 800);    // chờ relay isolated gắn listener xong mới quét lần đầu
+  setInterval(quetLocalStorage, 8000);  // lặp: lần đầu rơi mất thì lần sau tới nơi
 
   // ---- WebSocket (chat tải tin realtime qua WS; nhiều app nhét token vào query của URL WS) ----
   try {
