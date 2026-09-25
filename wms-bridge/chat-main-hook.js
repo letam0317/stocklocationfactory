@@ -58,18 +58,31 @@
   //      Bearer từ localStorage cho một số call/WebSocket). Token của CHÍNH người đang đăng nhập trang
   //      này nằm ở localStorage key "chat_token"/"access_token". Đọc trên chính origin chat.hasaki.vn —
   //      không đụng site khác. Quét lúc tải + mỗi 15s (token đổi khi gia hạn) để luôn có bản mới nhất. ----
+  const RE_JWT = /eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/;   // JWT ở BẤT KỲ đâu trong chuỗi (kể cả bọc JSON)
+  function laTokenChat(jwt) {
+    try { const p = JSON.parse(atob(jwt.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+      // token API chat có user_id/uid; loại token IdP (aud/iss là auth-gateway/oidc)
+      const s = JSON.stringify(p).toLowerCase();
+      if (/oidc|authorize|id_token/.test(s)) return false;
+      return !!(p.user_id || p.uid || p.partner_user_id || /chat/.test(s) || p.sub);
+    } catch (e) { return true; }   // không giải được payload thì cứ thử
+  }
   function quetLocalStorage() {
     try {
-      const laJWT = (v) => typeof v === "string" && /^eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(v.replace(/^Bearer\s+/i, "").trim());
-      const keys = [];
-      for (let i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i));
-      // ưu tiên khoá có 'chat', rồi 'access_token'/'token'; BỎ oidc.* (token của IdP, không phải API chat)
-      const uu = keys.filter((k) => /chat/i.test(k) && /token/i.test(k));
-      const phu = keys.filter((k) => !/^oidc\./i.test(k) && /(access_token|^token$|auth.?token)/i.test(k));
-      for (const k of uu.concat(phu)) {
-        const v = localStorage.getItem(k);
-        if (laJWT(v)) { bao(v); return; }
+      const ung = [];
+      for (const store of [localStorage, sessionStorage]) {
+        for (let i = 0; i < store.length; i++) {
+          const k = store.key(i);
+          if (/^oidc\./i.test(k)) continue;            // token của IdP, không phải API chat
+          const raw = store.getItem(k) || "";
+          const m = raw.match(RE_JWT);
+          if (m) ung.push({ k, tok: m[0], uu: /chat|token|auth|access/i.test(k) });
+        }
       }
+      // ưu tiên khoá tên có chat/token/auth/access + payload giống token chat, rồi tới bất kỳ JWT nào
+      ung.sort((a, b) => (b.uu - a.uu) || (b.tok.length - a.tok.length));
+      const pick = ung.find((x) => laTokenChat(x.tok)) || ung[0];
+      if (pick) bao(pick.tok);
     } catch (e) { /* localStorage bị chặn thì thôi — các kênh khác vẫn chạy */ }
   }
   quetLocalStorage();
