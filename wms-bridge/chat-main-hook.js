@@ -54,6 +54,27 @@
     return oSet.apply(this, arguments);
   };
 
+  // ---- localStorage (CHẮC ĂN NHẤT — 25/09: khe request/WS không ăn vì app chat có thể chỉ dùng
+  //      Bearer từ localStorage cho một số call/WebSocket). Token của CHÍNH người đang đăng nhập trang
+  //      này nằm ở localStorage key "chat_token"/"access_token". Đọc trên chính origin chat.hasaki.vn —
+  //      không đụng site khác. Quét lúc tải + mỗi 15s (token đổi khi gia hạn) để luôn có bản mới nhất. ----
+  function quetLocalStorage() {
+    try {
+      const laJWT = (v) => typeof v === "string" && /^eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(v.replace(/^Bearer\s+/i, "").trim());
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i));
+      // ưu tiên khoá có 'chat', rồi 'access_token'/'token'; BỎ oidc.* (token của IdP, không phải API chat)
+      const uu = keys.filter((k) => /chat/i.test(k) && /token/i.test(k));
+      const phu = keys.filter((k) => !/^oidc\./i.test(k) && /(access_token|^token$|auth.?token)/i.test(k));
+      for (const k of uu.concat(phu)) {
+        const v = localStorage.getItem(k);
+        if (laJWT(v)) { bao(v); return; }
+      }
+    } catch (e) { /* localStorage bị chặn thì thôi — các kênh khác vẫn chạy */ }
+  }
+  quetLocalStorage();
+  setInterval(quetLocalStorage, 15000);
+
   // ---- WebSocket (chat tải tin realtime qua WS; nhiều app nhét token vào query của URL WS) ----
   try {
     const OWS = window.WebSocket;
