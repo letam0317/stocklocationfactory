@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi" data-theme="hasaki">
+<html lang="vi" data-theme="antd">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -48,6 +48,14 @@
   --text:#20302a; --muted:#6b7c73; --accent:#326e51; --accent-hover:#295b42; --accent-text:#ffffff;
   --hover:#e8f4ec; --shadow:0 1px 2px rgba(20,50,36,.05),0 8px 24px rgba(20,50,36,.09); --skeleton:#e7efe9; --skeleton-hi:#f3f8f5;
   --good:#326e51; --info:#2f7d63; --warn:#c98a1e; --bad:#c0392b; --overlay:rgba(20,40,30,.5);
+}
+/* 12/10 theme "Ant Design" (mặc định, giống Audit Hasaki) — khuôn ở giaodien-antd.js ăn theo MỌI theme */
+[data-theme="antd"]{
+  --bg:#f5f5f5; --surface:#ffffff; --surface2:#fafafa; --border:#d9d9d9;
+  --text:rgba(0,0,0,.88); --muted:rgba(0,0,0,.45); --accent:#1677ff; --accent-hover:#4096ff; --accent-text:#ffffff;
+  --hover:#fafafa; --shadow:none; --skeleton:#f0f0f0; --skeleton-hi:#fafafa;
+  --good:#52c41a; --info:#1677ff; --warn:#faad14; --bad:#ff4d4f; --overlay:rgba(0,0,0,.45);
+  --brand:#1677ff; --brand-on:#ffffff;
 }
 /* Màu thương hiệu tiêu đề — tương phản tốt trên MỌI theme (bê nguyên kiemsoatkho) */
 :root,[data-theme="tokyo"],[data-theme="dracula"],[data-theme="nord"],[data-theme="mocha"]{--brand:#5fcf95; --brand-on:#0e1116;}
@@ -1148,6 +1156,8 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
 .abnlegend{display:inline-flex;flex-wrap:wrap;gap:3px 10px;font-weight:400;font-size:10.5px;color:var(--ink2)}
 .abnlegend span{display:inline-flex;align-items:center;gap:5px}
 .abnlegend i{width:9px;height:9px;border-radius:3px;display:inline-block;flex:none}
+/* 12/10 luật 13 (chú giải ≥4 mục không bung hàng tĩnh): điện thoại → 1 hàng vuốt ngang, không đẩy biểu đồ xuống */
+@media(max-width:768px){.abnlegend{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;max-width:100%;white-space:nowrap;padding-bottom:2px}.abnlegend::-webkit-scrollbar{display:none}.abnlegend span{flex:none}}
 .abnchart{display:flex;flex-direction:column;gap:1px;max-height:330px;overflow-y:auto;padding-right:6px}
 .abnrow{display:grid;grid-template-columns:210px 1fr 92px;align-items:center;gap:10px;padding:5px 6px;border-radius:8px;cursor:pointer;transition:background .16s var(--ease)}
 .abnrow:hover{background:var(--hover)}
@@ -3110,6 +3120,10 @@ body.side-anim{overflow-x:clip}
 .pg-whtab.pg-z0{opacity:.45}
 .pg-whtab.pg-z0:hover{opacity:.8}
 </style>
+<!-- 12/10 giao diện Ant Design (thanh bên · đầu trang · đường dẫn "Nhóm / Mục"), CHUNG với Audit Hasaki: bản chép
+     giaodien-antd.js (nguồn ở kiemsoatkho/hasaki-giaodien-antd.js). Nạp đồng bộ ở head để khung hình đầu đã đúng kiểu. -->
+<script>window.AD_TEN='Audit Factory'; window.AD_LOGO='hasaki-logo.png';</script>
+<script src="giaodien-antd.js?v=20261012c"></script>
 </head>
 <body>
 <aside id="sideNav" aria-label="Điều hướng hạng mục"></aside>
@@ -5238,7 +5252,7 @@ var TITLES={
   '8':'<span class="tt-wrap tt8">'+STAR+'<b>AUDIT FACTORY</b><i>Kiểm soát kho</i></span>'
 };
 /* Danh mục hiển thị cho 2 combo Cài đặt (C4 — thay <select> trần) */
-var THEME_TEN={hasaki:'Hasaki',solar:'Solarized Light',tokyo:'Tokyo Night',dracula:'Dracula',nord:'Nord',mocha:'Catppuccin Mocha',latte:'Catppuccin Latte'};
+var THEME_TEN={antd:'Ant Design',hasaki:'Hasaki',solar:'Solarized Light',tokyo:'Tokyo Night',dracula:'Dracula',nord:'Nord',mocha:'Catppuccin Mocha',latte:'Catppuccin Latte'};
 var HSTYLE_TEN={'1':'1 · Xếp chồng','2':'2 · Viên nhãn','3':'3 · Một hàng · vạch dọc','4':'4 · Hai độ đậm','5':'5 · Gạch chân accent','6':'6 · Ô monogram sao đỏ','7':'7 · Chữ viền','8':'8 · Sao đỏ nội tuyến'};
 function setComboBuild(id,items,cur,onPick){
   var combo=document.getElementById(id); if(!combo) return;
@@ -5261,10 +5275,13 @@ function setTitle(t){
 setTitle((function(){ try{ return localStorage.getItem('slf-hstyle')||'1'; }catch(e){ return '1'; } })());
 
 /* ===== 7 theme (palette đầy đủ) + popup Cài đặt — luồng chọn theme y hệt kiemsoatkho ===== */
-var THEME_IDS=['hasaki','solar','tokyo','dracula','nord','mocha','latte'];
-function curTheme(){ try{ return localStorage.getItem('slf-theme')||'hasaki'; }catch(e){ return 'hasaki'; } }
+var THEME_IDS=['antd','hasaki','solar','tokyo','dracula','nord','mocha','latte'];
+/* 12/10 theme mặc định = Ant Design (như Audit Hasaki). Máy đang "hasaki" (mặc định cũ) chuyển 1 lần (cờ slf-theme-antd); ai tự chọn khác thì giữ. */
+function curTheme(){ try{ var t=localStorage.getItem('slf-theme')||'antd';
+  if(t==='hasaki' && !localStorage.getItem('slf-theme-antd')) t='antd';
+  localStorage.setItem('slf-theme-antd','1'); return t; }catch(e){ return 'antd'; } }
 function setTheme(t){
-  if(THEME_IDS.indexOf(t)<0) t='hasaki';
+  if(THEME_IDS.indexOf(t)<0) t='antd';
   document.documentElement.setAttribute('data-theme',t);   // palette CSS đổi toàn trang theo attribute này
   try{ localStorage.setItem('slf-theme',t); }catch(e){}
   setComboBuild('themeCombo',THEME_TEN,t,setTheme);
@@ -17390,13 +17407,23 @@ async function tmvIn(){
   if(typeof HOME_MUC!=='undefined'&&HOME_MUC.length){
     HM=HOME_MUC.map(function(g){ return { g:g.g, items:g.items.map(function(x){ return [x.t,x.ten]; }) }; });
   }
-  HM=[{ g:'Audit Factory', items:[['home','Tổng quan']] }].concat(HM);
+  HM=[{ g:'', items:[['home','Tổng quan']] }].concat(HM);   // 12/10 đứng riêng không tiêu đề (logo đầu thanh bên đã là tên dự án)
   var nav=document.getElementById('sideNav'), tg=document.getElementById('sideToggle'), bd=document.getElementById('sideBackdrop');
-  function sync(){ nav.querySelectorAll('.s-item').forEach(function(el){ el.classList.toggle('on', el.getAttribute('data-tab')===TOPTAB); }); }
+  function sync(){ nav.querySelectorAll('.s-item').forEach(function(el){ el.classList.toggle('on', el.getAttribute('data-tab')===TOPTAB); }); soThanhBen(); }
+  /* 12/10 user: thanh bên "mục con có số" (như Audit Hasaki) — số = đúng số trên thẻ Tổng quan (HOME_MUC.so, chỉ đọc bộ nhớ, không tải);
+     tab công cụ không có số. Làm tươi khi đổi tab + nhịp 4 s (chỉ đọc biến trong bộ nhớ, không gọi mạng). */
+  function soThanhBen(){
+    if(typeof HOME_MUC==='undefined') return;
+    HOME_MUC.forEach(function(g){ g.items.forEach(function(it){
+      var el=nav.querySelector('.s-item[data-tab="'+it.t+'"] .sn'); if(!el) return;
+      var s=null; try{ s=it.so?it.so():null; }catch(e){}
+      el.textContent=s?s.k:''; el.title=s?s.l:''; }); });
+  }
+  setInterval(soThanhBen,4000);
   function build(){
     nav.innerHTML=HM.map(function(grp){
-      return '<div class="s-grp">'+grp.g+'</div><div class="s-sub">'+
-        grp.items.map(function(x){ return '<div class="s-item" data-tab="'+x[0]+'"><span class="di"></span>'+x[1]+'</div>'; }).join('')+
+      return (grp.g?'<div class="s-grp">'+grp.g+'</div>':'')+'<div class="s-sub'+(grp.g?'':' s-mot s-dau')+'">'+
+        grp.items.map(function(x){ return '<div class="s-item" data-tab="'+x[0]+'"><span class="di"></span>'+x[1]+'<span class="sn"></span></div>'; }).join('')+
         '</div>';
     }).join('');
     /* Chọn tab KHÔNG tự đóng thanh bên — nó ghim tới khi bấm nút hoặc nền mờ (mobile) */
