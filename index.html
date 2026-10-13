@@ -2,8 +2,10 @@
 <html lang="vi" data-theme="antd">
 <head>
 <meta charset="utf-8">
+<script>/* 13/10 link theo tab (t4): mở thẳng link sâu /retail/tonkho/batthuong → mọi tệp tương đối phải tính từ GỐC app, không từ /tonkho/ */
+(function(){var m=/^\/(retail|kiemsoatkho|factory|stocklocationfactory)\//.exec(location.pathname);if(m)document.write('<base href="/'+m[1]+'/">');})();</script>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FACTORY</title>
+<title>Audit Factory</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23e02020' d='M12 1.7l3 6.4 7 .9-5.2 4.8 1.4 7-6.2-3.5-6.2 3.5 1.4-7L2 9l7-.9z'/%3E%3C/svg%3E">
 <style>
 /* ===== 7 PALETTE THEME — BÊ NGUYÊN 100% TỪ kiemsoatkho (Audit Hasaki) ===== */
@@ -467,6 +469,37 @@ body.an-chan .footbar{display:none}
 .kkfbar .fclr:hover{border-color:var(--brand2);background:var(--hover)}
 /* Hàng điều khiển 1 DÒNG đầu tab Kiểm kê: chip kho (bên trái) + cụm nút Bộ lọc & Kế hoạch (cố định bên phải) */
 .kkonebar{display:flex;flex-direction:column;gap:8px}
+/* 13/10 HÀNG TRÊN Kiểm kê: [Bộ lọc 280px] [Tra cứu SL đếm] — thẻ Bộ lọc xếp dọc như Planogram Retail, ô cao 32 */
+.kktop{display:grid;grid-template-columns:280px minmax(0,1fr);gap:12px;margin-bottom:12px;align-items:start}
+.kktop>.panel{margin:0}
+/* 13/10 user quay video «lỗi rồi»: lịch Ngày kiểm + menu Request/Type bị thẻ «Kiểm kê theo SKU» che — thẻ có will-change (lớp vẽ riêng) nên thẻ sau đè lên. Hàng trên phải nổi cao hơn */
+.kktop{position:relative;z-index:30}
+#kkOneBar.kkloc{position:relative;z-index:2}   /* điện thoại: thẻ Tra cứu xếp ngay dưới, cũng phải nằm dưới menu */
+#kkOneBar.kkloc{display:flex;flex-direction:column;align-items:stretch;gap:8px;flex-wrap:nowrap;margin:0}
+#kkOneBar.kkloc>h2{margin:0 0 4px}
+#kkOneBar.kkloc #kkWhBar{display:block}
+#kkOneBar.kkloc .kkwhsel{width:100%;max-width:none;height:32px}
+#kkOneBar.kkloc #kkFilters:not([hidden]){display:flex;flex-direction:column;align-items:stretch;gap:8px;margin:0;padding:0}
+#kkOneBar.kkloc .kkfbar .fld,#kkOneBar.kkloc .kkfbar .fld.dt{flex:none;min-width:0;width:100%}
+#kkOneBar.kkloc .kkfbar .fld>label{display:none}
+#kkOneBar.kkloc .kkfbar .fld.bare{align-self:flex-start}
+#kkOneBar.kkloc #kkFilters{border:0!important;background:none!important;box-shadow:none!important}
+#kkOneBar.kkloc .kkfbar .fld{padding:0!important;border:0!important;background:none!important;box-shadow:none!important;height:auto}
+#kkOneBar.kkloc .kkfbar .fld .combo{width:100%}
+#kkOneBar.kkloc .kkfbar .fld .combo{flex:1 1 auto;min-width:0;max-width:none!important}
+#kkOneBar.kkloc .kkfbar .fld .combo input{width:100%!important;max-width:none!important;height:32px;box-sizing:border-box;border-radius:6px;font-size:14px}
+#kkOneBar.kkloc .kkfbar .date-btn,#kkOneBar.kkloc .kkwhsel{font-size:14px}
+#kkOneBar.kkloc .kkfbar .date-btn{height:32px;box-sizing:border-box;padding:0 11px;border:1px solid var(--border);border-radius:6px;background:var(--surface);display:flex;align-items:center;justify-content:space-between;gap:8px}
+#kkOneBar.kkloc .kkwhsel{display:block!important;min-height:32px;border-radius:6px}
+#kkOneBar.kkloc #kkWhBar{display:block!important;overflow:visible;flex:none}
+#kkOneBar.kkloc .fclr[hidden],#kkOneBar.kkloc .fld.bare:has(button[hidden]){display:none!important}
+@media(max-width:768px){.kktop{grid-template-columns:1fr}
+  /* QC điện thoại (luật răng cưa): 5 ô xếp dọc mỗi ô 1 hàng chiếm 32% màn → lưới 2 cột [Kho][Ngày] [Request][Type SKU] [Type vị trí] */
+  #kkOneBar.kkloc{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  #kkOneBar.kkloc>h2{grid-column:1/-1}
+  #kkOneBar.kkloc #kkFilters:not([hidden]){display:contents!important}
+  #kkOneBar.kkloc .kkfbar .fld.bare{grid-column:1/-1}
+  .kktop>.qtcpanel{order:-1}   /* tra SL đếm: kết quả ngay dưới ô gõ, không bị thẻ Bộ lọc đẩy xuống nửa màn (luật rác đầu màn) */}
 .kkbar-top{display:flex;align-items:center;gap:8px;width:100%;min-width:0}
 #kkWhBar{display:flex;align-items:center;gap:6px;flex:1 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 #kkWhBar::-webkit-scrollbar{display:none}
@@ -477,6 +510,8 @@ body.an-chan .footbar{display:none}
   font-size:10px;font-weight:750;background:var(--accent);color:var(--accent-text);line-height:1.6}
 .kkfltbtn .n:empty{display:none}
 .kkplan .ps{display:none}
+.an-hdr{display:none !important}
+#hdrKkPlan{margin-right:8px;white-space:nowrap}
 @media(max-width:1420px){.kkplan .pt{display:none}.kkplan .ps{display:inline}}   /* màn hẹp: nút rút gọn còn chữ "Kế hoạch" (tooltip giữ đủ chữ) */
 /* Bộ lọc cấp tab khi mở: trượt xuống hàng bên dưới, không làm nhảy vị trí các nút ở trên */
 #kkFilters:not([hidden]){display:flex;flex-wrap:wrap;align-items:center;gap:8px;width:100%;padding-top:4px;border-top:1px dashed var(--line)}
@@ -1150,7 +1185,7 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
 .abntile .l{font-size:11px;color:var(--ink);margin-top:4px;font-weight:650;line-height:1.2}
 .abntile .s{font-size:10px;color:var(--ink3);margin-top:1px}
 /* 2 chart cạnh nhau: theo kho (rộng) | theo loại (hẹp); dồn dọc dưới 1024px */
-.grid2.abn2{grid-template-columns:1.55fr 1fr}
+.grid2.abn2{grid-template-columns:1fr 1fr}
 .grid2.abn2 .panel{padding:14px 16px}
 @media(max-width:1024px){.grid2.abn2{grid-template-columns:1fr}}
 .abnlegend{display:inline-flex;flex-wrap:wrap;gap:3px 10px;font-weight:400;font-size:10.5px;color:var(--ink2)}
@@ -1160,12 +1195,20 @@ footer{margin-top:20px;color:var(--ink3);font-size:11.5px;text-align:center;line
 @media(max-width:768px){.abnlegend{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;max-width:100%;white-space:nowrap;padding-bottom:2px}.abnlegend::-webkit-scrollbar{display:none}.abnlegend span{flex:none}}
 .abnchart{display:flex;flex-direction:column;gap:1px;max-height:330px;overflow-y:auto;padding-right:6px}
 .abnrow{display:grid;grid-template-columns:210px 1fr 92px;align-items:center;gap:10px;padding:5px 6px;border-radius:8px;cursor:pointer;transition:background .16s var(--ease)}
+/* 13/10 user «tên kho 1 hàng, không xuống dòng; thanh dài quá thì ngắn lại, giữ đúng tỷ lệ» + chấm theo skill thiết kế:
+   cột tên = vừa tên DÀI NHẤT (subgrid → mọi thanh cùng điểm đầu, cùng thước), thanh mảnh 8px bo tròn như Progress antd,
+   bỏ chấm màu trước tên (màu kho ≠ màu loại trên thanh → 2 nghĩa màu trong 1 hàng) */
+@media(min-width:641px){
+  .abnchart{display:grid;grid-template-columns:max-content minmax(0,1fr) max-content;align-content:start;gap:2px 0}
+  .abnrow{grid-column:1/-1;grid-template-columns:subgrid;column-gap:16px}
+  .abnrl{white-space:nowrap!important}
+}
 .abnrow:hover{background:var(--hover)}
 /* Tên kho hiển thị ĐẦY ĐỦ (xuống dòng nếu dài) — thanh bar tự co lại nhường chỗ */
 .abnrl{font-size:11.5px;font-weight:600;color:var(--ink);white-space:normal;word-break:break-word;line-height:1.3;display:flex;align-items:center;gap:7px}
-.abnrl .dot{flex:none}
-.abntrack{background:var(--surface2);border-radius:6px;height:16px;overflow:hidden}
-.abnfill{height:100%;display:flex;width:0;border-radius:6px;overflow:hidden;transition:width .85s var(--ease)}
+.abnrl .dot{display:none}
+.abntrack{background:var(--ad-ray,var(--surface2));border-radius:100px;height:8px;overflow:hidden}
+.abnfill{height:100%;display:flex;width:0;min-width:3px;border-radius:100px;overflow:hidden;transition:width .85s var(--ease)}
 .abnfill i{display:block;height:100%;min-width:1px}
 .abnrv{text-align:right;font-variant-numeric:tabular-nums;font-size:12px;line-height:1.15}
 .abnrv b{font-size:13px;color:var(--ink)} .abnrv small{display:block;color:var(--ink3);font-size:10px;font-weight:500}
@@ -1805,6 +1848,49 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
    (trần chiều cao không còn là ràng buộc sau khi cắt khổ), nên mỗi px lấy lại đều thành ô to hơn.
    344px vẫn đủ cho thẻ chỉ số xếp dọc — nhãn dài nhất "Chưa khai báo lịch" không vỡ dòng. */
 .pg-main{display:grid;grid-template-columns:minmax(0,1fr) 344px;gap:12px;align-items:start}
+/* 13/10 khuôn Planogram Audit Hasaki: [Bộ lọc] [Tiến độ] [Cần xử lý] · sơ đồ trải hết bề ngang */
+.pg-main:has(#plgSide[hidden]){grid-template-columns:minmax(0,1fr)}
+#plgTop.pg-top3{display:grid!important;grid-template-columns:minmax(190px,230px) minmax(0,1.15fr) minmax(0,1fr);gap:12px;align-items:stretch;margin:0 0 12px;padding:0;background:none;border:0;box-shadow:none;flex-wrap:nowrap}
+#plgTop > .panel{margin:0;padding:16px;border-radius:8px;display:flex;flex-direction:column;min-width:0}
+#plgTop > .panel > h2{margin:0 0 12px;font-size:16px;font-weight:600;line-height:24px}
+.pg-ngayloc{position:relative;width:100%}
+.pg-ngaybtn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:32px;padding:4px 11px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font:inherit;font-size:14px;cursor:pointer;text-align:left}
+.pg-ngaybtn:hover{border-color:var(--accent)}
+.pg-ngaybtn .cr{color:var(--muted);font-size:12px}
+.pg-tdo2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:stretch;flex:1}
+.pg-tdotrai{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center}
+.pg-ring{width:120px;height:120px;border-radius:50%;flex:none;display:grid;place-items:center;position:relative}
+.pg-ring::after{content:'';position:absolute;inset:11px;border-radius:50%;background:var(--surface,#fff)}
+.pg-ring span{position:relative;z-index:1;line-height:1.1}
+.pg-ring b{display:block;font-size:24px;font-weight:600;font-variant-numeric:tabular-nums}
+.pg-ring small{font-size:12px;color:var(--muted)}
+.pg-progt{appearance:none;border:0;background:none;padding:4px 6px;font:inherit;color:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;border-radius:6px}
+.pg-progt b{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums}
+.pg-progt span{font-size:12px;color:var(--muted)}
+.pg-progt:hover,.pg-ttile:hover,.pg-tdrow:hover{background:color-mix(in srgb,var(--accent) 6%,transparent)}
+.pg-ttiles{display:flex;flex-direction:column;gap:8px}
+.pg-ttile{appearance:none;flex:1;display:flex;align-items:baseline;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);font:inherit;color:inherit;text-align:left;cursor:pointer;min-height:40px}
+.pg-ttile b{font-size:20px;font-weight:600;color:var(--cc);font-variant-numeric:tabular-nums;min-width:36px}
+.pg-ttile span{font-size:13px;color:var(--text)}
+.pg-tdlist{display:flex;flex-direction:column}
+.pg-tdrow{appearance:none;border:0;border-top:1px solid var(--border);background:none;margin:0;font:inherit;color:inherit;text-align:left;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:7px 4px;min-height:48px;width:100%;cursor:pointer}
+.pg-tdlist > .pg-tdrow:first-child{border-top:0}
+.pg-tdrow .n{min-width:40px;height:32px;padding:0 6px;box-sizing:border-box;border-radius:4px;display:grid;place-items:center;font-weight:600;font-size:15px;font-variant-numeric:tabular-nums}
+.pg-tdrow.bad .n{background:color-mix(in srgb,var(--bad,#dc2626) 12%,transparent);color:var(--bad,#dc2626)}
+.pg-tdrow.warn .n{background:color-mix(in srgb,#d97706 15%,transparent);color:#b45309}
+.pg-tdrow .t{min-width:0}
+.pg-tdrow .t b{display:block;font-size:14px;font-weight:600;line-height:20px}
+.pg-tdrow .t small{display:block;font-size:12px;color:var(--muted);line-height:18px}
+.pg-tdrow .go{font-size:12px;font-weight:600;color:var(--accent);white-space:nowrap}
+.pg-tdok{display:flex;align-items:center;gap:8px;padding:10px 4px;font-size:14px;font-weight:600;color:var(--good,#059669)}
+@media(max-width:1100px){#plgTop.pg-top3{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}#plgTop > .pg-loc{grid-column:1 / -1}}
+/* chú giải sơ đồ: 1 hàng chip phía trên bản vẽ (như hàng chú giải Planogram Hasaki), không đè lên bản vẽ; không in hoa */
+#viewPlg .pg-wrap{display:flex;flex-direction:column}
+#viewPlg .pg-legbox{position:static!important;flex-direction:row!important;flex-wrap:wrap;align-items:center;gap:6px 12px!important;width:auto!important;max-width:100%;margin:0 0 12px!important;padding:8px 12px!important;border-radius:8px!important;backdrop-filter:none!important;box-shadow:none!important}
+#viewPlg .pg-legbox .lb-t{margin:0!important;text-transform:none!important;letter-spacing:0!important;font-size:12px;font-weight:400;color:var(--muted)}
+#viewPlg .pg-legbox .lb-t + *{margin-left:-4px}
+#viewPlg .pg-maphdr{text-transform:none!important;letter-spacing:0!important;font-weight:600!important}
+@media(max-width:768px){#plgTop.pg-top3{grid-template-columns:minmax(0,1fr)}.pg-ring{width:104px;height:104px}}
 .pg-main > div{min-width:0;display:flex;flex-direction:column}
 .pg-main > div > .panel{flex:1;box-sizing:border-box;margin-bottom:0}
 #plgSide > .panel{display:flex;flex-direction:column}
@@ -3122,8 +3208,8 @@ body.side-anim{overflow-x:clip}
 </style>
 <!-- 12/10 giao diện Ant Design (thanh bên · đầu trang · đường dẫn "Nhóm / Mục"), CHUNG với Audit Hasaki: bản chép
      giaodien-antd.js (nguồn ở kiemsoatkho/hasaki-giaodien-antd.js). Nạp đồng bộ ở head để khung hình đầu đã đúng kiểu. -->
-<script>window.AD_TEN='Audit Factory'; window.AD_LOGO='hasaki-logo.png';</script>
-<script src="giaodien-antd.js?v=20261012d"></script>
+<script>window.AD_TEN='Audit Factory'; window.AD_LOGO='factory-logo.png'; window.AD_TEN_MAU='#000'; window.AD_CHUYEN={ten:'Audit Retail', app:'retail'};</script>   <!-- 13/10 user: logo Mastige (chỉ hình tròn chữ M) + chữ màu logo -->
+<script src="giaodien-antd.js?v=20261013tq2"></script>
 </head>
 <body>
 <aside id="sideNav" aria-label="Điều hướng hạng mục"></aside>
@@ -3136,6 +3222,7 @@ body.side-anim{overflow-x:clip}
 <div class="wrap">
 <header class="hdr">
   <div class="hgrow"><h1 class="brand-title" id="brandTitle"></h1></div>
+  <button class="kktab kkplan an-hdr" id="hdrKkPlan" onclick="plOpen()" title="Lệnh kiểm kê tạo từ dashboard nằm ở 'sổ kế hoạch' WMS trước khi thành phiếu — Pending = chờ push · Processing = đã push · đọc trực tiếp từ WMS"><span class="pt">Kế hoạch chờ push (WMS)</span><span class="ps">Kế hoạch</span></button>
   <div class="settings" id="settingsWrap">
     <button id="btnSettings" title="Cài đặt hiển thị &amp; dữ liệu" aria-label="Mở cài đặt"><span class="bars"></span></button>
     <div class="settings-pop hidden" id="settingsPop">
@@ -3178,25 +3265,19 @@ body.side-anim{overflow-x:clip}
 
 <!-- ===== TAB 2: Kiểm kê — 2 khối song song: theo SKU & theo mã vị trí ===== -->
 <div id="viewKK" hidden>
-  <!-- HÀNG ĐIỀU KHIỂN 1 DÒNG: chip lọc KHO + bộ lọc trường (Ngày/Request/Type) THU GỌN sau nút
-       "Bộ lọc" (yêu cầu user 25/08/2026 — mặc định ẩn, số trên nút = số bộ lọc đang bật, bộ lọc
-       đang chọn vẫn ÁP DỤNG khi thu); nút Kế hoạch GIỮ NGUYÊN không làm gọn. -->
-  <div class="kkbar kkonebar" id="kkOneBar" style="margin-bottom:12px">
-    <div class="kkbar-top">
+  <!-- 13/10 user «sao có bộ lọc ở đây, gom bộ lọc 1 bên như tab Planogram của Audit Retail»: HÀNG TRÊN = [Bộ lọc] [Tra cứu SL đếm].
+       Thẻ Bộ lọc xếp dọc: Kho (xổ xuống) · Ngày kiểm · Request · Type SKU · Type vị trí — luôn hiện (bỏ nút thu/xổ «Bộ lọc»). -->
+  <div class="kktop" id="kkTop">
+    <section class="panel kkloc kkbar" id="kkOneBar">
+      <h2>Bộ lọc</h2>
       <span id="kkWhBar"></span>
-      <div class="kkbar-actions">
-        <button class="kktab kkfltbtn" id="kkFltBtn" onclick="kkLocThu()" title="Thu/xổ bộ lọc của tab: ngày kiểm · request · type — bộ lọc đang chọn vẫn áp dụng khi thu gọn, số trên nút là số bộ lọc đang bật">Bộ lọc <span class="n" id="kkFltBtnN"></span><span id="kkFltBtnCh">▾</span></button>
-        <button class="kktab kkplan" onclick="plOpen()" title="Lệnh kiểm kê tạo từ dashboard nằm ở 'sổ kế hoạch' WMS trước khi thành phiếu — Pending = chờ push · Processing = đã push · đọc trực tiếp từ WMS"><span class="pt">Kế hoạch chờ push (WMS)</span><span class="ps">Kế hoạch</span></button>
-      </div>
-    </div>
-    <span class="mfilters kkmf kkfbar" id="kkFilters" hidden></span>
-  </div>
-  <div class="grid2 even">
+      <span class="mfilters kkmf kkfbar" id="kkFilters" hidden></span>
+    </section>
     <!-- ===== TRA CỨU SL ĐẾM THEO SKU (25/08/2026) — tra lại "Quantity count" của Physical Count
          Detail: gõ SKU hoặc bấm icon trong ô để quét mã vạch/QR bằng camera. Nguồn: tab Sheet
          kiemke-qtycount (push-pc-to-sheet ghi mọi dòng tracking của phiếu Full location - Factory);
          tra bằng gviz tq where theo SKU nên KHÔNG tải cả tab về điện thoại. -->
-    <section class="panel span2 qtcpanel">
+    <section class="panel qtcpanel">
       <h2>Tra cứu SL đếm theo SKU<span class="h2tip-slot" data-tip-key="qtc"></span> <span class="hint">(Quantity count · phiếu Full location - Factory)</span></h2>
       <div class="qtcrow">
         <div class="qtcbox">
@@ -3207,6 +3288,8 @@ body.side-anim{overflow-x:clip}
       </div>
       <div id="qtcKq"></div>
     </section>
+  </div>
+  <div class="grid2 even">
     <section class="panel">
       <h2>Kiểm kê theo SKU<span class="h2tip-slot" data-tip-key="kk"></span> <span class="hint">(Type: SKU · SKU Factory)</span> <span class="kkscope" id="kkScope-sku" hidden></span></h2>
       <div class="kkstrip" id="kkStrip-sku"></div>
@@ -3228,8 +3311,7 @@ body.side-anim{overflow-x:clip}
 <!-- ===== TAB 3: Tồn kho bất thường (báo cáo stock-inventory-beta · Product Type = Normal) ===== -->
 <div id="viewAbn" hidden>
   <!-- Cross-filter KHO: chip kho lọc toàn bộ thẻ chỉ số + chart + pop-up -->
-  <div class="kkbar" style="margin-bottom:6px"><span class="hint" style="flex:1"></span><button class="kktab kkplan" onclick="plOpen()" title="Lệnh kiểm kê tạo từ dashboard nằm ở 'sổ kế hoạch' WMS trước khi thành phiếu — Pending = chờ push · Processing = đã push · đọc trực tiếp từ WMS"><span class="pt">Kế hoạch chờ push (WMS)</span><span class="ps">Kế hoạch</span></button></div>
-  <div class="kkbar" id="abnWhBar" style="margin-bottom:12px"></div>
+  <div class="kkbar" id="abnWhBar" style="display:none"></div>   <!-- 13/10: dải lọc Công ty/Kho đã bỏ — giữ phần tử vì abnRender/tvt còn tham chiếu -->
   <div id="abnContent"></div>
   <div id="abnState" class="state"><div class="spin"></div>Đang tải dữ liệu tồn kho bất thường…</div>
   <!-- Mục "Tồn tại vị trí": UID nguyên liệu chưa khai báo UID group mà đã rời bãi chờ F0-A0.
@@ -3245,7 +3327,7 @@ body.side-anim{overflow-x:clip}
   <!-- Bố cục Y HỆT tab Planogram của Audit Hasaki: thanh chips → 2 cột (sơ đồ | chỉ số) →
        panel danh sách. Khác duy nhất là RUỘT cột trái: bên Hasaki là lưới quầy kệ A1/A8,
        bên này là bản vẽ mặt bằng kho nguyên liệu (SVG dựng từ MTG_zigzag). -->
-  <div class="pg-whbar" id="plgTop"></div>
+  <div class="pg-top3" id="plgTop"></div>
   <div class="pg-main">
     <div id="plgMap"></div>
     <div id="plgSide"></div>
@@ -5339,7 +5421,7 @@ var HOME_MUC=[
      thứ tự trong HOME_MUC (và do đó ở thanh bên) giữ nguyên để khỏi đổi thói tay của người đang dùng. */
   { g:'Công cụ kho', uuTien:true, mo:'Dùng ngay tại chỗ, không cần dữ liệu nền', items:[
     { t:'sku', ten:'Nhận diện SKU', cc:'var(--warn)', nhan:'Công cụ',
-      mo:'Chụp tem nhà cung cấp → máy bóc từ khoá → gợi ý SKU nội bộ khớp nhất; bấm thẻ là copy mã SKU.',
+      mo:'Chụp tem nhà cung cấp → máy bóc từ khoá → gợi ý SKU nội bộ khớp nhất.',
       /* Chip 2 thẻ Công cụ kho RÚT CHỮ CHO CÂN NHAU (user 22/08/2026: "chip hiển thị 2 mục này
          chưa cân bằng") — mỗi thẻ 4 chip ngắn tương đương, không chip nào dài gấp đôi chip kia. */
       muc:['Chụp ảnh tem','Gợi ý SKU','Từ khoá','Sổ tay tem'] },
@@ -5357,30 +5439,29 @@ var HOME_MUC=[
   ]}
 ];
 function homeMucList(it){ return typeof it.muc==='function'?it.muc():(it.muc||[]); }
+/* 13/10 user chọn PHƯƠNG ÁN B cho Tổng quan (cả 2 dự án): hàng chỉ số + thẻ chức năng — khuôn chung window.tqVe ở giaodien-antd.js.
+   Kiểm kê nặng (1,5 MB) nên Tổng quan KHÔNG tự tải: kkRenderPanel ghi số qua tqGhi khi vẽ xong (≤12 giờ trên máy này). */
 function homeRender(){
-  var el=document.getElementById('viewHome'); if(!el) return;
-  /* Đoạn "Chọn hạng mục cần làm…" ĐÃ BỎ HẲN, không chuyển đi đâu: bảng chọn tự nói lên nó là bảng
-     chọn, một dòng dạy cách bấm nằm chắn trước nó là đúng thứ cần bỏ. */
-  var html='<section class="panel"><div class="hm-grid">';
-  /* Nhóm có `uuTien` vẽ TRƯỚC (sort ổn định nên các nhóm còn lại giữ nguyên thứ tự khai báo). */
-  HOME_MUC.slice().sort(function(a,b){ return (b.uuTien?1:0)-(a.uuTien?1:0); }).forEach(function(grp){
-    html+='<div class="hm-h">'+esc(grp.g)+(grp.mo?' <span class="hint">'+esc(grp.mo)+'</span>':'')+'</div>';
-    grp.items.forEach(function(it){
-      var s=null; try{ s=it.so?it.so():null; }catch(e){ s=null; }   // số liệu chỉ là điểm cộng — hỏng thì thẻ vẫn phải hiện
-      var so=s?('<span class="k">'+s.k+'<small>'+esc(s.l)+'</small></span>')
-             :(it.nhan?('<span class="k nhan">'+esc(it.nhan)+'</span>')
-                      :'<span class="k trong">—<small>mở để xem</small></span>');
-      html+='<button type="button" class="hm-card" style="--cc:'+it.cc+'" data-tab="'+it.t+'" '+
-        'onclick="showTab(this.getAttribute(\'data-tab\'))" title="Mở '+esc(it.ten)+'">'+
-        '<span class="hm-t">'+esc(it.ten)+so+'</span>'+
-        '<span class="hm-d">'+esc(it.mo)+'</span>'+
-        '<span class="hm-c">'+homeMucList(it).map(function(m){ return '<span class="pg-chip">'+m+'</span>'; }).join('')+'</span>'+
-      '</button>';
-    });
-  });
-  html+='</div></section>';
-  el.innerHTML=html;
+  var el=document.getElementById('viewHome'); if(!el||typeof window.tqVe!=='function') return;
+  var so=function(it){ try{ return it.so?it.so():null; }catch(e){ return null; } };
+  var ks=window.tqDoc&&tqDoc('kk-sku'), kl=window.tqDoc&&tqDoc('kk-loc'), p1=function(a,b){ return b?(a/b*100).toFixed(1).replace(/\.0$/,''):'0'; };
+  var gT=_gSh+_gPe;
+  var chiSo=[
+    gT&&{ nhan:'SKU chờ lên kệ', so:nf(_gPe), tien:_gSh/gT*100, mau:'var(--warn)', phu:'đã lên kệ '+p1(_gSh,gT)+'% ('+nf(_gSh)+')' },
+    ks&&ks.tong&&{ nhan:'Kiểm kê theo SKU', so:p1(ks.dem,ks.tong)+'%', tien:ks.dem/ks.tong*100, mau:'var(--accent)', phu:nf(ks.dem)+' / '+nf(ks.tong)+(ks.eta?' · xong ≈ '+ks.eta:'') },
+    kl&&kl.tong&&{ nhan:'Kiểm kê theo vị trí', so:p1(kl.dem,kl.tong)+'%', tien:kl.dem/kl.tong*100, mau:'var(--accent)', phu:nf(kl.dem)+' / '+nf(kl.tong)+(kl.eta?' · xong ≈ '+kl.eta:'') },
+    ABN.ok&&{ nhan:'SKU tồn bất thường', so:nf(ABN.agg?ABN.nTong:ABN.rows.length), mau:'var(--bad)', phu:'Product Type = Normal' }
+  ];
+  var MAU={ stock:'var(--warn)', abn:'var(--bad)' };
+  var nhom=HOME_MUC.map(function(g){ return { ten:g.g, muc:g.items.map(function(it){
+    var s=so(it), m={ k:it.t, ten:it.ten, mo:it.mo, mauSo:MAU[it.t] };
+    if(it.t==='kk'&&ks&&ks.tong){ m.so=p1(ks.dem,ks.tong)+'%'; m.dv='SKU đã kiểm'; m.tien=ks.dem/ks.tong*100; }
+    else if(s){ m.so=s.k; m.dv=s.l; }
+    m.bam=function(){ showTab(it.t); };
+    return m; }) }; });
+  tqVe(el,{ chiSo:chiSo, nhom:nhom });
 }
+document.addEventListener('tq-so',function(){ if(typeof TOPTAB!=='undefined'&&TOPTAB==='home') homeRender(); });
 /* Nạp NHẸ cho trang Tổng quan: CHỈ 2 nguồn đã đo là nhỏ — tab tổng bất thường (2,5 KB) và
    tab ton-vitri (vài trăm dòng). KHÔNG đụng tab thô 21 MB, KHÔNG đụng kiểm kê/planogram: chúng
    nặng và chỉ cần khi thật sự mở tab. Đổi lại, mở tab Tồn kho bất thường sau đó là hiện ngay. */
@@ -5472,6 +5553,7 @@ function showTab(t){
   v.classList.remove('vfade'); void v.offsetWidth; v.classList.add('vfade');
   document.getElementById('ttStock').classList.toggle('active',t==='stock');
   document.getElementById('ttKK').classList.toggle('active',t==='kk');
+  var _kp=document.getElementById('hdrKkPlan'); if(_kp) _kp.classList.toggle('an-hdr', !(t==='kk'||t==='abn'));   // 13/10: nút Kế hoạch ở đầu trang chỉ ở Kiểm kê + Bất thường
   document.getElementById('ttAbn').classList.toggle('active',t==='abn');
   document.getElementById('ttPlg').classList.toggle('active',t==='plg');
   document.getElementById('ttSku').classList.toggle('active',t==='sku');
@@ -5897,10 +5979,10 @@ function plgVeTop(T){
     return '<div class="combo-item'+(on?' active':'')+'" data-k="'+esc(k)+'" onclick="plgSetNgay(this.getAttribute(\'data-k\'))">'+
       '<span class="nm">'+esc(lb)+'</span>'+(sub?'<span class="c">'+esc(sub)+'</span>':'')+'</div>';
   };
-  /* Không nhãn "Ngày:" (luật ⑬ — nút xổ hiện sẵn khoảng ngày nên nhãn chỉ tốn chỗ; Hasaki đã bỏ 10/09) */
-  var ngay='<div class="combo" style="display:inline-block">'+
-      '<button type="button" class="pg-whtab active" onclick="event.stopPropagation();plgMoNgay()" title="Khoảng ngày dùng để xét ĐÃ/CHƯA vệ sinh">'+
-        esc(kh.lb)+' <span style="font-size:9px;opacity:.75">▼</span></button>'+
+  /* 13/10 user «Planogram làm tương tự Audit Hasaki: bộ lọc, cái hiển thị, tiến độ…» → ô Ngày nằm trong THẺ Bộ lọc, kiểu ô chọn (rộng hết thẻ) */
+  var ngay='<div class="combo pg-ngayloc">'+
+      '<button type="button" class="pg-ngaybtn" onclick="event.stopPropagation();plgMoNgay()" title="Khoảng ngày dùng để xét ĐÃ/CHƯA vệ sinh">'+
+        '<span>'+esc(kh.lb)+'</span><span class="cr">▾</span></button>'+
       '<div class="combo-menu" id="plgNgayMenu" style="left:0;right:auto;min-width:268px">'+
         PLG_NGAY.map(function(m){
           var den=new Date(plgHomNay()); if(m.lui) den.setDate(den.getDate()-1);
@@ -5917,7 +5999,36 @@ function plgVeTop(T){
      chọn: NỀN ô = kho giữ tồn (định danh, luôn có dữ liệu), VIỀN ô = trạng thái vệ sinh (nét đứt
      = chưa khai báo lịch · xanh = đã vệ sinh · đỏ = chưa · hổ phách = lịch chưa duyệt). */
   var seg='';
-  document.getElementById('plgTop').innerHTML=chips+ngay+seg;
+  document.getElementById('plgTop').innerHTML=
+    '<section class="panel pg-loc"><h2>Bộ lọc</h2>'+chips+ngay+seg+'</section>'+
+    plgTheTienDo(T)+plgTheCanXuLy(T);
+}
+/* Thẻ TIẾN ĐỘ — trái: vòng % (màu theo 4 trạng thái) + «x / y vị trí»; phải: 4 ô trạng thái xếp dọc, bấm = mở bảng lọc sẵn */
+function plgTheTienDo(T){
+  var tong=T.tong||0, vs=T.vs, acc=0, p=plgPct(vs.da,tong);
+  var thu=['da','chua','nduyet','nolich'];
+  var vong=tong?thu.map(function(k){ var a0=acc; acc+=vs[k]/tong*100; return PLG_ST[k].c+' '+a0.toFixed(2)+'% '+acc.toFixed(2)+'%'; }).join(','):'var(--ad-ray,#eee) 0 100%';
+  var tiles=thu.map(function(k){
+    return '<button type="button" class="pg-ttile" style="--cc:'+PLG_ST[k].c+'" data-k="'+k+'" onclick="plgOpenAll(this.getAttribute(\'data-k\'))" title="'+esc(PLG_ST[k].lb+' — '+PLG_SUB[k])+'">'+
+      '<b>'+nf(vs[k])+'</b><span>'+esc(PLG_ST[k].lb)+'</span></button>';
+  }).join('');
+  return '<section class="panel pg-prog"><h2>Tiến độ</h2><div class="pg-tdo2">'+
+    '<div class="pg-tdotrai"><div class="pg-ring" style="background:conic-gradient('+vong+')" role="img" aria-label="Đã vệ sinh '+String(p).replace('.',',')+'%"><span><b>'+String(p).replace('.',',')+'%</b><small>đã xong</small></span></div>'+
+      '<button type="button" class="pg-progt" onclick="plgOpenAll(\'\')" title="Bảng đầy đủ mọi vị trí"><b>'+nf(vs.da)+' / '+nf(tong)+' vị trí</b><span>đã vệ sinh</span></button></div>'+
+    '<div class="pg-ttiles">'+tiles+'</div></div></section>';
+}
+/* Thẻ CẦN XỬ LÝ — mỗi việc 1 dòng: số · việc · Xem › ; không còn việc thì 1 dòng ✓ (cùng khuôn hp-todo của Hasaki) */
+function plgTheCanXuLy(T){
+  var vs=T.vs, dong=[];
+  if(vs.nolich) dong.push(['bad',vs.nolich,'vị trí chưa có lịch vệ sinh trên planogram','WMS không phát yêu cầu cho ô chưa khai báo lịch','nolich']);
+  if(vs.nduyet) dong.push(['warn',vs.nduyet,'lịch chưa duyệt','đã khai báo nhưng chưa duyệt trên WMS','nduyet']);
+  if(vs.chua) dong.push(['bad',vs.chua,'vị trí chưa vệ sinh','lịch đã duyệt, chưa ai báo cáo','chua']);
+  if(PLG.ngoai.length) dong.push(['warn',PLG.ngoai.length,'mã vị trí có tồn nhưng không có trên bản vẽ',PLG.ngoai.slice(0,3).join(' · ')+(PLG.ngoai.length>3?' …':''),'']);
+  var rows=dong.map(function(d){
+    return '<button type="button" class="pg-tdrow '+d[0]+'"'+(d[4]?' data-k="'+d[4]+'" onclick="plgOpenAll(this.getAttribute(\'data-k\'))"':' title="'+esc(PLG.ngoai.join(' · '))+'"')+'>'+
+      '<span class="n">'+nf(d[1])+'</span><span class="t"><b>'+esc(d[2])+'</b><small>'+esc(d[3])+'</small></span>'+(d[4]?'<span class="go">Xem ›</span>':'<span></span>')+'</button>';
+  }).join('');
+  return '<section class="panel pg-todo"><h2>Cần xử lý</h2>'+(rows?'<div class="pg-tdlist">'+rows+'</div>':'<div class="pg-tdok"><span class="ic">&#10003;</span>Không còn việc tồn</div>')+'</section>';
 }
 
 /* === CỘT TRÁI — panel "Sơ đồ khu vực" ======================================================
@@ -5955,7 +6066,7 @@ function plgVeMap(g,T){
     '<section class="panel">'+
     /* Chip "Tất cả · 161 ô" đổi thành NÚT "Toàn bộ vị trí · 161" (10/09/2026): vẫn con số đó nhưng bấm được
        để mở bảng đầy đủ — nút về đây từ thanh điều khiển đầu tab, cùng chỗ với tiêu đề Sơ đồ bên Audit Hasaki. */
-    '<h2>Sơ đồ khu vực<span style="flex:1"></span><button type="button" class="pg-whtab" onclick="plgOpenAll()" title="Bảng đầy đủ mọi ô kệ trên mặt bằng">Toàn bộ vị trí &middot; '+nf(tong)+'</button></h2>'+
+    '<h2>Sơ đồ khu vực'+tipMuc(plgTipNguon())+'<span style="flex:1"></span><button type="button" class="pg-whtab" onclick="plgOpenAll()" title="Bảng đầy đủ mọi ô kệ trên mặt bằng">Toàn bộ vị trí &middot; '+nf(tong)+'</button></h2>'+
     '<div class="pg-maprow"><span class="pg-maphdr">Kho nguyên liệu (F0-KHO) — '+dsDay.length+' dãy kệ</span></div>'+
     '<div class="pg-wrap">'+legend+'<div class="pg-scroll"><div class="pg-fit" style="--pg-ar:'+plgTyLeKho(g).toFixed(4)+'">'+
       plgSvg(g,mode,theoDay)+'</div></div></div>'+
@@ -5971,6 +6082,7 @@ function plgVeMap(g,T){
    Cố định là VỆ SINH (không đổi theo chế độ tô màu), đúng vai trò panel phải của Hasaki:
    thẻ chỉ số xếp dọc → thanh tiến độ → khối Độ phủ (mỗi khu vực 1 thanh) → dải kết luận. */
 function plgVeSide(T){
+  var _sd=document.getElementById('plgSide'); if(_sd){ _sd.innerHTML=''; _sd.hidden=true; } return;   // 13/10: gộp vào thẻ Tiến độ / Cần xử lý (khuôn Hasaki)
   var tong=T.tong, vs=T.vs;
   var K=plgKho();
   var nhom=[['da','Đã vệ sinh'],['chua','Chưa vệ sinh'],['nduyet','Lịch chưa duyệt'],['nolich','Chưa khai báo lịch']];
@@ -6439,6 +6551,7 @@ function plgHtmlDay(mode,dem,thu,theoDay,dsDay){
 function plgVeFoot(T){
   var tong=(T&&T.tong)||0;
   var el=document.getElementById('plgFoot'); if(!el) return;
+  el.innerHTML=''; return;   // 13/10: thanh «Kho nguyên liệu — F0-KHO… · 161 vị trí · cập nhật… · Làm mới» lặp tiêu đề Sơ đồ + viên Cập nhật
   el.innerHTML=
     '<div class="pg-srcbar">'+
       /* Nút i để NGOÀI chip: nhét vào trong thì chip (white-space:nowrap) phình thêm ~22px và tràn mép
@@ -6786,7 +6899,7 @@ function plgDongModal(id){
 /* ===== Tab Kiểm kê (Physical Count) — port nguyên logic từ QC, đọc tab kiemke-sku / kiemke-location ===== */
 var KK={loadedOnce:false,data:{sku:[],loc:[]},loaded:0,tab:'sku',wh:'',st:'',range:'all',q:'',refDay:0};
 /* Thu gọn bộ lọc tab (25/08/2026): mặc định THU — nhớ lựa chọn trên máy này */
-try{ KK.fltThu=localStorage.getItem('kk-flt-thu')!=='0'; }catch(e){ KK.fltThu=true; }
+KK.fltThu=false;   // 13/10: bộ lọc nằm trong thẻ «Bộ lọc» bên trái, luôn hiện — bỏ thu/xổ
 function kkLocThu(){
   KK.fltThu=!KK.fltThu;
   try{ localStorage.setItem('kk-flt-thu',KK.fltThu?'1':'0'); }catch(e){}
@@ -7628,8 +7741,9 @@ function kkRenderWhBar(){
   var ws=Object.keys(set).sort();
   if(!ws.length){ el.innerHTML=''; return; }
   /* Bỏ nhãn dài "Trạng thái kiểm kê theo kho:" — chip kho đứng ĐẦU hàng điều khiển 1 dòng, tự giải thích */
-  el.innerHTML='<button class="kktab'+(KK.wh?'':' active')+'" onclick="kkSetWh(\'\')" title="Lọc toàn tab Kiểm kê theo kho">Tất cả kho</button>'+
-    ws.map(function(w){ return '<button class="kktab'+(KK.wh===w?' active':'')+'" data-w="'+esc(w)+'" onclick="kkSetWh(this.getAttribute(\'data-w\'))"><span class="dot" style="background:'+kkColor(w)+'"></span>'+esc(w)+'</button>'; }).join('');
+  /* 13/10: thẻ Bộ lọc (khuôn Planogram Retail) — kho là ô XỔ XUỐNG, không còn hàng chip */
+  el.innerHTML='<select class="kkwhsel" aria-label="Kho" onchange="KK.wh=\'\';kkSetWh(this.value)" title="Lọc toàn tab Kiểm kê theo kho"><option value="">Tất cả kho</option>'+
+    ws.map(function(w){ return '<option value="'+esc(w)+'"'+(KK.wh===w?' selected':'')+'>'+esc(w)+'</option>'; }).join('')+'</select>';
 }
 /* ===== Bộ lọc cấp tab Kiểm kê (#kkFilters) — Ngày kiểm (lịch dp chuẩn dự án) + Request + Type SKU + Type vị trí =====
    Dựng 1 LẦN khi có dữ liệu (giá trị gõ dở không bị mất khi kkRender chạy lại); menu combo sinh lúc mở (chain-filter). */
@@ -7646,9 +7760,9 @@ function kkfBuild(){
     '<div class="fld dt" title="Lọc theo Counted date — áp dụng cho toàn bộ tab (dải số · trạng thái · chart · thẻ kho)"><label>Ngày kiểm</label>'+
       '<button type="button" class="date-btn" id="kkfDateBtn"><span class="ph">Tất cả ngày</span></button>'+
       '<span class="date-pop hidden" id="kkfDatePop"></span></div>'+
-    cb('req','Request','Tất cả…')+
-    cb('ts','Type SKU','Tất cả…')+
-    cb('tl','Type vị trí','Tất cả…')+
+    cb('req','Request','Tất cả request')+
+    cb('ts','Type SKU','Tất cả type SKU')+
+    cb('tl','Type vị trí','Tất cả type vị trí')+
     '<div class="fld bare"><button type="button" class="fclr" id="kkfClear" hidden onclick="kkfReset()" title="Bỏ toàn bộ bộ lọc ngày / request / type">✕ Xoá lọc</button></div>';
   document.getElementById('kkfDatePop').addEventListener('click',kkfDpClickSelf);   // lịch có thể bị portal sang <body> (sheet mobile) -> phải có listener riêng
 }
@@ -8099,6 +8213,10 @@ function kkRenderPanel(kind){
     it('negative','neg',neg,netTile?'Lệch âm · SKU':'Lệch âm')+
     it('positive','pos',pos,netTile?'Lệch dương · SKU':'Lệch dương')+
     fcHtml;
+  strip.innerHTML=tachNhanKs(strip.innerHTML);
+  /* 13/10 Tổng quan phương án B: ghi số khi KHÔNG lọc gì và mẫu số đã đủ tồn kho */
+  if(window.tqGhi&&!KK.wh&&!KKF.s&&!KKF.e&&!(fc.none&&fc.choTon)&&![].some.call(document.querySelectorAll('#kkFilters .combo input'),function(x){ return x.value.trim(); }))
+    window.tqGhi('kk-'+kind,{ dem:counted, tong:denom, eta:fc.eta||'' });
   kkSwap(strip);
   /* Tầng 2: thanh trạng thái 100% + chips đếm (Verified/Đã duyệt/Đang xử lý/Pending/Đã huỷ...) */
   var keys=KK_ST_ORDER.filter(function(s){ return stc[s]; })
@@ -8126,6 +8244,8 @@ function kkRenderPanel(kind){
   kkRenderDaily(kind);
 }
 /* CT4: đổi bộ lọc -> nội dung mờ dần + trượt nhẹ (fadeUp — cùng animation với tab Trạng thái lưu trữ) */
+/* 13/10 user «6 ô sao không thẳng 1 hàng»: nhãn 1 dòng — phần sau « · » / trong ngoặc chuyển thành dòng phụ dưới số */
+function tachNhanKs(h){ return h.replace(/<div class="t">([^<]*)<\/div>/g, function(_, t){ var m = /^(.*?)\s*(?:·\s*(.+)|\((.+)\))$/.exec(t); return m ? '<div class="t">' + m[1] + '</div><div class="s">' + (m[2] || m[3]) +'</div>' : _; }); }
 function kkSwap(el){ if(!el) return; el.classList.remove('swap'); void el.offsetWidth; el.classList.add('swap'); }
 /* ===== Chart "Đã đếm theo ngày" — cột chồng theo KHO từ Counted date, so sánh tiến độ ngày kề trước ===== */
 var KK_COLOR={}, _kkci=0;
@@ -8733,12 +8853,13 @@ var ABN_TAB='stock-inventory-beta';   // đổi tại đây nếu backend đặt
 /* Thứ tự hiển thị: ưu tiên loại cần xử lý (Conflict → UID Temp → Not Found → Unsuitable) rồi tới Committed.
    Thứ tự này quyết định: thẻ chỉ số, chú giải, đoạn chart xếp chồng, chart theo loại, VÀ thứ tự cột trong pop-up. */
 var ABN_TYPES=[
-  {k:'conflict',           lb:'Conflict',           c:'#d97706'},
-  {k:'uid_temp',           lb:'UID Temp',           c:'#8b5cf6'},
-  {k:'not_found',          lb:'Not Found',          c:'#e11d48'},
-  {k:'unsuitable_product', lb:'Unsuitable product', c:'#c0392b'},
-  {k:'committed',          lb:'Committed',          c:'#2563eb'},
-  {k:'committed_outbound', lb:'Committed Outbound', c:'#0891b2'}
+  /* 13/10: bộ màu gốc Ant Design (orange · purple · red · magenta · blue · cyan) — Not Found / Unsuitable trước là 2 sắc đỏ gần như trùng */
+  {k:'conflict',           lb:'Conflict',           c:'#fa8c16'},
+  {k:'uid_temp',           lb:'UID Temp',           c:'#722ed1'},
+  {k:'not_found',          lb:'Not Found',          c:'#f5222d'},
+  {k:'unsuitable_product', lb:'Unsuitable product', c:'#eb2f96'},
+  {k:'committed',          lb:'Committed',          c:'#1677ff'},
+  {k:'committed_outbound', lb:'Committed Outbound', c:'#13c2c2'}
 ];
 /* Nhận diện cột theo NHÃN tiêu đề (linh hoạt: chấp nhận snake_case, có dấu cách, tiếng Việt) */
 var ABN_COLS={
@@ -8903,6 +9024,7 @@ function abnSetWh(w){ if(ABN.wh===w) w=''; ABN.wh=w; abnRender(); tvtRender(); }
 /* Thanh lọc 2 tầng: ① công ty (Mastige/Garment) luôn hiện — gọn; ② kho của công ty đó chỉ hiện khi đã chọn công ty */
 function abnRenderWhBar(){
   var el=document.getElementById('abnWhBar'); if(!el) return;
+  ABN.company=''; ABN.wh=''; el.innerHTML=''; el.hidden=true; return;   // 13/10 user: bỏ dải «Lọc: Tất cả / Mastige / Garment» — đồng bộ Audit Hasaki (đã bỏ lọc Kho 12/10)
   var byCo={}, _ds=ABN.agg?ABN.agg:ABN.rows;
   _ds.forEach(function(r){ if(!r.wh) return; var co=abnCompanyOf(r.wh); (byCo[co]=byCo[co]||{})[r.wh]=1; });
   /* Gộp cả kho của mục "Tồn tại vị trí": một thanh chip điều khiển CẢ HAI mục, nên kho chỉ xuất
@@ -9361,7 +9483,7 @@ function tvtRender(){
     '<div class="abntile" style="--cc:var(--info,#3b82f6)" onclick="tvtOpenAll()" title="Xem toàn bộ UID sai vị trí">'+
       '<div class="k">'+nf(nSku)+'</div><div class="l">SKU liên quan</div><div class="s">'+(TVT.nhom?esc(TVT.nhom):'vải nguyên liệu')+'</div></div>'+
     '<div class="abntile" style="--cc:var(--accent)" onclick="tvtOpenAll()" title="Xem toàn bộ UID sai vị trí">'+
-      '<div class="k">'+nf(nLoc)+'</div><div class="l">Vị trí liên quan</div><div class="s">bấm thanh bên dưới để lọc 1 vị trí</div></div>'+
+      '<div class="k">'+nf(nLoc)+'</div><div class="l">Vị trí liên quan</div></div>'+
   '</div>';
   var lk=Object.keys(loc).sort(function(a,b){ return loc[b].n-loc[a].n; });
   var maxL=1; lk.forEach(function(k){ maxL=Math.max(maxL,loc[k].n); });
@@ -17478,5 +17600,8 @@ async function tmvIn(){
   build();
 })();
 </script>
+<!-- 13/10 t5: bố cục dashboard (dash-bocuc.js do bộ Chỉnh bố cục ghi ở bản QC) → áp bởi dash-bocuc-ap.js; bộ chỉnh chỉ nạp ở localhost -->
+<script>window.DASH_APP='factory';(function(){var n=function(f){var s=document.createElement('script');s.src=f;document.body.appendChild(s);return s;};
+var b=n('dash-bocuc.js?t='+Date.now());b.onload=b.onerror=function(){n('dash-bocuc-ap.js?v=20261013d');if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)&&!navigator.webdriver)n('dash-bocuc-sua.js?v=20261013c');};})();</script>
 </body>
 </html>
