@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Hasaki WMS Token Bridge — Factory",
-  "version": "1.6.0",
+  "version": "1.6.4",
   "description": "Đưa token phiên của CHÍNH BẠN (WMS + work/hr + chat) cho dashboard Factory và cho máy trạm đồng bộ (khỏi re-login đá phiên) — không đăng nhập lại, không tab ẩn. v1.6.0: thêm khe 'chat' (api.hasakichat.com) để bộ đọc lịch phân công vệ sinh mượn token phiên chat đang sống, vì chat cũng 1-phiên như WMS.",
   "host_permissions": [
     "https://wms-gw.inshasaki.com/*",
@@ -23,7 +23,9 @@
     {
       "matches": [
         "https://letam0317.github.io/stocklocationfactory/*",
-        "https://letam0317.github.io/kiemsoatkho/*"
+        "https://letam0317.github.io/kiemsoatkho/*",
+        "https://audit-dc.pages.dev/*",
+        "https://*.audit-dc.pages.dev/*"
       ],
       "js": [
         "bridge.js"

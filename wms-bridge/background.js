@@ -232,3 +232,24 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   });
   return true;   // async sendResponse
 });
+
+// v1.6.1 (29/09/2026) — MÓC BẮT THAO TÁC TASK: ghi payload các lệnh KHÁC GET tới wshr.hasaki.vn
+// (vd nút "Hủy và điều hướng" → "Dừng tại bước này") về listener cục bộ hasaki/bat-request-bridge.mjs
+// (127.0.0.1:8799). Chỉ quan sát, không sửa request; listener không chạy thì fetch lỗi im lặng.
+chrome.webRequest.onBeforeRequest.addListener(
+  (d) => {
+    if (d.method === "GET" || d.method === "OPTIONS") return;
+    let body = null;
+    try {
+      const rb = d.requestBody || {};
+      if (rb.formData) body = JSON.stringify(rb.formData);
+      else if (rb.raw && rb.raw.length) body = rb.raw.map((p) => (p.bytes ? new TextDecoder().decode(p.bytes) : "")).join("");
+    } catch (e) {}
+    // KHÔNG gắn content-type: application/json -> thành request "không đơn giản", Edge chặn gọi 127.0.0.1
+    // (bắt hụt 2 lượt 29/09); gửi text trơn như cò CO_URL, listener vẫn JSON.parse được.
+    fetch("http://127.0.0.1:8799/", { method: "POST",
+      body: JSON.stringify({ method: d.method, url: d.url, body }) }).catch(() => {});
+  },
+  { urls: ["https://wshr.hasaki.vn/*"] },   // 29/09: khoanh /hr/projects/* bắt hụt nút Hủy & điều hướng -> mở rộng
+  ["requestBody"]
+);
