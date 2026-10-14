@@ -3210,7 +3210,8 @@ body.side-anim{overflow-x:clip}
 <!-- 12/10 giao diện Ant Design (thanh bên · đầu trang · đường dẫn "Nhóm / Mục"), CHUNG với Audit Hasaki: bản chép
      giaodien-antd.js (nguồn ở kiemsoatkho/hasaki-giaodien-antd.js). Nạp đồng bộ ở head để khung hình đầu đã đúng kiểu. -->
 <script>window.AD_TEN='Audit Factory'; window.AD_LOGO='factory-logo.png'; window.AD_TEN_MAU='#000'; window.AD_CHUYEN={ten:'Audit Retail', app:'retail'};</script>   <!-- 13/10 user: logo Mastige (chỉ hình tròn chữ M) + chữ màu logo -->
-<script src="giaodien-antd.js?v=20261013vk1"></script>
+<script src="giaodien-antd.js?v=20261014tq4"></script>
+<script src="tai-khoan.js?v=20261014tq4"></script>   <!-- 14/10 đăng nhập + phân quyền (bản chép từ kiemsoatkho/tai-khoan.js) -->
 </head>
 <body>
 <aside id="sideNav" aria-label="Điều hướng hạng mục"></aside>
@@ -5448,10 +5449,10 @@ function homeRender(){
   var ks=window.tqDoc&&tqDoc('kk-sku'), kl=window.tqDoc&&tqDoc('kk-loc'), p1=function(a,b){ return b?(a/b*100).toFixed(1).replace(/\.0$/,''):'0'; };
   var gT=_gSh+_gPe;
   var chiSo=[
-    gT&&{ nhan:'SKU chờ lên kệ', so:nf(_gPe), tien:_gSh/gT*100, mau:'var(--warn)', phu:'đã lên kệ '+p1(_gSh,gT)+'% ('+nf(_gSh)+')' },
-    ks&&ks.tong&&{ nhan:'Kiểm kê theo SKU', so:p1(ks.dem,ks.tong)+'%', tien:ks.dem/ks.tong*100, mau:'var(--accent)', phu:nf(ks.dem)+' / '+nf(ks.tong)+(ks.eta?' · xong ≈ '+ks.eta:'') },
-    kl&&kl.tong&&{ nhan:'Kiểm kê theo vị trí', so:p1(kl.dem,kl.tong)+'%', tien:kl.dem/kl.tong*100, mau:'var(--accent)', phu:nf(kl.dem)+' / '+nf(kl.tong)+(kl.eta?' · xong ≈ '+kl.eta:'') },
-    ABN.ok&&{ nhan:'SKU tồn bất thường', so:nf(ABN.agg?ABN.nTong:ABN.rows.length), mau:'var(--bad)', phu:'Product Type = Normal' }
+    gT&&{ tab:'stock', nhan:'SKU chờ lên kệ', so:nf(_gPe), tien:_gSh/gT*100, mau:'var(--warn)', phu:'đã lên kệ '+p1(_gSh,gT)+'% ('+nf(_gSh)+')' },
+    ks&&ks.tong&&{ tab:'kk', nhan:'Kiểm kê theo SKU', so:p1(ks.dem,ks.tong)+'%', tien:ks.dem/ks.tong*100, mau:'var(--accent)', phu:nf(ks.dem)+' / '+nf(ks.tong)+(ks.eta?' · xong ≈ '+ks.eta:'') },
+    kl&&kl.tong&&{ tab:'kk', nhan:'Kiểm kê theo vị trí', so:p1(kl.dem,kl.tong)+'%', tien:kl.dem/kl.tong*100, mau:'var(--accent)', phu:nf(kl.dem)+' / '+nf(kl.tong)+(kl.eta?' · xong ≈ '+kl.eta:'') },
+    ABN.ok&&{ tab:'abn', nhan:'SKU tồn bất thường', so:nf(ABN.agg?ABN.nTong:ABN.rows.length), mau:'var(--bad)', phu:'Product Type = Normal' }
   ];
   var MAU={ stock:'var(--warn)', abn:'var(--bad)' };
   var nhom=HOME_MUC.map(function(g){ return { ten:g.g, muc:g.items.map(function(it){
