@@ -1919,6 +1919,17 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 #viewPlg .pg-legbox{position:static!important;flex-direction:row!important;flex-wrap:wrap;align-items:center;gap:6px 12px!important;width:auto!important;max-width:100%;margin:0 0 12px!important;padding:8px 12px!important;border-radius:8px!important;backdrop-filter:none!important;box-shadow:none!important}
 #viewPlg .pg-legbox .lb-t{margin:0!important;text-transform:none!important;letter-spacing:0!important;font-size:12px;font-weight:400;color:var(--muted)}
 #viewPlg .pg-legbox .lb-t + *{margin-left:-4px}
+/* 15/10 chip chú giải = khuôn .hp-legchip Retail (đo computed: 11.5px/600 · đệm 3×10 · viền 1px · bo 4 · cao 30 · khe 6 · ô màu 11px bo 3 · số xám 600) */
+#viewPlg .pg-legbox{display:flex!important;gap:6px!important;padding:0!important;border:0!important;background:none!important}
+#viewPlg .pg-legbox > :is(button,span.tinh){display:inline-flex;align-items:center;gap:6px;min-height:30px;padding:3px 10px;box-sizing:border-box;
+  border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font:inherit;font-size:11.5px;font-weight:600;line-height:18px;white-space:nowrap;opacity:1}
+#viewPlg .pg-legbox > button{cursor:pointer;transition:background .16s ease,border-color .16s ease}
+#viewPlg .pg-legbox > button:hover{border-color:var(--accent)}
+#viewPlg .pg-legbox > button.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
+#viewPlg .pg-legbox > button.off{opacity:.45}
+#viewPlg .pg-legbox .n{color:var(--muted);font-weight:600;font-variant-numeric:tabular-nums}
+#viewPlg .pg-legbox i{width:11px!important;height:11px!important;border-radius:3px!important}
+#viewPlg .pg-legbox i.chip{width:16px!important;border-radius:999px!important}
 #viewPlg .pg-maphdr{text-transform:none!important;letter-spacing:0!important;font-weight:600!important}
 @media(max-width:768px){#plgTop.pg-top3{grid-template-columns:minmax(0,1fr)}.pg-ring{width:104px;height:104px}}
 .pg-main > div{min-width:0;display:flex;flex-direction:column}
@@ -1952,6 +1963,18 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 .pg-dsday .pg-track{display:block;margin:4px 0 2px}
 .pg-dsday .pg-parts{display:flex;flex-wrap:wrap;gap:2px 10px;font-size:12px;color:var(--muted)}
 .pg-dsrong{padding:16px 4px;font-size:14px;color:var(--muted)}
+/* 15/10 đầu khung Danh sách theo dõi (khuôn #hpAI Retail): nút «Tra cứu» kiểu .hp-h2btn · Segmented trọn bề ngang · nhãn soi dãy */
+.pg-h2btn{height:30px;padding:3px 9px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font:inherit;font-size:11px;font-weight:400;cursor:pointer;white-space:nowrap}   /* = .hp-h2btn Retail đo computed 30px/11px */
+.pg-h2btn:hover{border-color:var(--accent);color:var(--accent)}
+#plgList .pg-segkhoi{display:flex!important;width:100%;margin:0 0 8px;padding:2px;box-sizing:border-box;gap:2px;background:color-mix(in srgb,var(--text) 6%,var(--surface));border:0;border-radius:6px}
+#plgList .pg-segkhoi button{flex:1 1 0;height:28px;min-height:28px;padding:0 8px;border:0;border-radius:4px;background:transparent;color:var(--muted);font:inherit;font-size:13px;font-weight:400;box-shadow:none;cursor:pointer}
+#plgList .pg-segkhoi button.on{background:var(--surface);color:var(--text);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08),0 1px 4px rgba(0,0,0,.06)}
+.pg-soitag{margin:0 0 8px}
+.pg-tag{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 4px 0 8px;border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);border-radius:4px;background:color-mix(in srgb,var(--accent) 8%,transparent);color:var(--accent);font-size:12px;font-weight:600}
+.pg-tag button{width:18px;height:18px;padding:0;border:0;border-radius:4px;background:transparent;color:inherit;font-size:14px;line-height:1;cursor:pointer}
+.pg-tag button:hover{background:color-mix(in srgb,var(--accent) 16%,transparent)}
+#plgList .pg-chipbar .pg-whtab{height:36px;min-height:36px;padding:6px 13px;font-size:12px;font-weight:600}   /* = .hp-whtab Retail 36px/12px/600 */
+#plgList .pg-search{height:42px;font-size:12.5px}   /* = .hp-ccsearch Retail 42px */
 .pg-dsmore{appearance:none;border:0;border-top:1px solid var(--border);background:none;margin:0;font:inherit;display:block;width:100%;text-align:center;padding:10px 0 4px;min-height:42px;font-weight:600;font-size:14px;color:var(--accent);cursor:pointer;flex:none}
 /* 15/10 user «retail và factory không đồng bộ» — dọn nốt lỗi bộ đo qc-dong-bo-antd --trang=factory (LUAT-DONG-BO-ANTD):
    AD-03 bo góc theo bậc (nút/ô 6 · Tag/chip 4 · khung 8, cấm 999) · AD-06 độ đậm chỉ 400/600 · AD-04 bỏ nền chuyển sắc. */
@@ -3287,7 +3310,7 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
 <!-- 12/10 giao diện Ant Design (thanh bên · đầu trang · đường dẫn "Nhóm / Mục"), CHUNG với Audit Hasaki: bản chép
      giaodien-antd.js (nguồn ở kiemsoatkho/hasaki-giaodien-antd.js). Nạp đồng bộ ở head để khung hình đầu đã đúng kiểu. -->
 <script>window.AD_TEN='Audit Factory'; window.AD_LOGO='factory-logo.png'; window.AD_TEN_MAU='#000'; window.AD_CHUYEN={ten:'Audit Retail', app:'retail'};</script>   <!-- 13/10 user: logo Mastige (chỉ hình tròn chữ M) + chữ màu logo -->
-<script src="giaodien-antd.js?v=20261015d"></script>
+<script src="giaodien-antd.js?v=20261015e"></script>
 <script src="tai-khoan.js?v=20261015b"></script>   <!-- 14/10 đăng nhập + phân quyền (bản chép từ kiemsoatkho/tai-khoan.js) -->
 </head>
 <body>
@@ -6119,16 +6142,19 @@ function plgVeMap(g,T){
   /* HỘP CHÚ GIẢI neo ở GÓC TRÊN BÊN PHẢI của sơ đồ. Dùng TÊN KHO ĐẦY ĐỦ (WH - MATERIAL - MTG…)
      chứ không rút gọn, vì đây là chỗ duy nhất còn giải nghĩa màu sau khi bỏ biển tên trên bản vẽ.
      Các mục nhóm bấm được để SOI RIÊNG nhóm đó; mục "Dãy kệ" chỉ để đối chiếu nên không phải nút. */
-  var legend='<div class="pg-legbox"><div class="lb-t">Trạng thái vệ sinh (nền ô)</div>'+
+  /* 15/10 user «trạng thái Sơ đồ factory chưa đồng bộ retail»: hộp 2 tiêu đề nhóm → 1 HÀNG CHIP như .hp-legrow Retail
+     (ô màu + tên + số xám); chip trạng thái BẤM ĐƯỢC = lọc Danh sách theo dõi (như chip Retail); ý nghĩa nhóm nằm ở title. */
+  var legend='<div class="pg-legbox">'+
     ['da','chua','nduyet','nolich'].map(function(k){
-      return '<span class="tinh"><i class="vs-'+k+'"></i>'+esc(PLG_ST[k].lb)+
-        ' <span class="n">'+nf(vs[k])+'</span></span>';
+      return '<button type="button" class="pg-lgst'+(PLG.st===k?' on':'')+'" data-k="'+k+'" onclick="plgSetSt(this.getAttribute(\'data-k\'))"'+
+        ' title="Trạng thái vệ sinh (nền ô) — bấm để lọc danh sách"><i class="vs-'+k+'"></i>'+esc(PLG_ST[k].lb)+
+        ' <span class="n">'+nf(vs[k])+'</span></button>';
     }).join('')+
-    '<div class="lb-t" style="margin-top:3px">Kho giữ tồn (vạch mép trái ô)</div>'+thu.map(function(k){
+    thu.map(function(k){
     var d=dem[k], mau=(k==='_none')?'':plgMauKho(k), soi=(PLG.soiKho===k);
     return '<button type="button" class="'+(soi?'on':(PLG.soiKho?'off':''))+'" data-k="'+esc(k)+'"'+
       ' onclick="plgSoiKho(this.getAttribute(\'data-k\'))" aria-pressed="'+(soi?'true':'false')+'"'+
-      ' title="'+(soi?'Đang soi nhóm này — bấm lần nữa để xem lại tất cả':'Bấm để soi riêng nhóm này trên sơ đồ')+'">'+
+      ' title="Kho giữ tồn (vạch mép trái ô) — '+(soi?'đang soi nhóm này, bấm lần nữa để xem lại tất cả':'bấm để soi riêng nhóm này trên sơ đồ')+'">'+
       (mau?'<i class="vach" style="--vc:'+mau+'"></i>':'<i class="dash"></i>')+
       esc(d.lb)+' <span class="n">'+d.n+'</span></button>';
   }).join('')+
@@ -6144,7 +6170,7 @@ function plgVeMap(g,T){
     '<section class="panel">'+
     /* Chip "Tất cả · 161 ô" đổi thành NÚT "Toàn bộ vị trí · 161" (10/09/2026): vẫn con số đó nhưng bấm được
        để mở bảng đầy đủ — nút về đây từ thanh điều khiển đầu tab, cùng chỗ với tiêu đề Sơ đồ bên Audit Hasaki. */
-    '<h2>Sơ đồ khu vực'+tipMuc(plgTipNguon())+'<span style="flex:1"></span><button type="button" class="pg-whtab" onclick="plgOpenAll()" title="Bảng đầy đủ mọi ô kệ trên mặt bằng">Toàn bộ vị trí &middot; '+nf(tong)+'</button></h2>'+
+    '<h2>Sơ đồ khu vực'+tipMuc(plgTipNguon())+'<span style="flex:1"></span><button type="button" class="pg-h2btn" onclick="plgOpenAll()" title="Bảng đầy đủ mọi ô kệ trên mặt bằng">Toàn bộ vị trí &middot; '+nf(tong)+'</button></h2>'+
     /* 15/10 bỏ dòng «Kho nguyên liệu (F0-KHO) — 14 dãy kệ» dưới tiêu đề (AD-07; số dãy đã ở chú giải «Dãy kệ 14») */
     '<div class="pg-wrap">'+legend+'<div class="pg-scroll"><div class="pg-fit" style="--pg-ar:'+plgTyLeKho(g).toFixed(4)+'">'+
       plgSvg(g,mode,theoDay)+'</div></div></div>'+
@@ -6501,9 +6527,13 @@ function plgVeList(T){
     '<button type="button" class="'+(PLG.list==='vt'?'on':'')+'" onclick="plgSetList(\'vt\')">Từng vị trí</button>'+
     '<button type="button" class="'+(PLG.list==='day'?'on':'')+'" onclick="plgSetList(\'day\')">Từng dãy kệ</button>'+
     '</div>';
+  /* 15/10 user «Danh sách theo dõi hiển thị không gọn/lộn xộn»: khuôn «Nhân viên hôm nay» Retail — tiêu đề + 1 nút «Tra cứu» (phải);
+     bộ chuyển chế độ = Segmented trọn bề ngang 1 hàng; «đang soi dãy» = nhãn nhỏ có × (không còn là chip lọc to). */
+  var soi=PLG.hiDay?'<div class="pg-soitag"><span class="pg-tag">Dãy '+esc(PLG.hiDay)+'<button type="button" onclick="plgSoiDay(\'\')" aria-label="Bỏ soi dãy" title="Bỏ soi dãy, xem lại toàn bộ">&times;</button></span></div>':'';
   box.innerHTML=
     '<section class="panel pg-dspanel">'+
-    '<h2>Danh sách theo dõi<span style="flex:1"></span>'+modes+'</h2>'+
+    '<h2>Danh sách theo dõi<span style="flex:1"></span><button type="button" class="pg-h2btn" onclick="plgOpenTra()" title="Xem từng dãy kệ: ô nào thuộc kho nào, trạng thái vệ sinh ra sao">Tra cứu</button></h2>'+
+    modes.replace('pg-seg sm','pg-seg sm pg-segkhoi')+soi+
     (PLG.list==='day'?plgHtmlDay(mode,dem,thu,theoDay,dsDay):plgHtmlVt(tong))+
     '</section>';
 }
@@ -6533,8 +6563,7 @@ function plgHtmlVt(tong){
       return '<button type="button" class="pg-whtab'+(PLG.st===k?' active':(cnt[k]?'':' pg-z0'))+'" data-k="'+k+'"'+
         ' onclick="plgSetSt(this.getAttribute(\'data-k\'))" title="'+esc(PLG_SUB[k])+'">'+
         esc(m.lb)+' <b>'+nf(cnt[k])+'</b></button>';
-    }).join('')+
-    (PLG.hiDay?'<button type="button" class="pg-whtab active" onclick="plgSoiDay(\'\')" title="Bỏ soi dãy, xem lại toàn bộ">Đang soi dãy '+esc(PLG.hiDay)+' &times;</button>':'');
+    }).join('');   // 15/10 «Đang soi dãy» rời hàng chip → nhãn nhỏ đầu khung (plgVeList)
 
   var CAP=300;
   /* 15/10 user: danh sách là CỘT PHẢI ngang hàng sơ đồ (khuôn «Nhân viên hôm nay» Retail) — mỗi ô 1 hàng gọn
@@ -6617,16 +6646,8 @@ function plgHtmlDay(mode,dem,thu,theoDay,dsDay){
      tác không sống trong UI; dòng có `cursor:pointer` + hover đã nói lên nó bấm được). Nó còn là thủ
      phạm đẩy nút "Mở tra cứu dãy kệ" ra ngoài mép màn 360px — chỉ thấy khi SOI ẢNH, vì nút nằm trong
      khung cuộn ngang nên số đo "không tràn". */
-  return '<div class="pg-whbar">'+
-      (PLG.hiDay?'<button type="button" class="pg-whtab active" onclick="plgSoiDay(\'\')">Đang soi dãy '+esc(PLG.hiDay)+' &times;</button>':'')+
-      '<span style="flex:1"></span>'+
-      /* Nay là LỐI VÀO DUY NHẤT của pop-up (bản ở thanh đầu tab đã bỏ 10/09/2026) — nhãn + tooltip lấy y
-         nguyên từ nút cũ để cùng một chức năng chỉ có một tên. */
-      '<button type="button" class="pg-whtab" onclick="plgOpenTra()" title="Xem từng dãy kệ: ô nào thuộc kho nào, trạng thái vệ sinh ra sao">Tra cứu dãy kệ</button>'+
-    '</div>'+
-    /* Chốt bề rộng cột: để tự động thì 4 cột số bị đẩy tản ra tận mép phải, đọc số phải rê mắt
-       ngang cả màn hình. Cột Thành phần là cột duy nhất co giãn. */
-    '<div class="pg-dslist">'+body+'</div>';
+  /* 15/10: thanh «Đang soi dãy · Tra cứu dãy kệ» bỏ — soi dãy là nhãn chung đầu khung, nút Tra cứu lên tiêu đề khung */
+  return '<div class="pg-dslist">'+body+'</div>';
 }
 
 /* --- Chân tab: nguồn + số liệu + nút làm mới (khuôn srcfoot của Hasaki) --- */
