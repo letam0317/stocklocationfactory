@@ -486,6 +486,10 @@ body.an-chan .footbar{display:none}
 /* 13/10 HÀNG TRÊN Kiểm kê: [Bộ lọc 280px] [Tra cứu SL đếm] — thẻ Bộ lọc xếp dọc như Planogram Retail, ô cao 32 */
 .kktop{display:grid;grid-template-columns:280px minmax(0,1fr);gap:12px;margin-bottom:12px;align-items:stretch}
 .kkphai{display:flex;flex-direction:column;gap:12px;min-width:0}
+/* 15/10 «Tồn kho chính xác»: 2 phần cùng trang — tiêu đề phần (antd Title 20/600) */
+#viewKK:not([hidden])::before,#viewAbn:not([hidden])::before{display:block;margin:4px 0 12px;font-size:20px;font-weight:600;line-height:28px;color:var(--text)}
+#viewKK:not([hidden])::before{content:"Kiểm kê"}
+#viewAbn:not([hidden])::before{content:"Bất thường";margin-top:24px}
 .kkphai > .panel{margin:0}
 .kkwhpanel #kkWhList{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
 .kktop>.panel{margin:0}
@@ -3309,8 +3313,8 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
 </style>
 <!-- 12/10 giao diện Ant Design (thanh bên · đầu trang · đường dẫn "Nhóm / Mục"), CHUNG với Audit Hasaki: bản chép
      giaodien-antd.js (nguồn ở kiemsoatkho/hasaki-giaodien-antd.js). Nạp đồng bộ ở head để khung hình đầu đã đúng kiểu. -->
-<script>window.AD_TEN='Audit Factory'; window.AD_LOGO='factory-logo.png'; window.AD_TEN_MAU='#000'; window.AD_CHUYEN={ten:'Audit Retail', app:'retail'};</script>   <!-- 13/10 user: logo Mastige (chỉ hình tròn chữ M) + chữ màu logo -->
-<script src="giaodien-antd.js?v=20261015e"></script>
+<script>window.AD_BI_DANH={"hangmuctonkho/kiemke":"kk","hangmuctonkho/tonkhobatthuong":"kk#viewAbn"};   /* 15/10 link cũ → mục gộp «Tồn kho chính xác» */ window.AD_TEN='Audit Factory'; window.AD_LOGO='factory-logo.png'; window.AD_TEN_MAU='#000'; window.AD_CHUYEN={ten:'Audit Retail', app:'retail'};</script>   <!-- 13/10 user: logo Mastige (chỉ hình tròn chữ M) + chữ màu logo -->
+<script src="giaodien-antd.js?v=20261015f"></script>
 <script src="tai-khoan.js?v=20261015b"></script>   <!-- 14/10 đăng nhập + phân quyền (bản chép từ kiemsoatkho/tai-khoan.js) -->
 </head>
 <body>
@@ -5499,16 +5503,11 @@ var HOME_MUC=[
       mo:'SKU nào đã lên kệ, SKU nào còn nằm bãi chờ F0-A0 — tách theo kho và ngành hàng, kèm biểu đồ tiến độ theo ngày.',
       muc:['Đã lên kệ','Còn cần lên kệ','Theo ngành hàng','Biểu đồ theo ngày'],
       so:function(){ return (_gSh+_gPe)?{k:nf(_gPe),l:'SKU chờ lên kệ'}:null; } },
-    { t:'kk', ten:'Kiểm kê', cc:'var(--info,#3b82f6)',
-      mo:'Phiếu kiểm kê thật (physical-count) theo SKU và theo mã vị trí: tiến độ từng kho, phiếu lệch âm/dương, UID group lệch.',
-      muc:['Theo SKU','Theo mã vị trí','Tiến độ theo kho','Lệch âm/dương','Kế hoạch chờ push'],
-      so:function(){ var n=((KK.data.sku||[]).length)+((KK.data.loc||[]).length); return n?{k:nf(n),l:'dòng kiểm kê'}:null; } },
-    { t:'abn', ten:'Tồn kho bất thường', cc:'var(--bad)',
-      mo:'SKU vướng Conflict · UID Temp · Not Found · Unsuitable · Committed, kèm mục Tồn tại vị trí (UID vải chưa khai báo UID group mà đã rời bãi chờ).',
-      muc:function(){
-        var a=['Conflict','UID Temp','Not Found','Unsuitable','Committed'];
-        a.push('Tồn tại vị trí'+(TVT.ok?(' <b>'+nf(tvtRowsInScope().length)+'</b>'):''));
-        return a; },
+    /* 15/10 user (Retail + Factory): gộp Kiểm kê + Tồn kho bất thường thành 1 mục «Tồn kho chính xác» — trong trang Kiểm kê trên, Bất thường dưới.
+       showTab('abn') vẫn chạy (đổi sang 'kk' rồi cuộn tới phần Bất thường) cho link/nút cũ. */
+    { t:'kk', ten:'Tồn kho chính xác', cc:'var(--info,#3b82f6)',
+      mo:'Kiểm kê thật (physical-count) theo SKU và mã vị trí, kèm SKU bất thường (Conflict · UID Temp · Not Found · Unsuitable · Committed) và Tồn tại vị trí.',
+      muc:function(){ return ['Kiểm kê','Lệch âm/dương','Kế hoạch chờ push','Bất thường','Tồn tại vị trí'+(TVT.ok?(' <b>'+nf(tvtRowsInScope().length)+'</b>'):'')]; },
       so:function(){ return ABN.ok?{k:nf(ABN.agg?ABN.nTong:ABN.rows.length),l:'SKU bất thường'}:null; } }
   ]},
   { g:'Hạng mục 5S', mo:'Vệ sinh theo sơ đồ mặt bằng', items:[
@@ -5648,8 +5647,10 @@ function tipDoSlot(){
 function showTab(t){
   var MAP={home:'viewHome',stock:'viewStock',kk:'viewKK',abn:'viewAbn',plg:'viewPlg',sku:'viewNds',cd:'viewCd',tem:'viewTem'};
   if(!MAP[t]) t='home';
+  var _denAbn=(t==='abn'); if(_denAbn) t='kk';   // 15/10 «Tồn kho chính xác» = Kiểm kê (trên) + Bất thường (dưới) cùng 1 trang
   TOPTAB=t;
-  Object.keys(MAP).forEach(function(k){ document.getElementById(MAP[k]).hidden=(k!==t); });
+  Object.keys(MAP).forEach(function(k){ document.getElementById(MAP[k]).hidden=(k!==t && !(t==='kk'&&k==='abn')); });
+  if(_denAbn) setTimeout(function(){ var a=document.getElementById('viewAbn'); if(a) a.scrollIntoView({behavior:'smooth',block:'start'}); },60);
   var v=document.getElementById(MAP[t]);
   v.classList.remove('vfade'); void v.offsetWidth; v.classList.add('vfade');
   document.getElementById('ttStock').classList.toggle('active',t==='stock');
@@ -5665,7 +5666,7 @@ function showTab(t){
   if(t!=='sku') ndsRoiTab();   // rời tab thì tắt camera (đèn camera sáng vô cớ + hao pin)
   if(t!=='kk'&&QTC.quetStream) qtcQuetDong();   // camera quét mã của mục Tra SL đếm cũng vậy
   if(t==='kk' && !KK.loadedOnce){ KK.loadedOnce=true; kkLoad(); }    // lazy-load lần đầu mở tab
-  if(t==='abn' && !ABN.loadedOnce){ ABN.loadedOnce=true; abnLoad(); }
+  if((t==='abn'||t==='kk') && !ABN.loadedOnce){ ABN.loadedOnce=true; abnLoad(); }
   if(t==='plg' && !PLG.loadedOnce){ PLG.loadedOnce=true; plgLoad(); }
   if(t==='cd' && !CD.loadedOnce){ CD.loadedOnce=true; cdLoad(); }       // tính tay; chip Tex dùng cache danh mục, cùng lắm 1 lượt gviz
   if(t==='tem' && !TMV.loadedOnce){ TMV.loadedOnce=true; tmvLoad(); }   // đọc Sheet của người dùng đã nhớ (1 lượt gviz), không chạm WMS

@@ -16,12 +16,7 @@ window.DASH_BOCUC = {
   },
   {
    "k": "kk",
-   "ten": "Kiểm kê",
-   "nhom": "Hạng mục Tồn kho"
-  },
-  {
-   "k": "abn",
-   "ten": "Tồn kho bất thường",
+   "ten": "Tồn kho chính xác",
    "nhom": "Hạng mục Tồn kho"
   },
   {
