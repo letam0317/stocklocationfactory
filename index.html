@@ -484,7 +484,10 @@ body.an-chan .footbar{display:none}
 /* Hàng điều khiển 1 DÒNG đầu tab Kiểm kê: chip kho (bên trái) + cụm nút Bộ lọc & Kế hoạch (cố định bên phải) */
 .kkonebar{display:flex;flex-direction:column;gap:8px}
 /* 13/10 HÀNG TRÊN Kiểm kê: [Bộ lọc 280px] [Tra cứu SL đếm] — thẻ Bộ lọc xếp dọc như Planogram Retail, ô cao 32 */
-.kktop{display:grid;grid-template-columns:280px minmax(0,1fr);gap:12px;margin-bottom:12px;align-items:start}
+.kktop{display:grid;grid-template-columns:280px minmax(0,1fr);gap:12px;margin-bottom:12px;align-items:stretch}
+.kkphai{display:flex;flex-direction:column;gap:12px;min-width:0}
+.kkphai > .panel{margin:0}
+.kkwhpanel #kkWhList{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
 .kktop>.panel{margin:0}
 /* 13/10 user quay video «lỗi rồi»: lịch Ngày kiểm + menu Request/Type bị thẻ «Kiểm kê theo SKU» che — thẻ có will-change (lớp vẽ riêng) nên thẻ sau đè lên. Hàng trên phải nổi cao hơn */
 .kktop{position:relative;z-index:30}
@@ -518,7 +521,7 @@ body.an-chan .footbar{display:none}
   #kkOneBar.kkloc>h2{grid-column:1/-1}
   #kkOneBar.kkloc #kkFilters:not([hidden]){display:contents!important}
   #kkOneBar.kkloc .kkfbar .fld.bare{grid-column:1/-1}
-  .kktop>.qtcpanel{order:-1}   /* tra SL đếm: kết quả ngay dưới ô gõ, không bị thẻ Bộ lọc đẩy xuống nửa màn (luật rác đầu màn) */}
+  .kkphai>.qtcpanel{order:-1}   /* tra SL đếm: kết quả ngay dưới ô gõ, không bị thẻ Bộ lọc đẩy xuống nửa màn (luật rác đầu màn) */}
 .kkbar-top{display:flex;align-items:center;gap:8px;width:100%;min-width:0}
 #kkWhBar{display:flex;align-items:center;gap:6px;flex:1 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 #kkWhBar::-webkit-scrollbar{display:none}
@@ -3284,8 +3287,8 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
 <!-- 12/10 giao diện Ant Design (thanh bên · đầu trang · đường dẫn "Nhóm / Mục"), CHUNG với Audit Hasaki: bản chép
      giaodien-antd.js (nguồn ở kiemsoatkho/hasaki-giaodien-antd.js). Nạp đồng bộ ở head để khung hình đầu đã đúng kiểu. -->
 <script>window.AD_TEN='Audit Factory'; window.AD_LOGO='factory-logo.png'; window.AD_TEN_MAU='#000'; window.AD_CHUYEN={ten:'Audit Retail', app:'retail'};</script>   <!-- 13/10 user: logo Mastige (chỉ hình tròn chữ M) + chữ màu logo -->
-<script src="giaodien-antd.js?v=20261015c"></script>
-<script src="tai-khoan.js?v=20261014tq4"></script>   <!-- 14/10 đăng nhập + phân quyền (bản chép từ kiemsoatkho/tai-khoan.js) -->
+<script src="giaodien-antd.js?v=20261015d"></script>
+<script src="tai-khoan.js?v=20261015b"></script>   <!-- 14/10 đăng nhập + phân quyền (bản chép từ kiemsoatkho/tai-khoan.js) -->
 </head>
 <body>
 <aside id="sideNav" aria-label="Điều hướng hạng mục"></aside>
@@ -3353,6 +3356,9 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
          Detail: gõ SKU hoặc bấm icon trong ô để quét mã vạch/QR bằng camera. Nguồn: tab Sheet
          kiemke-qtycount (push-pc-to-sheet ghi mọi dòng tracking của phiếu Full location - Factory);
          tra bằng gviz tq where theo SKU nên KHÔNG tải cả tab về điện thoại. -->
+    <!-- 15/10 user: HÀNG 1 = [Bộ lọc] [Tiến độ theo kho] (Tra cứu SL đếm xếp ngay dưới Tiến độ, cùng cột phải) · HÀNG 2 = [Kiểm kê theo SKU] [Kiểm kê theo mã vị trí] -->
+    <div class="kkphai">
+    <section class="panel kkwhpanel"><h2>Tiến độ theo kho</h2><div class="whlist" id="kkWhList"></div></section>
     <section class="panel qtcpanel">
       <h2>Tra cứu SL đếm theo SKU<span class="h2tip-slot" data-tip-key="qtc"></span> <span class="hint">(Quantity count · phiếu Full location - Factory)</span></h2>
       <div class="qtcrow">
@@ -3364,6 +3370,7 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
       </div>
       <div id="qtcKq"></div>
     </section>
+    </div>
   </div>
   <div class="grid2 even">
     <section class="panel">
@@ -3380,7 +3387,6 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
       <div class="kkdhead">Đã kiểm theo ngày <span class="lg" id="kkLegend-loc"></span></div>
       <div class="kkdaily" id="kkHist-loc"></div>
     </section>
-    <section class="panel span2"><h2>Tiến độ theo kho</h2><div class="whlist" id="kkWhList"></div></section>
   </div>
 </div>
 
