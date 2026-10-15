@@ -488,8 +488,8 @@ body.an-chan .footbar{display:none}
 .kkphai{display:flex;flex-direction:column;gap:12px;min-width:0}
 /* 15/10 «Tồn kho chính xác»: 2 phần cùng trang — tiêu đề phần (antd Title 20/600) */
 /* 15/10 (lượt 2) user «Kiểm kê và Bất thường là 2 khung khác nhau — đóng khung cho đẹp»: mỗi phần = 1 khung (Card antd) — tiêu đề là đầu khung, vạch ngăn dưới */
-#viewKK:not([hidden]),#viewAbn:not([hidden]){border:1px solid var(--ad-chia,var(--border));border-radius:8px;background:color-mix(in srgb,var(--text) 2%,var(--surface));padding:0 16px 16px;margin-bottom:16px}
-#viewKK:not([hidden])::before,#viewAbn:not([hidden])::before{display:block;margin:0 -16px 16px;padding:12px 24px;border-bottom:1px solid var(--ad-chia,var(--border));background:var(--surface);border-radius:8px 8px 0 0;font-size:16px;font-weight:600;line-height:24px;color:var(--text)}
+#viewKK:not([hidden]),#viewAbn:not([hidden]){border:1px solid var(--ad-chia,var(--border));border-radius:8px;background:var(--surface);padding:0 24px 4px;margin-bottom:16px}
+#viewKK:not([hidden])::before,#viewAbn:not([hidden])::before{display:block;margin:0 -24px;padding:16px 24px;border-bottom:1px solid var(--ad-chia,var(--border));background:var(--surface);border-radius:8px 8px 0 0;font-size:16px;font-weight:600;line-height:24px;color:var(--text)}
 #viewKK:not([hidden])::before{content:"Kiểm kê"}
 #viewAbn:not([hidden])::before{content:"Bất thường"}
 @media(max-width:768px){#viewKK:not([hidden]),#viewAbn:not([hidden]){padding:0 8px 8px}#viewKK:not([hidden])::before,#viewAbn:not([hidden])::before{margin:0 -8px 12px;padding:10px 16px}}
@@ -3317,7 +3317,7 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
 <!-- 12/10 giao diện Ant Design (thanh bên · đầu trang · đường dẫn "Nhóm / Mục"), CHUNG với Audit Hasaki: bản chép
      giaodien-antd.js (nguồn ở kiemsoatkho/hasaki-giaodien-antd.js). Nạp đồng bộ ở head để khung hình đầu đã đúng kiểu. -->
 <script>window.AD_BI_DANH={"hangmuctonkho/kiemke":"kk","hangmuctonkho/tonkhobatthuong":"kk#viewAbn"};   /* 15/10 link cũ → mục gộp «Tồn kho chính xác» */ window.AD_TEN='Audit Factory'; window.AD_LOGO='factory-logo.png'; window.AD_TEN_MAU='#000'; window.AD_CHUYEN={ten:'Audit Retail', app:'retail'};</script>   <!-- 13/10 user: logo Mastige (chỉ hình tròn chữ M) + chữ màu logo -->
-<script src="giaodien-antd.js?v=20261015f"></script>
+<script src="giaodien-antd.js?v=20261015g"></script>
 <script src="tai-khoan.js?v=20261015b"></script>   <!-- 14/10 đăng nhập + phân quyền (bản chép từ kiemsoatkho/tai-khoan.js) -->
 </head>
 <body>
