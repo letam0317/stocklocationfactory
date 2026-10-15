@@ -487,9 +487,12 @@ body.an-chan .footbar{display:none}
 .kktop{display:grid;grid-template-columns:280px minmax(0,1fr);gap:12px;margin-bottom:12px;align-items:stretch}
 .kkphai{display:flex;flex-direction:column;gap:12px;min-width:0}
 /* 15/10 «Tồn kho chính xác»: 2 phần cùng trang — tiêu đề phần (antd Title 20/600) */
-#viewKK:not([hidden])::before,#viewAbn:not([hidden])::before{display:block;margin:4px 0 12px;font-size:20px;font-weight:600;line-height:28px;color:var(--text)}
+/* 15/10 (lượt 2) user «Kiểm kê và Bất thường là 2 khung khác nhau — đóng khung cho đẹp»: mỗi phần = 1 khung (Card antd) — tiêu đề là đầu khung, vạch ngăn dưới */
+#viewKK:not([hidden]),#viewAbn:not([hidden]){border:1px solid var(--ad-chia,var(--border));border-radius:8px;background:color-mix(in srgb,var(--text) 2%,var(--surface));padding:0 16px 16px;margin-bottom:16px}
+#viewKK:not([hidden])::before,#viewAbn:not([hidden])::before{display:block;margin:0 -16px 16px;padding:12px 24px;border-bottom:1px solid var(--ad-chia,var(--border));background:var(--surface);border-radius:8px 8px 0 0;font-size:16px;font-weight:600;line-height:24px;color:var(--text)}
 #viewKK:not([hidden])::before{content:"Kiểm kê"}
-#viewAbn:not([hidden])::before{content:"Bất thường";margin-top:24px}
+#viewAbn:not([hidden])::before{content:"Bất thường"}
+@media(max-width:768px){#viewKK:not([hidden]),#viewAbn:not([hidden]){padding:0 8px 8px}#viewKK:not([hidden])::before,#viewAbn:not([hidden])::before{margin:0 -8px 12px;padding:10px 16px}}
 .kkphai > .panel{margin:0}
 .kkwhpanel #kkWhList{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
 .kktop>.panel{margin:0}
