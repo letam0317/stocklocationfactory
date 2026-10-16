@@ -3317,8 +3317,8 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
 <!-- 12/10 giao diện Ant Design (thanh bên · đầu trang · đường dẫn "Nhóm / Mục"), CHUNG với Audit Hasaki: bản chép
      giaodien-antd.js (nguồn ở kiemsoatkho/hasaki-giaodien-antd.js). Nạp đồng bộ ở head để khung hình đầu đã đúng kiểu. -->
 <script>window.AD_BI_DANH={"hangmuctonkho/kiemke":"kk","hangmuctonkho/tonkhobatthuong":"kk#viewAbn"};   /* 15/10 link cũ → mục gộp «Tồn kho chính xác» */ window.AD_TEN='Audit Factory'; window.AD_LOGO='factory-logo.png'; window.AD_TEN_MAU='#000'; window.AD_CHUYEN={ten:'Audit Retail', app:'retail'};</script>   <!-- 13/10 user: logo Mastige (chỉ hình tròn chữ M) + chữ màu logo -->
-<script src="giaodien-antd.js?v=20261015g"></script>
-<script src="tai-khoan.js?v=20261015b"></script>   <!-- 14/10 đăng nhập + phân quyền (bản chép từ kiemsoatkho/tai-khoan.js) -->
+<script src="giaodien-antd.js?v=20261016a"></script>
+<script src="tai-khoan.js?v=20261016a"></script>   <!-- 14/10 đăng nhập + phân quyền (bản chép từ kiemsoatkho/tai-khoan.js) -->
 </head>
 <body>
 <aside id="sideNav" aria-label="Điều hướng hạng mục"></aside>
@@ -5656,6 +5656,7 @@ function showTab(t){
   if(_denAbn) setTimeout(function(){ var a=document.getElementById('viewAbn'); if(a) a.scrollIntoView({behavior:'smooth',block:'start'}); },60);
   var v=document.getElementById(MAP[t]);
   v.classList.remove('vfade'); void v.offsetWidth; v.classList.add('vfade');
+  if(t==='kk'){ var _ab=document.getElementById('viewAbn'); _ab.classList.remove('vfade'); void _ab.offsetWidth; _ab.classList.add('vfade'); }   // 16/10 Bất thường trượt CÙNG nhịp Kiểm kê (trước: thẻ con tự fadeUp lệch nhịp)
   document.getElementById('ttStock').classList.toggle('active',t==='stock');
   document.getElementById('ttKK').classList.toggle('active',t==='kk');
   var _kp=document.getElementById('hdrKkPlan'); if(_kp) _kp.classList.toggle('an-hdr', !(t==='kk'||t==='abn'));   // 13/10: nút Kế hoạch ở đầu trang chỉ ở Kiểm kê + Bất thường
