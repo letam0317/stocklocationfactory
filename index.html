@@ -107,10 +107,7 @@ history.replaceState(null,'',location.pathname+location.search+con);}}catch(e){}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 /* Thanh cuộn mảnh đồng bộ toàn trang (Webkit) */
-::-webkit-scrollbar{width:6px;height:6px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--muted) 45%,var(--bg));border-radius:10px}
-::-webkit-scrollbar-thumb:hover{background:color-mix(in srgb,var(--muted) 75%,var(--bg))}
+/* thanh cuộn: dùng thanh-cuon.css chung (17/10) — kiểu webkit 6px cũ đã gỡ */
 body{margin:0;background:var(--bg);color:var(--ink);
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
@@ -3319,6 +3316,7 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
 <script>window.AD_BI_DANH={"hangmuctonkho/kiemke":"kk","hangmuctonkho/tonkhobatthuong":"kk#viewAbn"};   /* 15/10 link cũ → mục gộp «Tồn kho chính xác» */ window.AD_TEN='Audit Factory'; window.AD_LOGO='factory-logo.png'; window.AD_TEN_MAU='#000'; window.AD_CHUYEN={ten:'Audit Retail', app:'retail'};</script>   <!-- 13/10 user: logo Mastige (chỉ hình tròn chữ M) + chữ màu logo -->
 <script src="giaodien-antd.js?v=20261016a"></script>
 <script src="tai-khoan.js?v=20261016a"></script>   <!-- 14/10 đăng nhập + phân quyền (bản chép từ kiemsoatkho/tai-khoan.js) -->
+<link rel="stylesheet" href="thanh-cuon.css?v=20261017a"><!-- 17/10 thanh cuộn chung theo theme (bản gốc hasaki/kiemsoatkho/thanh-cuon.css) -->
 </head>
 <body>
 <aside id="sideNav" aria-label="Điều hướng hạng mục"></aside>
