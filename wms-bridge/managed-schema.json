@@ -1,0 +1,6 @@
+{
+  "type": "object",
+  "properties": {
+    "may": { "type": "string", "description": "Tên máy (COMPUTERNAME) do ghim-bridge.ps1 ghi qua policy 3rdparty — kèm khi đẩy phiên để bảng Máy trạm biết phiên đến từ máy nào." }
+  }
+}

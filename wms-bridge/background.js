@@ -102,6 +102,14 @@ async function kiemSong(token, loai) {
   } catch (e) { return "unknown"; }
 }
 
+/* v1.6.5 (17/10/2026) — PHIÊN NÀY TỪ MÁY NÀO: ghim-bridge.ps1 (máy trạm) ghi tên máy vào policy 3rdparty
+ * của extension → chrome.storage.managed {may}. Laptop ghim bằng HKCU không có → "" (GAS coi như laptop).
+ * Kèm trình duyệt (Edge/Chrome) để bảng Máy trạm ghi phiên vào đúng thẻ máy. */
+const TRINH_DUYET = /Edg\//.test(navigator.userAgent) ? "Edge" : "Chrome";
+async function tenMay() {
+  try { const o = await chrome.storage.managed.get("may"); return String((o && o.may) || "").slice(0, 60); } catch (e) { return ""; }
+}
+
 // Đẩy token (ĐÃ biết còn sống) lên GAS cho máy trạm: token MỚI đẩy ngay (cách tối thiểu 20s),
 // token cũ nhắc lại mỗi KEEP_MIN phút (giữ mốc "còn tươi" phía GAS). Lỗi mạng bỏ qua êm.
 async function pushBridge(token, exp, loai) {
@@ -123,10 +131,11 @@ async function pushBridge(token, exp, loai) {
       return;
     }
     await chrome.storage.session.set({ [kh.push]: { at: now, token } });
+    const may = await tenMay();
     const r = await fetch(GAS_URL, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "bridgeToken", kind: loai, token, exp: exp || 0 }),
+      body: JSON.stringify({ action: "bridgeToken", kind: loai, token, exp: exp || 0, may, trinhDuyet: TRINH_DUYET }),
     });
     console.log("[bridge] đẩy token " + kh.nhan + " (đã xác thực OK) lên GAS:", r.status, (await r.text()).slice(0, 120));
   } catch (e) { console.warn("[bridge] đẩy token " + kh.nhan + " LỖI (lần sau thử lại):", e && e.message); }
