@@ -329,7 +329,7 @@ body.an-chan .footbar{display:none}
 .fcfact span{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
 .fcctl{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:2px 0 12px}
 @media(max-width:560px){.fcctl{grid-template-columns:1fr}}
-.fcctl label{display:flex;flex-direction:column;gap:5px;font-size:10px;font-weight:750;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.fcctl label,.fcctl .fcl{display:flex;flex-direction:column;gap:5px;font-size:10px;font-weight:750;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .fcctl select,.fcctl input{padding:8px 10px;border:1px solid var(--border);border-radius:9px;background:var(--surface);color:var(--ink);font-size:13px;font-family:inherit}
 .fcctl select:focus,.fcctl input:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}
 /* Dropdown trong pop-up dự báo: TÁI DÙNG combo-menu popIn của dự án (đồng bộ với bộ lọc các pop-up khác) */
@@ -343,38 +343,10 @@ body.an-chan .footbar{display:none}
 .fcg.on{background:var(--accent);border-color:var(--accent);color:var(--accent-text)}
 .fcneed{font-size:12.5px;color:var(--ink);margin-top:8px;font-weight:600}
 .fcref{font-size:11.5px;color:var(--muted);margin:-4px 0 10px;line-height:1.5}   /* ghi chú nguồn bộ số chuẩn / thực đo tham chiếu trong pop-up dự báo */
-@media(max-width:640px){.fcfact span,.fcctl label{font-size:10.5px}}   /* sàn chữ điện thoại 10,5px (luật 6) — nhãn ô số & nhãn control của pop-up dự báo */
-/* ===== Bộ chọn KHOẢNG NGÀY gộp (bắt đầu → hạn chót) — bê nguyên thiết kế "Ngày ghi nhận" từ kiemsoatkho ===== */
-.fcdate{position:relative;text-transform:none;letter-spacing:0;font-weight:400}
-.fcdate .date-btn{width:100%;text-align:left;cursor:pointer;padding:8px 30px 8px 10px;border:1px solid var(--border);border-radius:9px;background:var(--surface);color:var(--ink);font-size:13px;font-family:inherit;transition:border-color .15s var(--ease),box-shadow .15s var(--ease)}
-.fcdate .date-btn:hover{border-color:var(--accent)}
-.fcdate .date-btn:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}
-.fcdate::after{content:"";position:absolute;right:12px;top:19px;width:7px;height:7px;margin-top:-5px;border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);transform:rotate(45deg);pointer-events:none;transition:transform .2s var(--ease)}
-.fcdate.open::after{transform:rotate(-135deg);margin-top:-1px}
-/* position:fixed + JS định vị theo nút -> lịch KHÔNG bị .modalbody (overflow:auto) cắt; z-index cao hơn modal */
-.date-pop{position:fixed;z-index:120;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg);padding:12px;width:max-content;max-width:96vw;overflow:auto;
-  transform-origin:top left;animation:popIn .16s cubic-bezier(.16,1,.3,1);will-change:opacity,transform}
-.date-pop.hidden{display:none}
-.date-pop button{border:1px solid var(--border);background:var(--surface);color:var(--ink);border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;padding:5px 12px;font-weight:500;transition:background .15s var(--ease),border-color .15s var(--ease)}
-.date-pop button:hover{border-color:var(--accent);background:var(--hover)}
-.date-pop button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-text);font-weight:650}
-.dp-presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
-.dp-presets button{border-radius:16px;padding:5px 10px}
-.dp-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
-.dp-months{display:flex;gap:20px}
-.dp-mtitle{text-align:center;font-size:12.5px;font-weight:700;margin-bottom:6px}
-.dp-grid{display:grid;grid-template-columns:repeat(7,32px);gap:2px}
-.dp-dow{font-size:10px;color:var(--muted);text-align:center;height:22px;line-height:22px;font-weight:600}
-.dp-day{height:32px;display:flex;align-items:center;justify-content:center;font-size:12px;border-radius:7px;cursor:pointer;user-select:none;transition:background-color .12s ease,color .12s ease}
-.dp-day:hover{background:var(--hover)}
-.dp-day.out{opacity:.35}
-.dp-day.in-range{background:color-mix(in srgb,var(--accent) 14%,transparent)}
-.dp-day.edge{background:var(--accent);color:var(--accent-text);font-weight:700}
-.dp-day.today{box-shadow:inset 0 0 0 1px var(--accent)}
-.dp-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px;border-top:1px solid var(--border);padding-top:10px}
-.dp-foot .dpsel{font-size:12px;color:var(--muted)}
-.dp-foot button{margin-left:6px}
-@media(max-width:640px){.dp-months{flex-direction:column;gap:14px}}
+@media(max-width:640px){.fcfact span,.fcctl label,.fcctl .fcl{font-size:10.5px}}   /* sàn chữ điện thoại 10,5px (luật 6) — nhãn ô số & nhãn control của pop-up dự báo */
+/* 19/10 BỘ LỌC NGÀY CHUẨN toàn dự án = bo-loc-ngay.css/.js (bản chép từ hasaki/kiemsoatkho, nạp ở <head>) — thay lịch fcdate/date-pop/dp-* tự dựng ở đây.
+   Pop-up Dự báo: ô ngày nằm trong nhãn chữ hoa → bỏ chữ hoa/đậm kế thừa; nhãn bọc ô ngày là <div class="fcl"> (không phải <label>: label chuyển cú bấm trong lịch về nút). */
+.fcdate{text-transform:none;letter-spacing:0;font-weight:400}
 /* Thanh trạng thái 100%: mỏng 8px, bo tròn hẳn, khe 2px giữa các đoạn */
 .kkstbar{display:flex;height:8px;border-radius:99px;overflow:hidden;background:var(--surface2);margin:2px 0 10px}
 .kkstbar i{display:block;height:100%;min-width:2px}
@@ -442,40 +414,7 @@ body.an-chan .footbar{display:none}
 .kkfbar .fld .combo-menu{width:max-content;min-width:100%;max-width:340px;right:auto}   /* menu nở theo nội dung (mã request + ngày · số dòng) dù pill hẹp */
 .kkfbar .date-btn{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font-size:12px;font-family:inherit;text-align:left;padding:6px 7px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kkfbar .date-btn .ph{color:var(--ink3);opacity:.75}
-/* ===== NGÀY KIỂM — lịch NEO TRỰC TIẾP vào nút (bottom-start), 31/07/2026 =====
-   BUG ĐÃ VÁ: `.date-pop` dùng position:fixed + JS ghi toạ độ VIEWPORT, nhưng `#viewKK` mang
-   `.vfade{will-change:opacity,transform}` → chính nó thành CONTAINING BLOCK của mọi position:fixed
-   bên trong, nên left/top viewport bị cộng thêm offset của #viewKK ⇒ lịch nhảy lơ lửng giữa màn
-   hình. (Bản trong modal Dự báo không lỗi vì fcPositionDatePop có trừ rect .modalbox — kkfPosDatePop
-   thì không.) Cách chữa gốc: desktop dùng position:absolute trong .fld.dt ⇒ miễn nhiễm hoàn toàn. */
-.kkfbar .fld.dt{position:relative}
-#kkfDatePop{position:absolute;top:calc(100% + 6px);left:0;right:auto;bottom:auto;z-index:1050;padding:10px;
-  box-shadow:0 10px 25px -5px rgba(0,0,0,.1),0 8px 10px -6px rgba(0,0,0,.1)}
-#kkfDatePop.dp-up{top:auto;bottom:calc(100% + 6px)}   /* hụt chỗ phía dưới -> lật lên trên nút */
-#kkfDatePop.dp-right{left:auto;right:0}               /* sát mép phải viewport -> neo mép phải nút */
-/* Bố cục gọn theo chỉ thị: preset 12px/4×10 · 2 tháng cách 16px · ô ngày 32×32 chữ 13px căn giữa */
-#kkfDatePop .dp-presets{gap:5px;margin-bottom:8px}
-#kkfDatePop .dp-presets button{font-size:12px;padding:4px 10px}
-#kkfDatePop .dp-nav{margin-bottom:6px}
-#kkfDatePop .dp-months{gap:16px}
-#kkfDatePop .dp-day{width:32px;height:32px;font-size:13px}
-#kkfDatePop .dp-foot{margin-top:8px;padding-top:8px}
-/* ĐIỆN THOẠI ≤768px: đổi thành BOTTOM SHEET xổ từ dưới lên + backdrop mờ.
-   kkfDpMount() DỜI element sang <body> ở breakpoint này, nhờ vậy position:fixed neo đúng viewport và
-   left/right/bottom:0 là đủ — KHÔNG cần JS tính toạ độ (xem chú thích kkfDpMount về 2 cách đã bỏ).
-   Backdrop cũng là element rời gắn vào <body> nên phủ đủ màn hình, kể cả vùng header. */
-@media(max-width:768px){
-  #kkfDatePop{position:fixed;left:0;right:0;bottom:0;top:auto;width:auto;max-width:none;max-height:82vh;
-    border-radius:16px 16px 0 0;border-bottom:0;padding:12px 14px 14px;
-    box-shadow:0 -12px 30px -8px rgba(0,0,0,.28);animation:dpSheetUp .22s cubic-bezier(.16,1,.3,1)}
-  #kkfDatePop.dp-up,#kkfDatePop.dp-right{top:auto;bottom:0;left:0;right:0}
-  #kkfDatePop .dp-months{flex-direction:column;gap:14px;align-items:center}   /* ô ngày giữ 32px, canh giữa sheet */
-  #kkfDatePop .dp-foot{position:sticky;bottom:-1px;background:var(--surface);z-index:1}
-}
-@keyframes dpSheetUp{from{opacity:0;transform:translate3d(0,16px,0)} to{opacity:1;transform:none}}
-#kkfDpBack{position:fixed;inset:0;z-index:1049;background:rgba(15,23,42,.42);opacity:0;transition:opacity .18s var(--ease)}
-#kkfDpBack.show{opacity:1}
-@media(min-width:769px){#kkfDpBack{display:none}}
+/* 19/10 Ngày kiểm = BỘ LỌC NGÀY CHUẨN (bo-loc-ngay.js) — lịch tự lo vị trí/tấm trượt điện thoại; bỏ khối #kkfDatePop/#kkfDpBack tự dựng */
 .kkfbar .fclr{height:32px;display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--brand2);font-weight:650;font-size:12px;cursor:pointer;white-space:nowrap;padding:0 12px;font-family:inherit}
 .kkfbar .fclr:hover{border-color:var(--brand2);background:var(--hover)}
 /* Hàng điều khiển 1 DÒNG đầu tab Kiểm kê: chip kho (bên trái) + cụm nút Bộ lọc & Kế hoạch (cố định bên phải) */
@@ -1887,10 +1826,9 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 #plgTop.pg-top3{display:grid!important;grid-template-columns:minmax(190px,230px) minmax(0,1.15fr) minmax(0,1fr);gap:12px;align-items:stretch;margin:0 0 12px;padding:0;background:none;border:0;box-shadow:none;flex-wrap:nowrap}
 #plgTop > .panel{margin:0;padding:16px;border-radius:8px;display:flex;flex-direction:column;min-width:0}
 #plgTop > .panel > h2{margin:0 0 12px;font-size:16px;font-weight:600;line-height:24px}
-.pg-ngayloc{position:relative;width:100%}
-.pg-ngaybtn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:32px;padding:4px 11px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font:inherit;font-size:14px;cursor:pointer;text-align:left}
-.pg-ngaybtn:hover{border-color:var(--accent)}
-.pg-ngaybtn .cr{color:var(--muted);font-size:12px}
+/* 19/10 ô Ngày Planogram = BỘ LỌC NGÀY CHUẨN, cỡ nút y hệt ô Ngày trong thẻ Bộ lọc của Planogram Retail (#hpWhBar .hp-ngayloc) */
+.pg-ngayloc{position:relative;width:100%;min-width:0}
+#plgTop .pg-ngayloc .date-btn{width:100%;min-height:32px;padding:4px 9px;font-size:11.5px}
 .pg-tdo2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:stretch;flex:1}
 .pg-tdotrai{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center}
 .pg-ring{width:120px;height:120px;border-radius:50%;flex:none;display:grid;place-items:center;position:relative}
@@ -3317,6 +3255,7 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
 <script src="giaodien-antd.js?v=20261016a"></script>
 <script src="tai-khoan.js?v=20261017a"></script>   <!-- 14/10 đăng nhập + phân quyền (bản chép từ kiemsoatkho/tai-khoan.js) -->
 <link rel="stylesheet" href="thanh-cuon.css?v=20261017a"><!-- 17/10 thanh cuộn chung theo theme (bản gốc hasaki/kiemsoatkho/thanh-cuon.css) -->
+<link rel="stylesheet" href="bo-loc-ngay.css?v=20261019a"><script src="bo-loc-ngay.js?v=20261019a"></script><!-- 19/10 BỘ LỌC NGÀY CHUẨN toàn dự án (bản chép Y HỆT hasaki/kiemsoatkho/bo-loc-ngay.*) -->
 </head>
 <body>
 <aside id="sideNav" aria-label="Điều hướng hạng mục"></aside>
@@ -4117,12 +4056,8 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
       <div class="fld"><label>Type</label><div class="combo">
         <input id="pcType" autocomplete="off" readonly placeholder="— Theo nguồn từng dòng —" onfocus="pcTypeMenu()" onclick="pcTypeMenu()">
         <div class="combo-menu" id="pcTypeMenu"></div></div></div>
-      <!-- C5 (25/07/2026): date-pop tuỳ biến của dự án thay <input type=date> trần (lịch OS lệch giao diện) -->
-      <div class="fld"><label>Plan date</label><span class="fcdate" id="pcDateWrap" style="display:block">
-        <button type="button" class="date-btn" id="pcDateBtn" onclick="pcDpToggle()">Chọn ngày</button>
-        <span class="date-pop hidden" id="pcDatePop" style="position:absolute;left:0;top:calc(100% + 6px)"></span>
-        <input type="hidden" id="pcDate">
-      </span></div>
+      <!-- 19/10 Plan date = BỘ LỌC NGÀY CHUẨN (bo-loc-ngay.js, chọn 1 ngày) — thay date-pop C5 tự dựng -->
+      <div class="fld"><label>Plan date</label><div class="pc-ngay" id="pcDateWrap"></div><input type="hidden" id="pcDate"></div>
       <div class="fld"><label>Executed By</label><div class="combo">
         <input id="pcBy" autocomplete="off" placeholder="— Để trống —" oninput="pcByInput(this)" onfocus="pcByMenu()">
         <div class="combo-menu" id="pcByMenu"></div></div></div>
@@ -5230,15 +5165,14 @@ document.addEventListener('keydown',function(e){
   if(e.key!=='Escape') return;
   if(document.querySelector('#pcFilters .combo-menu.show')){ pcCloseCombos(); return; }   // menu combo modal tạo lệnh
   var pdp=document.getElementById('pcDatePop');   // lịch Plan date trong modal tạo lệnh — đóng trước modal
-  if(pdp && !pdp.classList.contains('hidden')){ pdp.classList.add('hidden'); return; }
+  if(pdp && !pdp.classList.contains('hidden')){ pcDpClose(); return; }
   var pv=document.getElementById('pcprev');    // preview giỏ chọn nổi trên cùng -> Escape đóng trước nhất
   if(pv && !pv.classList.contains('hidden')){ pv.classList.add('hidden'); return; }
   var pm=document.getElementById('pcmodal');   // modal tạo lệnh mở ĐÈ lên pop-up khác -> đóng trước tiên
   if(pm && pm.classList.contains('show')){ closePcModal(); return; }
   var plm=document.getElementById('plmodal');
   if(plm && plm.classList.contains('show')){ closePlModal(); return; }
-  var pgn=document.getElementById('plgNgayMenu');   // menu chọn Ngày đóng trước mọi pop-up
-  if(pgn && pgn.classList.contains('show')){ plgDongNgay(); return; }
+  if(PLG_LOC && PLG_LOC.dangMo()){ plgDongNgay(); return; }   // lịch Ngày (bộ lọc ngày chuẩn) đóng trước mọi pop-up
   /* 4 pop-up của tab Planogram — đóng theo thứ tự "cái nào nổi trên cùng thì đóng trước":
      lightbox ảnh mở TỪ pop-up chi tiết ô, mà chi tiết ô lại mở được từ 2 pop-up kia. */
   if(pgl && pgl.classList.contains('show')){ closePlgAnh(); return; }
@@ -5285,8 +5219,6 @@ document.getElementById('catMenu').addEventListener('click',function(e){
 document.addEventListener('click',function(e){
   var combo=document.getElementById('catCombo');
   if(combo && !combo.contains(e.target)) closeCat();
-  var ngay=document.getElementById('plgNgayMenu');   // ô chọn Ngày của tab Planogram
-  if(ngay && ngay.classList.contains('show') && !ngay.parentNode.contains(e.target)) plgDongNgay();
   /* Combo mẫu tem trong modal In tem: bấm ra ngoài thì đóng — dùng CHÍNH handler chung này, không
      dựng thêm listener riêng (mỗi listener rời là một chỗ có thể quên tháo). */
   if(document.querySelector('#prmodal .combo-menu.show') && !(e.target.closest && e.target.closest('#prmodal .prcb'))) prCbDong();
@@ -5814,9 +5746,13 @@ function plgKhoCua(loc){ var k=plgKho().byO[loc]; return k?Object.keys(k).sort()
    khi người dùng chọn ở phần "Hoặc chọn 1 ngày" — đúng nếp ô chọn ngày bên Audit Hasaki. */
 function plgKhoang(){
   var t=plgHomNay();
-  if(/^\d{4}-\d{2}-\d{2}$/.test(PLG.ngay||'')){
-    var p=PLG.ngay.split('-'), d=new Date(+p[0],+p[1]-1,+p[2]);
-    return {lb:plgThuVN(d)+' '+plgNgayVN(d),tu:d.getTime(),den:d.getTime()+86399999,mot:true};
+  /* 19/10 bộ lọc ngày chuẩn: PLG.ngay còn nhận 'YYYY-MM-DD' (1 ngày) hoặc 'YYYY-MM-DD~YYYY-MM-DD' (khoảng chọn trên lịch) */
+  var r=String(PLG.ngay||'').match(/^(\d{4})-(\d{2})-(\d{2})(?:~(\d{4})-(\d{2})-(\d{2}))?$/);
+  if(r){
+    var d=new Date(+r[1],+r[2]-1,+r[3]), d2=r[4]?new Date(+r[4],+r[5]-1,+r[6]):d;
+    if(d2<d){ var x=d; d=d2; d2=x; }
+    var mot=d.getTime()===d2.getTime();
+    return {lb:mot?plgThuVN(d)+' '+plgNgayVN(d):plgNgayVN(d)+' – '+plgNgayVN(d2),tu:d.getTime(),den:d2.getTime()+86399999,mot:mot};
   }
   var m=PLG_NGAY[PLG_NGAY.length-1];
   for(var i=0;i<PLG_NGAY.length;i++) if(PLG_NGAY[i].k===PLG.ngay) m=PLG_NGAY[i];
@@ -5867,8 +5803,20 @@ function plgSetList(m){ if(PLG.list===m) return; PLG.list=m; plgRender(); }
 function plgSetArea(a){ if(PLG.area===a) a=''; PLG.area=a; PLG.hiDay=''; plgRender(); }
 function plgSetSt(k){ if(PLG.st===k) k=''; PLG.st=k; plgRender(); }
 function plgSetNgay(k){ PLG.ngay=k; plgDongNgay(); plgRender(); }
-function plgMoNgay(){ var m=document.getElementById('plgNgayMenu'); if(m) m.classList.toggle('show'); }
-function plgDongNgay(){ var m=document.getElementById('plgNgayMenu'); if(m) m.classList.remove('show'); }
+/* 19/10 user: «bộ lọc ngày ở Planogram (Retail) làm CHUẨN toàn dự án» — ô Ngày = 1 bản taoBoLocNgay (bo-loc-ngay.js), dựng 1 lần, cắm lại
+   mỗi lần plgRender vẽ lại thẻ Bộ lọc (giữ lịch đang mở) — đúng cách hasaki-planogram.js làm. Nút nhanh như Retail + 30/45 ngày (cửa sổ sync). */
+var PLG_LOC=null;
+function plgLocNgay(){
+  if(PLG_LOC||typeof window.taoBoLocNgay!=='function') return PLG_LOC;
+  var root=document.createElement('div'); root.className='pg-ngayloc'; root.title='Khoảng ngày dùng để xét ĐÃ/CHƯA vệ sinh';
+  PLG_LOC=window.taoBoLocNgay({ root:root, khongRong:true,
+    presets:[{k:'today',lb:'Hôm nay'},{k:'yesterday',lb:'Hôm qua'},{k:'3',lb:'3 ngày'},{k:'7',lb:'7 ngày'},{k:'30',lb:'30 ngày'},{k:'45',lb:'45 ngày'}],
+    macDinh:function(){ var k0=PLG.ngay; PLG.ngay='45'; var k=plgKhoang(); PLG.ngay=k0; return [plgISO(new Date(k.tu)),plgISO(new Date(k.den))]; },
+    onApply:function(a,b){ PLG.ngay=(!b||b===a)?a:a+'~'+b; plgRender(); } });
+  return PLG_LOC;
+}
+function plgMoNgay(){ var l=plgLocNgay(); if(l) l.mo(); }
+function plgDongNgay(){ if(PLG_LOC) PLG_LOC.dong(); }
 var _plgQdeb;
 /* Tìm nhanh: CHỈ vẽ lại panel danh sách (sơ đồ SVG không đổi theo từ khoá) và trả lại con trỏ vào
    ô tìm — vẽ lại cả tab mỗi phím gõ vừa phí vừa làm mất focus giữa chừng. */
@@ -6075,30 +6023,9 @@ function plgVeTop(T){
   var chips='';
   /* Ô chọn NGÀY — cùng vị trí (ngay sau Khu vực) và cùng lối bấm-xổ như tab Planogram Hasaki */
   var kh=plgKhoang();
-  /* Ô CHỌN NGÀY — clone tab Planogram Audit Hasaki: nút xổ hiện nhãn khoảng đang xem, menu gồm
-     các mốc sẵn (kèm dải ngày ở cột phụ), một dòng phân cách "Hoặc chọn 1 ngày", rồi 7 ngày gần
-     nhất dạng "T6 08/08". */
-  var dsNgay=plgDsNgay();
-  var mucNgay=function(k,lb,sub,on){
-    return '<div class="combo-item'+(on?' active':'')+'" data-k="'+esc(k)+'" onclick="plgSetNgay(this.getAttribute(\'data-k\'))">'+
-      '<span class="nm">'+esc(lb)+'</span>'+(sub?'<span class="c">'+esc(sub)+'</span>':'')+'</div>';
-  };
+  /* Ô CHỌN NGÀY = bộ lọc ngày chuẩn (19/10) — chỗ giữ #plgNgayPh, sau innerHTML cắm lại PLG_LOC.el */
   /* 13/10 user «Planogram làm tương tự Audit Hasaki: bộ lọc, cái hiển thị, tiến độ…» → ô Ngày nằm trong THẺ Bộ lọc, kiểu ô chọn (rộng hết thẻ) */
-  var ngay='<div class="combo pg-ngayloc">'+
-      '<button type="button" class="pg-ngaybtn" onclick="event.stopPropagation();plgMoNgay()" title="Khoảng ngày dùng để xét ĐÃ/CHƯA vệ sinh">'+
-        '<span>'+esc(kh.lb)+'</span><span class="cr">▾</span></button>'+
-      '<div class="combo-menu" id="plgNgayMenu" style="left:0;right:auto;min-width:268px">'+
-        PLG_NGAY.map(function(m){
-          var den=new Date(plgHomNay()); if(m.lui) den.setDate(den.getDate()-1);
-          var tu=new Date(den); tu.setDate(den.getDate()-(m.n-1));
-          var sub=m.sub||(m.n===1?plgNgayVN(den):plgNgayVN(tu)+' – '+plgNgayVN(den));
-          return mucNgay(m.k,m.lb,sub,PLG.ngay===m.k);
-        }).join('')+
-        '<div class="combo-item all" style="pointer-events:none"><span class="nm pg-hint">Hoặc chọn 1 ngày</span></div>'+
-        dsNgay.map(function(d,i){
-          return mucNgay(plgISO(d),plgThuVN(d)+' '+plgNgayVN(d),i===0?'hôm nay':'',PLG.ngay===plgISO(d));
-        }).join('')+
-      '</div></div>';
+  var ngay='<div id="plgNgayPh"></div>';
   /* Bộ chuyển "Tô màu" đã bỏ 08/08/2026. Sơ đồ nay dùng ĐỒNG THỜI hai kênh nên không còn gì để
      chọn: NỀN ô = kho giữ tồn (định danh, luôn có dữ liệu), VIỀN ô = trạng thái vệ sinh (nét đứt
      = chưa khai báo lịch · xanh = đã vệ sinh · đỏ = chưa · hổ phách = lịch chưa duyệt). */
@@ -6106,6 +6033,8 @@ function plgVeTop(T){
   document.getElementById('plgTop').innerHTML=
     '<section class="panel pg-loc"><h2>Bộ lọc</h2>'+chips+ngay+seg+'</section>'+
     plgTheTienDo(T)+plgTheCanXuLy(T);
+  var ph=document.getElementById('plgNgayPh'), lc=plgLocNgay();
+  if(ph&&lc){ ph.replaceWith(lc.el); lc.dat(plgISO(new Date(kh.tu)),plgISO(new Date(kh.den))); }
 }
 /* Thẻ TIẾN ĐỘ — trái: vòng % (màu theo 4 trạng thái) + «x / y vị trí»; phải: 4 ô trạng thái xếp dọc, bấm = mở bảng lọc sẵn */
 function plgTheTienDo(T){
@@ -6822,7 +6751,7 @@ function plgPgListUrl(iso,loc){
 }
 function plgNgayLb(){
   for(var i=0;i<PLG_NGAY.length;i++) if(PLG_NGAY[i].k===PLG.ngay) return PLG_NGAY[i].lb;
-  return PLG.ngay;
+  return plgKhoang().lb;
 }
 /* Mốc ngày của tab Sheet in ra tiếng Việt: "2026-08-14 14:18" -> "14/08/2026 14:18". Bộ sync ghi
    ISO cho máy đọc, còn pop-up là chỗ người đọc — bên Hasaki mọi ngày đều in dd/mm. */
@@ -7884,14 +7813,16 @@ function kkfBuild(){
       '<div class="combo-menu"></div></div></div>';
   }
   el.innerHTML=
-    '<div class="fld dt" title="Lọc theo Counted date — áp dụng cho toàn bộ tab (dải số · trạng thái · chart · thẻ kho)"><label>Ngày kiểm</label>'+
-      '<button type="button" class="date-btn" id="kkfDateBtn"><span class="ph">Tất cả ngày</span></button>'+
-      '<span class="date-pop hidden" id="kkfDatePop"></span></div>'+
+    '<div class="fld dt" title="Lọc theo Counted date — áp dụng cho toàn bộ tab (dải số · trạng thái · chart · thẻ kho)"><label>Ngày kiểm</label><div id="kkfNgay"></div></div>'+
     cb('req','Request','Tất cả request')+
     cb('ts','Type SKU','Tất cả type SKU')+
     cb('tl','Type vị trí','Tất cả type vị trí')+
     '<div class="fld bare"><button type="button" class="fclr" id="kkfClear" hidden onclick="kkfReset()" title="Bỏ toàn bộ bộ lọc ngày / request / type">✕ Xoá lọc</button></div>';
-  document.getElementById('kkfDatePop').addEventListener('click',kkfDpClickSelf);   // lịch có thể bị portal sang <body> (sheet mobile) -> phải có listener riêng
+  /* 19/10 Ngày kiểm = BỘ LỌC NGÀY CHUẨN (bo-loc-ngay.js) — preset hướng QUÁ KHỨ vì là bộ LỌC; 1 ngày = lọc đúng ngày đó */
+  if(typeof window.taoBoLocNgay==='function') KKF_LOC=window.taoBoLocNgay({ root:document.getElementById('kkfNgay'), idNut:'kkfDateBtn', idPop:'kkfDatePop', homNay:fcTodayISO,
+    nhan:function(a){ return a?'':'Tất cả ngày'; },
+    onApply:function(a,b){ KKF.s=a||''; KKF.e=a?(b||a):''; kkfClearBtn(); kkRender(); } });
+  kkfUpdateBtn();
 }
 /* Nguồn dòng cho menu combo: tôn trọng kho đang chọn + các bộ lọc CÒN LẠI (trừ chính nó) — đúng pattern pop-up */
 function kkfMenuRows(k){
@@ -7948,147 +7879,12 @@ function kkfReset(){
   document.querySelectorAll('#kkFilters .combo input').forEach(function(i){ i.value=''; i.removeAttribute('data-exact'); });
   kkfCloseCombos(); kkfCloseDatePop(); kkfUpdateBtn(); kkRender();
 }
-/* --- Bộ chọn khoảng ngày: tái dùng nguyên lịch dp-* của dự án (fcMonthHTML), preset hướng QUÁ KHỨ vì là bộ LỌC --- */
-var KKF_DP={view:{y:0,m:0},selS:'',selE:''};
-function kkfUpdateBtn(){
-  var b=document.getElementById('kkfDateBtn'); if(!b) return;
-  b.innerHTML=KKF.s?esc(KKF.s===KKF.e?fcFmtVN(KKF.s):fcFmtVN(KKF.s)+' → '+fcFmtVN(KKF.e)):'<span class="ph">Tất cả ngày</span>';
-  kkfClearBtn();
-}
-function kkfOpenDatePop(){
-  kkfCloseCombos();
-  var base=KKF.s||fcTodayISO();
-  KKF_DP={view:{y:Number(base.slice(0,4)),m:Number(base.slice(5,7))-1},selS:KKF.s||'',selE:KKF.s?(KKF.e||KKF.s):''};
-  var pop=document.getElementById('kkfDatePop');
-  pop.innerHTML=
-    '<span class="dp-presets" style="display:flex">'+
-      '<button type="button" data-preset="today">Hôm nay</button>'+
-      '<button type="button" data-preset="7">7 ngày qua</button>'+
-      '<button type="button" data-preset="30">30 ngày qua</button>'+
-      '<button type="button" data-preset="month">Tháng này</button>'+
-    '</span>'+
-    '<span class="dp-nav" style="display:flex"><button type="button" id="kkfDpPrev">‹ Trước</button><span></span><button type="button" id="kkfDpNext">Sau ›</button></span>'+
-    '<span class="dp-months" id="kkfDpMonths" style="display:flex"></span>'+
-    '<span class="dp-foot" style="display:flex"><span class="dpsel">Chưa chọn</span><span><button type="button" id="kkfDpClear">Xoá</button><button type="button" class="primary" id="kkfDpApply">Áp dụng</button></span></span>';
-  pop.classList.remove('hidden');
-  kkfRenderCal();
-  kkfBindRepos(true);
-}
-function kkfCloseDatePop(){
-  var pop=document.getElementById('kkfDatePop');
-  if(pop&&!pop.classList.contains('hidden')){
-    pop.classList.add('hidden'); pop.classList.remove('dp-up','dp-right');
-    pop.innerHTML=''; pop.style.maxHeight=''; pop.style.left=pop.style.top=pop.style.width='';
-  }
-  kkfDpBack(false);
-  kkfBindRepos(false);
-}
-function kkfRenderCal(){
-  var y=KKF_DP.view.y, m=KKF_DP.view.m, y2=(m===11)?y+1:y, m2=(m+1)%12;
-  var el=document.getElementById('kkfDpMonths'); if(!el) return;
-  el.innerHTML=fcMonthHTML(y,m)+fcMonthHTML(y2,m2);
-  kkfPaint();
-  kkfPosDatePop();
-}
-function kkfPaint(){
-  var a=KKF_DP.selS, b=KKF_DP.selE; if(a&&b&&a>b){ var t=a;a=b;b=t; }
-  var today=fcTodayISO();
-  document.querySelectorAll('#kkfDpMonths .dp-day').forEach(function(el){
-    var iso=el.getAttribute('data-iso');
-    el.classList.remove('in-range','edge');
-    el.classList.toggle('today',iso===today);
-    if(a&&b){ if(iso===a||iso===b) el.classList.add('edge'); else if(iso>a&&iso<b) el.classList.add('in-range'); }
-    else if(a&&iso===a) el.classList.add('edge');
-  });
-  var s=document.querySelector('#kkfDatePop .dpsel');
-  if(s) s.textContent=a?(b&&b!==a?fcFmtVN(a)+' → '+fcFmtVN(b):fcFmtVN(a)):'Chưa chọn';
-}
-function kkfDpMobile(){ return window.matchMedia&&window.matchMedia('(max-width:768px)').matches; }
-/* PORTAL cho bottom sheet. Sheet phải position:fixed dán đáy VIEWPORT, nhưng nằm trong #viewKK thì
-   `.vfade{will-change:transform}` biến #viewKK thành containing block ⇒ fixed neo sai. Cách chữa
-   sạch nhất: mobile thì DỜI hẳn element sang <body> (body không có transform) — `left/right/bottom:0`
-   thuần CSS là đúng tuyệt đối, không cần đo đạc gì. Desktop dời trả về .fld.dt để neo absolute.
-   ĐÃ THỬ VÀ BỎ: tính toạ độ = viewport − rect(ancestor) (lệch 30px) và vòng lặp đo-rồi-bù (lệch 5–19px
-   vì animation đang chạy + innerHeight mobile dao động). */
-function kkfDpMount(mob){
-  var pop=document.getElementById('kkfDatePop'); if(!pop) return;
-  var dich=mob?document.body:document.querySelector('#kkFilters .fld.dt');
-  if(dich&&pop.parentNode!==dich) dich.appendChild(pop);
-}
-/* Backdrop của bottom sheet: element rời gắn vào <body> để phủ ĐỦ màn hình (nếu dùng ::before trên
-   pop thì cũng bị neo theo #viewKK, hụt phần header). Bấm backdrop = click ngoài -> tự đóng. */
-function kkfDpBack(on){
-  var b=document.getElementById('kkfDpBack');
-  if(on){
-    if(!b){ b=document.createElement('div'); b.id='kkfDpBack'; document.body.appendChild(b); }
-    requestAnimationFrame(function(){ b.classList.add('show'); });
-  } else if(b) b.remove();
-}
-/* Định vị lịch NGÀY KIỂM.
-   Desktop: CSS đã neo bottom-start (absolute trong .fld.dt) — JS chỉ lật lên (.dp-up) / neo mép phải
-   (.dp-right) khi hụt chỗ + chặn chiều cao, KHÔNG ghi left/top nữa.
-   Mobile ≤768px: sheet fixed dán đáy viewport, toạ độ quy về hệ containing block. */
-function kkfPosDatePop(){
-  var pop=document.getElementById('kkfDatePop'), btn=document.getElementById('kkfDateBtn');
-  if(!pop||!btn||pop.classList.contains('hidden')) return;
-  pop.style.maxHeight=''; pop.style.left=pop.style.top=pop.style.width='';
-  pop.classList.remove('dp-up','dp-right');
-  var mob=kkfDpMobile();
-  kkfDpMount(mob);  // đổi chiều màn hình khi đang mở -> chuyển giữa sheet (body) và popover (.fld.dt)
-  kkfDpBack(mob);   // ... backdrop bật/tắt theo
-  if(mob) return;   // sheet dán đáy hoàn toàn bằng CSS (left/right/bottom:0), không cần tính toạ độ
-  var r=btn.getBoundingClientRect(), vw2=window.innerWidth, vh2=window.innerHeight, M=8;
-  if(r.left+pop.offsetWidth>vw2-M) pop.classList.add('dp-right');
-  var ph=pop.offsetHeight, below=vh2-r.bottom-M, above=r.top-M;
-  if(ph>below&&above>below){ pop.classList.add('dp-up'); if(ph>above) pop.style.maxHeight=Math.max(160,above-6)+'px'; }
-  else if(ph>below) pop.style.maxHeight=Math.max(160,below-6)+'px';
-}
-var _kkfBound=false;
-function kkfBindRepos(on){
-  if(on&&!_kkfBound){ window.addEventListener('resize',kkfPosDatePop); window.addEventListener('scroll',kkfPosDatePop,true); _kkfBound=true; }
-  else if(!on&&_kkfBound){ window.removeEventListener('resize',kkfPosDatePop); window.removeEventListener('scroll',kkfPosDatePop,true); _kkfBound=false; }
-}
-function kkfPreset(p){
-  var t=fcTodayISO(), tm=Date.parse(t+'T00:00:00Z');
-  function truoc(n){ var d=new Date(tm-n*86400000); return fcIsoOf(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()); }
-  if(p==='today'){ KKF_DP.selS=t; KKF_DP.selE=t; }
-  else if(p==='month'){ KKF_DP.selS=t.slice(0,8)+'01'; KKF_DP.selE=t; }
-  else { KKF_DP.selS=truoc(Number(p)-1); KKF_DP.selE=t; }
-  KKF_DP.view={y:Number(KKF_DP.selS.slice(0,4)),m:Number(KKF_DP.selS.slice(5,7))-1};
-  kkfRenderCal();   // preset chỉ TÔ dải, bấm Áp dụng mới chốt — đúng hành vi lịch toàn dự án
-}
-function kkfCommit(){
-  var a=KKF_DP.selS, b=KKF_DP.selE; if(a&&b&&a>b){ var t=a;a=b;b=t; }
-  KKF.s=a||''; KKF.e=a?(b||a):'';   // chọn 1 ngày = lọc đúng ngày đó
-  kkfCloseDatePop(); kkfUpdateBtn(); kkRender();
-}
-/* Click TRONG lịch — tách riêng vì trên mobile lịch được portal sang <body>, không còn nằm trong
-   #kkFilters nên delegation của thanh lọc không với tới. Trả true = đã xử lý. */
-function kkfDpClick(e){
-  var day=e.target.closest('.dp-day');
-  if(day){ e.preventDefault();
-    var iso=day.getAttribute('data-iso');
-    if(!KKF_DP.selS||(KKF_DP.selS&&KKF_DP.selE)){ KKF_DP.selS=iso; KKF_DP.selE=''; }   // bắt đầu dải MỚI
-    else if(iso<KKF_DP.selS){ KKF_DP.selE=KKF_DP.selS; KKF_DP.selS=iso; }              // chọn ngược -> hoán đổi
-    else KKF_DP.selE=iso;
-    kkfPaint(); return true; }
-  var pr=e.target.closest('#kkfDatePop .dp-presets button'); if(pr){ e.preventDefault(); kkfPreset(pr.getAttribute('data-preset')); return true; }
-  if(e.target.closest('#kkfDpPrev')){ e.preventDefault(); var v=KKF_DP.view, m=v.m-1, y=v.y; if(m<0){m=11;y--;} KKF_DP.view={y:y,m:m}; kkfRenderCal(); return true; }
-  if(e.target.closest('#kkfDpNext')){ e.preventDefault(); var v2=KKF_DP.view, m2=v2.m+1, y2=v2.y; if(m2>11){m2=0;y2++;} KKF_DP.view={y:y2,m:m2}; kkfRenderCal(); return true; }
-  if(e.target.closest('#kkfDpApply')){ e.preventDefault(); kkfCommit(); return true; }
-  if(e.target.closest('#kkfDpClear')){ e.preventDefault(); KKF_DP.selS=KKF_DP.selE=''; KKF.s=KKF.e=''; kkfCloseDatePop(); kkfUpdateBtn(); kkRender(); return true; }
-  return !!e.target.closest('#kkfDatePop');   // click nền lịch: coi như đã xử lý, không làm gì thêm
-}
-/* Listener gắn trên CHÍNH element lịch (bind trong kkfBuild sau khi innerHTML dựng xong). Khi lịch còn
-   nằm trong .fld.dt thì click sẽ bubble lên #kkFilters -> phải stopPropagation kẻo bị xử lý 2 lần
-   (bấm 1 ngày mà tính thành chọn cả dải bắt đầu = kết thúc). */
-function kkfDpClickSelf(e){ if(kkfDpClick(e)) e.stopPropagation(); }
+/* --- Ngày kiểm = bộ lọc ngày chuẩn (19/10): KKF_LOC dựng trong kkfBuild; nhãn/đóng đi qua nó --- */
+var KKF_LOC=null;
+function kkfUpdateBtn(){ if(KKF_LOC) KKF_LOC.dat(KKF.s,KKF.e); kkfClearBtn(); }
+function kkfCloseDatePop(){ if(KKF_LOC) KKF_LOC.dong(); }
 /* Delegation 1 lần trên container cố định — cùng pattern #kkmFilters/#fcBody */
 document.getElementById('kkFilters').addEventListener('click',function(e){
-  if(e.target.closest('#kkfDateBtn')){ e.preventDefault();
-    var hid=document.getElementById('kkfDatePop').classList.contains('hidden');
-    kkfCloseCombos(); if(hid) kkfOpenDatePop(); else kkfCloseDatePop(); return; }
-  if(kkfDpClick(e)) return;
   var it=e.target.closest('.combo-item'); if(!it) return;
   var inp=it.closest('.combo').querySelector('input');
   inp.value=it.getAttribute('data-v')||'';
@@ -8485,11 +8281,8 @@ function kkFcOpen(kind){
       '<label>Thời lượng kiểm / người / ngày'+fcComboHtml('fcH',hItems,hDo)+'</label>'+
       '</div>'+
       '<div class="fcctl" style="grid-template-columns:1fr"><label>Tính trên (phạm vi mô phỏng)'+fcComboHtml('fcBase',baseItems,'conlai')+'</label></div>'+
-      '<div class="fcctl" style="grid-template-columns:1fr"><label>Thời gian đợt kiểm — bắt đầu → hạn chót (bấm ngày 1 = bắt đầu, ngày 2 = hạn)'+
-      '<span class="fcdate" id="fcDateWrap">'+
-        '<button type="button" class="date-btn" id="fcDateBtn">'+homNay+'</button>'+
-        '<span class="date-pop hidden" id="fcDatePop"></span>'+
-      '</span></label></div>'+
+      '<div class="fcctl" style="grid-template-columns:1fr"><div class="fcl">Thời gian đợt kiểm — bắt đầu → hạn chót (bấm ngày 1 = bắt đầu, ngày 2 = hạn)'+
+      '<div class="fcdate" id="fcDateWrap"></div></div></div>'+
       '<div class="fcctl" style="grid-template-columns:1fr"><label>Nhóm hàng đưa vào đợt kiểm<span class="fcgroups" id="fcG">'+gChips+'</span></label></div>'+
       '<div class="fchero" id="fcSimOut"></div><div class="fcneed" id="fcNeed"></div></div>';
   }
@@ -8517,8 +8310,8 @@ function kkFcOpen(kind){
   var fcb=document.getElementById('fcBody');
   fcb.className='modalbody fcwrap'+(htmlB?'':' one');   // 100% (chỉ 1 tầng) -> 1 cột; còn lại 2 cột cạnh nhau
   fcb.innerHTML=htmlA+htmlB;
-  FC_DP={view:{y:0,m:0},selS:'',selE:'',start:fcTodayISO(),end:''};   // mỗi lần mở: bắt đầu = hôm nay, chưa đặt hạn
-  fcUpdateDateBtn();
+  FC_DP={start:fcTodayISO(),end:''};   // mỗi lần mở: bắt đầu = hôm nay, chưa đặt hạn
+  fcTaoLocNgay();
   if(fc.mode==='chuan') kkFcSim();
   /* Mở khi tồn kho chi tiết chưa về -> chờ capChiTiet xong rồi TỰ vẽ lại pop-up (nếu vẫn đang mở cùng bảng), khỏi đóng mở lại */
   if(fc.choTon&&typeof capChiTiet==='function') capChiTiet().then(function(){
@@ -8546,23 +8339,7 @@ function fcMenuToggle(combo){
   if(!dang){ m.classList.add('show'); combo.classList.add('open'); }
 }
 document.getElementById('fcBody').addEventListener('click',function(e){
-  /* Bộ chọn khoảng ngày (mọi nhánh preventDefault — control nằm trong <label>, chặn forward-click) */
-  if(e.target.closest('#fcDateBtn')){ e.preventDefault();
-    var mo=document.getElementById('fcDatePop').classList.contains('hidden');
-    fcCloseMenus(); if(mo) fcOpenDatePop(); else fcCloseDatePop(); return; }
-  var day=e.target.closest('.dp-day');
-  if(day){ e.preventDefault();
-    var iso=day.getAttribute('data-iso');
-    if(!FC_DP.selS||(FC_DP.selS&&FC_DP.selE)){ FC_DP.selS=iso; FC_DP.selE=''; }       // bắt đầu dải MỚI
-    else if(iso<FC_DP.selS){ FC_DP.selE=FC_DP.selS; FC_DP.selS=iso; }                 // chọn ngược -> hoán đổi
-    else FC_DP.selE=iso;                                                              // chốt hạn chót
-    fcPaintSel(); return; }
-  var pr=e.target.closest('.dp-presets button'); if(pr){ e.preventDefault(); fcPreset(pr.getAttribute('data-preset')); return; }
-  if(e.target.closest('#fcDpPrev')){ e.preventDefault(); var v=FC_DP.view, m=v.m-1, y=v.y; if(m<0){m=11;y--;} FC_DP.view={y:y,m:m}; fcRenderCal(); return; }
-  if(e.target.closest('#fcDpNext')){ e.preventDefault(); var v2=FC_DP.view, m2=v2.m+1, y2=v2.y; if(m2>11){m2=0;y2++;} FC_DP.view={y:y2,m:m2}; fcRenderCal(); return; }
-  if(e.target.closest('#fcDpApply')){ e.preventDefault(); fcCommitDate(); return; }
-  if(e.target.closest('#fcDpClear')){ e.preventDefault(); fcClearDate(); return; }
-  if(e.target.closest('#fcDatePop')){ e.preventDefault(); return; }   // click nền lịch: không làm gì, không forward
+  if(e.target.closest('#fcDateWrap')) return;   // bộ lọc ngày chuẩn tự xử lý click của nó
   var it=e.target.closest('.combo-item'); if(!it) return;
   e.preventDefault();   // combo nằm trong <label>: chặn label forward click về input (sẽ mở lại menu vừa đóng)
   var inp=it.closest('.combo').querySelector('input');
@@ -8571,7 +8348,6 @@ document.getElementById('fcBody').addEventListener('click',function(e){
 });
 document.addEventListener('click',function(e){
   if(!e.target.closest('#fcBody .combo')) fcCloseMenus();
-  if(!e.target.closest('#fcDateWrap')) fcCloseDatePop();
 });
 function fcComboV(id){ var inp=document.querySelector('#fcBody .fccombo[data-id="'+id+'"] input'); return inp?Number(inp.getAttribute('data-v')):NaN; }
 function fcBaseVal(){ var inp=document.querySelector('#fcBody .fccombo[data-id="fcBase"] input'); return (inp&&inp.getAttribute('data-v'))||'conlai'; }
@@ -8614,118 +8390,30 @@ function kkFcSim(){
   }
   need.textContent=txt;
 }
-/* ===== BỘ CHỌN KHOẢNG NGÀY (bắt đầu → hạn chót) — port nguyên pattern "Ngày ghi nhận" của kiemsoatkho =====
-   Click 1 = ngày bắt đầu, click 2 = hạn chót; preset hướng TƯƠNG LAI (lập kế hoạch đợt kiểm); Áp dụng mới chốt. */
-var FC_DP={view:{y:0,m:0},selS:'',selE:'',start:'',end:''};
+/* ===== THỜI GIAN ĐỢT KIỂM (bắt đầu → hạn chót) = BỘ LỌC NGÀY CHUẨN taoBoLocNgay (19/10, user: «bộ lọc ngày ở Planogram làm chuẩn
+   toàn dự án») — thay lịch fc* tự dựng. Nút nhanh tính TỚI (+7/+14/+30 ngày, Hết tháng); 1 ngày = không hạn chót. ===== */
+var FC_DP={start:'',end:''}, FC_LOC=null;
 function fcIsoOf(y,m,d){ function p(n){ return (n<10?'0':'')+n; } return y+'-'+p(m+1)+'-'+p(d); }
 function fcTodayISO(){ var t=new Date(kkTodayMsVN()); return fcIsoOf(t.getUTCFullYear(),t.getUTCMonth(),t.getUTCDate()); }
 function fcFmtVN(iso){ return iso?iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4):''; }
-function fcDpRange(){ var a=FC_DP.selS||FC_DP.start, b=FC_DP.selE||FC_DP.end||''; if(a&&b&&a>b){ var t=a;a=b;b=t; } return [a,b]; }
-function fcMonthHTML(y,m){
-  var first=Date.UTC(y,m,1), dow=(new Date(first).getUTCDay()+6)%7, start=first-dow*86400000, g='';
-  for(var i=0;i<42;i++){ var dt=new Date(start+i*86400000);
-    var iso=fcIsoOf(dt.getUTCFullYear(),dt.getUTCMonth(),dt.getUTCDate());
-    g+='<span class="dp-day'+(dt.getUTCMonth()!==m?' out':'')+'" data-iso="'+iso+'">'+dt.getUTCDate()+'</span>';
-  }
-  var dows=['T2','T3','T4','T5','T6','T7','CN'].map(function(x){ return '<span class="dp-dow">'+x+'</span>'; }).join('');
-  return '<span class="dp-month"><span class="dp-mtitle" style="display:block">Th'+(m+1)+' '+y+'</span><span class="dp-grid">'+dows+g+'</span></span>';
-}
-function fcRenderCal(){
-  var y=FC_DP.view.y, m=FC_DP.view.m, y2=(m===11)?y+1:y, m2=(m+1)%12;
-  var el=document.getElementById('fcDpMonths'); if(!el) return;
-  el.innerHTML=fcMonthHTML(y,m)+fcMonthHTML(y2,m2);
-  fcPaintSel();
-  fcPositionDatePop();   // canh lại vị trí sau khi đổi tháng (kích thước có thể đổi)
-}
-/* Định vị lịch (position:fixed) bám nút chọn ngày, tự lật lên/né mép, không bị .modalbody cắt.
-   LƯU Ý: .modalbox có transform (will-change) nên là containing block của phần tử fixed
-   -> toạ độ fixed tính theo .modalbox, phải trừ đi offset của .modalbox (mr.left/top). */
-function fcPositionDatePop(){
-  var pop=document.getElementById('fcDatePop'), btn=document.getElementById('fcDateBtn');
-  if(!pop||!btn||pop.classList.contains('hidden')) return;
-  pop.style.maxHeight='';   // reset để đo kích thước tự nhiên
-  var r=btn.getBoundingClientRect(), vw=window.innerWidth, vh=window.innerHeight, M=8;
-  var pw=pop.offsetWidth, ph=pop.offsetHeight;
-  var leftVp=Math.max(M, Math.min(r.left, vw-pw-M));
-  var below=vh-r.bottom-M, above=r.top-M, topVp;
-  if(ph<=below || below>=above){ topVp=r.bottom+6; if(ph>below) pop.style.maxHeight=Math.max(160,below-6)+'px'; }
-  else { var h=Math.min(ph,above-6); pop.style.maxHeight=Math.max(160,h)+'px'; topVp=Math.max(M,r.top-6-h); }
-  var box=btn.closest('.modalbox'), ox=0, oy=0;
-  if(box){ var mr=box.getBoundingClientRect(); ox=mr.left; oy=mr.top; }   // quy về hệ toạ độ containing block
-  pop.style.left=Math.round(leftVp-ox)+'px';
-  pop.style.top=Math.round(topVp-oy)+'px';
-}
-var _fcDpBound=false;
-function fcBindReposition(on){
-  if(on && !_fcDpBound){ window.addEventListener('resize',fcPositionDatePop); window.addEventListener('scroll',fcPositionDatePop,true); _fcDpBound=true; }
-  else if(!on && _fcDpBound){ window.removeEventListener('resize',fcPositionDatePop); window.removeEventListener('scroll',fcPositionDatePop,true); _fcDpBound=false; }
-}
-function fcPaintSel(){
-  var r=fcDpRange(), a=r[0], b=r[1], today=fcTodayISO();
-  document.querySelectorAll('#fcDpMonths .dp-day').forEach(function(el){
-    var iso=el.getAttribute('data-iso');
-    el.classList.remove('in-range','edge');
-    el.classList.toggle('today',iso===today);
-    if(a&&b){ if(iso===a||iso===b) el.classList.add('edge'); else if(iso>a&&iso<b) el.classList.add('in-range'); }
-    else if(a&&iso===a) el.classList.add('edge');
-  });
-  var s=document.querySelector('#fcDatePop .dpsel');
-  if(s) s.textContent=a?(b&&b!==a?fcFmtVN(a)+' → '+fcFmtVN(b):fcFmtVN(a)+' → (không hạn)'):'Chưa chọn';
-}
-function fcUpdateDateBtn(){
-  var b=document.getElementById('fcDateBtn'); if(!b) return;
-  b.textContent=FC_DP.start?(FC_DP.end?fcFmtVN(FC_DP.start)+' → '+fcFmtVN(FC_DP.end):fcFmtVN(FC_DP.start)+' → (không hạn)'):'Hôm nay';
-}
-function fcOpenDatePop(){
-  var base=FC_DP.start||fcTodayISO();
-  FC_DP.view={y:Number(base.slice(0,4)),m:Number(base.slice(5,7))-1};
-  /* chỉ coi là ĐÃ có dải khi user từng chốt hạn — start mặc định "hôm nay" không tính,
-     để click đầu tiên luôn bắt đầu dải mới (không bị kéo dài từ hôm nay) */
-  FC_DP.selS=FC_DP.end?FC_DP.start:''; FC_DP.selE=FC_DP.end;
-  var pop=document.getElementById('fcDatePop');
-  pop.innerHTML=
-    '<span class="dp-presets" style="display:flex">'+
-      '<button type="button" data-preset="today">Hôm nay</button>'+
-      '<button type="button" data-preset="7">+7 ngày</button>'+
-      '<button type="button" data-preset="14">+14 ngày</button>'+
-      '<button type="button" data-preset="30">+30 ngày</button>'+
-      '<button type="button" data-preset="month">Hết tháng</button>'+
-    '</span>'+
-    '<span class="dp-nav" style="display:flex"><button type="button" id="fcDpPrev">‹ Trước</button><span></span><button type="button" id="fcDpNext">Sau ›</button></span>'+
-    '<span class="dp-months" id="fcDpMonths" style="display:flex"></span>'+
-    '<span class="dp-foot" style="display:flex"><span class="dpsel">Chưa chọn</span><span><button type="button" id="fcDpClear">Xoá</button><button type="button" class="primary" id="fcDpApply">Áp dụng</button></span></span>';
-  pop.classList.remove('hidden');
-  document.getElementById('fcDateWrap').classList.add('open');
-  fcRenderCal();
-  fcBindReposition(true);   // canh lại khi cuộn/đổi cỡ cửa sổ trong lúc lịch mở
-}
-function fcCloseDatePop(){
-  var pop=document.getElementById('fcDatePop');
-  if(pop&&!pop.classList.contains('hidden')){ pop.classList.add('hidden'); pop.innerHTML=''; pop.style.maxHeight=''; }
-  var w=document.getElementById('fcDateWrap'); if(w) w.classList.remove('open');
-  fcBindReposition(false);
-}
-function fcPreset(p){
+function fcTaoLocNgay(){
+  var w=document.getElementById('fcDateWrap'); FC_LOC=null; if(!w||typeof window.taoBoLocNgay!=='function') return;
   var t=fcTodayISO(), tm=Date.parse(t+'T00:00:00Z');
-  function plus(n){ var d=new Date(tm+n*86400000); return fcIsoOf(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()); }
-  FC_DP.selS=t;
-  if(p==='today') FC_DP.selE='';
-  else if(p==='month'){ var d=new Date(tm); FC_DP.selE=fcIsoOf(d.getUTCFullYear(),d.getUTCMonth()+1,0); }
-  else FC_DP.selE=plus(Number(p));
-  FC_DP.view={y:Number(FC_DP.selS.slice(0,4)),m:Number(FC_DP.selS.slice(5,7))-1};
-  fcRenderCal();   // preset chỉ TÔ dải, chưa đóng — bấm Áp dụng mới chốt (đúng hành vi kiemsoatkho)
+  var cong=function(n){ var d=new Date(tm+n*86400000); return fcIsoOf(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()); };
+  var chu=function(a,b){ return a?(b&&b!==a?fcFmtVN(a)+' → '+fcFmtVN(b):fcFmtVN(a)+' → (không hạn)'):''; };
+  FC_LOC=window.taoBoLocNgay({ root:w, idNut:'fcDateBtn', idPop:'fcDatePop', homNay:fcTodayISO, khongRong:true,
+    presets:[{k:'today',lb:'Hôm nay'},{k:'+7',lb:'+7 ngày'},{k:'+14',lb:'+14 ngày'},{k:'+30',lb:'+30 ngày'},{k:'hetthang',lb:'Hết tháng'}],
+    tinhPreset:function(k){ if(k==='today') return [t,t]; if(k==='hetthang'){ var d=new Date(tm); return [t,fcIsoOf(d.getUTCFullYear(),d.getUTCMonth()+1,0)]; }
+      if(/^\+\d+$/.test(k)) return [t,cong(Number(k.slice(1)))]; return null; },
+    macDinh:function(){ return [t,t]; },
+    nhan:function(a,b){ return chu(a,b)||'Hôm nay'; },
+    nhanChon:function(a,b){ return chu(a,b)||'Chưa chọn'; },
+    onApply:function(a,b){ FC_DP.start=a||t; FC_DP.end=(b&&b!==a)?b:''; kkFcSim(); } });
+  FC_LOC.dat(FC_DP.start,FC_DP.end);
 }
-function fcCommitDate(){
-  var r=fcDpRange();
-  FC_DP.start=r[0]||fcTodayISO(); FC_DP.end=(r[1]&&r[1]!==r[0])?r[1]:'';
-  fcUpdateDateBtn(); fcCloseDatePop(); kkFcSim();
-}
-function fcClearDate(){
-  FC_DP.selS=FC_DP.selE=''; FC_DP.start=fcTodayISO(); FC_DP.end='';
-  fcUpdateDateBtn(); fcCloseDatePop(); kkFcSim();
-}
+function fcCloseDatePop(){ if(FC_LOC) FC_LOC.dong(); }
 function closeFcModal(){
-  fcBindReposition(false);   // gỡ listener định vị lịch
+  fcCloseDatePop();
   var m=document.getElementById('fcmodal'); m.classList.remove('show');
   document.body.classList.remove('ovl-open');
   setTimeout(function(){ m.style.display='none'; document.getElementById('fcBody').innerHTML=''; },240);
@@ -10059,7 +9747,7 @@ async function pcOpen(){
 }
 function closePcModal(){
   document.body.classList.remove('pcm-open');
-  pcCloseCombos();
+  pcCloseCombos(); pcDpClose();
   var m=document.getElementById('pcmodal'); m.classList.remove('show');
   setTimeout(function(){ m.style.display='none'; },240);
 }
@@ -10407,41 +10095,22 @@ async function plLoad(){
 /* Người dùng CHỦ ĐỘNG bấm nút mới hỏi khoá (pcKeyGet có prompt) — nhập xong tải lại sổ kế hoạch */
 function plNhapKhoa(){ if(pcKeyGet()) plLoad(); }
 
-/* ===== Plan date (modal tạo lệnh): date-pop 1 ngày, tái dùng lưới tháng fcMonthHTML + CSS dp-* (C5) ===== */
-var PC_DP2={y:0,m:0};
+/* ===== Plan date (modal tạo lệnh) = BỘ LỌC NGÀY CHUẨN taoBoLocNgay, chọn 1 ngày (19/10) — thay date-pop C5 tự dựng ===== */
+var PC_LOC=null;
 function pcDateSet(iso){
   document.getElementById('pcDate').value=iso||'';
-  document.getElementById('pcDateBtn').textContent=iso?(iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4)):'Chọn ngày';
+  if(!PC_LOC&&typeof window.taoBoLocNgay==='function'){
+    var t=new Date(); t.setDate(t.getDate()+1); var mai=t.getFullYear()+'-'+kkP2(t.getMonth()+1)+'-'+kkP2(t.getDate());
+    PC_LOC=window.taoBoLocNgay({ root:document.getElementById('pcDateWrap'), idNut:'pcDateBtn', idPop:'pcDatePop', homNay:fcTodayISO, motNgay:true, khongRong:true,
+      presets:[{k:'today',lb:'Hôm nay'},{k:'mai',lb:'Ngày mai'}],
+      tinhPreset:function(k){ return k==='mai'?[mai,mai]:null; },
+      macDinh:function(){ return [mai,mai]; },
+      nhan:function(a){ return a?'':'Chọn ngày'; },
+      onApply:function(a){ document.getElementById('pcDate').value=a||mai; pcRender(); } });
+  }
+  if(PC_LOC) PC_LOC.dat(iso||'',iso||'');
 }
-function pcDpToggle(){
-  var pop=document.getElementById('pcDatePop');
-  if(!pop.classList.contains('hidden')){ pop.classList.add('hidden'); return; }
-  var iso=document.getElementById('pcDate').value||fcTodayISO();
-  PC_DP2.y=Number(iso.slice(0,4)); PC_DP2.m=Number(iso.slice(5,7))-1;
-  pcDpRender(); pop.classList.remove('hidden');
-}
-function pcDpNav(d){ PC_DP2.m+=d; if(PC_DP2.m<0){ PC_DP2.m=11; PC_DP2.y--; } if(PC_DP2.m>11){ PC_DP2.m=0; PC_DP2.y++; } pcDpRender(); }
-function pcDpRender(){
-  var pop=document.getElementById('pcDatePop');
-  pop.innerHTML='<span style="display:flex;justify-content:space-between;gap:6px;margin-bottom:8px">'+
-    '<button type="button" onclick="pcDpNav(-1)" aria-label="Tháng trước">‹</button>'+
-    '<button type="button" onclick="pcDpNav(1)" aria-label="Tháng sau">›</button></span>'+fcMonthHTML(PC_DP2.y,PC_DP2.m);
-  var sel=document.getElementById('pcDate').value, today=fcTodayISO();
-  pop.querySelectorAll('.dp-day').forEach(function(x){
-    var iso=x.getAttribute('data-iso');
-    if(iso===sel) x.classList.add('edge');
-    if(iso===today) x.classList.add('today');
-  });
-}
-document.getElementById('pcDatePop').addEventListener('click',function(e){
-  var day=e.target.closest('.dp-day'); if(!day) return;
-  pcDateSet(day.getAttribute('data-iso'));
-  document.getElementById('pcDatePop').classList.add('hidden');
-  pcRender();
-});
-document.addEventListener('click',function(e){
-  if(!e.target.closest('#pcDateWrap')){ var p=document.getElementById('pcDatePop'); if(p&&!p.classList.contains('hidden')) p.classList.add('hidden'); }
-});
+function pcDpClose(){ if(PC_LOC) PC_LOC.dong(); }
 function plStColor(s){ s=String(s).toUpperCase();
   if(/PEND/.test(s)) return 'var(--warn)';
   if(/PROCESS/.test(s)) return 'var(--info)';
