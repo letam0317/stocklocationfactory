@@ -1928,10 +1928,11 @@ html.ad body :is(#viewNds,#viewCd,#viewTem) :is(label,b){font-weight:600!importa
 html.ad body .combo-menu{border-radius:8px!important}
 /* Trạng thái lưu trữ: 5 thẻ gradient → Statistic antd (cùng ô số Bất thường / Retail): nhãn xám trên, số màu chữ, chấm màu loại */
 html.ad body .cards{gap:12px}
-html.ad body .cards > .card{background:var(--surface)!important;color:var(--text)!important;border:1px solid var(--ad-chia,var(--border));border-radius:8px!important;box-shadow:none!important;padding:16px!important;display:flex;flex-direction:column}
-html.ad body .cards > .card .k{font-size:24px!important;font-weight:600!important;line-height:32px!important;letter-spacing:0;color:var(--text)}
-html.ad body .cards > .card .l{order:-1;display:flex;align-items:center;gap:8px;margin:0 0 4px!important;font-size:14px!important;font-weight:400!important;line-height:22px;opacity:1;color:var(--muted)}
-html.ad body .cards > .card .l::before{content:'';flex:none;width:6px;height:6px;border-radius:50%;background:var(--cc,var(--accent))}
+/* 21/10 đánh giá 20/10 (mục 4.3f «Retail và Factory hai bộ màu, hai bố cục»): thẻ số Factory CÙNG KHUÔN thẻ Tổng quan Retail (.tq-o) —
+   nền nhuộm nhẹ theo màu thẻ, nhãn + số cùng màu, viền nhạt; bỏ chấm tròn trước nhãn */
+html.ad body .cards > .card{background:color-mix(in srgb,var(--cc,var(--accent)) 7%,var(--surface))!important;color:var(--text)!important;border:1px solid color-mix(in srgb,var(--cc,var(--accent)) 32%,var(--surface));border-radius:8px!important;box-shadow:none!important;padding:12px 16px!important;display:flex;flex-direction:column}
+html.ad body .cards > .card .k{font-size:28px!important;font-weight:600!important;line-height:36px!important;letter-spacing:0;color:var(--cc,var(--text))}
+html.ad body .cards > .card .l{order:-1;display:flex;align-items:center;gap:8px;margin:0!important;font-size:13px!important;font-weight:500!important;line-height:20px;opacity:1;color:color-mix(in srgb,var(--cc,var(--accent)) 55%,var(--text))}
 html.ad body .cards > .card.c1{--cc:#0d9488} html.ad body .cards > .card.c2{--cc:#d97706} html.ad body .cards > .card.c3{--cc:#2563eb} html.ad body .cards > .card.c4{--cc:#7c3aed} html.ad body .cards > .card.c5{--cc:#e11d48}
 html.ad body .nds-tools{background:color-mix(in srgb,#000 45%,transparent)!important}
 @media(max-width:1150px){.pg-main:has(#plgSide[hidden]){grid-template-columns:minmax(0,1fr)}#plgList{min-height:0}#plgList > .pg-dspanel{position:static}.pg-dslist{overflow:visible}}
@@ -3253,7 +3254,7 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
      giaodien-antd.js (nguồn ở kiemsoatkho/hasaki-giaodien-antd.js). Nạp đồng bộ ở head để khung hình đầu đã đúng kiểu. -->
 <script>window.AD_BI_DANH={"hangmuctonkho/kiemke":"kk","hangmuctonkho/tonkhobatthuong":"kk#viewAbn"};   /* 15/10 link cũ → mục gộp «Tồn kho chính xác» */ window.AD_TEN='Audit Factory'; window.AD_LOGO='factory-logo.png'; window.AD_TEN_MAU='#000'; window.AD_CHUYEN={ten:'Audit Retail', app:'retail'};</script>   <!-- 13/10 user: logo Mastige (chỉ hình tròn chữ M) + chữ màu logo -->
 <script src="giaodien-antd.js?v=20261016a"></script>
-<script src="tai-khoan.js?v=20261017a"></script>   <!-- 14/10 đăng nhập + phân quyền (bản chép từ kiemsoatkho/tai-khoan.js) -->
+<script src="tai-khoan.js?v=20261019a"></script>   <!-- 14/10 đăng nhập + phân quyền (bản chép từ kiemsoatkho/tai-khoan.js) -->
 <link rel="stylesheet" href="thanh-cuon.css?v=20261017a"><!-- 17/10 thanh cuộn chung theo theme (bản gốc hasaki/kiemsoatkho/thanh-cuon.css) -->
 <link rel="stylesheet" href="bo-loc-ngay.css?v=20261019a"><script src="bo-loc-ngay.js?v=20261019a"></script><!-- 19/10 BỘ LỌC NGÀY CHUẨN toàn dự án (bản chép Y HỆT hasaki/kiemsoatkho/bo-loc-ngay.*) -->
 </head>
