@@ -461,10 +461,21 @@ body.an-chan .footbar{display:none}
 #kkOneBar.kkloc #kkWhBar .kkwhcb .combo-menu{width:max-content;min-width:100%;max-width:340px;right:auto;z-index:40}
 #kkOneBar.kkloc #kkWhBar .combo-item.on .nm{color:var(--accent);font-weight:600}
 #kkOneBar.kkloc .fclr[hidden],#kkOneBar.kkloc .fld.bare:has(button[hidden]){display:none!important}
+.kk-lochd, .pg-lochd{display:flex; justify-content:space-between; align-items:center;}
+#kkOneBar .btn-filter, .pg-loc .btn-filter{display:none;}
+@media(max-width:768px){
+  #kkOneBar .btn-filter, .pg-loc .btn-filter{position:relative;display:inline-flex!important;align-items:center;justify-content:center;gap:6px;margin-left:auto;padding:0 10px;height:28px;min-height:28px;font-size:12px;font-weight:500;line-height:1;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;white-space:nowrap;}
+  #kkOneBar .btn-filter::after, .pg-loc .btn-filter::after{content:'';display:inline-block;width:5.5px;height:5.5px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateY(-1.5px) rotate(45deg);transition:transform .22s var(--ez-apple,ease);}
+  #kkOneBar .btn-filter.mo::after, .pg-loc .btn-filter.mo::after{transform:translateY(1.5px) rotate(-135deg);}
+  #kkOneBar .btn-filter:hover,#kkOneBar .btn-filter.mo,.pg-loc .btn-filter:hover,.pg-loc .btn-filter.mo{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--surface));}
+  #kkOneBar .kk-locbody.collapsed, .pg-loc .pg-locbody.collapsed{display:none!important;}
+  #kkOneBar .kk-locbody:not(.collapsed), .pg-loc .pg-locbody:not(.collapsed){transform-origin:top center;animation:popIn .22s var(--ez-spring,cubic-bezier(.16,1,.3,1));}
+}
 @media(max-width:768px){.kktop{grid-template-columns:1fr}
   /* QC điện thoại (luật răng cưa): 5 ô xếp dọc mỗi ô 1 hàng chiếm 32% màn → lưới 2 cột [Kho][Ngày] [Request][Type SKU] [Type vị trí] */
-  #kkOneBar.kkloc{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-  #kkOneBar.kkloc>h2{grid-column:1/-1}
+  #kkOneBar.kkloc{display:flex!important;flex-direction:column;gap:8px}
+  .kk-lochd{width:100%;}
+  #kkOneBar .kk-locbody{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%;}
   #kkOneBar.kkloc #kkFilters:not([hidden]){display:contents!important}
   #kkOneBar.kkloc .kkfbar .fld.bare{grid-column:1/-1}
   .kkphai>.qtcpanel{order:-1}   /* tra SL đếm: kết quả ngay dưới ô gõ, không bị thẻ Bộ lọc đẩy xuống nửa màn (luật rác đầu màn) */}
@@ -2513,9 +2524,9 @@ body.side-open #sideNav .s-grp:nth-of-type(2){animation-delay:.05s}
    header sticky vẫn dính bình thường, khác overflow:hidden). */
 body.side-anim{overflow-x:clip}
 @media(max-width:768px){
-  #sideNav{width:72vw;max-width:264px}   /* 15/10 đồng bộ Retail: cỡ Drawer antd; nút thu nằm trong đầu ngăn kéo */
-  body.side-open #sideToggle{translate:calc(min(72vw,264px) - 52px) 0;z-index:1303}
-  @supports not (translate:1px 0){ body.side-open #sideToggle{left:calc(min(72vw,264px) + 7px)} }
+  #sideNav{width:200px;max-width:200px}   /* 15/10 đồng bộ Retail: cỡ Drawer antd; nút thu nằm trong đầu ngăn kéo */
+  body.side-open #sideToggle{translate:calc(200px - 52px) 0;z-index:1303}
+  @supports not (translate:1px 0){ body.side-open #sideToggle{left:calc(200px + 7px)} }
   body.side-open #sideBackdrop{opacity:1;visibility:visible}
 }
 /* ============================================================================================
@@ -3320,9 +3331,11 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
        Thẻ Bộ lọc xếp dọc: Kho (xổ xuống) · Ngày kiểm · Request · Type SKU · Type vị trí — luôn hiện (bỏ nút thu/xổ «Bộ lọc»). -->
   <div class="kktop" id="kkTop">
     <section class="panel kkloc kkbar" id="kkOneBar">
-      <h2>Bộ lọc</h2>
-      <span id="kkWhBar"></span>
-      <span class="mfilters kkmf kkfbar" id="kkFilters" hidden></span>
+      <div class="kk-lochd"><h2>Bộ lọc</h2><button type="button" class="btn-filter" id="kkBtnLoc" onclick="kkToggleLoc()">Bộ lọc</button></div>
+      <div id="kkLocBody" class="kk-locbody">
+        <span id="kkWhBar"></span>
+        <span class="mfilters kkmf kkfbar" id="kkFilters" hidden></span>
+      </div>
     </section>
     <!-- ===== TRA CỨU SL ĐẾM THEO SKU (25/08/2026) — tra lại "Quantity count" của Physical Count
          Detail: gõ SKU hoặc bấm icon trong ô để quét mã vạch/QR bằng camera. Nguồn: tab Sheet
@@ -6035,11 +6048,23 @@ function plgVeTop(T){
      = chưa khai báo lịch · xanh = đã vệ sinh · đỏ = chưa · hổ phách = lịch chưa duyệt). */
   var seg='';
   document.getElementById('plgTop').innerHTML=
-    '<section class="panel pg-loc"><h2>Bộ lọc</h2>'+chips+ngay+seg+'</section>'+
+    '<section class="panel pg-loc"><div class="pg-lochd"><h2>Bộ lọc</h2><button type="button" class="btn-filter" id="pgBtnLoc" onclick="plgToggleLoc()">Bộ lọc</button></div><div id="pgLocBody" class="pg-locbody' + (window.matchMedia('(max-width:768px)').matches ? ' collapsed' : '') + '">'+chips+ngay+seg+'</div></section>'+
     plgTheTienDo(T)+plgTheCanXuLy(T);
   var ph=document.getElementById('plgNgayPh'), lc=plgLocNgay();
   if(ph&&lc){ ph.replaceWith(lc.el); lc.dat(plgISO(new Date(kh.tu)),plgISO(new Date(kh.den))); }
 }
+window.plgToggleLoc = function(){
+  var b = document.getElementById('pgLocBody'), nut = document.getElementById('pgBtnLoc');
+  if(!b || !nut) return;
+  var col = b.classList.toggle('collapsed');
+  nut.classList.toggle('mo', !col);
+};
+window.kkToggleLoc = function(){
+  var b = document.getElementById('kkLocBody'), nut = document.getElementById('kkBtnLoc');
+  if(!b || !nut) return;
+  var col = b.classList.toggle('collapsed');
+  nut.classList.toggle('mo', !col);
+};
 /* Thẻ TIẾN ĐỘ — trái: vòng % (màu theo 4 trạng thái) + «x / y vị trí»; phải: 4 ô trạng thái xếp dọc, bấm = mở bảng lọc sẵn */
 function plgTheTienDo(T){
   var tong=T.tong||0, vs=T.vs, acc=0, p=plgPct(vs.da,tong);
@@ -7787,6 +7812,10 @@ function kkRenderWhBar(){
   if(dang) return;   // đang gõ trong ô kho thì không dựng lại (mất chữ)
   el.innerHTML='<div class="combo kkwhcb"><input aria-label="Kho" autocomplete="off" placeholder="Tất cả kho" title="Lọc toàn tab Kiểm kê theo kho" value="'+esc(KK.wh||'')+'"'+
     ' oninput="kkWhMenu(this.parentNode,1)" onfocus="kkWhMenu(this.parentNode)"><div class="combo-menu"></div></div>';
+  if(window.matchMedia('(max-width:768px)').matches){
+    var b0=document.getElementById('kkLocBody'), n0=document.getElementById('kkBtnLoc');
+    if(b0&&!b0.classList.contains('collapsed')&&(!n0||!n0.classList.contains('mo'))) b0.classList.add('collapsed');
+  }
 }
 function kkWhMenu(cb,go){
   var inp=cb.querySelector('input'), menu=cb.querySelector('.combo-menu');
@@ -17350,7 +17379,7 @@ async function tmvIn(){
     }).join('');
     /* Chọn tab KHÔNG tự đóng thanh bên — nó ghim tới khi bấm nút hoặc nền mờ (mobile) */
     nav.querySelectorAll('.s-item').forEach(function(el){
-      el.addEventListener('click',function(){ showTab(el.getAttribute('data-tab')); });
+      el.addEventListener('click',function(){ showTab(el.getAttribute('data-tab')); if(document.body.classList.contains('side-open')) nhipDoi(false); });   // 21/10 user: chọn mục → thanh bên tự ẩn (web + điện thoại)
     });
     sync();
   }
@@ -17396,6 +17425,15 @@ async function tmvIn(){
     e.preventDefault(); daoChieu();
   });
   nhan(false);
+  /* Luật thanh bên: khi thanh bên phải hiển thị thì thanh bên trái tự động ẩn */
+  try {
+    var obsBen = new MutationObserver(function(){
+      if (!document.body.classList.contains('side-open')) return;
+      var coBenPhai = document.querySelector('#modal.hx-ben.show, #plgmodal.show, .hx-ben.show');
+      if (coBenPhai) nhipDoi(false);
+    });
+    obsBen.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
+  } catch (e) {}
   /* Bọc showTab gốc để đồng bộ trạng thái active của thanh bên (kể cả khi gọi từ nơi khác) */
   if(typeof window.showTab==='function'){ var _st=window.showTab; window.showTab=function(t){ _st(t); sync(); }; }
   build();

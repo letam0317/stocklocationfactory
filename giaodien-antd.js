@@ -156,7 +156,10 @@
     H + " .set-h{font-size:12px;letter-spacing:0;text-transform:none;font-weight:600;color:var(--muted)}",
     H + " .modal-box{border:0;border-radius:8px;box-shadow:" + BONG2 + "}",
     /* 12/10 user: pop-up bị thanh bên đè — mọi pop-up (host z 50, module z 1200) phải NẰM TRÊN thanh bên (60/61) */
-    H + " :is(#modal,#statModal,#hmModal,#ghiModal,#pinModal){z-index:90}" + H + " #lightbox{z-index:95}",   // ảnh phóng mở TỪ pop-up thì phải nằm trên pop-up
+    H + " :is(#modal,#statModal,#hmModal){z-index:90}" + H + " #lightbox{z-index:1400}",   // ảnh phóng mở TỪ pop-up (kể cả pop-up module z 1200) thì phải nằm trên pop-up
+    /* 17/10 user: form Ghi nhận + hộp PIN mở TỪ pop-up ô Planogram (module z 1200) — hạ về 90 ở đây (độ ưu tiên html.ad cao hơn
+       luật #ghiModal 1250 / #pinModal 1260 của module) làm pop-up ô ĐÈ lên hộp PIN, phải tắt pop-up ô mới gõ được mật khẩu. */
+    H + " #ghiModal{z-index:1250}" + H + " #pinModal{z-index:1260}",
     H + " #btnSettings{border-color:transparent;box-shadow:none;width:32px;height:32px;padding:0}",
     H + " #btnSettings:hover{background:var(--ad-re);border-color:transparent}",
     H + " #btnSettings .bars," + H + " #btnSettings .bars::before," + H + " #btnSettings .bars::after{background:var(--text);width:16px}",
@@ -297,7 +300,7 @@
       B + " :is(#pane-kk .hk-strip,#viewKK .kkstrip) .ks .t{height:36px;min-height:0!important;overflow:hidden!important;display:-webkit-box!important;-webkit-line-clamp:2;-webkit-box-orient:vertical}" +
       B + " :is(#pane-kk .hk-strip,#viewKK .kkstrip) .ks .s{max-height:32px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}" +
       B + " :is(#pane-kk .hk-grid2 > .hk-panel,#viewKK .grid2.even > .panel) > h2{min-height:28px;margin-bottom:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}",
-    "@media(max-width:768px){" + B + " :is(#pane-kk .hk-strip,#viewKK .kkstrip){grid-template-columns:repeat(3,minmax(0,1fr));gap:8px!important}" + B + " :is(#pane-kk .hk-strip,#viewKK .kkstrip) .ks{padding:8px 10px!important}" + B + " :is(#pane-kk .hk-strip,#viewKK .kkstrip) .ks .t{font-size:12px!important;line-height:18px!important;white-space:normal!important}" + B + " :is(#pane-kk .hk-strip,#viewKK .kkstrip) .ks .v{font-size:20px!important;line-height:28px!important}}",   // 15/10 điện thoại 3 cột × 2 hàng (6 ô 1 hàng không đọc được ở 390px)
+    "@media(max-width:768px){" + B + " :is(#pane-kk .hk-strip,#viewKK .kkstrip){grid-template-columns:repeat(3,minmax(0,1fr));gap:8px!important}" + B + " :is(#pane-kk .hk-strip,#viewKK .kkstrip) .ks{padding:8px 10px!important}" + B + " :is(#pane-kk .hk-strip,#viewKK .kkstrip) .ks .t{font-size:12px!important;line-height:18px!important;white-space:normal!important}" + B + " :is(#pane-kk .hk-strip,#viewKK .kkstrip) .ks .v{font-size:20px!important;line-height:28px!important}" + B + " :is(#pane-kk .hk-strip,#viewKK .kkstrip) .ks .s{white-space:normal;line-height:16px}}",   // 17/10 QC điện thoại: dòng phụ «≈19 ngày làm việc» bị cắt 10px → cho xuống dòng   // 15/10 điện thoại 3 cột × 2 hàng (6 ô 1 hàng không đọc được ở 390px)
     /* 15/10 user «dùng ant design QC lại khung Kiểm kê/Bất thường — nhiều khung, không chuyên nghiệp»: đo được 3 tầng viền lồng nhau
        (khung phần → thẻ khối → ô số). Chuẩn antd: 1 Card / phần; bên trong KHÔNG lồng Card — khối là vùng phẳng ngăn bằng vạch ngang
        (Divider), ô số là Statistic không viền ngăn bằng vạch dọc; thẻ kho (Tiến độ theo kho) = nền xám nhạt, không viền. */
@@ -322,7 +325,7 @@
     "@media(max-width:768px){" + B + " :is(#pane-kk,#pane-htonbat,#viewKK,#viewAbn) :is(.hk-strip,.kkstrip,.ht-tiles,.abntiles) > :is(.ks,.ht-tile,.abntile){padding:4px 10px!important}" + B + " :is(#pane-kk,#pane-htonbat,#viewKK,#viewAbn) :is(.hk-strip,.kkstrip,.ht-tiles,.abntiles) > :is(.ks,.ht-tile,.abntile):nth-child(3n+1){border-left:0!important;padding-left:0!important}}",
     /* 13/10 QC «vừa chiều ngang»: bảng Task vi phạm (Retail) rộng 1.342px trong khung 1.159px ở màn 1440 → phải kéo ngang.
        Tên NV / quản lý được xuống dòng (bỏ min 22ch), nhãn cột «Tần suất vi phạm» xuống dòng — bảng vừa khung, không cuộn ngang */
-    "@media(min-width:769px){" + B + " :is(thead th,tbody td):is(.c-nv,.c-ql){min-width:0!important;white-space:normal!important}" + B + " thead th:is(.c-freq,.c-nv,.c-ql){white-space:normal!important}}",
+    "@media(min-width:769px){" + B + " :is(thead th,tbody td).c-ql{min-width:0!important;white-space:normal!important}" + B + " thead th:is(.c-freq,.c-ql){white-space:normal!important}}",
     "@media(min-width:769px) and (max-width:1366px){" + B + " :is(thead th,tbody td).c-vitri{width:17ch!important;min-width:17ch!important;max-width:17ch!important}" + B + " tbody td.c-freq{white-space:normal!important}}",
     /* 13/10 Tổng quan phương án B (tqVe) — token antd: thẻ viền 1px bo 8, số 30/600 (ô chỉ số) · 24/600 (thẻ), mô tả 14 xám 2 dòng */
     ".tq{display:flex;flex-direction:column}",
@@ -385,8 +388,8 @@
       /* đầu trang điện thoại 1 hàng: chỉ còn tên mục (nhóm đã thấy trong thanh bên) — chặn luật 13 rác đầu màn */
       H + " #adCrumb .g," + H + " #adCrumb .s{display:none}" +
       H + " #adCrumb{white-space:normal}" + H + " #adCrumb b{font-size:14px;line-height:20px}" +   // máy hẹp 360px: tên dài xuống 2 dòng, không cắt chữ
-      H + " #adLogo{width:min(72vw,264px)}" + H + " #adChuyen{width:min(72vw,264px)}" +
-      H + " #sideNav{width:72vw;max-width:264px}" +
+      H + " #adLogo{width:200px;padding:0 16px}" + H + " #adChuyen{width:200px}" +   /* 21/10 user: điện thoại thanh bên khít cụm dữ liệu (264 → 200px) */
+      H + " #sideNav{width:200px;max-width:200px}" +
       H + " #sideToggle{width:40px;height:40px;top:8px;left:8px}" +
       H + " #btnSettings{width:40px;height:40px}" +
       H + " #btnGhiNhan{min-height:40px}" +
@@ -496,7 +499,8 @@
   window.tqVe = function (el, cfg) {
     if (!el) return;
     /* 14/10 phân quyền (tai-khoan.js): thẻ / ô chỉ số của tab bị «Không» thì không hiện; nhóm hết mục thì bỏ cả nhóm */
-    var coQ = function (k) { return typeof window.tkCo !== "function" || !k || k === "home" || window.tkCo((TQ_APP === "factory" ? "f." : "r.") + String(k).split(":")[0]); };
+    var coQ = function (k) { k = String(k || "").split(":")[0]; if (k === "maytram") k = "xacminh";   /* 20/10: sổ quyền không có khoá r.maytram — Máy trạm thuộc nhóm Xác minh (trước đây bị lọc mất thẻ khi đã đăng nhập) */
+      return typeof window.tkCo !== "function" || !k || k === "home" || window.tkCo((TQ_APP === "factory" ? "f." : "r.") + k); };
     var cs = (cfg.chiSo || []).filter(function (c) { return c && (!c.tab || coQ(c.tab)); });
     cfg = { chiSo: cfg.chiSo, nhom: (cfg.nhom || []).map(function (g) { var g2 = {}; for (var k in g) g2[k] = g[k]; g2.muc = g.khoa && !(window.TK && window.TK.nguoi) ? (g.muc || []) : (g.muc || []).filter(function (m) { return coQ(m.k); }); return g2; }).filter(function (g) { return g.muc.length; }) };
     var h = cs.length ? '<div class="tq-cs n' + cs.length + '">' + cs.map(function (c) {
