@@ -175,6 +175,9 @@ h1.brand-title{margin:0;min-width:0}
 .settings-pop.hidden{display:none}
 .set-sec{display:flex;flex-direction:column;gap:9px}
 .set-h{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+/* 21/10 user: mốc «Cập nhật …» nằm trong Cài đặt › Dữ liệu (thay nút Tải lại); chân trang không còn chip → ẩn khi rỗng */
+.set-dl{font-size:13px;line-height:1.5;color:var(--ink2,var(--text));padding:4px 0}.set-dl b{font-variant-numeric:tabular-nums}.set-dl small{color:var(--muted)}.set-dl-loi{color:var(--warn);font-weight:700}
+.footbar:has(> #loadinfo:empty){display:none}
 .set-field{display:flex;flex-direction:column;gap:5px}
 .set-field>span.lbl{font-size:12px;color:var(--muted);min-height:0}
 /* Combo trong Cài đặt (thay select trần — C4): input cùng dáng field cũ + focus ring chuẩn dự án */
@@ -3283,7 +3286,8 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
       </div>
       <div class="set-sec">
         <div class="set-h">Dữ liệu</div>
-        <button id="reload" class="dropdown-action-btn" onclick="syncWms()" title="Kéo dữ liệu mới trực tiếp từ WMS"><span class="act">Tải lại dữ liệu</span><small class="timestamp-hint" id="tsReload"></small></button>
+        <!-- 21/10 user: bỏ nút «Tải lại dữ liệu / mở khoá lúc …» (máy trạm tự đồng bộ) — thay bằng mốc «Cập nhật …» vốn hiện ở chân trang -->
+        <div class="set-dl" id="dlMoc" title="Dữ liệu do máy trạm tự đồng bộ từ WMS — không cần bấm tải lại">Dữ liệu tự làm mới · chưa có mốc</div>
       </div>
     </div>
   </div>
@@ -4501,7 +4505,7 @@ var _raw=[], _failed=0;
 var TONG_TAB='stockloc-tong';
 var _daNapTho=false, _dangNapTho=null;
 function loadData(){
-  document.getElementById('reload').disabled=true;
+  { var rb=document.getElementById('reload'); if(rb) rb.disabled=true; }   // 21/10 nút Tải lại đã bỏ
   var st=document.getElementById('state'); st.style.display='block';
   st.innerHTML='<div class="spin"></div>Đang tải dữ liệu trực tiếp từ Google Sheet…';
   document.getElementById('content').innerHTML='';
@@ -5245,14 +5249,13 @@ function capNhatThongTin(){
   if(TOPTAB==='kk' && TAB_SYNC.kk) moc=TAB_SYNC.kk;
   else if(TOPTAB==='abn' && TAB_SYNC.abn) moc=TAB_SYNC.abn;
   else if(TOPTAB==='plg' && TAB_SYNC.plg) moc=TAB_SYNC.plg;
-  var el=document.getElementById('loadinfo');
-  if(!moc){ el.innerHTML=''; return; }
-  /* fmtTime cho "HH:mm:ss DD/MM/YYYY" — cắt làm 2 vai để giờ đậm, ngày mờ */
+  /* 21/10 user: chip «Cập nhật …» ở chân trang BỎ; mốc hiện trong Cài đặt › Dữ liệu (thay chỗ nút Tải lại) */
+  var lf=document.getElementById('loadinfo'); if(lf) lf.innerHTML='';
+  var el=document.getElementById('dlMoc'); if(!el) return;
+  if(!moc){ el.textContent='Dữ liệu tự làm mới · chưa có mốc'; return; }
   var s=fmtTime(moc), gio=s.slice(0,8), ngay=s.slice(9);
-  var h='<span class="cn" title="'+esc('Dữ liệu '+tuoiChu(Date.now()-moc)+' · mốc do máy trạm ghi sau khi đồng bộ WMS xong')+'">'+
-        '<i class="cn-dot"></i><span class="cn-lb">Cập nhật</span> '+
-        '<b class="cn-gio">'+gio+'</b> <span class="cn-ngay">'+ngay+'</span></span>';
-  if(TOPTAB==='stock' && _failed) h+=' <span class="cn cn-loi">'+_failed+' tab lỗi</span>';
+  var h='Dữ liệu tự làm mới · Cập nhật <b>'+gio+'</b> '+ngay+' <small>('+esc(tuoiChu(Date.now()-moc))+')</small>';
+  if(TOPTAB==='stock' && _failed) h+=' <span class="set-dl-loi">'+_failed+' tab lỗi</span>';
   el.innerHTML=h;
 }
 /* Tuổi dữ liệu bằng chữ — chỉ hiện trong tooltip của chip (không chiếm chỗ trên màn) */
@@ -5267,7 +5270,7 @@ function tuoiChu(ms){
 }
 /* Nút chỉ "sáng" khi đã qua 4h kể từ lần đồng bộ WMS cuối; còn lại khoá + hint (nút 2 tầng kiểu kiemsoatkho) */
 function capNhatNut(){
-  var btn=document.getElementById('reload');
+  var btn=document.getElementById('reload'); if(!btn) return;   // 21/10 nút Tải lại đã bỏ
   var act=btn.querySelector('.act'), ts=document.getElementById('tsReload');
   if(_syncing){ btn.disabled=true; act.textContent='Đang đồng bộ WMS...'; ts.textContent='có thể mất 1–3 phút'; btn.title='Đang kéo dữ liệu từ WMS.'; return; }
   act.textContent='Tải lại dữ liệu';
