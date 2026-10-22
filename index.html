@@ -4512,7 +4512,7 @@ function tbMoXinQuyen(){
       '<div class="modalbody" style="padding-top:14px"><div id="tbXinQ">'+
       '<input id="tbXinTen" maxlength="60" placeholder="Bạn là ai? (tên · bộ phận)">'+
       '<button id="tbXinBtn" type="button">Xin mã OTP</button><div id="tbXinTT"></div></div>'+
-      /* 23/10 user «đã cấp quyền cho người dùng thì bỏ OTP»: có tài khoản audit-dc → đăng nhập là đủ quyền (GAS nhận phiên thay mã máy) */
+      /* 22/10 user «đã cấp quyền cho người dùng thì bỏ OTP»: có tài khoản audit-dc → đăng nhập là đủ quyền (GAS nhận phiên thay mã máy) */
       (window.tkMoDangNhap?'<div class="tbtk" style="margin-top:12px;font-size:13px;color:var(--muted,#6b7280)">Đã được cấp tài khoản? '+
         '<button type="button" onclick="tbDangNhapTk()" style="border:0;background:none;padding:0;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;text-decoration:underline">Đăng nhập</button> — không cần OTP.</div>':'')+
       '<div id="tbOtpQ"><input id="tbOtpMa" inputmode="numeric" autocomplete="one-time-code" maxlength="4" '+
