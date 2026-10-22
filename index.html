@@ -495,6 +495,17 @@ body.an-chan .footbar{display:none}
 #hdrKkPlan{margin-right:8px;white-space:nowrap}
 @media(max-width:1420px){.kkplan .pt{display:none}.kkplan .ps{display:inline}}   /* màn hẹp: nút rút gọn còn chữ "Kế hoạch" (tooltip giữ đủ chữ) */
 /* Bộ lọc cấp tab khi mở: trượt xuống hàng bên dưới, không làm nhảy vị trí các nút ở trên */
+/* 22/10 bộ lọc Kiểm kê = khuôn Retail › Tồn kho chính xác: 5 ô 1 hàng; nhãn chữ thường như Retail; điện thoại ô mã trọn hàng */
+#kkLocBody{grid-template-columns:1fr 1fr 1.6fr 1fr 1fr}
+#kkLocBody .lbl{text-transform:none;letter-spacing:0}
+#kkLocBody{border-bottom:0!important}   /* 1 vạch ngăn như Retail: vạch đầu khối «Kiểm kê theo SKU» đã đủ */
+@media(max-width:768px){#kkLocBody{grid-template-columns:repeat(2,minmax(0,1fr))}#kkLocBody .kk-ma{grid-column:1/-1}}
+.kk-ma{display:flex;flex-direction:column;gap:4px;min-width:0}
+.kk-ma-o{display:flex;min-width:0}
+.kk-ma-o .cs{flex:0 0 auto;width:auto;min-width:0}
+.kk-ma-o .cs-trigger{border-top-right-radius:0;border-bottom-right-radius:0;background:color-mix(in srgb,var(--muted) 8%,var(--surface))}
+.kk-ma-o input{flex:1 1 auto;min-width:0;margin-left:-1px;border-top-left-radius:0!important;border-bottom-left-radius:0!important}
+.kk-ma-o .cs-trigger:focus,.kk-ma-o input:focus{position:relative;z-index:1}
 #kkFilters:not([hidden]){display:flex;flex-wrap:wrap;align-items:center;gap:8px;width:100%;padding-top:4px;border-top:1px dashed var(--line)}
 #kkOneBar.thu #kkWhBar,#kkOneBar.thu #kkFilters,#kkFilters[hidden]{display:none !important}
 #kkmodal .kkwrap{overflow-x:auto}
@@ -3342,7 +3353,7 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
 <script>window.AD_BI_DANH={"hangmuctonkho/kiemke":"kk","hangmuctonkho/tonkhobatthuong":"kk#viewAbn"};   /* 15/10 link cũ → mục gộp «Tồn kho chính xác» */ window.AD_TEN='Audit Factory'; window.AD_LOGO='factory-logo.png'; window.AD_TEN_MAU='#000'; window.AD_CHUYEN={ten:'Audit Retail', app:'retail'};</script>   <!-- 13/10 user: logo Mastige (chỉ hình tròn chữ M) + chữ màu logo -->
 <script src="giaodien-antd.js?v=20261016a"></script>
 <script src="tai-khoan.js?v=20261019a"></script>   <!-- 14/10 đăng nhập + phân quyền (bản chép từ kiemsoatkho/tai-khoan.js) -->
-<link rel="stylesheet" href="thanh-cuon.css?v=20261017a"><!-- 17/10 thanh cuộn chung theo theme (bản gốc hasaki/kiemsoatkho/thanh-cuon.css) -->
+<link rel="stylesheet" href="thanh-cuon.css?v=20261022a"><!-- 17/10 thanh cuộn chung theo theme (bản gốc hasaki/kiemsoatkho/thanh-cuon.css) -->
 <link rel="stylesheet" href="bo-loc-ngay.css?v=20261019a"><script src="bo-loc-ngay.js?v=20261019a"></script><!-- 19/10 BỘ LỌC NGÀY CHUẨN toàn dự án (bản chép Y HỆT hasaki/kiemsoatkho/bo-loc-ngay.*) -->
 </head>
 <body>
@@ -3406,27 +3417,15 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
       <button type="button" class="btn-filter" id="kkBtnLoc" onclick="kkToggleLoc()">Bộ lọc</button>
     </div>
     <div class="filters collapsed" id="kkLocBody" data-mb-rangcua="luoi-1-cot-gap-mac-dinh">
+      <!-- 22/10 user «Bộ lọc làm giống Retail › Tồn kho chính xác»: Kho · Trạng thái · Tìm theo mã (ID / Source code / Request code chung 1 ô) · Ngày kiểm · Ngày kế hoạch -->
       <label><span class="lbl">Kho</span><select id="kkWhSel"></select></label>
+      <label><span class="lbl">Trạng thái</span><select id="kkStSel"></select></label>
+      <div class="kk-ma"><span class="lbl">Tìm theo mã</span><div class="kk-ma-o"><select id="kkMaLoai" aria-label="Loại mã"><option value="id">ID</option><option value="src">Source code</option><option value="req">Request code</option></select><input type="search" id="kkMaInp" autocomplete="off" placeholder="Nhập ID…"></div></div>
       <div class="date-filter" id="kkfNgay"><span class="lbl">Ngày kiểm</span></div>
       <div class="date-filter" id="kkPlanSlot"><span class="lbl">Ngày kế hoạch</span></div>
-      <label><span class="lbl">ID</span><input type="search" id="kkIdInp" autocomplete="off" placeholder="Tìm ID…"></label>
-      <label><span class="lbl">Source code</span><input type="search" id="kkSrcInp" autocomplete="off" placeholder="Source code…"></label>
-      <label><span class="lbl">Request code</span><input type="search" id="kkReqInp" autocomplete="off" placeholder="Request code…"></label>
-      <label><span class="lbl">Trạng thái</span><select id="kkStSel"></select></label>
     </div>
   </div>
-  <!-- ===== TRA CỨU SL ĐẾM THEO SKU (Quantity count · phiếu Full location - Factory) ===== -->
-  <section class="panel qtcpanel" style="margin-bottom:12px;">
-    <h2>Tra cứu SL đếm theo SKU<span class="h2tip-slot" data-tip-key="qtc"></span> <span class="hint">(Quantity count · phiếu Full location - Factory)</span></h2>
-    <div class="qtcrow">
-      <div class="qtcbox">
-        <input id="qtcSku" inputmode="numeric" autocomplete="off" placeholder="Gõ SKU, Enter để tra…" onkeydown="if(event.key==='Enter')qtcTra()">
-        <button type="button" class="qtcqrbtn" onclick="qtcQuetMo()" title="Quét mã vạch / QR trên tem bằng camera — bắt được mã là tự điền ô SKU và tra luôn" aria-label="Quét mã bằng camera"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><rect x="7.5" y="7.5" width="4" height="4" rx=".8"/><rect x="13" y="13" width="4" height="4" rx=".8"/><path d="M13 9.5h2M9.5 13v2M15.5 9.5v1.5"/></svg></button>
-      </div>
-      <button type="button" class="kktab qtcgo" id="qtcGo" onclick="qtcTra()">Tra cứu</button>
-    </div>
-    <div id="qtcKq"></div>
-  </section>
+  <!-- 22/10 user «ở factory: bỏ Tra cứu SL đếm theo SKU» — khối đã gỡ; hàm qtc* còn lại phục vụ pop-up QR UIDgr -->
   <div class="grid2 even">
     <section class="panel">
       <h2>Kiểm kê theo SKU<span class="h2tip-slot" data-tip-key="kk"></span> <span class="hint">(Type: SKU · SKU Factory)</span> <span class="kkscope" id="kkScope-sku" hidden></span></h2>
@@ -7385,6 +7384,7 @@ async function qtcTra(boCache){
 var QTC_SUNG={buf:'',t:0};
 document.addEventListener('keydown',function(e){
   if(typeof TOPTAB==='undefined'||TOPTAB!=='kk') return;
+  if(!document.getElementById('qtcSku')) return;   // 22/10 khối Tra cứu SL đếm đã gỡ — súng quét không tra ngầm nữa
   var tg=e.target, tag=tg&&tg.tagName;
   if(tag==='INPUT'||tag==='TEXTAREA'||(tg&&tg.isContentEditable)) return;   // ô qtcSku đã có Enter riêng; ô khác không cướp
   if(document.querySelector('.modal.show:not(#qtcqrmodal)')) return;         // pop-up khác đang mở — không tra ngầm sau lưng
@@ -7977,23 +7977,22 @@ function kkRenderWhBar(){
     if(whSel) whSel.addEventListener('change',function(){ KK.wh=this.value; kkRender(); });
     if(stSel) stSel.addEventListener('change',function(){ KK.st=this.value; kkRender(); });
 
-    var idInp=document.getElementById('kkIdInp');
-    if(idInp) idInp.addEventListener('input',function(){
-      clearTimeout(_kkDebT); var v=this.value.trim();
-      _kkDebT=setTimeout(function(){ KK.id=v; kkRender(); },250);
-    });
-
-    var srcInp=document.getElementById('kkSrcInp');
-    if(srcInp) srcInp.addEventListener('input',function(){
-      clearTimeout(_kkDebT); var v=this.value.trim();
-      _kkDebT=setTimeout(function(){ KK.src=v; kkRender(); },250);
-    });
-
-    var reqInp=document.getElementById('kkReqInp');
-    if(reqInp) reqInp.addEventListener('input',function(){
-      clearTimeout(_kkDebT); var v=this.value.trim();
-      _kkDebT=setTimeout(function(){ KK.req=v; kkRender(); },250);
-    });
+    /* 22/10 ID / Source code / Request code gom 1 ô — chọn loại mã ở đầu ô, gõ mã bên phải; chỉ lọc theo loại đang chọn (cùng cách Retail) */
+    var KK_MA={id:'ID',src:'Source code',req:'Request code'}, maSel=document.getElementById('kkMaLoai'), maInp=document.getElementById('kkMaInp');
+    var datMa=function(){ var v=maInp?maInp.value.trim():''; KK.id=KK.src=KK.req=''; KK[KK.maLoai||'id']=v; kkRender(); };
+    if(maSel){
+      if(typeof window.enhanceSelect==='function') window.enhanceSelect(maSel);
+      /* khung chọn loại mã khít chữ, khoá bề rộng theo chữ dài nhất («Request code») — đổi loại không làm ô nhảy */
+      var wr=maSel._csWrap, tg=wr&&wr.querySelector('.cs-trigger');
+      if(tg){
+        var cs=getComputedStyle(tg), sp=document.createElement('span');
+        sp.style.cssText='position:absolute;visibility:hidden;white-space:nowrap;left:-9999px;top:0'; sp.style.font=cs.font; sp.textContent='Request code'; document.body.appendChild(sp);
+        var px=sp.getBoundingClientRect().width+parseFloat(cs.paddingLeft)+parseFloat(cs.paddingRight)+parseFloat(cs.borderLeftWidth)+parseFloat(cs.borderRightWidth)+10+(parseFloat(cs.columnGap)||8)+2;
+        sp.remove(); wr.style.flex='0 0 '+Math.ceil(px)+'px';
+      }
+      maSel.addEventListener('change',function(){ KK.maLoai=this.value; if(maInp) maInp.placeholder='Nhập '+KK_MA[KK.maLoai]+'…'; datMa(); });
+    }
+    if(maInp) maInp.addEventListener('input',function(){ clearTimeout(_kkDebT); _kkDebT=setTimeout(datMa,250); });
 
     if(typeof window.taoBoLocNgay==='function'){
       var cdRoot=document.getElementById('kkfNgay');
@@ -8045,9 +8044,7 @@ function kkfReset(){
   KKF.s=''; KKF.e='';
   if(KKF_LOC) KKF_LOC.dat('','');
   if(KK_PLAN_LOC) KK_PLAN_LOC.dat('','');
-  var idInp=document.getElementById('kkIdInp'); if(idInp) idInp.value='';
-  var srcInp=document.getElementById('kkSrcInp'); if(srcInp) srcInp.value='';
-  var reqInp=document.getElementById('kkReqInp'); if(reqInp) reqInp.value='';
+  var maInp=document.getElementById('kkMaInp'); if(maInp) maInp.value='';   // 22/10 ID/Source/Request gom 1 ô
   var whSel=document.getElementById('kkWhSel'); if(whSel) whSel.value='';
   var stSel=document.getElementById('kkStSel'); if(stSel) stSel.value='';
   if(whSel&&whSel._csWrap&&typeof whSel._csWrap._csDongBo==='function') whSel._csWrap._csDongBo();
