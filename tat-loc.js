@@ -13,7 +13,7 @@
  * Bản chép: factory/tat-loc.js (sửa ở đây rồi chép sang). */
 (function () {
   if (window.__TAT_LOC) return; window.__TAT_LOC = 1;
-  var KHUNG = ".modal-box,.modalbox,.hk-dau-panel,.kk-dau-panel,.panel,.pane,section";
+  var KHUNG = ".modal-box,.modalbox,.hp-modalbox,.hk-modalbox,.ht-modalbox,.hk-dau-panel,.kk-dau-panel,.panel,.pane,section";   // 26/10: + khung pop-up module (nút «Bộ lọc» của loc-popup.js)
   var chuNut = function (b) { var c = b.cloneNode(true), x = c.querySelector(".tat-loc"); if (x) x.remove(); return (c.textContent || "").trim(); };
   var la = function (el) { return el.tagName === "BUTTON" && /^Bộ lọc/.test(chuNut(el)) && !el.classList.contains("tat-loc"); };
   /* mục tự báo đang lọc: chữ «đang lọc», lớp dang-loc, huy hiệu đếm (Factory «Bộ lọc nâng cao» n) */
