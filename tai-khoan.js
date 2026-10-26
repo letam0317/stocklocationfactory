@@ -88,6 +88,8 @@
     if (APP === "r" && !TK.nguoi && (q["r.xacminh"] || "khong") === "khong") css.push("#sideNav .s-grp.s-khoa,.tq-gkhoa{display:none!important}");
     /* 26/10 user «không có nút Ghi nhận 5S kể cả khi đã đăng nhập — nhiều người bị»: tài khoản NV đều Vi phạm = «Xem» ⇒ nút bị ẩn, trong khi khách
        chưa đăng nhập lại thấy nút (xin OTP). Nay nút Ghi nhận chỉ ẩn khi Vi phạm = «Không»; «Xem» bấm vào thì xin OTP như khách, «Xem + thao tác» mở thẳng. */
+    /* 26/10 user «Khách thấy + Biên bản nhưng bấm lại đòi OTP — ẩn luôn với khách»: biên bản chỉ cho tài khoản Vi phạm = Xem + thao tác */
+    if (APP === "r" && !TK.nguoi) css.push(".bb-up{display:none!important}");
     if (APP === "r" && an("r.ghinhan")) css.push("#btnGhiNhan,.hp-vtghi{display:none!important}");   // 26/10 tách quyền «Ghi nhận 5S»
     (THAO_TAC[APP] || []).forEach(function (x) { if (x[2] ? (cur === x[1] && q[x[1]] !== "lam") : q[x[1]] !== "lam") css.push(x[0] + "{display:none!important}"); });
     stQ.textContent = css.join("\n");
@@ -318,11 +320,24 @@
     if (f.vaiTro) f.vaiTro.onchange = function () { var q = f.vaiTro.value === "quantri"; f.querySelector(".tk-qwrap").innerHTML = bangQuyen(q ? null : x.quyen, q) + (q ? '<div class="tk-goiy">Quản trị luôn có toàn quyền.</div>' : ""); };
     noiQuyen(f);
     var layQ = function () { var q = {}; [].slice.call(f.querySelectorAll("input[type=radio][name^='q:']:checked")).forEach(function (r) { q[r.name.slice(2)] = r.value; }); return chuanQ(q); };
-    f.onsubmit = function (ev) { ev.preventDefault();
-      var p = x.khach ? goi("tk_luukhach", { phien: TK.phien, quyen: layQ() })
-        : goi("tk_luu", { phien: TK.phien, tk: { id: f.id.value, ten: f.ten.value, mk: f.mk.value, vaiTro: f.vaiTro.value, quyen: layQ(), khoa: f.khoa.checked } });
+    /* 26/10 user «taina1 đã phân quyền + Ghi nhận mà vẫn báo chưa được cấp»: máy chủ ghi Xem — lần lưu bị mất (2 lượt ghi trùng lúc, nay GAS khoá)
+       hoặc chưa bấm Lưu. Nay: bấm chọn quyền ở tài khoản có sẵn / Khách là TỰ LƯU; sau khi lưu ĐỌC LẠI máy chủ, lệch thì báo đỏ, không báo «Đã lưu». */
+    var luot = 0;
+    var luu = function () {
+      var q = layQ(), so = ++luot, id = x.khach ? "" : f.id.value.trim().toLowerCase();
+      var p = x.khach ? goi("tk_luukhach", { phien: TK.phien, quyen: q })
+        : goi("tk_luu", { phien: TK.phien, tk: { id: f.id.value, ten: f.ten.value, mk: f.mk.value, vaiTro: f.vaiTro.value, quyen: q, khoa: f.khoa.checked } });
       trangThai(f, "", "Đang lưu…");
-      p.then(function () { return goi("tk_ds", { phien: TK.phien }); }).then(function (j) { QL = j; veDs(o); trangThai(f, "ok", "Đã lưu."); }).catch(function (e) { trangThai(f, "loi", e.message); }); };
+      p.then(function () { return goi("tk_ds", { phien: TK.phien }); }).then(function (j) { QL = j; if (so !== luot) return;
+        var moi = x.khach ? { quyen: j.khach } : (j.ds || []).find(function (t) { return t.id === id; });
+        var lech = !moi ? ["(không thấy tài khoản)"] : f.vaiTro && f.vaiTro.value === "quantri" ? [] : MUC.filter(function (m) { return (moi.quyen || {})[m[0]] !== q[m[0]]; }).map(function (m) { return m[1]; });
+        veDs(o); [].slice.call(o.querySelectorAll(".tk-dong")).forEach(function (d) { d.classList.toggle("on", x.khach ? d.dataset.id === "" : d.dataset.id === id); });
+        if (lech.length) trangThai(f, "loi", "Máy chủ chưa nhận: " + lech.join(", ") + " — bấm Lưu lại.");
+        else { trangThai(f, "ok", "Đã lưu lúc " + new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) + ".");
+          if (f.mk) f.mk.value = ""; if (moi && !x.khach) x = moi; else if (x.khach) x.quyen = j.khach; } })
+        .catch(function (e) { if (so === luot) trangThai(f, "loi", e.message + " — chưa lưu, bấm Lưu lại."); }); };
+    f.onsubmit = function (ev) { ev.preventDefault(); luu(); };
+    if (!x.moi) f.addEventListener("change", function (ev) { if (ev.target.type === "radio") { clearTimeout(f._hen); f._hen = setTimeout(luu, 350); } });
     var xb = f.querySelector(".tk-xoa");
     if (xb) xb.onclick = function () { if (!confirm("Xoá tài khoản «" + x.id + "»?")) return;
       goi("tk_xoa", { phien: TK.phien, id: x.id }).then(function () { return goi("tk_ds", { phien: TK.phien }); }).then(function (j) { QL = j; veDs(o); suaTk(o, null); }).catch(function (e) { trangThai(f, "loi", e.message); }); };
