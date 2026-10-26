@@ -38,6 +38,11 @@ window.DASH_BOCUC = {
    "k": "tem",
    "ten": "Tem vị trí",
    "nhom": "Công cụ kho"
+  },
+  {
+   "k": "btt",
+   "ten": "Bảng thông tin",
+   "nhom": "Công cụ kho"
   }
  ],
  "khoi": {

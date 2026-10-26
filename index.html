@@ -1973,7 +1973,7 @@ html.ad body :is(.ndsib,.fcg,.pg-seg,.nds-raw){border-radius:6px!important}
 html.ad body :is(.kkstchip,.pg-chip){border-radius:4px!important}
 html.ad body #ndsStage{border-radius:8px!important}
 html.ad body :is(.kkstchip,.kkdhead,.ndsib,.fcg,.pg-chip,.cd-dv.tinh,.cd-th,#tmvBtnIn,.cd-f .g,.cd-f b),
-html.ad body :is(#viewNds,#viewCd,#viewTem) :is(label,b){font-weight:600!important}
+html.ad body :is(#viewNds,#viewCd,#viewTem,#viewBtt) :is(label,b){font-weight:600!important}
 html.ad body .combo-menu{border-radius:8px!important}
 /* Trạng thái lưu trữ: 5 thẻ gradient → Statistic antd (cùng ô số Bất thường / Retail): nhãn xám trên, số màu chữ, chấm màu loại */
 html.ad body .cards{gap:12px}
@@ -2952,6 +2952,45 @@ body.side-anim{overflow-x:clip}
   .tmv-row .cd-in{flex:0 0 100px}
   .tmv-row .cd-in input,.tmv-row .kktab,.tmv-src .kktab,.tmv-tools .kktab{min-height:42px}
 }
+/* ===== TAB "BẢNG THÔNG TIN" (24/10/2026) — khung soạn biển báo. Tái dùng .cd-grid/.cd-f/.cd-in/.kktab/.combo/.nds-raw;
+   ở đây chỉ bố cục riêng + ô chọn (mũi tên đúng kiểu .prcb của pop-up In tem). CSS của chính TẤM BIỂN nằm trong bang-thong-tin.js
+   (màu cố định theo biển gốc, không theo theme — dùng chung cho xem trước và bản in). ===== */
+#viewBtt [hidden]{display:none!important}
+#viewBtt .cd-grid{grid-template-columns:minmax(0,5fr) minmax(0,7fr)}   /* xem trước cần rộng hơn khung nhập */
+#viewBtt .btt-xemp{position:sticky;top:12px}
+@media(max-width:900px){#viewBtt .cd-grid{grid-template-columns:minmax(0,1fr)}#viewBtt .btt-xemp{order:-1;position:static}}   /* điện thoại: xem trước lên đầu */
+#viewBtt .cd-in input{text-align:left;font-variant-numeric:normal;letter-spacing:0;font-weight:600}
+#viewBtt .nds-raw.btt-vung{margin-top:0;min-height:0;resize:vertical;line-height:1.5}
+.btt-hang{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px}
+.btt-hang>.cd-f{flex:1 1 150px;margin-top:0}
+#viewBtt .cd-f.dau{margin-top:0}
+.bttcb input{cursor:pointer;width:100%;height:36px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--ink);
+  padding:0 28px 0 11px;font-size:13.5px;font-weight:600;font-family:inherit;outline:none;text-overflow:ellipsis}
+.bttcb input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}
+.bttcb::after{content:"";position:absolute;right:11px;top:50%;width:6px;height:6px;margin-top:-4px;border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);
+  transform:rotate(45deg);pointer-events:none;transition:transform .2s var(--ease)}
+.bttcb.open::after{transform:rotate(-135deg);margin-top:-1px}
+.bttcb .combo-menu{max-height:300px}
+.btt-muc{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}
+.btt-muc .cd-in+.nds-raw{margin-top:6px}
+.btt-muchd{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.btt-so{font-size:12px;font-weight:700;color:var(--ink2);margin-right:auto}
+.kktab.btt-nho{padding:4px 11px;min-height:30px;font-size:12.5px}
+.btt-them{margin-top:10px}
+.btt-xem{display:flex;justify-content:center;padding:6px 0 2px}
+.btt-san{position:relative;overflow:hidden;border-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.12),0 6px 20px rgba(0,0,0,.14);animation:fadeUp .3s var(--ez-apple,ease) both}
+.btt-dong{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:10px}
+.btt-co{display:flex;align-items:center;gap:6px}
+.btt-coso{min-width:44px;text-align:center;font-size:12.5px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.btt-thu{color:var(--warn);font-weight:600}
+.btt-nut{justify-content:flex-end}
+.btt-tt{min-height:14px;margin-top:6px}
+@media(max-width:768px){
+  #viewBtt .kktab{min-height:40px}   /* vùng chạm ≥ 40 px (luật điện thoại ⑤) — cả nhóm nút chọn màu / có-không */
+  .kktab.btt-nho{min-height:40px;padding:6px 13px}
+  #viewBtt .btt-nut .kktab{min-height:42px}
+  .bttcb input,#viewBtt .cd-in input{height:42px}
+}
 /* Nhan nam TREN o nhap: cau chu thich cua may dong nay dai (vd "khong bao gom chi"), de cung
    hang voi o thi tren dien thoai o nhap bi bop con mot mau. */
 .cd-f{margin-top:10px}
@@ -3351,8 +3390,8 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
 <!-- 12/10 giao diện Ant Design (thanh bên · đầu trang · đường dẫn "Nhóm / Mục"), CHUNG với Audit Hasaki: bản chép
      giaodien-antd.js (nguồn ở kiemsoatkho/hasaki-giaodien-antd.js). Nạp đồng bộ ở head để khung hình đầu đã đúng kiểu. -->
 <script>window.AD_BI_DANH={"hangmuctonkho/kiemke":"kk","hangmuctonkho/tonkhobatthuong":"kk#viewAbn"};   /* 15/10 link cũ → mục gộp «Tồn kho chính xác» */ window.AD_TEN='Audit Factory'; window.AD_LOGO='factory-logo.png'; window.AD_TEN_MAU='#000'; window.AD_CHUYEN={ten:'Audit Retail', app:'retail'};</script>   <!-- 13/10 user: logo Mastige (chỉ hình tròn chữ M) + chữ màu logo -->
-<script src="giaodien-antd.js?v=20261022f"></script>
-<script src="tai-khoan.js?v=20261023a"></script>   <!-- 14/10 đăng nhập + phân quyền (bản chép từ kiemsoatkho/tai-khoan.js) -->
+<script src="giaodien-antd.js?v=20261025c"></script>
+<script src="tai-khoan.js?v=20261024a"></script>   <!-- 14/10 đăng nhập + phân quyền (bản chép từ kiemsoatkho/tai-khoan.js) -->
 <script src="tat-loc.js?v=20261023d" defer></script>   <!-- 22/10 nút «✕ Tắt lọc» · 23/10 dời vào TRONG nút «Bộ lọc» (bản chép từ kiemsoatkho/tat-loc.js) -->
 <link rel="stylesheet" href="thanh-cuon.css?v=20261022a"><!-- 17/10 thanh cuộn chung theo theme (bản gốc hasaki/kiemsoatkho/thanh-cuon.css) -->
 <link rel="stylesheet" href="bo-loc-ngay.css?v=20261019a"><script src="bo-loc-ngay.js?v=20261023a"></script><!-- 19/10 BỘ LỌC NGÀY CHUẨN toàn dự án (bản chép Y HỆT hasaki/kiemsoatkho/bo-loc-ngay.*) -->
@@ -3397,6 +3436,7 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
   <button class="toptab" id="ttSku" onclick="showTab('sku')">Nhận diện SKU</button>
   <button class="toptab" id="ttCd" onclick="showTab('cd')">Chuyển đổi cân</button>
   <button class="toptab" id="ttTem" onclick="showTab('tem')">Tem vị trí</button>
+  <button class="toptab" id="ttBtt" onclick="showTab('btt')">Bảng thông tin</button>
 </div>
 
 <!-- ===== TRANG TỔNG QUAN: bảng chọn hạng mục (màn hình đầu tiên) =====
@@ -3899,6 +3939,35 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
     </section>
   </div>
 </div>
+<!-- ===== TAB "BẢNG THÔNG TIN" (Công cụ kho · 24/10/2026) — biển báo / nội quy kho dựng lại từ 8 bản PDF gốc thành MẪU:
+     tự sửa chữ, chọn khổ (A4/A3/A2, 60×60, 75×30, 100×56 cm hoặc tự nhập), chữ tự thu cho vừa, xuất PDF đúng khổ.
+     Ruột do bang-thong-tin.js dựng (nạp lười khi mở tab); tái dùng .cd-grid/.cd-f/.cd-in/.kktab/.combo/.nds-raw. -->
+<div id="viewBtt" hidden>
+  <div class="cd-grid">
+    <section class="panel">
+      <h2>1 · Nội dung<span class="h2tip-slot" data-tip-key="btt"></span></h2>
+      <div id="bttForm"><div class="state" style="padding:32px 20px">Đang tải mẫu…</div></div>
+    </section>
+    <section class="panel btt-xemp">
+      <h2>2 · Xem trước</h2>
+      <div class="btt-xem" id="bttXem"></div>
+      <div class="btt-dong">
+        <span class="hint" id="bttKhoInfo"></span>
+        <div class="btt-co" role="group" aria-label="Cỡ chữ">
+          <button type="button" class="kktab btt-nho" onclick="bttCo(-0.05)" title="Thu nhỏ chữ">−</button>
+          <span class="btt-coso" id="bttCoSo" title="Cỡ chữ tối đa so với bản gốc — chữ dài thì máy tự thu thêm cho vừa">100%</span>
+          <button type="button" class="kktab btt-nho" onclick="bttCo(0.05)" title="Phóng to chữ">+</button>
+        </div>
+      </div>
+      <div class="btt-dong btt-nut">
+        <button type="button" class="kktab" onclick="bttGoc()" title="Trả mẫu đang chọn về chữ của bản PDF gốc">Khôi phục chữ gốc</button>
+        <button type="button" class="kktab nds-go" id="bttXuat" onclick="bttXuat(this)" title="Mở hộp in đúng khổ đã chọn — chọn «Lưu dưới dạng PDF» để ra tệp gửi nhà in">Xuất PDF</button>
+      </div>
+      <div class="hint btt-tt" id="bttTT" role="status" aria-live="polite"></div>
+    </section>
+  </div>
+</div>
+
 <!-- Pop-up "Toàn bộ vị trí": bảng đầy đủ 161 ô kệ (tương ứng pop-up cùng tên của Audit Hasaki) -->
 <div id="plgallmodal" class="modal" onclick="if(event.target===this)closePlgAll()">
   <div class="modalbox" style="width:min(1080px,96vw)">
@@ -5366,7 +5435,7 @@ function fmtTime(ms){  // HH:mm:ss DD/MM/YYYY — NEO GIỜ VN (+07) như mọi 
    hỏng; bình thường không có lỗi thì dòng này đọc đúng một câu như user yêu cầu. */
 function capNhatThongTin(){
   /* 3 tab "Công cụ kho" đã ẩn hẳn dòng chân -> thoát ngay, không tính rồi ghi vào chỗ không ai thấy */
-  if(TOPTAB==='sku'||TOPTAB==='cd'||TOPTAB==='tem') return;
+  if(TOPTAB==='sku'||TOPTAB==='cd'||TOPTAB==='tem'||TOPTAB==='btt') return;
   var moc=LAST_SYNC_MS;   // mặc định: Metadata (mốc tồn-vị-trí)
   if(TOPTAB==='kk' && TAB_SYNC.kk) moc=TAB_SYNC.kk;
   else if(TOPTAB==='abn' && TAB_SYNC.abn) moc=TAB_SYNC.abn;
@@ -5594,7 +5663,12 @@ var HOME_MUC=[
     { t:'tem', ten:'Tem vị trí', cc:'var(--good)', nhan:'Công cụ',
       mo:'Dán link Google Sheet có UID group · vị trí · SKU · số mm của từng cuộn → tem 40×60: mã group + mã vạch, "501-05-02 | SKU", tên hàng, số mm kèm yard — gửi thẳng máy in kho.',
       muc:['Dán link Sheet','Lọc vị trí/SKU','Xem trước tem','In hàng loạt'],
-      so:function(){ return (typeof TMV!=='undefined'&&TMV.rows.length)?{k:nf(TMV.rows.length),l:'cuộn trong Sheet'}:null; } }
+      so:function(){ return (typeof TMV!=='undefined'&&TMV.rows.length)?{k:nf(TMV.rows.length),l:'cuộn trong Sheet'}:null; } },
+    /* BẢNG THÔNG TIN (24/10/2026): biển báo / nội quy kho (8 bản PDF gốc, chữ đã thành nét vẽ nên không sửa thẳng được)
+       dựng lại thành mẫu — tự sửa chữ, đổi khổ mà vẫn giữ form, xuất PDF đúng khổ cho nhà in. Không chạm upstream. */
+    { t:'btt', ten:'Bảng thông tin', cc:'var(--info,#3b82f6)', nhan:'Công cụ',
+      mo:'Biển báo, nội quy kho theo mẫu có sẵn — sửa chữ, chọn khổ A4/A3 hoặc 100 × 56 cm, chữ tự co cho vừa, xuất PDF đúng khổ để in.',
+      muc:['Chọn mẫu','Sửa chữ','Đổi khổ','Xuất PDF'] }
   ]}
 ];
 function homeMucList(it){ return typeof it.muc==='function'?it.muc():(it.muc||[]); }
@@ -5674,6 +5748,12 @@ var TIP={
   abn:'Chỉ số "bất thường" đọc từ báo cáo stock-inventory-beta: chỉ lấy SKU có Product Type = Normal '+
     'và có ít nhất 1 loại lớn hơn 0 — Conflict, UID Temp, Not Found, Unsuitable product, Committed, '+
     'Committed Outbound.',
+  btt:'Chọn mẫu biển rồi sửa chữ ngay trong các ô; bản xem trước bên cạnh đổi theo. Khổ: A4 / A3 / A2, 60 × 60, 75 × 30, '+
+    '100 × 56 cm hoặc tự nhập — đổi khổ thì nền và khung giãn theo, chữ cùng biểu tượng giữ đúng tỉ lệ. Chữ dài hơn khung thì máy '+
+    'tự thu nhỏ cho vừa; nút − / + chỉnh cỡ chữ tối đa. Ô nội dung của mục nội quy: dòng bắt đầu bằng # là tiêu đề nhỏ màu cam, '+
+    '- là gạch đầu dòng, > là ô ghi chú nền xanh nhạt, ! là dòng cảnh báo, [chữ] [chữ] là hàng nhãn xanh đậm, dòng trống để cách đoạn. '+
+    'Xuất PDF: hộp in mở đúng khổ đã chọn → Đích = «Lưu dưới dạng PDF» → Lưu, gửi tệp cho nhà in. Chữ sửa được nhớ trên máy này; '+
+    '«Khôi phục chữ gốc» trả mẫu về đúng bản PDF ban đầu.',
   tem:'Dán link (hoặc ID) Google Sheet đã bật "ai có link đều xem được"; có thể kèm #gid=… để lấy đúng tab. '+
     'Máy dò cột theo TIÊU ĐỀ hàng đầu: UID group (UIDgr / Group UID / uid), vị trí (Location / Vị trí / Bin), '+
     'SKU, tên hàng (Product name / Tên), số lượng (Qty / Số lượng / Tồn), đơn vị (Unit / ĐVT — thiếu thì lấy '+
@@ -5704,7 +5784,7 @@ function tipDoSlot(){
   });
 }
 function showTab(t){
-  var MAP={home:'viewHome',stock:'viewStock',kk:'viewKK',abn:'viewAbn',plg:'viewPlg',sku:'viewNds',cd:'viewCd',tem:'viewTem'};
+  var MAP={home:'viewHome',stock:'viewStock',kk:'viewKK',abn:'viewAbn',plg:'viewPlg',sku:'viewNds',cd:'viewCd',tem:'viewTem',btt:'viewBtt'};
   if(!MAP[t]) t='home';
   var _denAbn=(t==='abn'); if(_denAbn) t='kk';   // 15/10 «Tồn kho chính xác» = Kiểm kê (trên) + Bất thường (dưới) cùng 1 trang
   TOPTAB=t;
@@ -5721,8 +5801,9 @@ function showTab(t){
   document.getElementById('ttSku').classList.toggle('active',t==='sku');
   document.getElementById('ttCd').classList.toggle('active',t==='cd');
   document.getElementById('ttTem').classList.toggle('active',t==='tem');
-  /* 3 tab "Công cụ kho" không có thanh chân trang (xem body.an-chan trong CSS) */
-  document.body.classList.toggle('an-chan', t==='sku'||t==='cd'||t==='tem');
+  document.getElementById('ttBtt').classList.toggle('active',t==='btt');
+  /* 4 tab "Công cụ kho" không có thanh chân trang (xem body.an-chan trong CSS) */
+  document.body.classList.toggle('an-chan', t==='sku'||t==='cd'||t==='tem'||t==='btt');
   if(t!=='sku' && typeof ndsRoiTab === 'function') ndsRoiTab();   // rời tab thì tắt camera (đèn camera sáng vô cớ + hao pin)
   if(t!=='kk'&&QTC.quetStream) qtcQuetDong();   // camera quét mã của mục Tra SL đếm cũng vậy
   if(t==='kk' && !KK.loadedOnce){ KK.loadedOnce=true; kkLoad(); }    // lazy-load lần đầu mở tab
@@ -5730,6 +5811,7 @@ function showTab(t){
   if(t==='plg' && !PLG.loadedOnce){ PLG.loadedOnce=true; plgLoad(); }
   if(t==='cd' && !CD.loadedOnce){ CD.loadedOnce=true; cdLoad(); }       // tính tay; chip Tex dùng cache danh mục, cùng lắm 1 lượt gviz
   if(t==='tem' && !TMV.loadedOnce){ TMV.loadedOnce=true; tmvLoad(); }   // đọc Sheet của người dùng đã nhớ (1 lượt gviz), không chạm WMS
+  if(t==='btt') bttNap();   // nạp lười 2 tệp mô-đun lần đầu; các lần sau vẽ lại (đo chữ cần khung đang hiện)
   if(t==='sku' && !NDS.loadedOnce){ NDS.loadedOnce=true; ndsLoad(); }   // lazy: 1MB danh mục chỉ tải khi cần
   /* Về Tổng quan thì vẽ lại: số trên thẻ phải khớp thứ vừa xem xong (mở tab Kiểm kê rồi quay ra
      là thấy ngay số dòng kiểm kê), chứ không đứng im ở lần dựng đầu. */
@@ -5739,6 +5821,19 @@ function showTab(t){
   if(typeof pcSyncBar==='function') pcSyncBar();
   if(typeof prSyncBar==='function') prSyncBar();   // thanh chờ in chỉ hiện ở tab Nhận diện SKU
   capNhatThongTin();   // footer neo theo tab đang xem (số dòng đúng tab + cùng mốc cập nhật)
+}
+/* Tab Bảng thông tin: mô-đun ở 2 tệp riêng (bang-thong-tin-hinh.js = nét vẽ tách từ PDF gốc ~27 KB, bang-thong-tin.js = mẫu + vẽ + in),
+   chỉ tải khi mở tab lần đầu — trang chính không nặng thêm. Lỗi mạng: báo trên màn + cho bấm lại (luật offline mục 3). */
+var BTT_NAP={dang:null,xong:false};
+function bttNap(){
+  if(BTT_NAP.xong){ bttVe(); return; }
+  if(BTT_NAP.dang) return;
+  var f=document.getElementById('bttForm');
+  var tai=function(src){ return new Promise(function(ok,loi){ var s=document.createElement('script'); s.src=src; s.onload=ok; s.onerror=loi; document.head.appendChild(s); }); };
+  BTT_NAP.dang=tai('bang-thong-tin-hinh.js?v=20261024a').then(function(){ return tai('bang-thong-tin.js?v=20261025a'); })
+    .then(function(){ BTT_NAP.xong=true; if(TOPTAB==='btt') bttVe(); })
+    .catch(function(){ if(f) f.innerHTML='<div class="state" style="padding:32px 20px">Không tải được mẫu (mất mạng?). <button type="button" class="kktab" onclick="bttNap()">Thử lại</button></div>'; })
+    .finally(function(){ BTT_NAP.dang=null; });
 }
 
 /* ============================================================================================
