@@ -3980,7 +3980,7 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
 <div id="plgtramodal" class="modal" onclick="if(event.target===this)closePlgTra()">
   <div class="modalbox" style="width:min(920px,96vw);height:min(640px,90vh);display:flex;flex-direction:column">
     <div class="modalhd"><div><div class="mt">Tra cứu dãy kệ</div>
-      <div class="mtsub">Chọn 1 dãy để xem từng ô kệ của dãy đó — kho đang giữ tồn và trạng thái vệ sinh</div></div>
+      </div>
       <button class="mclose" onclick="closePlgTra()">&times;</button></div>
     <div class="pg-nk">
       <div class="pg-nkl"><input id="plgTraQ" autocomplete="off" placeholder="Tìm dãy… (501, 507A…)" oninput="plgTraTim(this.value)"><div class="pg-nklist" id="plgTraList"></div></div>
@@ -4193,7 +4193,7 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
 <!-- Modal "Kế hoạch kiểm kê trên WMS": đọc LIVE /wms/counting-plans/type-sku — Pending = chờ push, Processing = đã push; kèm ai push, lúc nào -->
 <div id="plmodal" class="modal" onclick="if(event.target===this)closePlModal()">
   <div class="modalbox">
-    <div class="modalhd"><div><div class="mt">Kế hoạch kiểm kê trên WMS <span class="hint">(counting plan · type SKU)</span></div><div class="mtsub">Pending = chờ WMS push thành phiếu · Processing = đã push, đang kiểm · đọc trực tiếp từ WMS</div></div><button class="mclose" onclick="closePlModal()">&times;</button></div>
+    <div class="modalhd"><div><div class="mt">Kế hoạch kiểm kê trên WMS</div></div><button class="mclose" onclick="closePlModal()">&times;</button></div>
     <div class="mfilters kkmf">
       <div class="fld q"><label>Tìm nhanh</label><input id="plQ" autocomplete="off" placeholder="SKU / tên / kho / người push / ngày…" oninput="plRender()"></div>
       <div class="fld bare" style="flex:0 0 auto"><button class="fcg" onclick="PL.at=0;plLoad()">⟳ Làm mới từ WMS</button></div>
@@ -4285,7 +4285,7 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
      Đóng pop-up = TẮT camera (qtcQuetDong) — không để đèn camera sáng vô cớ. -->
 <div id="qtcqrmodal" class="modal" onclick="if(event.target===this)qtcQuetDong()">
   <div class="modalbox qtcqrbox">
-    <div class="modalhd"><div><div class="mt">Quét mã SKU</div><div class="mtsub">QR / Code 128 trên tem — bắt được là tự điền ô SKU và tra luôn</div></div><button class="mclose" onclick="qtcQuetDong()">&times;</button></div>
+    <div class="modalhd"><div><div class="mt">Quét mã SKU</div></div><button class="mclose" onclick="qtcQuetDong()">&times;</button></div>
     <div class="qtcqrbody">
       <div class="qtcvidwrap"><video id="qtcVideo" autoplay playsinline muted></video><div class="qtcaim"></div></div>
       <div class="hint" id="qtcQrHint" style="white-space:normal"></div>
@@ -4299,7 +4299,7 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
     <div class="modalhd">
       <div>
         <div class="mt" id="qtcShowQrTitle">Mã QR</div>
-        <div class="mtsub" id="qtcShowQrSub">Nhấn hoặc nhấp đúp để xem mã QR</div>
+        <div class="mtsub" id="qtcShowQrSub"></div>
       </div>
       <button class="mclose" onclick="qtcQrPopDong()">&times;</button>
     </div>
@@ -5241,7 +5241,7 @@ function openModal(w){
      undefined → TypeError chết cả pop-up. Trả bảng rỗng (thấy "Không có dữ liệu") thay vì chết câm. */
   MODAL_ROWS=WH_DATA[w]||{shelf:[],pend:[]};
   MODAL_KEY=3;
-  openDetail(w,'Chi tiết SKU theo mã vị trí — lọc theo từng cột bên dưới');
+  openDetail(w,'');
 }
 function openCatModal(cat){
   if(!_daNapTho){ moSauKhiCoChiTiet(function(){ openCatModal(cat); }); return; }
@@ -5252,7 +5252,7 @@ function openCatModal(cat){
   }
   MODAL_ROWS={shelf:sh,pend:pe};
   MODAL_KEY=5;
-  openDetail(cat,'Chi tiết SKU của category trên '+Object.keys(whn).length+' kho — lọc theo từng cột bên dưới');
+  openDetail(cat,'Chi tiết SKU của category trên '+Object.keys(whn).length+' kho');
 }
 function openDetail(title,sub){
   var isWh=(MODAL_KEY===3);
@@ -5280,7 +5280,7 @@ function closeModal(){
 function openCatWh(cat){
   var ca=CAT_DATA[cat]; if(!ca) return;
   document.getElementById('cmtitle').textContent='Chi tiết lên kệ: '+cat;
-  document.getElementById('cmsub').textContent='Phân bổ trên '+ca.whs.length+' kho — số SKU đếm distinct theo Kho × Category';
+  document.getElementById('cmsub').textContent=ca.whs.length+' kho';   // 26/10 AD-07
   var rows=ca.whs.slice().sort(function(x,y){ return (y[1]-x[1]) || ((y[1]+y[2])-(x[1]+x[2])); });
   var html=rows.map(function(wr){
     var tot=wr[1]+wr[2], rt=tot?wr[1]/tot*100:0;
@@ -5347,7 +5347,7 @@ function renderRows(giuLim){
   }
   if(cnt>RR_LIM){
     out.push('<tr><td colspan="5" class="empty">Đang hiện '+nf(Math.min(RR_LIM,cnt))+' / '+nf(cnt)+' dòng'+
-      (RR_LIM<RR_MAX?' — <button type="button" class="whnum" style="min-height:40px;padding:8px 16px" onclick="rrXemThem()">Xem thêm 1.000 dòng</button>':' (trần 4.000 — dùng bộ lọc để thu hẹp)')+'</td></tr>');
+      (RR_LIM<RR_MAX?' — <button type="button" class="whnum" style="min-height:40px;padding:8px 16px" onclick="rrXemThem()">Xem thêm 1.000 dòng</button>':' (trần 4.000)')+'</td></tr>');
   }
   document.getElementById('mbody').innerHTML=out.length?out.join(''):'<tr><td colspan="5" class="empty">Không có dữ liệu phù hợp</td></tr>';
   document.getElementById('msum').textContent=nf(cnt)+' dòng · tổng số lượng '+nf(qsum);
@@ -6736,7 +6736,7 @@ function plgHtmlVt(tong){
   var body=rows.length?rows.slice(0,CAP).map(function(o){ return plgHangVt(o); }).join('')
     :'<div class="pg-dsrong">Không có vị trí nào khớp bộ lọc.</div>';
   var capNote=rows.length>CAP?(CAP===20?'<button type="button" class="pg-dsmore" onclick="PLG.dsHet=true;plgVeList()">Xem cả '+nf(rows.length)+' vị trí</button>'
-    :'<div class="pg-dsrong">Hiển thị '+nf(CAP)+' / '+nf(rows.length)+' — dùng bộ lọc để thu hẹp.</div>'):'';
+    :'<div class="pg-dsrong">Hiển thị '+nf(CAP)+' / '+nf(rows.length)+'</div>'):'';
   return '<div class="pg-whbar pg-chipbar">'+chips+'</div>'+
     '<input class="pg-search" placeholder="Tìm vị trí / dãy / kho / người vệ sinh…" value="'+esc(PLG.q||'')+'" oninput="plgSearch(this.value)">'+
     '<div class="pg-dslist">'+body+capNote+'</div>';
@@ -6854,7 +6854,7 @@ function plgOpenAll(st){
   document.getElementById('plgallTitle').textContent='Toàn bộ vị trí'+(PLG.st?' — '+PLG_ST[PLG.st].lb:'');
   document.getElementById('plgallSub').textContent=
     nf(loc.length)+'/'+nf(os.length)+' ô kệ'+(PLG.area?' · '+plgTenNgan(PLG.area):' · cả 2 kho')+
-    ' — danh mục lấy theo mặt bằng thật (bản vẽ MTG_zigzag), không lấy từ dữ liệu lịch';
+    '';
   document.getElementById('plgallBody').innerHTML=
     '<div class="pg-tblwrap" style="max-height:60vh"><table class="pg-tbl mbcard"><thead><tr>'+
     '<th>Vị trí</th><th>Dãy</th><th>Cột</th><th>Kho giữ tồn</th><th>Trạng thái vệ sinh</th>'+
@@ -7147,7 +7147,7 @@ function plgAnhDi(k){ var n=PLGANH.list.length; if(n<2) return; PLGANH.i=(PLGANH
 function plgAnhVe(){
   var n=PLGANH.list.length;
   document.getElementById('plgAnhTitle').textContent=PLGANH.nhan;
-  document.getElementById('plgAnhSub').textContent='Ảnh '+(PLGANH.i+1)+'/'+n+(n>1?' — mũi tên trái/phải để lật':'');
+  document.getElementById('plgAnhSub').textContent='Ảnh '+(PLGANH.i+1)+'/'+n;   // 26/10 AD-10: bỏ «mũi tên trái/phải để lật»
   document.getElementById('plgAnhImg').src=PLGANH.list[PLGANH.i]||'';
   var nav=document.querySelectorAll('#plganhmodal .pg-lbnav');
   for(var j=0;j<nav.length;j++) nav[j].style.display=(n<2)?'none':'';
@@ -8509,7 +8509,7 @@ function kkFcOpen(kind){
   KK_FC={kind:kind,fc:fc,U:U};
   document.getElementById('fcTitle').textContent='Dự báo hoàn thành kiểm kê · '+U;
   var chuan=fc.chuan||kkChuanCho(kind);
-  document.getElementById('fcSub').textContent=(KK.wh?('Kho '+KK.wh):'Toàn bộ kho')+' · còn lại '+nf(notc)+' '+U+' chưa kiểm · chuẩn '+chuan.ten+' · lịch làm việc bỏ qua Chủ nhật';
+  document.getElementById('fcSub').textContent=KK.wh?('Kho '+KK.wh):'';   // 26/10 AD-07: bỏ «còn lại … · chuẩn … · lịch làm việc bỏ qua Chủ nhật»
   var htmlA='',htmlB='';
   /* Khối mô phỏng ② — nguồn tốc độ: bộ số CHUẨN (mặc định) hoặc thực đo tại chỗ (chỉ khi phạm vi lọc có phiếu kèm giờ) */
   function simHtml(){
@@ -8729,15 +8729,7 @@ function kkOpen(kind,metric){
   var lab=(metric.indexOf('st:')===0)?('trạng thái '+kkStMeta(metric.slice(3))[0]):KK_METRIC_LABEL[metric];
   if(lech) kkLechTitle();
   else document.getElementById('kkmTitle').textContent=U+' · '+lab+(KK.wh?(' · kho '+KK.wh):'')+' — '+nf(rows.length)+' dòng';
-  document.getElementById('kkmSub').textContent=(KK.wh?('Đang lọc theo kho '+KK.wh+' · '):'')+(metric==='total'
-    ? 'Mẫu số tuyệt đối: distinct (kho|mã) tồn kho từ Stock Location — 1 mã nằm nhiều vị trí chỉ tính 1, kèm cột trạng thái kiểm kê'
-    : metric==='notcount'
-    ? 'Anti-join: tồn kho từ Stock Location TRỪ tập (kho|mã) đã kiểm — đây là phần chưa được đụng tới'
-    : lech
-    ? 'Gộp theo SKU SAU BÙ TRỪ vị trí TRONG TỪNG ĐỢT KIỂM (request): thiếu bin này thừa bin kia tự bù, chỉ SKU có tổng ≠ 0 mới tính lệch · bộ lọc ngày không áp ở đây (đợt kiểm vắt ngày) · dưới mỗi SKU là từng vị trí × UID group (Action sửa tự do) · bấm MÃ PHIẾU để mở phiếu đó trên WMS (tab mới) · chuyển "Danh sách phiếu" để xem theo phiếu như cũ'
-    : (metric==='counted')
-    ? 'Đã khử trùng phiếu: mỗi (kho|mã) chỉ tính 1 phiếu đã kiểm MỚI NHẤT (ưu tiên phiếu không bị từ chối/huỷ) · bấm MÃ PHIẾU để mở phiếu đó trên WMS (tab mới)'
-    : 'Bấm MÃ PHIẾU để mở phiếu đó trên WMS (tab mới) · ✎ = phiếu có số lượng điều chỉnh');
+  document.getElementById('kkmSub').textContent='';   // 26/10 AD-07/AD-10: bỏ «Mẫu số / Anti-join / Gộp theo SKU… / Đã khử trùng… · bấm MÃ PHIẾU…»
   kkmBuildFilters();
   _skuCat=null;   // dữ liệu tồn kho/phiếu có thể vừa nạp lại — map SKU→Category dựng tươi mỗi lượt mở
   kkmRender();
@@ -8880,14 +8872,14 @@ function kkmRender(){
     var rsP=kkmRowsWith(null,state,'');
     var nAct1=state.filter(function(f){ return f.v; }).length+(q?1:0);
     if(!UIDGR.map){
-      document.getElementById('kkmSum').textContent=nf(rsP.length)+' phiếu lệch'+(nAct1?' · '+nAct1+' bộ lọc đang áp dụng':'');
+      document.getElementById('kkmSum').textContent=nf(rsP.length)+' phiếu lệch';
       body.innerHTML=kkViewBar()+'<div class="state" style="padding:22px"><div class="spin"></div>Đang tải chi tiết UID group từ Sheet…</div>';
       return;
     }
     var ug=kkUidGroups(KK_MODAL.kind,KK_MODAL.metric,rsP,q,state,null);
     document.getElementById('kkmSum').textContent=nf(ug.groups.length)+' SKU lệch (sau bù trừ vị trí) · '+nf(ug.nRows)+' dòng UID group'+
       ' · đã kiểm lại (có Action) '+nf(ug.actCo)+'/'+nf(ug.actTong)+' dòng lệch'+(ug.actTong?(' = '+Math.round(ug.actCo/ug.actTong*100)+'%'):'')+
-      (nAct1?' · '+nAct1+' bộ lọc đang áp dụng':'');
+      '';
     body.innerHTML=kkViewBar()+((UIDGR.err&&!ug.groups.length)
       ? '<div class="state" style="padding:22px;white-space:normal">⚠ Chưa đọc được tab <code>kiemke-uidgr</code> trên Sheet (tab chưa được cụm sync tạo, hoặc lỗi mạng). Chuyển tạm sang "Danh sách phiếu" để xem, hoặc chờ cụm sync kế. <button class="fcg" onclick="uidgrLoad(true).then(kkmRender)">Thử lại</button></div>'
       : kkUidTable(ug));
@@ -8903,7 +8895,7 @@ function kkmRender(){
   }
   /* dòng tổng kết .msum — cùng vị trí/kiểu với pop-up Trạng thái lưu trữ */
   var nAct=state.filter(function(f){ return f.v; }).length+(q?1:0);
-  document.getElementById('kkmSum').textContent=nf(rs.length)+' / '+nf(KK_MODAL.rows.length)+' dòng'+(nAct?' · '+nAct+' bộ lọc đang áp dụng':'');
+  document.getElementById('kkmSum').textContent=nf(rs.length)+' / '+nf(KK_MODAL.rows.length)+' dòng';
   body.innerHTML=kkViewBar()+((KK_MODAL.metric==='notcount')?kkTableRemain(KK_MODAL.kind,rs)
     :(KK_MODAL.metric==='total')?kkTableRemain(KK_MODAL.kind,rs,true)
     :kkTable(KK_MODAL.kind,rs));
@@ -9214,7 +9206,7 @@ function abnOpenType(k){ var ty=abnType(k); if(!ty) return; abnCanDong(function(
 function abnShowModal(base,title,preset){
   ABN_MODAL.base=base||[]; ABN_MODAL.preset=preset||null;
   document.getElementById('abnmTitle').textContent=title;
-  document.getElementById('abnmSub').textContent=nf(ABN_MODAL.base.length)+' dòng (kho | SKU) — combo lọc sinh động, gõ để lọc, đếm số dòng';
+  document.getElementById('abnmSub').textContent='';   // 26/10 AD-07 + không lặp
   abnmBuildFilters();
   /* mở modal TRƯỚC với placeholder nhẹ, đổ bảng SAU 1 frame — render bảng lớn không chặn frame mở pop-up (chống "not responding") */
   document.getElementById('abnmSum').textContent='';
@@ -9326,13 +9318,13 @@ function abnmRender(){
         '<td class="num abtot" data-lb="Tồn">'+nf(r.in_stock)+'</td><td class="num abav" data-lb="Available">'+nf(r.available)+'</td>'+tds+'</tr>');
     }
   }
-  if(rows.length>cap) out.push('<tr><td colspan="'+NCOL+'" class="empty">Hiển thị '+nf(cap)+' / '+nf(rows.length)+' dòng — dùng bộ lọc để thu hẹp.</td></tr>');
+  if(rows.length>cap) out.push('<tr><td colspan="'+NCOL+'" class="empty">Hiển thị '+nf(cap)+' / '+nf(rows.length)+' dòng</td></tr>');
   var body=document.getElementById('abnmBody');
   body.innerHTML=out.length?out.join(''):'<tr><td colspan="'+NCOL+'" class="empty">Không có dòng phù hợp</td></tr>';
   pcSyncAll(document.getElementById('abnmodal'),rows);   // ô "chọn tất cả" phản ánh đúng tập đang lọc
   var nAct=state.filter(function(f){ return f.v; }).length+(q?1:0);
   var parts=ABN_TYPES.map(function(t){ return t.lb+': '+nf(sums[t.k]); });
-  document.getElementById('abnmSum').textContent=nf(rows.length)+' / '+nf(ABN_MODAL.base.length)+' dòng'+(nAct?(' · '+nAct+' bộ lọc đang áp dụng'):'')+' · Tồn '+nf(sums.in_stock)+' · '+parts.join(' · ');
+  document.getElementById('abnmSum').textContent=nf(rows.length)+' / '+nf(ABN_MODAL.base.length)+' dòng';
 }
 function closeAbnModal(){
   var m=document.getElementById('abnmodal'); m.classList.remove('show');
@@ -9608,7 +9600,7 @@ function tvtOpenWh(w){ tvtShowModal(tvtRowsInScope().filter(function(r){ return 
 function tvtShowModal(base,title,preset){
   TVT_MODAL.base=base||[]; TVT_MODAL.preset=preset||null;
   document.getElementById('tvtmTitle').textContent=title;
-  document.getElementById('tvtmSub').textContent=nf(TVT_MODAL.base.length)+' UID — chưa khai báo UID group mà không nằm ở bãi chờ '+TVT_CHO;
+  document.getElementById('tvtmSub').textContent='';   // 26/10 AD-07
   tvtmBuildFilters();
   document.getElementById('tvtmSum').textContent='';
   document.getElementById('tvtmBody').innerHTML='<tr><td colspan="10" class="empty">Đang hiển thị…</td></tr>';
@@ -9721,12 +9713,12 @@ function tvtmRender(){
         '<td class="tvst">'+esc(r.st||'—')+'</td><td class="tvupd">'+esc(r.upd||'—')+'</td></tr>');
     }
   }
-  if(rows.length>cap) out.push('<tr><td colspan="'+NCOL+'" class="empty">Hiển thị '+nf(cap)+' / '+nf(rows.length)+' dòng — dùng bộ lọc để thu hẹp.</td></tr>');
+  if(rows.length>cap) out.push('<tr><td colspan="'+NCOL+'" class="empty">Hiển thị '+nf(cap)+' / '+nf(rows.length)+' dòng</td></tr>');
   var body=document.getElementById('tvtmBody');
   body.innerHTML=out.length?out.join(''):'<tr><td colspan="'+NCOL+'" class="empty">Không có dòng phù hợp</td></tr>';
   pcSyncAll(document.getElementById('tvtmodal'),rows);
   var nAct=state.filter(function(f){ return f.v; }).length+(q?1:0);
-  document.getElementById('tvtmSum').textContent=nf(rows.length)+' / '+nf(TVT_MODAL.base.length)+' UID'+(nAct?(' · '+nAct+' bộ lọc đang áp dụng'):'')+
+  document.getElementById('tvtmSum').textContent=nf(rows.length)+' / '+nf(TVT_MODAL.base.length)+' UID'+
     ' · Tổng SL '+nf(sl)+' · '+nf(Object.keys(sku).length)+' SKU';
   /* Giá trị của cột vừa ẩn phải hiện lại Ở MỘT CHỖ — phụ đề pop-up — chứ không biến mất im lặng. */
   var sub=document.getElementById('tvtmSub');
