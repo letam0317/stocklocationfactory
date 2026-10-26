@@ -16,13 +16,14 @@
   var NHOM = [
     ["Audit Retail", [["r.tong", "Tổng kết"], ["r.task", "Vi phạm"], ["r.ghinhan", "Ghi nhận 5S", null, null, "phu"], ["r.hangmuc", "Quy định"], ["r.planogram", "Planogram"],
       [null, "Tồn kho chính xác", [["r.kk", "Kiểm kê"], ["r.htonbat", "Bất thường"]], "kk"],
-      ["r.xacminh", "Xác minh", [["r.xm.treo", "Theo tác vụ"], ["r.xm.cam", "Theo máy"], ["r.maytram", "Máy trạm"], ["r.xm.tg", "Nhật ký"]], "xacminh"]]],
+      ["r.xacminh", "Xác minh", [["r.xm.treo", "Theo tác vụ"], ["r.xm.cam", "Theo máy"], ["r.maytram", "Máy trạm"], ["r.xm.tg", "Nhật ký"], ["r.xm.sodo", "CCTV"]], "xacminh"]]],
     ["Audit Factory", [["f.stock", "Trạng thái lưu trữ"], [null, "Tồn kho chính xác", [["f.kk", "Kiểm kê"], ["f.abn", "Bất thường"]], "kk"],
-      ["f.plg", "Planogram"], ["f.sku", "Nhận diện SKU"], ["f.cd", "Chuyển đổi cân"], ["f.tem", "Tem vị trí"]]]
+      ["f.plg", "Planogram"], ["f.sku", "Nhận diện SKU"], ["f.cd", "Chuyển đổi cân"], ["f.tem", "Tem vị trí"],
+      ["f.btt", "Bảng thông tin"]]]   // 26/10 user «sao mục quyền không có Bảng thông tin / CCTV mới thêm — LẠI LẶP LẠI, cần làm tươi bộ quyền khi các mục đã live»
   ];
   /* chỗ ẩn của từng mục con khi «Không» (mặc định: mục cùng tên ở thanh bên) */
   var AN_CON = { "r.xm.treo": "#sideNav .s-item[data-tab='xacminh'][data-sub='treo']", "r.xm.cam": "#sideNav .s-item[data-tab='xacminh'][data-sub='cam']",
-    "r.xm.tg": "#sideNav .s-item[data-tab='xacminh'][data-sub='tg']", "r.kk": "#pane-kk", "r.htonbat": "#pane-htonbat", "f.kk": "#viewKK", "f.abn": "#viewAbn" };
+    "r.xm.tg": "#sideNav .s-item[data-tab='xacminh'][data-sub='tg']", "r.xm.sodo": "#sideNav .s-item[data-tab='xacminh'][data-sub='sodo']", "r.kk": "#pane-kk", "r.htonbat": "#pane-htonbat", "f.kk": "#viewKK", "f.abn": "#viewAbn" };
   var MUC = [], CHA = {};   // MUC: mọi mục lá [khoá, tên, mục cha]; CHA: khoá con → khoá cha
   NHOM.forEach(function (g) { g[1].forEach(function (t) { if (!t[2]) return MUC.push([t[0], t[1], null]);
     t[2].forEach(function (c) { MUC.push([c[0], c[1], t]); if (t[0]) CHA[c[0]] = t[0]; }); }); });
@@ -32,10 +33,12 @@
   /* 26/10 user «tách riêng quyền + Ghi nhận» (Vi phạm «Xem + thao tác» kéo theo cả nút + Biên bản): r.ghinhan = nút «+ Ghi nhận 5S»
      (Tổng quan + pop-up ô Planogram). Tài khoản chưa đặt dòng này → theo quyền Vi phạm (cùng luật TK_THEO ở google-script-TaiKhoan.gs). */
   var THEO = { "f.btt": "f.tem", "r.ghinhan": "r.task" };
+  var KHONG_THUA = { "r.xm.sodo": 1 };   // 26/10 CCTV chưa đặt = Không (không theo Xác minh) — cùng TK_KHONG_THUA ở GAS
+  window.tkCoCctv = function () { return !!(TK.nguoi && (String(TK.nguoi.id || "").toLowerCase() === "tamlc" || window.tkCo("r.xm.sodo"))); };
   function chuanQ(q) {   // con thiếu → theo cha cũ; cha = mức cao nhất của con
     q = Object.assign({}, q || {});
     Object.keys(THEO).forEach(function (k) { if (q[k] == null) q[k] = q[THEO[k]]; });
-    MUC.forEach(function (m) { if (q[m[0]] == null && CHA[m[0]]) q[m[0]] = q[CHA[m[0]]]; });
+    MUC.forEach(function (m) { if (q[m[0]] == null && CHA[m[0]]) q[m[0]] = KHONG_THUA[m[0]] ? "khong" : q[CHA[m[0]]]; });
     NHOM.forEach(function (g) { g[1].forEach(function (t) { if (!t[0] || !t[2]) return;
       q[t[0]] = t[2].reduce(function (a, c) { return BAC[q[c[0]]] > BAC[a] ? q[c[0]] : a; }, "khong"); }); });
     return q;
@@ -79,7 +82,7 @@
       if (!t[2]) { if (an(t[0])) css.push("#sideNav .s-item[data-tab='" + t[0].slice(2) + "']{display:none!important}"); return; }
       /* mục có mục con: con nào «Không» thì ẩn phần đó; mọi con «Không» thì ẩn luôn mục ở thanh bên */
       if (t[2].every(function (c) { return an(c[0]); })) { css.push("#sideNav .s-item[data-tab='" + t[3] + "']{display:none!important}"); return; }
-      t[2].forEach(function (c) { if (an(c[0])) css.push((AN_CON[c[0]] || "#sideNav .s-item[data-tab='" + c[0].slice(2) + "']") + "{display:none!important}"); }); }); });
+      t[2].forEach(function (c) { if (an(c[0]) && !(c[0] === "r.xm.sodo" && window.tkCoCctv())) css.push((AN_CON[c[0]] || "#sideNav .s-item[data-tab='" + c[0].slice(2) + "']") + "{display:none!important}"); }); }); });
     Object.keys(THEO).forEach(function (k) { if (k.charAt(0) === APP && an(k)) css.push("#sideNav .s-item[data-tab='" + k.slice(2) + "']{display:none!important}"); });
     /* 22/10 user: khách (chưa đăng nhập) ở Retail không thấy nút chuyển sang Audit Factory — Factory chỉ vào bằng link riêng /factory/ */
     if (APP === "r" && !TK.nguoi) css.push("#adChuyen a{display:none!important}");
