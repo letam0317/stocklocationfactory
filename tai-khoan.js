@@ -313,7 +313,7 @@
     if (!x) { el.innerHTML = '<div class="tk-goiy">Chọn một tài khoản ở bên trái, hoặc «+ Thêm tài khoản».</div>'; return; }
     var qt = x.vaiTro === "quantri";
     el.innerHTML = '<form class="tk-f">' + (x.khach ? '<div class="tk-tieu">Quyền của khách (người chưa đăng nhập)</div>' :
-      '<div class="tk-hai"><label>ID đăng nhập<input name="id" required pattern="[a-zA-Z0-9._\\-]+" value="' + e_(x.id) + '"' + (x.moi ? "" : " readonly") + ' placeholder="vd: nguyenvana"></label>' +
+      '<div class="tk-hai"><label>ID đăng nhập<input name="id" required autocomplete="off" spellcheck="false" autocapitalize="none" value="' + e_(x.id) + '"' + (x.moi ? "" : " readonly") + ' placeholder="vd: nguyenvana"></label>' +
       '<label>Tên hiển thị<input name="ten" value="' + e_(x.ten || "") + '"></label></div>' +
       '<div class="tk-hai"><label>' + (x.moi ? "Mật khẩu" : "Mật khẩu mới (để trống = giữ)") + '<input name="mk" type="password" autocomplete="new-password"' + (x.moi ? " required minlength=\"4\"" : "") + '></label>' +
       '<label>Vai trò<select name="vaiTro"><option value="nguoidung"' + (qt ? "" : " selected") + '>Người dùng</option><option value="quantri"' + (qt ? " selected" : "") + ">Quản trị (toàn quyền)</option></select></label></div>" +
@@ -321,6 +321,11 @@
       '<div class="tk-qwrap">' + bangQuyen(qt ? null : x.quyen, qt) + (qt ? '<div class="tk-goiy">Quản trị luôn có toàn quyền.</div>' : "") + "</div>" +
       '<div class="tk-nut"><button type="submit" class="tk-chinh">Lưu</button>' + (!x.khach && !x.moi && x.id !== (TK.nguoi || {}).id ? '<button type="button" class="tk-xoa">Xoá tài khoản</button>' : "") + '</div><div class="tk-st"></div></form>';
     var f = el.querySelector("form");
+    /* 28/10 user «Please match the requested format» khi tạo huyenltn1: ô ID dính ký tự ẩn (dán / bộ gõ tiếng Việt) ⇒ bỏ pattern,
+       tự làm sạch ID đúng luật tkId_ máy chủ (bỏ dấu, chữ thường, bỏ @đuôi, chỉ giữ a-z 0-9 . _ -) khi rời ô và khi Lưu */
+    var sachId = function () { if (!f.id || f.id.readOnly) return; f.id.value = f.id.value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[đĐ]/g, "d")
+      .trim().toLowerCase().replace(/@.*$/, "").replace(/[^a-z0-9._-]/g, "").slice(0, 40); };
+    if (f.id) f.id.addEventListener("blur", sachId);
     if (f.vaiTro) f.vaiTro.onchange = function () { var q = f.vaiTro.value === "quantri"; f.querySelector(".tk-qwrap").innerHTML = bangQuyen(q ? null : x.quyen, q) + (q ? '<div class="tk-goiy">Quản trị luôn có toàn quyền.</div>' : ""); };
     noiQuyen(f);
     var layQ = function () { var q = {}; [].slice.call(f.querySelectorAll("input[type=radio][name^='q:']:checked")).forEach(function (r) { q[r.name.slice(2)] = r.value; }); return chuanQ(q); };
@@ -340,7 +345,7 @@
         else { trangThai(f, "ok", "Đã lưu lúc " + new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) + ".");
           if (f.mk) f.mk.value = ""; if (moi && !x.khach) x = moi; else if (x.khach) x.quyen = j.khach; } })
         .catch(function (e) { if (so === luot) trangThai(f, "loi", e.message + " — chưa lưu, bấm Lưu lại."); }); };
-    f.onsubmit = function (ev) { ev.preventDefault(); luu(); };
+    f.onsubmit = function (ev) { ev.preventDefault(); sachId(); if (f.id && !f.id.value) { trangThai(f, "loi", "ID chỉ gồm chữ không dấu, số, . _ -"); f.id.focus(); return; } luu(); };
     if (!x.moi) f.addEventListener("change", function (ev) { if (ev.target.type === "radio") { clearTimeout(f._hen); f._hen = setTimeout(luu, 350); } });
     var xb = f.querySelector(".tk-xoa");
     if (xb) xb.onclick = function () { if (!confirm("Xoá tài khoản «" + x.id + "»?")) return;
