@@ -14,7 +14,9 @@
   /* 22/10 user «phải hiển thị hạng mục con bên trong: theo tác vụ/theo máy,…»: bảng quyền theo đúng thanh bên — mục có mục con = [khoá cha|null, tên, [con…], tab thanh bên].
      Khoá cha (r.xacminh) = mức cao nhất của các con (máy chủ 8591 vẫn hỏi r.xacminh); con chưa từng lưu thì thừa hưởng quyền cha cũ. Cùng luật ở google-script-TaiKhoan.gs. */
   var NHOM = [
-    ["Audit Retail", [["r.tong", "Tổng kết"], ["r.task", "Vi phạm"], ["r.ghinhan", "Ghi nhận 5S", null, null, "phu"], ["r.vp.nn", "Lịch sử nhắc nhở", null, null, "phu"], ["r.hangmuc", "Quy định"], ["r.planogram", "Planogram"],
+    ["Audit Retail", [["r.tong", "Tổng kết"], ["r.task", "Vi phạm"], ["r.ghinhan", "Ghi nhận 5S", null, null, "phu"],
+      ["r.vp.nn", "Lịch sử nhắc nhở", null, null, "phu"], ["r.vp.ng", "Người gửi ghi nhận", null, null, "phu"],
+      ["r.hangmuc", "Quy định"], ["r.planogram", "Planogram"],
       [null, "Tồn kho chính xác", [["r.kk", "Kiểm kê"], ["r.htonbat", "Bất thường"]], "kk"],
       ["r.baoduong", "Bảo dưỡng"],   // 27/10 nhóm Tài sản › Bảo dưỡng (kế hoạch bảo dưỡng kho 170)
       ["r.xacminh", "Xác minh", [["r.xm.treo", "Theo tác vụ"], ["r.xm.cam", "Theo máy"], ["r.maytram", "Máy trạm"], ["r.xm.tg", "Nhật ký"], ["r.xm.sodo", "CCTV"]], "xacminh"]]],
@@ -36,6 +38,8 @@
   var THEO = { "f.btt": "f.tem", "r.ghinhan": "r.task", "r.baoduong": "r.planogram" };   // 27/10 Bảo dưỡng chưa đặt → theo Planogram (cùng TK_THEO ở GAS)
   /* 29/10 user: «Lịch sử nhắc nhở» (r.vp.nn) = số lần đã nhắc nhở + ngày vào làm ở cột Tần suất vi phạm — chưa đặt = Không (máy chủ 8591 chỉ phát cho tamlc / người được cấp) */
   var KHONG_THUA = { "r.xm.sodo": 1 };   // 26/10 CCTV chưa đặt = Không (không theo Xác minh) — cùng TK_KHONG_THUA ở GAS
+  /* 29/10 «Bởi <người gửi form>» ở Vi phạm: tamlc hoặc quyền «Người gửi ghi nhận» */
+  window.tkCoNguoiGui = function () { return !!(TK.nguoi && (String(TK.nguoi.id || "").toLowerCase() === "tamlc" || window.tkCo("r.vp.ng"))); };
   window.tkCoNhacNho = function () { return !!(TK.nguoi && (String(TK.nguoi.id || "").toLowerCase() === "tamlc" || window.tkCo("r.vp.nn"))); };
   window.tkCoCctv = function () { return !!(TK.nguoi && (String(TK.nguoi.id || "").toLowerCase() === "tamlc" || window.tkCo("r.xm.sodo"))); };
   function chuanQ(q) {   // con thiếu → theo cha cũ; cha = mức cao nhất của con
