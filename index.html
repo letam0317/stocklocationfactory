@@ -897,6 +897,9 @@ code{background:var(--surface2);padding:1px 7px;border-radius:6px;font-size:12px
 .pend{color:var(--amber);font-weight:600}
 
 /* modal */
+/* 29/10 (9) «nhảy ô» — thanh cuộn dọc xuất hiện/biến mất (đổi tab, lọc, nạp dữ liệu) KHÔNG được đổi bề rộng trang (giống Retail) */
+html{scrollbar-gutter:stable}
+.table-wrap,.tblwrap{scrollbar-gutter:stable}
 .modal{display:none;position:fixed;inset:0;background:rgba(17,24,39,.5);z-index:99;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity .22s var(--ease)}
 @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)){
   .modal{backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)}   /* kính mờ như kiemsoatkho */
@@ -2607,6 +2610,8 @@ body.side-open #sideNav .s-grp:nth-of-type(2){animation-delay:.05s}
 /* Trong lúc trượt, nội dung lấn ra ngoài -> clip ngang (clip KHÔNG tạo scroll container nên
    header sticky vẫn dính bình thường, khác overflow:hidden). */
 body.side-anim{overflow-x:clip}
+/* 29/10 pop-up mở GIỮA lúc thanh bên đang trượt: bỏ transform/animation của .wrap ngay (pop-up fixed trong .wrap không bị lệch theo độ cuộn) */
+body.side-anim:has(.wrap :is([class*="modal"],[id$="modal"],[id$="Modal"],#lightbox).show) .wrap{animation:none!important;will-change:auto!important;transform:none!important}
 @media(max-width:768px){
   #sideNav{width:200px;max-width:200px}   /* 15/10 đồng bộ Retail: cỡ Drawer antd; nút thu nằm trong đầu ngăn kéo */
   body.side-open #sideToggle{translate:calc(200px - 52px) 0;z-index:1303}
@@ -17606,8 +17611,14 @@ async function tmvIn(){
   /* .side-anim chỉ bật trong lúc trượt (~320ms): mở khoá animation FLIP của .wrap + will-change
      + clip ngang, tắt ngay sau đó nên không giữ layer thừa khi đứng yên. */
   var hetAnim=null;
+  /* 29/10 user (clip 18.45.25 «nhảy ô, nhảy vị trí… rất nhiều nơi»): .side-anim gắn transform/animation lên .wrap ⇒ mọi pop-up position:fixed
+     NẰM TRONG .wrap bị tính theo .wrap thay vì màn hình ⇒ lệch đúng bằng độ cuộn trang suốt ~0,4 s rồi nhảy về (đo: pop-up ô Planogram lệch 183 px).
+     Đang có lớp phủ hiện (kể cả lúc mờ dần khi đóng) ⇒ KHÔNG chạy hiệu ứng trượt, chỉ đổi bố cục. Cùng luật CSS :has() bên trên. */
+  function coLopPhu(){ return [].some.call(document.querySelectorAll('.wrap :is([class*="modal"],[id$="modal"],[id$="Modal"],#lightbox)'),function(e){
+    var c=getComputedStyle(e); return c.display!=='none'&&c.visibility!=='hidden'&&(c.position==='fixed'||c.position==='absolute')&&e.getBoundingClientRect().width>0; }); }
   function nhipAnim(){
     if(document.body.dataset.moNgay){ setTimeout(function(){ window.dispatchEvent(new Event('resize')); },0); return; }   // 15/10 mở sẵn lúc tải (lớp antd) = không trượt
+    if(coLopPhu()){ setTimeout(function(){ window.dispatchEvent(new Event('resize')); },0); return; }
     document.body.classList.add('side-anim'); /* 15/10 user «thanh bên giật, nhảy chữ dù không trỏ chuột»: nhịp trượt-vào của mục chỉ chạy khi NGƯỜI DÙNG bấm mở (.side-vao ~600ms) — trước đây chạy lại mỗi lần thanh bên được dựng lại (tải trang 3 lần, đổi phiên Xác minh, bộ áp bố cục) */ document.body.classList.add('side-vao'); clearTimeout(window.__hetVao); window.__hetVao=setTimeout(function(){ document.body.classList.remove('side-vao'); },600);
     clearTimeout(hetAnim);
     hetAnim=setTimeout(function(){
