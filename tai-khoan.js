@@ -366,12 +366,15 @@
     return do_.then(function (co) { if (!co) return false; return doiPhienXm_(); });
   }
   function doiPhienXm_() {
-    return fetch(API_XM() + "/api/dang-nhap-tk", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ phienTk: TK.phien }) })
+    var api = API_XM();
+    return fetch(api + "/api/dang-nhap-tk", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ phienTk: TK.phien }) })
       .then(function (r) { var ma = r.status; return r.json().then(function (j) { if (ma === 401) kiemLai(true); return j; }); })
-      .then(function (j) { if (!j.phien) return false; ls.set("hx-phien", j.phien); try { window.dispatchEvent(new Event("hx-phien")); } catch (e) {} return true; })
+      /* 30/10: nhớ MÁY CHỦ nào cấp phiên (hx-phien-api) — laptop tắt, trang sang máy dự phòng thì index.html hxDoMayChu thấy lệch và đổi phiên lại */
+      .then(function (j) { if (!j.phien) return false; ls.set("hx-phien", j.phien); ls.set("hx-phien-api", api); try { window.dispatchEvent(new Event("hx-phien")); } catch (e) {} return true; })
       .catch(function () { return false; });
   }
   window.tkDoiPhienXm = doiPhienXm;
+  window.tkDoiPhienXmNgay = function () { return APP === "r" && TK.phien && window.tkCo("r.xacminh") ? doiPhienXm_() : Promise.resolve(false); };   // 30/10 gọi TỪ TRONG hxDoMayChu (đã dò xong) — không dò lại
   window.tkGoi = goi;   // 22/10 dùng chung cho index.html hxGuongMa (xmKhoaMa — khoá giải mã bản dự phòng) — cùng địa chỉ GAS / bản QC
   function bao() { try { document.dispatchEvent(new CustomEvent("tk-doi")); } catch (e) {} if (typeof window.homeRender === "function") try { window.homeRender(); } catch (e) {} }
 
