@@ -5837,7 +5837,7 @@ function bttNap(){
   if(BTT_NAP.dang) return;
   var f=document.getElementById('bttForm');
   var tai=function(src){ return new Promise(function(ok,loi){ var s=document.createElement('script'); s.src=src; s.onload=ok; s.onerror=loi; document.head.appendChild(s); }); };
-  BTT_NAP.dang=tai('bang-thong-tin-hinh.js?v=20261024a').then(function(){ return tai('bang-thong-tin.js?v=20261102b'); })
+  BTT_NAP.dang=tai('bang-thong-tin-hinh.js?v=20261024a').then(function(){ return tai('bang-thong-tin.js?v=20261102c'); })
     .then(function(){ BTT_NAP.xong=true; if(TOPTAB==='btt') bttVe(); })
     .catch(function(){ if(f) f.innerHTML='<div class="state" style="padding:32px 20px">Không tải được mẫu (mất mạng?). <button type="button" class="kktab" onclick="bttNap()">Thử lại</button></div>'; })
     .finally(function(){ BTT_NAP.dang=null; });

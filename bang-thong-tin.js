@@ -241,7 +241,7 @@
         (d.td ? '<div class="bttb-td nl" style="color:' + mauMa(d.mauTd) + ';font-size:calc(var(--t)*' + d.coTd + ')">' + esc(d.td) + '</div>' : '') +
         (d.gach ? '<div class="bttb-gach"></div>' : '') +
         (d.dong ? '<div class="bttb-dong nl" style="color:' + mauMa(d.mauDong) + ';font-size:calc(var(--t)*' + d.coDong + ')">' + esc(d.dong) + '</div>' : '') +
-        (d.vien ? '<div class="bttb-vien nl">' + esc(d.vien) + '</div>' : '') + '</div></div>';
+        (d.vien ? '<div class="bttb-vien nl" style="background:' + mauMa(d.mauVien || 'xanh') + '">' + esc(d.vien) + '</div>' : '') + '</div></div>';
     } else if (d.kieu === 'ten') {
       r = '<div class="vien-trong"></div><div class="bttb-fit"><div class="bttb-trong"><div class="bttb-td nl" style="font-size:calc(var(--t)*' + d.coTd + ')">' + esc(d.td) + '</div></div></div>';
     } else {
@@ -388,7 +388,8 @@
       /* màu đứng ngang hàng ô chữ của nó; 4 lựa chọn ngắn chung 1 hàng (luật ngang hàng khi còn chỗ) */
       h += '<div class="btt-hang">' + o('Tiêu đề', oVung('td', d.td, 1)) + o('Màu', chip('mauTd', d.mauTd, [['xanh', 'Xanh'], ['cam', 'Cam']]), 'gon') + '</div>' +
         '<div class="btt-hang">' + o('Dòng phụ', oVung('dong', d.dong, 1)) + o('Màu', chip('mauDong', d.mauDong, [['xanh', 'Xanh'], ['cam', 'Cam']]), 'gon') + '</div>' +
-        o('Ô viền xanh', oChu('vien', d.vien)) +
+        /* 02/11 user «bổ sung ô viền cam ở Ô viền xanh — hiển thị tương tự Dòng phụ / Màu»: ô chữ + chip Xanh/Cam cùng 1 hàng */
+        '<div class="btt-hang">' + o('Ô viền', oVung('vien', d.vien, 1)) + o('Màu', chip('mauVien', d.mauVien || 'xanh', [['xanh', 'Xanh'], ['cam', 'Cam']]), 'gon') + '</div>' +
         '<div class="btt-hang">' + o('Biểu tượng', chip('hinh', d.hinh || '', [['', 'Không'], ['camHut', 'Cấm hút thuốc']]), 'gon') +
         o('Gạch ngang', chip('gach', d.gach ? 1 : 0, [[1, 'Có'], [0, 'Không']]), 'gon') +
         o('Logo', chip('logo', d.logo ? 1 : 0, [[1, 'Có'], [0, 'Không']]), 'gon') + (d.logo ? coLogoHtml(d) : '') + '</div>';
