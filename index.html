@@ -493,6 +493,7 @@ body.an-chan .footbar{display:none}
 .kkplan .ps{display:none}
 .an-hdr{display:none !important}
 #hdrKkPlan{margin-right:8px;white-space:nowrap}
+#hdrNghiemThu{margin-right:8px;white-space:nowrap}   /* 02/11 nút «Nghiệm thu checklist» — chỉ ở Tổng quan */
 @media(max-width:1420px){.kkplan .pt{display:none}.kkplan .ps{display:inline}}   /* màn hẹp: nút rút gọn còn chữ "Kế hoạch" (tooltip giữ đủ chữ) */
 /* Bộ lọc cấp tab khi mở: trượt xuống hàng bên dưới, không làm nhảy vị trí các nút ở trên */
 /* 22/10 bộ lọc Kiểm kê = khuôn Retail › Tồn kho chính xác: 5 ô 1 hàng; nhãn chữ thường như Retail; điện thoại ô mã trọn hàng */
@@ -3415,6 +3416,7 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
 <header class="hdr">
   <div class="hgrow"><h1 class="brand-title" id="brandTitle"></h1></div>
   <button class="kktab kkplan an-hdr" id="hdrKkPlan" onclick="plOpen()" title="Lệnh kiểm kê tạo từ dashboard nằm ở 'sổ kế hoạch' WMS trước khi thành phiếu — Pending = chờ push · Processing = đã push · đọc trực tiếp từ WMS"><span class="pt">Kế hoạch chờ push (WMS)</span><span class="ps">Kế hoạch</span></button>
+  <button class="kktab kkplan" id="hdrNghiemThu" type="button" title="Mở form nghiệm thu checklist hiện trạng Factory (tab mới) — ảnh/clip/ghi chú ghi thẳng vào Google Sheet"><span class="pt">Nghiệm thu checklist</span><span class="ps">Nghiệm thu</span></button>
   <div class="settings" id="settingsWrap">
     <button id="btnSettings" title="Cài đặt hiển thị &amp; dữ liệu" aria-label="Mở cài đặt"><span class="bars"></span></button>
     <div class="settings-pop hidden" id="settingsPop">
@@ -5803,6 +5805,7 @@ function showTab(t){
   document.getElementById('ttStock').classList.toggle('active',t==='stock');
   document.getElementById('ttKK').classList.toggle('active',t==='kk');
   var _kp=document.getElementById('hdrKkPlan'); if(_kp) _kp.classList.toggle('an-hdr', !(t==='kk'||t==='abn'));   // 13/10: nút Kế hoạch ở đầu trang chỉ ở Kiểm kê + Bất thường
+  var _nt=document.getElementById('hdrNghiemThu'); if(_nt) _nt.classList.toggle('an-hdr', t!=='home');   // 02/11 nghiệm thu checklist: chỉ ở Tổng quan
   document.getElementById('ttAbn').classList.toggle('active',t==='abn');
   document.getElementById('ttPlg').classList.toggle('active',t==='plg');
   document.getElementById('ttSku').classList.toggle('active',t==='sku');
@@ -16313,6 +16316,9 @@ prSyncBar();          // thanh "Chờ in N SKU" — ẩn khi danh sách rỗng h
 /* Mở trang = vào Tổng quan. `loadData()` VẪN chạy ngay như cũ (nó nuôi cả tab Trạng thái lưu trữ
    lẫn chế độ tô màu kho của Planogram) — chỉ khác là màn hình đầu tiên hiện bảng chọn hạng mục. */
 tipDoSlot();
+document.getElementById('hdrNghiemThu').addEventListener('click',function(){   // 02/11: form dùng chung ở /retail, bộ ?bo=factory
+  window.open((/(^|\.)audit-dc\.pages\.dev$/.test(location.hostname)?'../retail/':'https://audit-dc.pages.dev/retail/')+'nghiem-thu?bo=factory','_blank','noopener');
+});
 showTab('home');
 loadData();
 </script>
