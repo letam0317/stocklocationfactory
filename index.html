@@ -2968,6 +2968,8 @@ body.side-anim:has(.wrap :is([class*="modal"],[id$="modal"],[id$="Modal"],#light
 #viewBtt .nds-raw.btt-vung{margin-top:0;min-height:0;resize:vertical;line-height:1.5}
 .btt-hang{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px}
 .btt-hang>.cd-f{flex:1 1 150px;margin-top:0}
+.btt-hang>.cd-f.gon{flex:0 0 auto}   /* 27/10 «làm gọn»: lựa chọn ngắn (màu, có/không, cỡ logo) chỉ rộng bằng nút — đứng ngang hàng ô chữ/nhau */
+.btt-hang>.cd-f.so{flex:0 0 88px;min-width:0}.btt-hang>.cd-f.so input{width:100%}   /* ô nhập trần rộng ~20 ký tự sẽ đẩy giãn ô số */
 #viewBtt .cd-f.dau{margin-top:0}
 .bttcb input{cursor:pointer;width:100%;height:36px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--ink);
   padding:0 28px 0 11px;font-size:13.5px;font-weight:600;font-family:inherit;outline:none;text-overflow:ellipsis}
@@ -2979,7 +2981,7 @@ body.side-anim:has(.wrap :is([class*="modal"],[id$="modal"],[id$="Modal"],#light
 .btt-muc{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}
 .btt-muc .cd-in+.nds-raw{margin-top:6px}
 .btt-muchd{display:flex;align-items:center;gap:6px;margin-bottom:6px}
-.btt-so{font-size:12px;font-weight:700;color:var(--ink2);margin-right:auto}
+.btt-so{font-size:12px;font-weight:600;color:var(--ink2);margin-right:auto}
 .kktab.btt-nho{padding:4px 11px;min-height:30px;font-size:12.5px}
 .btt-them{margin-top:10px}
 .btt-xem{display:flex;justify-content:center;padding:6px 0 2px}
@@ -3955,7 +3957,7 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
     </section>
     <section class="panel btt-xemp">
       <h2>2 · Xem trước</h2>
-      <div class="btt-xem" id="bttXem"></div>
+      <div class="btt-xem" id="bttXem" data-ad-mien></div>   <!-- miễn bộ đo antd: tấm biển giữ đúng thiết kế bản in gốc (chữ in hoa, bo viên thuốc, đậm 800) -->
       <div class="btt-dong">
         <span class="hint" id="bttKhoInfo"></span>
         <div class="btt-co" role="group" aria-label="Cỡ chữ">
@@ -3966,7 +3968,7 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
       </div>
       <div class="btt-dong btt-nut">
         <button type="button" class="kktab" onclick="bttGoc()" title="Trả mẫu đang chọn về chữ của bản PDF gốc">Khôi phục chữ gốc</button>
-        <button type="button" class="kktab nds-go" id="bttXuat" onclick="bttXuat(this)" title="Mở hộp in đúng khổ đã chọn — chọn «Lưu dưới dạng PDF» để ra tệp gửi nhà in">Xuất PDF</button>
+        <button type="button" class="kktab nds-go" id="bttXuat" onclick="bttXuat(this)" title="Tải tệp PDF đúng khổ, kèm số lượng — gửi thẳng nhà in">Tải PDF</button>
       </div>
       <div class="hint btt-tt" id="bttTT" role="status" aria-live="polite"></div>
     </section>
@@ -5835,7 +5837,7 @@ function bttNap(){
   if(BTT_NAP.dang) return;
   var f=document.getElementById('bttForm');
   var tai=function(src){ return new Promise(function(ok,loi){ var s=document.createElement('script'); s.src=src; s.onload=ok; s.onerror=loi; document.head.appendChild(s); }); };
-  BTT_NAP.dang=tai('bang-thong-tin-hinh.js?v=20261024a').then(function(){ return tai('bang-thong-tin.js?v=20261025a'); })
+  BTT_NAP.dang=tai('bang-thong-tin-hinh.js?v=20261024a').then(function(){ return tai('bang-thong-tin.js?v=20261102a'); })
     .then(function(){ BTT_NAP.xong=true; if(TOPTAB==='btt') bttVe(); })
     .catch(function(){ if(f) f.innerHTML='<div class="state" style="padding:32px 20px">Không tải được mẫu (mất mạng?). <button type="button" class="kktab" onclick="bttNap()">Thử lại</button></div>'; })
     .finally(function(){ BTT_NAP.dang=null; });
