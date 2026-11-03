@@ -3982,7 +3982,7 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
       <div class="cd-f"><label for="rfidLoai">Loại UID group</label><select id="rfidLoai">
         <option value="thieu">Thiếu (không đếm thấy)</option><option value="lech">Chênh lệch số lượng</option><option value="ca">Thiếu + chênh lệch</option></select></div>
       <div class="cd-f"><label for="rfidDang">Dạng mã trong tệp</label><select id="rfidDang">
-        <option value="chu">Mã tag như WMS (A5…)</option><option value="hex">Mã hex (4135…)</option></select></div>
+        <option value="hex">Mã hex (4135…) — app 123RFID nhận</option><option value="chu">Mã tag như WMS (A5…)</option></select></div>
       <div class="abntiles cd-tiles" id="rfidTiles" role="status" aria-live="polite" hidden></div>
       <div class="tmv-tools" id="rfidTools" hidden>
         <button type="button" class="kktab nds-go" id="rfidBtnTai" onclick="rfidTai()" disabled title="Tải danh sách mã tag đang lọc (mỗi dòng 1 mã, không tiêu đề) để Import vào Multi-Tag Locate">Tải .csv</button>
@@ -5836,7 +5836,7 @@ var TIP={
   rfid:'Lấy từ dữ liệu kiểm kê đã đồng bộ (cùng nguồn pop-up UID group lệch). Thiếu = có trên hệ thống tại vị trí nhưng lần kiểm không đếm thấy; '+
     'Chênh lệch = đếm thấy nhưng số lượng khác hệ thống. Một cây có ở nhiều phiếu của cùng request thì lấy phiếu kiểm sau cùng. '+
     'Tải .csv: mỗi dòng 1 mã tag, không tiêu đề — chép vào máy quét rồi vào app 123RFID › RFID › Multi-Tag Locate › Import. '+
-    'Nếu app không nhận mã dạng A5…, chọn «Mã hex». Cây chưa gắn tag không có trong tệp, tìm theo vị trí ở bảng.',
+    'App chỉ nhận mã hex và hiện mã dạng 4135…37363732: đọc 8 chữ số cuối theo từng cặp, bỏ số 3 đầu mỗi cặp (37 36 37 32 → 7672) = 4 số cuối mã tag in đậm ở bảng. Cây chưa gắn tag không có trong tệp, tìm theo vị trí ở bảng.',
   tem:'Dán link (hoặc ID) Google Sheet đã bật "ai có link đều xem được"; có thể kèm #gid=… để lấy đúng tab. '+
     'Máy dò cột theo TIÊU ĐỀ hàng đầu: UID group (UIDgr / Group UID / uid), vị trí (Location / Vị trí / Bin), '+
     'SKU, tên hàng (Product name / Tên), số lượng (Qty / Số lượng / Tồn), đơn vị (Unit / ĐVT — thiếu thì lấy '+
@@ -5915,7 +5915,7 @@ var RFID_NAP={dang:null,xong:false};
 function rfidNap(){
   if(RFID_NAP.xong){ rfidMo(); return; }
   if(RFID_NAP.dang) return;
-  RFID_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='do-rfid.js?v=20261103a'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
+  RFID_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='do-rfid.js?v=20261103b'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
     .then(function(){ RFID_NAP.xong=true; if(TOPTAB==='rfid') rfidMo(); })
     .catch(function(){ var st=document.getElementById('rfidState'); if(st) st.innerHTML='Không tải được công cụ (mất mạng?). <button type="button" class="kktab" onclick="rfidNap()">Thử lại</button>'; })
     .finally(function(){ RFID_NAP.dang=null; });

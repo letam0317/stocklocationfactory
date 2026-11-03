@@ -5,7 +5,7 @@
    do push-pc-to-sheet ghi (mã tag lấy từ ảnh chụp Group UID sẵn có → 0 lượt gọi WMS thêm). Trang KHÔNG chạm WMS.
    Tái dùng: .cd-grid/.panel/.abntiles/.mtbl.mbcard/.kktab, enhanceSelect (ô chọn chuẩn), taoBoLocNgay (bộ lọc ngày chuẩn). */
 (function () {
-  var R = window.RFID = window.RFID || { rows: null, hien: 200, loc: { req: '', by: '', loai: 'thieu', dang: 'chu', a: '', b: '' }, dangNap: false };
+  var R = window.RFID = window.RFID || { rows: null, hien: 200, loc: { req: '', by: '', loai: 'thieu', dang: 'hex', a: '', b: '' }, dangNap: false };
   var $ = function (id) { return document.getElementById(id); };
   var soCo = function (v) { return v !== '' && v != null && !isNaN(Number(v)); };
   var ngayIso = function (s) { var ms = kkParseDate(s); return isNaN(ms) ? '' : new Date(ms).toISOString().slice(0, 10); };
@@ -78,7 +78,9 @@
     var html = '';
     loc.slice(0, R.hien).forEach(function (x) {
       html += '<tr>' +
-        '<td class="mb-hd">' + (x.rf ? esc(x.rf) : '<span class="hint" title="Cây chưa gắn tag RFID — không dò được bằng súng, tìm theo vị trí">chưa có tag</span>') + '</td>' +
+        /* 03/11 app 123RFID chỉ hiện mã dạng hex (4135…37363732) — khó dò bằng mắt. Đuôi 4 số = 8 chữ số hex cuối đọc từng cặp bỏ số 3
+         (37 36 37 32 → 7672) nên in đậm ĐUÔI để người đi tìm khớp dòng trên súng với dòng trong bảng. */
+        '<td class="mb-hd">' + (x.rf ? '<b title="4 số cuối mã tag — trên súng là 8 chữ số cuối (mỗi cặp bỏ số 3 đầu)">…' + esc(x.rf.slice(-4)) + '</b> <span class="hint">' + esc(x.rf) + '</span>' : '<span class="hint" title="Cây chưa gắn tag RFID — không dò được bằng súng, tìm theo vị trí">chưa có tag</span>') + '</td>' +
         '<td data-lb="UID group">' + esc(x.uid) + '</td>' +
         '<td class="mb-tag" data-lb="Vị trí">' + esc(x.loc) + '</td>' +
         '<td data-lb="SKU">' + esc(x.sku) + '</td>' +
@@ -111,7 +113,7 @@
       if (typeof window.enhanceSelect === 'function') window.enhanceSelect(el);
       el.addEventListener('change', function () {
         var k = { rfidReq: 'req', rfidBy: 'by', rfidLoai: 'loai', rfidDang: 'dang' }[id];
-        R.loc[k] = this.value || (k === 'loai' ? 'thieu' : k === 'dang' ? 'chu' : ''); R.hien = 200; ve();
+        R.loc[k] = this.value || (k === 'loai' ? 'thieu' : k === 'dang' ? 'hex' : ''); R.hien = 200; ve();
       });
     });
     if (typeof window.taoBoLocNgay === 'function' && $('rfidNgay')) {
