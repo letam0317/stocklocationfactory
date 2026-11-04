@@ -494,6 +494,27 @@ body.an-chan .footbar{display:none}
 .an-hdr{display:none !important}
 #hdrKkPlan{margin-right:8px;white-space:nowrap}
 #hdrNghiemThu{margin-right:8px;white-space:nowrap}   /* 02/11 nút «Nghiệm thu checklist» — chỉ ở Tổng quan */
+/* 04/11 user «Nghiệm thu thành 1 nút có pop-up … giao diện chuyên nghiệp»: form nạp trong vỏ .modal chuẩn (kính mờ + sheetIn + Escape),
+   khung form giữ nguyên sau khi đóng (phần đang soạn / đang lưu ngầm không mất). Điện thoại: phủ kín màn. */
+#ntmodal .modalbox{width:min(780px,96vw);height:min(940px,92vh);height:min(940px,92dvh);overflow:hidden}
+#ntmodal .modalhd{padding:12px 14px 12px 22px;gap:10px}
+#ntmodal .nt-hd-nut{display:flex;align-items:center;gap:6px;flex:none}
+#ntmodal .nt-mo{height:32px;padding:0 12px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink2);font:inherit;font-size:13px;font-weight:400;cursor:pointer;white-space:nowrap;transition:border-color .15s var(--ease),color .15s var(--ease)}
+#ntmodal .nt-mo:hover{border-color:var(--accent);color:var(--accent)}
+#ntmodal .nt-mo:focus-visible,#ntmodal .mclose:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#ntmodal .modalbody{flex:1;min-height:0;padding:0;overflow:hidden;position:relative;background:#f1f5f9}
+#ntmodal iframe{display:block;width:100%;height:100%;border:0;background:#f1f5f9}
+#ntmodal .nt-cho{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--ink3);font-size:13px;background:#f1f5f9;transition:opacity .2s var(--ease)}
+#ntmodal .nt-cho.xong{opacity:0;pointer-events:none}
+#ntmodal .nt-cho i{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--accent);animation:ntQuay .8s linear infinite}
+@keyframes ntQuay{to{transform:rotate(360deg)}}
+@media (max-width:640px){
+  #ntmodal{padding:0!important}
+  #ntmodal .modalbox{width:100%;height:100vh;height:100dvh;max-height:100dvh;border-radius:0}
+  #ntmodal .modalhd{padding:8px 8px 8px 14px;padding-top:calc(env(safe-area-inset-top,0px) + 8px)}
+  #ntmodal .nt-mo{height:40px}
+  #ntmodal .mclose{min-width:40px;min-height:40px}
+}
 @media(max-width:1420px){.kkplan .pt{display:none}.kkplan .ps{display:inline}}   /* màn hẹp: nút rút gọn còn chữ "Kế hoạch" (tooltip giữ đủ chữ) */
 /* Bộ lọc cấp tab khi mở: trượt xuống hàng bên dưới, không làm nhảy vị trí các nút ở trên */
 /* 22/10 bộ lọc Kiểm kê = khuôn Retail › Tồn kho chính xác: 5 ô 1 hàng; nhãn chữ thường như Retail; điện thoại ô mã trọn hàng */
@@ -3416,7 +3437,7 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
 <header class="hdr">
   <div class="hgrow"><h1 class="brand-title" id="brandTitle"></h1></div>
   <button class="kktab kkplan an-hdr" id="hdrKkPlan" onclick="plOpen()" title="Lệnh kiểm kê tạo từ dashboard nằm ở 'sổ kế hoạch' WMS trước khi thành phiếu — Pending = chờ push · Processing = đã push · đọc trực tiếp từ WMS"><span class="pt">Kế hoạch chờ push (WMS)</span><span class="ps">Kế hoạch</span></button>
-  <button class="kktab kkplan" id="hdrNghiemThu" type="button" title="Mở form nghiệm thu checklist hiện trạng Factory (tab mới) — ảnh/clip/ghi chú ghi thẳng vào Google Sheet"><span class="pt">Nghiệm thu checklist</span><span class="ps">Nghiệm thu</span></button>
+  <button class="kktab kkplan" id="hdrNghiemThu" type="button" title="Nghiệm thu checklist hiện trạng Factory — ảnh/clip, hiện trạng, đề xuất ghi thẳng vào Google Sheet"><span class="pt">Nghiệm thu checklist</span><span class="ps">Nghiệm thu</span></button>
   <div class="settings" id="settingsWrap">
     <button id="btnSettings" title="Cài đặt hiển thị &amp; dữ liệu" aria-label="Mở cài đặt"><span class="bars"></span></button>
     <div class="settings-pop hidden" id="settingsPop">
@@ -4057,6 +4078,15 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
 </div>
 
 <!-- Modal danh sách in: chọn mẫu tem + số lượng cho TỪNG SKU, xoá được từng dòng, xem trước rồi in -->
+<!-- 04/11 pop-up Nghiệm thu checklist (form dùng chung ở /retail, bộ ?bo=factory, chế độ nhúng nhung=1) -->
+<div id="ntmodal" class="modal" onclick="if(event.target===this)ntDong()">
+  <div class="modalbox" role="dialog" aria-modal="true" aria-labelledby="ntTieuDe">
+    <div class="modalhd"><div class="mt" id="ntTieuDe">Nghiệm thu checklist</div>
+      <div class="nt-hd-nut"><button type="button" class="nt-mo" onclick="ntTabRieng()" title="Mở form trong tab riêng">Mở tab riêng</button>
+      <button class="mclose" type="button" onclick="ntDong()" aria-label="Đóng">&times;</button></div></div>
+    <div class="modalbody" id="ntThan"><div class="nt-cho" id="ntCho"><i></i>Đang mở form…</div></div>
+  </div>
+</div>
 <div id="prmodal" class="modal" onclick="if(event.target===this)prDong()">
   <div class="modalbox" style="max-width:1000px;width:100%">
     <div class="modalhd"><div>
@@ -5368,6 +5398,8 @@ document.addEventListener('keydown',function(e){
     e.preventDefault(); plgAnhDi(e.key==='ArrowRight'?1:-1); return;
   }
   if(e.key!=='Escape') return;
+  var ntm=document.getElementById('ntmodal');   // 04/11 pop-up Nghiệm thu (Escape trong form tự đóng lớp của form trước)
+  if(ntm && ntm.classList.contains('show')){ ntDong(); return; }
   if(document.querySelector('#pcFilters .combo-menu.show')){ pcCloseCombos(); return; }   // menu combo modal tạo lệnh
   var pdp=document.getElementById('pcDatePop');   // lịch Plan date trong modal tạo lệnh — đóng trước modal
   if(pdp && !pdp.classList.contains('hidden')){ pcDpClose(); return; }
@@ -16316,9 +16348,32 @@ prSyncBar();          // thanh "Chờ in N SKU" — ẩn khi danh sách rỗng h
 /* Mở trang = vào Tổng quan. `loadData()` VẪN chạy ngay như cũ (nó nuôi cả tab Trạng thái lưu trữ
    lẫn chế độ tô màu kho của Planogram) — chỉ khác là màn hình đầu tiên hiện bảng chọn hạng mục. */
 tipDoSlot();
-document.getElementById('hdrNghiemThu').addEventListener('click',function(){   // 02/11: form dùng chung ở /retail, bộ ?bo=factory
-  window.open((/(^|\.)audit-dc\.pages\.dev$/.test(location.hostname)?'../retail/':'https://audit-dc.pages.dev/retail/')+'nghiem-thu?bo=factory','_blank','noopener');
+/* 02/11 nút «Nghiệm thu checklist» → 04/11 mở POP-UP (form dùng chung ở /retail, bộ ?bo=factory). Cùng tên miền audit-dc
+   ⇒ form dùng chung phiên đăng nhập/khoá máy. Khung form tạo 1 lần và GIỮ sau khi đóng: phản hồi đang lưu ngầm vẫn chạy tiếp. */
+function ntUrl(nhung){ return (/(^|\.)audit-dc\.pages\.dev$/.test(location.hostname)?'../retail/':'https://audit-dc.pages.dev/retail/')+'nghiem-thu?bo=factory'+(nhung?'&nhung=1':''); }
+var NT_LOP=false;   // pop-up đang giữ 1 nấc lịch sử (vuốt lùi đóng pop-up, không rời trang)
+function ntMo(){
+  var m=document.getElementById('ntmodal'); if(!m) return;
+  if(!document.getElementById('ntKhung')){
+    var f=document.createElement('iframe'); f.id='ntKhung'; f.title='Form nghiệm thu checklist';
+    f.allow='camera *; microphone *; clipboard-write *; fullscreen *'; f.src=ntUrl(true);
+    f.addEventListener('load',function(){ var c=document.getElementById('ntCho'); if(c) c.classList.add('xong'); });
+    document.getElementById('ntThan').appendChild(f);
+  }
+  plgMoModal('ntmodal');
+  if(!NT_LOP){ try{ history.pushState({ntLop:1},'',location.href); NT_LOP=true; }catch(e){} }
+}
+function ntDong(tuBack){
+  var m=document.getElementById('ntmodal'); if(!m || !m.classList.contains('show')) return;
+  plgDongModal('ntmodal');
+  if(NT_LOP){ NT_LOP=false; if(!tuBack){ try{ history.back(); }catch(e){} } }
+}
+function ntTabRieng(){ window.open(ntUrl(false),'_blank','noopener'); }
+window.addEventListener('popstate',function(){ if(NT_LOP){ NT_LOP=false; ntDong(true); } });
+window.addEventListener('message',function(e){   // form nhúng báo đóng (Escape / nút trong form khi không còn lớp nào mở)
+  if(e.data && e.data.nt==='dong' && /(^|\.)audit-dc\.pages\.dev$|^localhost$|^127\.0\.0\.1$/.test(new URL(e.origin).hostname)) ntDong();
 });
+document.getElementById('hdrNghiemThu').addEventListener('click',ntMo);
 showTab('home');
 loadData();
 </script>
