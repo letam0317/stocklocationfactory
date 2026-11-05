@@ -22,7 +22,7 @@
       ["r.xacminh", "Xác minh", [["r.xm.treo", "Theo tác vụ"], ["r.xm.cam", "Theo máy"], ["r.maytram", "Máy trạm"], ["r.xm.tg", "Nhật ký"], ["r.xm.sodo", "CCTV"]], "xacminh"]]],
     ["Audit Factory", [["f.stock", "Trạng thái lưu trữ"], [null, "Tồn kho chính xác", [["f.kk", "Kiểm kê"], ["f.abn", "Bất thường"]], "kk"],
       ["f.plg", "Planogram"], ["f.sku", "Nhận diện SKU"], ["f.cd", "Chuyển đổi cân"], ["f.tem", "Tem vị trí"],
-      ["f.btt", "Bảng thông tin"]]]   // 26/10 user «sao mục quyền không có Bảng thông tin / CCTV mới thêm — LẠI LẶP LẠI, cần làm tươi bộ quyền khi các mục đã live»
+      ["f.btt", "Bảng thông tin"], ["f.rfid", "Dò RFID"]]]   // 05/11 f.rfid: mục «Dò RFID» live từ 03/11 chưa có khoá (cổng qc-quyen-du-muc chặn đẩy)   // 26/10 user «sao mục quyền không có Bảng thông tin / CCTV mới thêm — LẠI LẶP LẠI, cần làm tươi bộ quyền khi các mục đã live»
   ];
   /* chỗ ẩn của từng mục con khi «Không» (mặc định: mục cùng tên ở thanh bên) */
   var AN_CON = { "r.xm.treo": "#sideNav .s-item[data-tab='xacminh'][data-sub='treo']", "r.xm.cam": "#sideNav .s-item[data-tab='xacminh'][data-sub='cam']",
@@ -35,7 +35,7 @@
      «Bảng thông tin» (Factory › Công cụ kho, chỉ soạn + in biển, không ghi dữ liệu) = quyền «Tem vị trí». Muốn chỉnh riêng thì thêm khoá vào NHOM + TK_TAB. */
   /* 26/10 user «tách riêng quyền + Ghi nhận» (Vi phạm «Xem + thao tác» kéo theo cả nút + Biên bản): r.ghinhan = nút «+ Ghi nhận 5S»
      (Tổng quan + pop-up ô Planogram). Tài khoản chưa đặt dòng này → theo quyền Vi phạm (cùng luật TK_THEO ở google-script-TaiKhoan.gs). */
-  var THEO = { "f.btt": "f.tem", "r.ghinhan": "r.task", "r.baoduong": "r.planogram" };   // 27/10 Bảo dưỡng chưa đặt → theo Planogram (cùng TK_THEO ở GAS)
+  var THEO = { "f.btt": "f.tem", "f.rfid": "f.kk", "r.ghinhan": "r.task", "r.baoduong": "r.planogram" };   // 27/10 Bảo dưỡng chưa đặt → theo Planogram (cùng TK_THEO ở GAS)
   /* 29/10 user: «Lịch sử nhắc nhở» (r.vp.nn) = số lần đã nhắc nhở + ngày vào làm ở cột Tần suất vi phạm — chưa đặt = Không (máy chủ 8591 chỉ phát cho tamlc / người được cấp) */
   var KHONG_THUA = { "r.xm.sodo": 1 };   // 26/10 CCTV chưa đặt = Không (không theo Xác minh) — cùng TK_KHONG_THUA ở GAS
   /* 29/10 «Bởi <người gửi form>» ở Vi phạm: tamlc hoặc quyền «Người gửi ghi nhận» */
