@@ -3423,7 +3423,7 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
 <script src="tai-khoan.js?v=20261030a"></script>   <!-- 14/10 đăng nhập + phân quyền (bản chép từ kiemsoatkho/tai-khoan.js) -->
 <script src="tat-loc.js?v=20261023d" defer></script>   <!-- 22/10 nút «✕ Tắt lọc» · 23/10 dời vào TRONG nút «Bộ lọc» (bản chép từ kiemsoatkho/tat-loc.js) -->
 <link rel="stylesheet" href="thanh-cuon.css?v=20261022a"><!-- 17/10 thanh cuộn chung theo theme (bản gốc hasaki/kiemsoatkho/thanh-cuon.css) -->
-<link rel="stylesheet" href="bo-loc-ngay.css?v=20261019a"><script src="bo-loc-ngay.js?v=20261023a"></script><!-- 19/10 BỘ LỌC NGÀY CHUẨN toàn dự án (bản chép Y HỆT hasaki/kiemsoatkho/bo-loc-ngay.*) -->
+<link rel="stylesheet" href="bo-loc-ngay.css?v=20261019a"><script src="bo-loc-ngay.js?v=20261023a"></script><script src="anh-nv.js?v=20261105a"></script><!-- 05/11 ảnh đại diện NV toàn dự án (bản chép Y HỆT hasaki/kiemsoatkho/anh-nv.js) --><!-- 19/10 BỘ LỌC NGÀY CHUẨN toàn dự án (bản chép Y HỆT hasaki/kiemsoatkho/bo-loc-ngay.*) -->
 </head>
 <body>
 <aside id="sideNav" aria-label="Điều hướng hạng mục"></aside>
@@ -7192,7 +7192,7 @@ function plgVtVe(){
   if(bcTen){
     cardPt='<div class="pg-vtcard pt">'+
       '<div class="hd">Phụ trách <span class="pg-badge" style="background:color-mix(in srgb,#d97706 14%,transparent);color:#d97706">Suy từ báo cáo gần nhất</span></div>'+
-      '<div class="who"><span class="av" style="background:'+plgMauNguoi(bcTen)+'">'+esc(plgChuDau(bcTen))+'</span>'+
+      '<div class="who"><span class="av" data-anh-nv="'+esc(bcTen)+'"'+(/@/.test(bcTen)?' data-anh-em="'+esc(bcTen)+'"':'')+' style="background:'+plgMauNguoi(bcTen)+'">'+esc(plgChuDau(bcTen))+'</span>'+
       '<div><b>'+esc(bcTen)+'</b><small>người vệ sinh ô này gần đây nhất</small></div></div>'+
       '<div class="ln mut">kho nguyên liệu chưa có bảng phân công vệ sinh — đây là SUY DIỄN từ bằng chứng, không phải phân công chính thức</div>'+
       (bcTuoi!=null&&bcTuoi>7?'<div class="ln" style="color:#d97706">⚠ bằng chứng đã '+bcTuoi+' ngày — chưa chắc còn phụ trách</div>':'')+
@@ -7207,7 +7207,7 @@ function plgVtVe(){
   var cardBc='<div class="pg-vtcard ref"><div class="hd">Báo cáo gần nhất '+
     '<span class="pg-hint" style="font-size:10.5px;text-transform:none;letter-spacing:0;font-weight:500">tham khảo</span></div>';
   if(bcTen){
-    cardBc+='<div class="who"><span class="av" style="background:'+plgMauNguoi(bcTen)+'">'+esc(plgChuDau(bcTen))+'</span>'+
+    cardBc+='<div class="who"><span class="av" data-anh-nv="'+esc(bcTen)+'"'+(/@/.test(bcTen)?' data-anh-em="'+esc(bcTen)+'"':'')+' style="background:'+plgMauNguoi(bcTen)+'">'+esc(plgChuDau(bcTen))+'</span>'+
       '<div><b>'+esc(bcTen)+'</b><small>'+esc(bcNguon)+'</small></div></div>'+
       (bcNgay?'<div class="ln"><b>'+esc(plgThuIso(bcNgay))+' '+esc(plgVNiso(bcNgay))+'</b>'+
         (bcGio?' lúc <b>'+esc(bcGio)+'</b>':'')+
