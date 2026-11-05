@@ -8361,7 +8361,9 @@ function kkChuanCho(kind){
   return {b:b,p:p,ten:'đợt '+b.req+(b.kho?' · '+b.kho:' · gộp 2 kho')+(b.ngayDau?' ('+dm(b.ngayDau)+'–'+dm(b.ngayCuoi)+')':'')};
 }
 function kkForecastInfo(kind,univ,conLai){
-  if(!conLai) return {done:true};
+  /* 05/11 user «rà các mục như CCTV — hiện bản tạm rồi nhảy»: tồn kho (WH_DATA) chưa tải ⇒ còn lại = 0 ⇒ thẻ hiện «✓ Hoàn thành 100%»
+     ~2 s rồi mới ra số thật. Chưa có tồn kho thì là «chờ tồn kho», không kết luận xong. */
+  if(!conLai) return Object.keys(WH_DATA||{}).length ? {done:true} : {none:true,choTon:true,chuan:kkChuanCho(kind)};
   var nowVN=vnDate(Date.now());
   var todayMs=Date.UTC(nowVN.getUTCFullYear(),nowVN.getUTCMonth(),nowVN.getUTCDate());
   var namNay=nowVN.getUTCFullYear();
@@ -17338,9 +17340,15 @@ function cdSoiLoi(id,v){
  * hiện chip "Khác…" (bấm là mở nốt, hàng đó cho xuống dòng). Điện thoại thì bỏ qua — ở đó dải vốn
  * được xuống dòng riêng, gom hết vào "Khác…" chỉ làm mất chỗ với tay.
  */
+/* 05/11 user «rà các mục như CCTV — hiện bản tạm rồi nhảy»: đo thấy dải được đo lúc khung mới rộng 180px (gom chip vào «Khác…»), rồi
+   khung nở 246–266px nhưng KHÔNG đo lại (chỉ nghe resize cửa sổ) ⇒ «Khác…» chớp / nằm lì dù đủ chỗ. Nay theo dõi bề ngang TỪNG dải
+   (ResizeObserver — chạy sau bố cục, trước khi vẽ ⇒ không chớp); chỉ đo lại khi bề ngang đổi thật. */
 function cdVuaMotDong(){
   var dt = window.matchMedia && window.matchMedia('(max-width:520px)').matches;
+  if(window.ResizeObserver && !CD._ro) CD._ro=new ResizeObserver(function(ds){
+    if(ds.some(function(d){ var w=Math.round(d.contentRect.width); if(d.target._cdW===w) return false; d.target._cdW=w; return true; })) cdVuaMotDong(); });
   document.querySelectorAll('#viewCd .cd-goi').forEach(function(bar){
+    if(CD._ro && !bar._cdTheo){ bar._cdTheo=1; bar._cdW=Math.round(bar.clientWidth); CD._ro.observe(bar); }
     var chips=[].slice.call(bar.querySelectorAll('.cd-chips .kktab'));
     var khac=bar.querySelector('.cd-khac');
     chips.forEach(function(c){ c.hidden=false; });

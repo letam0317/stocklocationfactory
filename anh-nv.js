@@ -51,10 +51,16 @@
   }
   /* ảnh lấp kín vòng tròn — kích thước/khung do lớp của mô-đun quyết */
   var st = document.createElement("style");
-  st.textContent = "[data-anh-nv].co-anh{overflow:hidden;background:var(--surface2)!important;padding:0}[data-anh-nv].co-anh>img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}";
+  /* 05/11 user «rà các mục như CCTV — hiện bản tạm rồi nhảy»: chưa biết có ảnh hay không thì KHÔNG vẽ chữ cái (tránh chữ cái → ảnh);
+     danh bạ về (hoặc hỏng / không có ảnh) mới hiện ảnh hoặc chữ cái — gan() đánh dấu data-anh-xong. */
+  st.textContent = "[data-anh-nv]:not([data-anh-xong]){color:transparent!important}[data-anh-nv]:not([data-anh-xong])>*{visibility:hidden}" +
+    "[data-anh-nv].co-anh{overflow:hidden;background:var(--surface2)!important;padding:0}[data-anh-nv].co-anh>img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}";
   document.head.appendChild(st);
   var hen = 0;
   new MutationObserver(function () { if (hen) return; hen = requestAnimationFrame(function () { hen = 0; gan(document); }); })
     .observe(document.documentElement, { childList: true, subtree: true });
+  /* nạp sớm lúc trang rảnh (1 lượt / phiên) — mở mục có vòng người là ảnh đã sẵn, không vẽ vòng trống chờ */
+  var som = function () { if (tb()) tai(); };
+  if (window.requestIdleCallback) requestIdleCallback(som, { timeout: 1500 }); else setTimeout(som, 300);
   window.hskAnhNV = { lay: lay, gan: gan, tai: tai, san: san, ds: function () { return DS; }, theoMa: function (m) { return theoMa[String(m)] || null; }, chuan: chuan };
 })();
