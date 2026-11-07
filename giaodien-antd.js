@@ -347,11 +347,14 @@
     ".tq-luoi{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 16px}",
     ".tq-the{display:flex;flex-direction:column;align-items:stretch;min-width:0;padding:12px 16px;border:1px solid var(--ad-chia);border-radius:8px;background:var(--surface);color:var(--text);font:inherit;text-align:left;cursor:pointer;transition:box-shadow .2s,border-color .2s}",
     ".tq-the:hover{box-shadow:" + BONG1 + ";border-color:transparent}.tq-the:focus-visible{outline:none;box-shadow:" + VONG + "}",
-    ".tq-the .h{display:flex;align-items:center;gap:10px;min-width:0}.tq-the .t{font-size:15px;line-height:20px;font-weight:600;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}",
+    /* 07/11 user «kích thước ô theo chuẩn, đồng bộ tất cả»: tên 1 dòng, dài thì «…» (title đủ tên) */
+    ".tq-the .h{display:flex;align-items:center;gap:10px;min-width:0}",
+    ".tq-the .t{flex:1 1 auto;min-width:0;font-size:15px;line-height:20px;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}",
     ".tq-the .av{flex:none;width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:var(--ad-chon);color:var(--accent)}.tq-the .av svg{width:18px;height:18px;fill:currentColor}",
     ".tq-the .m{margin-top:6px;font-size:13px;line-height:20px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
     ".tq-the .ft{margin-top:auto;padding-top:8px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px}",
     ".tq-the .sv{flex:1;min-width:0}.tq-the .sv b{font-size:20px;line-height:28px;font-weight:600;font-variant-numeric:tabular-nums}.tq-the .sv small{margin-left:6px;font-size:12px;color:var(--muted)}",
+    ".tq:not([data-bac='3']) .tq-the .sv{min-height:28px}",   /* 07/11 thẻ có số hay không đều cùng cao */
     ".tq-the .sv .tq-bar{margin-top:6px}.tq-the .mo{flex:none;font-size:13px;color:var(--accent);white-space:nowrap}",
     "@media(max-width:768px){.tq-cs{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px}.tq-luoi{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px}}",
     "@media(max-width:480px){.tq-luoi{grid-template-columns:minmax(0,1fr)}}",
@@ -362,9 +365,11 @@
     ".tq[data-bac='3'] .tq-o .n{font-size:12px;line-height:16px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.tq[data-bac='3'] .tq-o .v{font-size:18px;line-height:24px}.tq[data-bac='3'] .tq-o .tq-bar{height:4px;margin-top:4px}",
     ".tq[data-bac='3'] .tq-g{font-size:13px;line-height:18px;margin-bottom:6px}.tq[data-bac='3'] .tq-luoi{gap:6px;margin-bottom:10px}",
     /* lưới «icon | tên (≤2 dòng) + số dưới tên | →» — .h/.ft display:contents để con của chúng thành ô lưới; số KHÔNG chiếm chỗ của tên (QC 13/10: «Trạng…», «Tồn kh…» bị cắt) */
-    ".tq[data-bac='3'] .tq-the{display:grid;grid-template-columns:26px minmax(0,1fr) auto;grid-template-areas:'av t mo' 'av sv mo';column-gap:8px;align-items:center;align-content:center;padding:6px 10px;min-height:44px}",
+    /* 07/11 mọi ô cùng cao 52px (có số hay không; dòng tên 19px để dấu tiếng Việt chồng không bị cắt) */
+    ".tq[data-bac='3'] .tq-the{display:grid;grid-template-columns:26px minmax(0,1fr) auto;grid-template-areas:'av t mo' 'av sv mo';column-gap:8px;align-items:center;align-content:center;padding:6px 10px;min-height:52px;height:52px}",
     ".tq[data-bac='3'] .tq-the .h,.tq[data-bac='3'] .tq-the .ft{display:contents}.tq[data-bac='3'] .tq-the .av{grid-area:av;width:26px;height:26px}.tq[data-bac='3'] .tq-the .av svg{width:16px;height:16px}",
-    ".tq[data-bac='3'] .tq-the .t{grid-area:t;font-size:13.5px;line-height:17px;white-space:normal;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}",
+    ".tq[data-bac='3'] .tq-the:has(.sv:empty) .t{grid-row:1/span 2;align-self:center}",   /* 07/11 thẻ không số: tên giữa ô */
+    ".tq[data-bac='3'] .tq-the .t{grid-area:t;font-size:13.5px;line-height:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}",
     ".tq[data-bac='3'] .tq-the .sv{grid-area:sv;line-height:0}.tq[data-bac='3'] .tq-the .sv:empty{display:none}.tq[data-bac='3'] .tq-the .sv b{font-size:14px;line-height:18px}.tq[data-bac='3'] .tq-the .sv small,.tq[data-bac='3'] .tq-the .sv .tq-bar{display:none}",
     ".tq[data-bac='3'] .tq-the .mo{grid-area:mo;font-size:0}.tq[data-bac='3'] .tq-the .mo::after{content:'→';font-size:14px}",
     "@media(max-width:480px){.tq[data-bac='3'] .tq-luoi{grid-template-columns:repeat(2,minmax(0,1fr))}}",
@@ -518,7 +523,8 @@
       h += '<h3 class="tq-g">' + escT(g.ten) + '</h3><div class="tq-luoi">';
       g.muc.forEach(function (m) {
         ds.push(m);
-        h += '<button type="button" class="tq-the" data-tqi="' + (ds.length - 1) + '" title="Mở ' + escT(m.ten) + '"><span class="h"><span class="av">' + window.adIconTab(m.k) + '</span><span class="t">' + escT(m.ten) + "</span></span>" +
+        h += '<button type="button" class="tq-the" data-tqi="' + (ds.length - 1) + '" title="Mở ' + escT(m.ten) + '"><span class="h"><span class="av">' + window.adIconTab(m.k) + '</span>' +
+          '<span class="t" title="' + escT(m.ten) + '">' + escT(m.ten) + "</span></span>" +
           '<span class="m">' + escT(m.mo) + "</span>" +
           '<span class="ft"><span class="sv">' + (m.so != null && m.so !== "" ? '<b' + (m.mauSo ? ' style="color:' + m.mauSo + '"' : "") + ">" + escT(m.so) + "</b>" + (m.dv ? "<small>" + escT(m.dv) + "</small>" : "") + (m.tien != null ? thanh(m.tien) : "") : "") + '</span><span class="mo">Mở →</span></span></button>';
       });
