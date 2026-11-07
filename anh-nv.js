@@ -9,6 +9,10 @@
   if (window.hskAnhNV) return;
   var URL_GAS = "https://script.google.com/macros/s/AKfycbzIE6E68VYxS0Zm1vj8Ttfd790-JYolO1C4rMoEPj7FdNOWLPb23QpUHgIZ2T_dlZPJRQ/exec";
   var TAB = "NHAN-SU-ANH", KHOA_PHIEN = "anh-nv-v2", theoTen = null, theoEm = {}, theoMa = {}, DS = [], doi = [], dangTai = false;
+  /* 07/11 user «vào Bảo dưỡng từ thiết bị khác chỉ hiện khung tròn — không hình, mã NV thay tên»: trước đây hỏng 1 lần (trang mở khi CHƯA đăng nhập,
+     GAS chập chờn 404, mã máy hết hạn) là khoá «không danh bạ» tới hết trang. Nay hỏng = tạm: thử lại khi khoá/phiên đổi (vừa đăng nhập) hoặc sau 30 s;
+     403 bằng mã máy mà có phiên tài khoản ⇒ thử ngay bằng phiên; tải được thì gắn ảnh cả vòng đã vẽ chữ cái + báo «hsk-anh-nv» để mô-đun vẽ lại tên. */
+  var hong = 0, hongTb = "", henLai = 0;
   var chuan = function (s) { return String(s == null ? "" : s).normalize("NFC").replace(/\s+/g, " ").trim().toUpperCase(); };
   var tb = function () { try { return localStorage.getItem("tb-khoa") || (localStorage.getItem("tk-phien") ? "tk:" + localStorage.getItem("tk-phien") : ""); } catch (e) { return ""; } };
   function nap(rows, H) {
@@ -18,31 +22,41 @@
       var x = { ten: String(r[iT] || ""), ma: ma, em: String(r[iE] || "").toLowerCase(), anh: co }; DS.push(x); if (ma) theoMa[ma] = x;
       if (!co) return; theoTen[chuan(r[iT])] = co; if (x.em) theoEm[x.em] = co; });
   }
-  function tai() {
-    if (theoTen || dangTai) return;
-    try { var c = JSON.parse(sessionStorage.getItem(KHOA_PHIEN) || "null"); if (c && c.rows && Date.now() - c.luc < 6 * 3600e3) { nap(c.rows, c.H); gan(document); xongTai(); return; } } catch (e) {}
-    if (!tb()) { theoTen = {}; xongTai(); return; }   // máy chưa có khoá ⇒ không đọc được tab riêng — giữ chữ cái
+  function daHong() {   // giữ chữ cái tạm, KHÔNG khoá: lượt sau thử lại
+    if (!theoTen) theoTen = {}; hong = Date.now(); hongTb = tb(); xongTai();
+    if (!henLai) henLai = setTimeout(function () { henLai = 0; if (hong) tai(); }, 30e3);
+  }
+  function daXong(rows, H) { hong = 0; nap(rows, H); gan(document, true); xongTai(); try { window.dispatchEvent(new Event("hsk-anh-nv")); } catch (e) {} }
+  function tai(khoaThu) {
+    if (dangTai || (theoTen && !hong)) return;
+    if (hong && !khoaThu && tb() === hongTb && Date.now() - hong < 30e3) return;
+    try { var c = JSON.parse(sessionStorage.getItem(KHOA_PHIEN) || "null"); if (c && c.rows && Date.now() - c.luc < 6 * 3600e3) { daXong(c.rows, c.H); return; } } catch (e) {}
+    var k = khoaThu || tb();
+    if (!k) { daHong(); return; }   // máy chưa có khoá / chưa đăng nhập ⇒ chữ cái tạm, đăng nhập xong tự thử lại
     dangTai = true;
     var cb = "anhnv_" + Date.now(), s = document.createElement("script"), xong = function () { dangTai = false; delete window[cb]; s.remove(); };
     window[cb] = function (j) {
       xong();
-      if (!j || j.status !== "success") { theoTen = {}; xongTai(); return; }   // lỗi / không quyền ⇒ thôi, giữ chữ cái (không gửi lại mỗi lần trang đổi)
+      if (!j || j.status !== "success") {
+        var ph = ""; try { ph = localStorage.getItem("tk-phien") || ""; } catch (e) {}
+        if (j && j.code === 403 && ph && k !== "tk:" + ph) { tai("tk:" + ph); return; }   // mã máy hết hạn nhưng phiên tài khoản còn
+        daHong(); return; }
       var H = (j.header || []).map(chuan);
-      nap(j.rows || [], H);
       try { sessionStorage.setItem(KHOA_PHIEN, JSON.stringify({ luc: Date.now(), H: H, rows: j.rows })); } catch (e) {}
-      gan(document); xongTai();
+      daXong(j.rows || [], H);
     };
-    s.onerror = function () { xong(); theoTen = {}; xongTai(); };
-    s.src = URL_GAS + "?action=readTab&tab=" + TAB + "&callback=" + cb + "&tb=" + encodeURIComponent(tb());
+    s.onerror = function () { xong(); daHong(); };
+    s.src = URL_GAS + "?action=readTab&tab=" + TAB + "&callback=" + cb + "&tb=" + encodeURIComponent(k);
     document.head.appendChild(s);
   }
   function xongTai() { var d = doi; doi = []; d.forEach(function (f) { try { f(); } catch (e) {} }); }
   /* danh bạ sẵn sàng thì gọi f (ô gợi ý người cần danh bạ, không chỉ ảnh) */
-  function san(f) { if (theoTen && !dangTai) { f(); return; } doi.push(f); tai(); }
+  function san(f) { if (theoTen && !dangTai) { if (hong) tai(); f(); return; } doi.push(f); tai(); }   // đang hỏng: trả chữ cái ngay, về được thì báo «hsk-anh-nv»
   function lay(ten, em) { if (!theoTen) return ""; return (em && theoEm[String(em).toLowerCase()]) || theoTen[chuan(ten)] || ""; }
-  function gan(goc) {
-    if (!theoTen) { if ((goc.querySelector ? goc : document).querySelector("[data-anh-nv]")) tai(); return; }
-    (goc.querySelectorAll ? goc : document).querySelectorAll("[data-anh-nv]:not([data-anh-xong])").forEach(function (el) {
+  function gan(goc, lai) {
+    if (!theoTen || hong) { if ((goc.querySelector ? goc : document).querySelector("[data-anh-nv]")) tai(); if (!theoTen) return; }
+    /* lai = danh bạ vừa về sau lượt hỏng ⇒ gắn cả vòng đã vẽ chữ cái */
+    (goc.querySelectorAll ? goc : document).querySelectorAll(lai ? "[data-anh-nv]:not(.co-anh)" : "[data-anh-nv]:not([data-anh-xong])").forEach(function (el) {
       el.setAttribute("data-anh-xong", "1");
       var a = lay(el.getAttribute("data-anh-nv"), el.getAttribute("data-anh-em")); if (!a) return;
       var im = document.createElement("img"); im.src = a; im.alt = ""; im.decoding = "async";
