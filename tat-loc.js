@@ -10,6 +10,7 @@
  * 23/10 KIỂM ảnh user (screenshot-1792725099771: «Bộ lọc · đang lọc» mà không có ✕): bản «nhớ giá trị lúc ô hiện lần đầu» coi bộ lọc ĐÃ NHỚ
  *   từ lần trước là mặc định ⇒ ✕ ẩn. Nay: ô chọn so với lựa chọn đầu (không nhớ); ✕ còn bám TÍN HIỆU của chính mục (chữ «đang lọc» /
  *   lớp dang-loc / huy hiệu đếm Factory) — mục nói đang lọc là có ✕. Chỉ lịch ngày còn nhớ chữ lúc hiện đầu (mục có khoảng ngày mặc định).
+ * 07/11: ✕ luôn nằm trong nút bên phải (user: «lệch khung — xấu»), ẩn mũi tên ▾ khi có ✕.
  * Bản chép: factory/tat-loc.js (sửa ở đây rồi chép sang). */
 (function () {
   if (window.__TAT_LOC) return; window.__TAT_LOC = 1;
@@ -68,12 +69,8 @@
       nut.hidden = !hien;
       if (!hien) { if (b.dataset.tlMl != null) { b.style.removeProperty("margin-left"); if (b.dataset.tlMl) b.style.marginLeft = b.dataset.tlMl; delete b.dataset.tlMl; } return; }
       if (getComputedStyle(b).position === "static") b.classList.add("tl-goc");
-      /* đủ chỗ bên trái (≥ 26px trong khung cha) thì vẽ ngoài mép trái; nút sát lề thì nằm trong nút */
-      var rb = b.getBoundingClientRect(), rk = (b.parentElement || k).getBoundingClientRect(), trong = rb.width > 0 && rb.left - Math.max(rk.left, 0) < 26;
-      if (nut.classList.contains("tl-trong") !== trong) nut.classList.toggle("tl-trong", trong);
-      /* 23/10 (đo điện thoại Theo máy): ✕ đè chữ đếm bên cạnh → chỉ khi ĐÈ mới đẩy nút nhường chỗ (nút ghim phải bằng margin-left:auto không đè nên không đụng) */
-      var tr = b.previousElementSibling, de = !trong && tr && tr.getBoundingClientRect().right > rb.left - 28;
-      if (de && b.dataset.tlMl == null) { b.dataset.tlMl = b.style.marginLeft; b.style.setProperty("margin-left", "28px", "important"); }   // important: khung đầu panel ép margin-left:0!important
+      /* 07/11 user «dấu x bị lệch khung — xấu»: ✕ vẽ ngoài mép trái lệch khỏi hàng ⇒ nay LUÔN nằm TRONG nút, bên phải chữ, thay mũi tên ▾ (khuôn nút Bộ lọc mới) */
+      if (!nut.classList.contains("tl-trong")) nut.classList.add("tl-trong");
     });
   }
   var hT = 0; function henGan() { clearTimeout(hT); hT = setTimeout(gan, 150); }
@@ -81,7 +78,8 @@
   st.textContent = ".tl-goc{position:relative}" +
     ".tat-loc{position:absolute;right:calc(100% + 6px);top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;" +
     "margin:0;padding:0;border-radius:50%;background:var(--bad);color:var(--accent-text);font-size:11px;font-weight:700;line-height:1;cursor:pointer;z-index:1}" +
-    ".tat-loc.tl-trong{position:static;transform:none;flex:none;width:18px;height:18px;margin-left:6px;vertical-align:middle}" +
+    ".tat-loc.tl-trong{position:static;transform:none;flex:none;width:16px;height:16px;margin:0 -4px 0 2px;font-size:9.5px;vertical-align:middle}" +
+    "button:has(>.tat-loc.tl-trong:not([hidden]))::after{display:none!important}" +
     ".tat-loc:hover{filter:brightness(1.12)}.tat-loc:focus-visible{outline:2px solid var(--bad);outline-offset:2px}.tat-loc[hidden]{display:none!important}";
   (document.head || document.documentElement).appendChild(st);
   var rT = 0;
