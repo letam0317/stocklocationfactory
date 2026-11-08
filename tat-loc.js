@@ -143,4 +143,23 @@
   document.addEventListener("change", henGan, true); document.addEventListener("input", henGan, true);
   window.addEventListener("resize", henGan);
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { gan(); ganX(); }); else { gan(); ganX(); }
+
+  /* 08/11 user «toàn bộ Bộ lọc dạng NGĂN KÉO — không xô đẩy khung dữ liệu» (TK-28): khối .panel > .filters nổi (CSS index.html).
+     Ở đây: (1) đặt --loc-top = đáy đầu khung thật (đầu khung có thể cao khác 40 px) lúc ngăn mở; (2) bấm ra ngoài ngăn / Esc ⇒ đẩy ngăn vào
+     bằng CHÍNH nút Bộ lọc của khung (giữ logic riêng từng mô-đun). Lịch chọn ngày / ô chọn gắn ra body vẫn tính là «trong ngăn». */
+  var NGOAI_OK = ".date-pop,.dp-sheet,.cs-list,.cs,.hsk-toast,.toast,[role=dialog]";
+  var NGAN = ".panel > .filters:not(.collapsed),.pg-locbody:not(.collapsed)";   // .pg-locbody = Tiến độ Planogram Factory
+  function nganMo() { return [].filter.call(document.querySelectorAll(NGAN), function (f) { return f.offsetParent !== null; }); }
+  function datTop(f) { var h = f.previousElementSibling; if (h) f.parentNode.style.setProperty("--loc-top", (h.offsetTop + h.offsetHeight) + "px"); }
+  function nutCua(f) { var h = f.previousElementSibling; return (h && h.querySelector(".btn-filter")) || f.parentNode.querySelector(".btn-filter"); }
+  new MutationObserver(function () { nganMo().forEach(datTop); }).observe(document.documentElement, { subtree: true, attributes: true, attributeFilter: ["class"] });
+  document.addEventListener("click", function (ev) {
+    var t = ev.target; if (!t || !t.closest || !document.contains(t) || t.closest(NGOAI_OK)) return;
+    nganMo().forEach(function (f) { var b = nutCua(f); if (!b || f.contains(t) || b.contains(t)) return; b.click(); });
+  });
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key !== "Escape" || document.querySelector(".date-pop:not(.hidden),.cs.show")) return;
+    var ds = nganMo(); if (!ds.length) return;
+    ds.forEach(function (f) { var b = nutCua(f); if (b) b.click(); }); ev.stopPropagation();
+  }, true);
 })();
