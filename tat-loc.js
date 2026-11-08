@@ -20,6 +20,9 @@
  *   × trắng var(--surface) 14/700, rê sẫm nhẹ). Vòng vẽ bằng radial-gradient GIỮA hộp sẵn có ⇒ nút giữ nguyên kích thước / vùng bấm (không nhảy
  *   bố cục, nút đóng pop-up vẫn ≥44 px). Bộ này TỰ gắn .x-do cho mọi phần tử bấm được mà chữ chỉ là 1 dấu × / ✕ / ✖ (đóng pop-up, bỏ SKU,
  *   bỏ từ khoá…). Mục mới: chỉ cần chữ «×» (hoặc tự đặt class="x-do"). Bảo dưỡng tự đặt lớp (#pane-baoduong không tự gắn).
+ * 08/11 user «đổi nút Đóng có ở bất cứ đâu của link audit-dc thành dấu x đỏ ở thư viện dự án»: nút bấm được có chữ ĐÚNG «Đóng»
+ *   (đóng pop-up / tấm / khung sửa) ⇒ chữ thay bằng «×» + .x-do .x-do-dong, giữ aria-label/title «Đóng»; hộp vuông theo chiều cao nút
+ *   (vùng chạm điện thoại ≥44 px của trang vẫn giữ). Cả #pane-baoduong. Nút «Đóng ▴» (thu gọn), «Đóng camera», «Đóng gói» không đụng.
  * Bản chép: factory/tat-loc.js (sửa ở đây rồi chép sang). */
 (function () {
   if (window.__TAT_LOC) return; window.__TAT_LOC = 1;
@@ -91,7 +94,19 @@
   }
   /* 07/11 dấu x chuẩn: tìm nút chữ «×/✕/✖» bằng XPath (nhanh, không quét mọi phần tử) */
   var XP = "//text()[normalize-space()='×' or normalize-space()='✕' or normalize-space()='✖']";
+  var XP_DONG = "//text()[normalize-space()='Đóng']";
+  function ganDong() {
+    var r; try { r = document.evaluate(XP_DONG, document.body || document.documentElement, null, 7, null); } catch (e) { return; }
+    for (var i = 0; i < r.snapshotLength; i++) {
+      var t = r.snapshotItem(i), e = t.parentElement; if (!e || e.closest(".tat-loc,.bl-cum,[data-khong-x-do]")) continue;
+      if ((e.textContent || "").trim() !== "Đóng" || !e.matches("button,[role=button],a,[onclick]")) continue;
+      if (!e.getAttribute("aria-label")) e.setAttribute("aria-label", "Đóng");
+      if (!e.title) e.title = "Đóng";
+      t.nodeValue = "×"; e.classList.add("x-do", "x-do-dong");
+    }
+  }
   function ganX() {
+    ganDong();
     var r; try { r = document.evaluate(XP, document.body || document.documentElement, null, 7, null); } catch (e) { return; }
     for (var i = 0; i < r.snapshotLength; i++) {
       var t = r.snapshotItem(i), e = t.parentElement; if (!e || e.classList.contains("x-do")) continue;
@@ -129,6 +144,8 @@
       "background:var(--xd) center/8px 8px no-repeat,linear-gradient(-45deg,transparent calc(50% - .9px),var(--surface) calc(50% - .9px),var(--surface) calc(50% + .9px),transparent calc(50% + .9px)) center/8px 8px no-repeat," +
       "radial-gradient(circle closest-side,var(--bad) calc(100% - .5px),transparent 100%) center/18px 18px no-repeat!important;" +
       "color:transparent!important;text-shadow:none!important;border-color:transparent!important;box-shadow:none!important;cursor:pointer}" +
+    /* 08/11 nút chữ «Đóng» đổi sang × — hộp vuông (rộng = cao), bỏ đệm ngang của khuôn nút chữ */
+    ".x-do.x-do-dong.x-do-dong{padding-left:0!important;padding-right:0!important;min-width:32px!important;width:auto;aspect-ratio:1;flex:none;justify-content:center}" +
     ":is(span,i,a,b).x-do.x-do{display:inline-block;min-width:18px;min-height:18px;vertical-align:middle}" +
     ".x-do.x-do:hover{filter:brightness(.88)}.x-do.x-do:focus-visible{outline:2px solid var(--bad);outline-offset:2px}" +
     ".tat-loc:hover{filter:brightness(1.12)}.tat-loc:focus-visible{outline:2px solid var(--bad);outline-offset:2px}.tat-loc[hidden]{display:none!important}";
