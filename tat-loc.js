@@ -165,10 +165,10 @@
      Ở đây: (1) đặt --loc-top = đáy đầu khung thật (đầu khung có thể cao khác 40 px) lúc ngăn mở; (2) bấm ra ngoài ngăn / Esc ⇒ đẩy ngăn vào
      bằng CHÍNH nút Bộ lọc của khung (giữ logic riêng từng mô-đun). Lịch chọn ngày / ô chọn gắn ra body vẫn tính là «trong ngăn». */
   var NGOAI_OK = ".date-pop,.dp-sheet,.cs-list,.cs,.hsk-toast,.toast,[role=dialog]";
-  var NGAN = ".panel > .filters:not(.collapsed),.pg-locbody:not(.collapsed)";   // .pg-locbody = Tiến độ Planogram Factory
+  var NGAN = ".panel > .filters:not(.collapsed),.pg-locbody:not(.collapsed),#hpLocSlot:not(.collapsed)";   // .pg-locbody = Tiến độ Planogram Factory · #hpLocSlot = Tiến độ Planogram Retail (09/11)
   function nganMo() { return [].filter.call(document.querySelectorAll(NGAN), function (f) { return f.offsetParent !== null; }); }
   function datTop(f) { var h = f.previousElementSibling; if (h) f.parentNode.style.setProperty("--loc-top", (h.offsetTop + h.offsetHeight) + "px"); }
-  function nutCua(f) { var h = f.previousElementSibling; return (h && h.querySelector(".btn-filter")) || f.parentNode.querySelector(".btn-filter"); }
+  function nutCua(f) { var h = f.previousElementSibling, q = ".btn-filter,#hpBtnLoc"; return (h && h.querySelector(q)) || f.parentNode.querySelector(q); }
   new MutationObserver(function () { nganMo().forEach(datTop); }).observe(document.documentElement, { subtree: true, attributes: true, attributeFilter: ["class"] });
   document.addEventListener("click", function (ev) {
     var t = ev.target; if (!t || !t.closest || !document.contains(t) || t.closest(NGOAI_OK)) return;

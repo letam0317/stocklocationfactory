@@ -367,6 +367,8 @@
   }
   function doiPhienXm_() {
     var api = API_XM();
+    /* 09/11 kho Drive (mọi máy tắt): không máy chủ nào cấp phiên — phiên tài khoản có quyền Xác minh là đủ (khoá giải mã vẫn chỉ cấp qua xmKhoaMa) */
+    if (window.__HX_DRIVE) { ls.set("hx-phien", "drive"); ls.set("hx-phien-api", api); try { window.dispatchEvent(new Event("hx-phien")); } catch (e) {} return Promise.resolve(true); }
     return fetch(api + "/api/dang-nhap-tk", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ phienTk: TK.phien }) })
       .then(function (r) { var ma = r.status; return r.json().then(function (j) { if (ma === 401) kiemLai(true); return j; }); })
       /* 30/10: nhớ MÁY CHỦ nào cấp phiên (hx-phien-api) — laptop tắt, trang sang máy dự phòng thì index.html hxDoMayChu thấy lệch và đổi phiên lại */
