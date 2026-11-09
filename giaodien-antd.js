@@ -27,8 +27,10 @@
   var BONG1 = "0 1px 2px -2px rgba(0,0,0,.16),0 3px 6px 0 rgba(0,0,0,.12),0 5px 12px 4px rgba(0,0,0,.09)";
   var BONG2 = "0 6px 16px 0 rgba(0,0,0,.08),0 3px 6px -4px rgba(0,0,0,.12),0 9px 28px 8px rgba(0,0,0,.05)";
   var VONG = "0 0 0 2px color-mix(in srgb,var(--accent) 18%,transparent)";   // quầng focus của antd, theo màu theme
-  var SEG = "#hpWhBar .hp-wb1 .hp-whtab,#bdNay .bd-seg .hp-whtab,#bdDoiHop .bd-seg .hp-whtab";   // 05/11 + Việc hôm nay (Theo người|Theo hạng mục) và hộp đổi người (Chỉ hôm nay|Từ nay về sau)   // thanh lọc "chọn 1 trong vài" kiểu Segmented (Kiểm kê/Bất thường nay dùng ô chọn)
+  var SEG = "#hpWhBar .hp-wb1 .hp-whtab,#bdNay .bd-seg .hp-whtab,#bdDoiHop .bd-seg .hp-whtab,#kpiChe .hp-whtab";   /* 09/11 + Tổng kết Mẫu 13 (Nhân viên · Quản lý · Tổng kết nhanh) */   // 05/11 + Việc hôm nay (Theo người|Theo hạng mục) và hộp đổi người (Chỉ hôm nay|Từ nay về sau)   // thanh lọc "chọn 1 trong vài" kiểu Segmented (Kiểm kê/Bất thường nay dùng ô chọn)
   var H = "html.ad", B = "html.ad body";
+  /* 09/11 user (Retail) «Tồn kho CX — thu hẹp thanh bên trái cho gọn khít» ⇒ Retail 176 px; Factory giữ 216 (nhãn dài: Trạng thái lưu trữ…) */
+  var SW = /factory|stocklocation/.test(location.pathname) ? 216 : 176;
   /* 16/10 nhịp chuyển dùng chung: khung tab chạy lại paneIn (đổi mục con trong tab — vd Xác minh Theo tác vụ ⇄ Theo máy) */
   window.nhipTab = function (el) { if (!el) return; el.style.animation = "none"; void el.offsetWidth; el.style.animation = ""; };
   function seg(suf) { return SEG.split(",").map(function (x) { return H + " " + x + suf; }).join(","); }
@@ -166,7 +168,7 @@
     H + " #btnSettings.open .bars{background:transparent}",
 
     /* ---- thanh bên: Menu kiểu antd, rộng 200 ---- */
-    H + " #sideNav{width:216px;background:var(--surface);border-right:1px solid var(--ad-chia);padding:64px 4px 16px;gap:0;box-shadow:none}",
+    H + " #sideNav{width:" + SW + "px;background:var(--surface);border-right:1px solid var(--ad-chia);padding:64px 4px 16px;gap:0;box-shadow:none}",
     H + " body.side-open #sideNav{box-shadow:none}",
     H + " #sideNav .s-grp{font-size:12px;font-weight:400;color:var(--muted);opacity:1;padding:16px 16px 8px;letter-spacing:0}",
     H + " #sideNav .s-grp::before{display:none}",
@@ -188,13 +190,13 @@
     H + " #sideNav .s-item.on .sn{color:var(--accent)}",
     /* logo đầu thanh bên — trượt cùng thanh bên */
     "#adLogo{display:none}",
-    H + " #adLogo{display:flex;align-items:center;gap:8px;position:fixed;top:0;left:0;z-index:61;width:216px;height:56px;padding:0 24px;" +
+    H + " #adLogo{display:flex;align-items:center;gap:8px;position:fixed;top:0;left:0;z-index:61;width:" + SW + "px;height:56px;padding:0 24px;" +
       "background:var(--surface);border-right:1px solid var(--ad-chia);font-size:16px;font-weight:600;color:var(--text);white-space:nowrap;" +
       "transform:translate3d(-100%,0,0);visibility:hidden;transition:transform .32s var(--ez-apple,ease),visibility 0s linear .32s}",
     H + " #adLogo img{width:24px;height:24px;border-radius:50%;flex:none}",
     H + " body.side-open #adLogo{transform:none;visibility:visible;transition-delay:0s}",
     "#adChuyen{display:none}",
-    H + " #adChuyen{display:flex;align-items:center;position:fixed;left:0;bottom:0;z-index:61;width:216px;padding:8px;box-sizing:border-box;" +
+    H + " #adChuyen{display:flex;align-items:center;position:fixed;left:0;bottom:0;z-index:61;width:" + SW + "px;padding:8px;box-sizing:border-box;" +
       "background:var(--surface);border-right:1px solid var(--ad-chia);border-top:1px solid var(--ad-chia);" +
       "transform:translate3d(-100%,0,0);visibility:hidden;transition:transform .32s var(--ez-apple,ease),visibility 0s linear .32s}",
     H + " body.side-open #adChuyen{transform:none;visibility:visible;transition-delay:0s}",
@@ -209,15 +211,15 @@
     H + " #sideToggle:hover{background:var(--ad-re);box-shadow:none}",
     H + " #sideToggle:focus-visible{box-shadow:" + VONG + "}",
     "@media(min-width:769px){" +
-      H + " body.side-open .wrap{padding-left:240px}" +
-      H + " body.side-open #sideToggle{translate:216px 0}" +
+      H + " body.side-open .wrap{padding-left:" + (SW + 24) + "px}" +
+      H + " body.side-open #sideToggle{translate:" + SW + "px 0}" +
     "}",
     /* 14/10 user: «nút thu gọn/mở rộng thanh bên dính liền với thanh bên — lòi ra 2/3 kích thước nút, 1/3 còn lại dính vào thanh bên» (máy tính).
-       Nút 32px: left 0 + translate = mép thanh bên − 11px (mở 216 → 205 · thu gọn 72 → 61); có nền + viền để thấy rõ gắn vào mép. */
+       Nút 32px: left 0 + translate = mép thanh bên − 11px (mở 176 → 165 · thu gọn 72 → 61; 09/11 user «Tồn kho CX — thu hẹp thanh bên trái cho gọn khít»: 216 → 176); có nền + viền để thấy rõ gắn vào mép. */
     "@media(min-width:769px){" +
       H + " #sideToggle{left:0;top:16px;border-radius:999px;background:var(--surface);border:1px solid var(--ad-chia,var(--border));box-shadow:0 2px 6px rgba(0,0,0,.08)}" +
       H + " #sideToggle:hover{background:var(--surface);border-color:var(--accent);color:var(--accent);box-shadow:0 2px 8px rgba(0,0,0,.12)}" +
-      H + " body.side-open #sideToggle{translate:205px 0!important}" + H + " body:not(.side-open) #sideToggle{translate:61px 0!important}" +
+      H + " body.side-open #sideToggle{translate:" + (SW - 11) + "px 0!important}" + H + " body:not(.side-open) #sideToggle{translate:61px 0!important}" +
     "}",
     /* ---- 12/10 user: "thanh bên khi thu gọn thì chuyển tên các sub-tab thành nhãn" — máy tính: thu gọn = DẢI 72px (Sider collapsed của antd),
        mỗi mục là nhãn chữ nhỏ 2 dòng canh giữa, nhóm thành vạch ngăn, logo chỉ còn hình. Điện thoại giữ ngăn kéo (không đủ chỗ cho dải). ---- */
@@ -370,6 +372,9 @@
     ".tq[data-bac='3'] .tq-the{display:grid;grid-template-columns:26px minmax(0,1fr) auto;grid-template-areas:'av t mo' 'av sv mo';column-gap:8px;align-items:center;align-content:center;padding:6px 10px;min-height:52px;height:52px}",
     ".tq[data-bac='3'] .tq-the .h,.tq[data-bac='3'] .tq-the .ft{display:contents}.tq[data-bac='3'] .tq-the .av{grid-area:av;width:26px;height:26px}.tq[data-bac='3'] .tq-the .av svg{width:16px;height:16px}",
     ".tq[data-bac='3'] .tq-the:has(.sv:empty) .t{grid-row:1/span 2;align-self:center}",   /* 07/11 thẻ không số: tên giữa ô */
+    /* 09/11 user «Tổng quan điện thoại: Tồn kho chính xác cho xuống hàng chữ "xác" nhưng KHÔNG đổi kích thước khung chip»: thẻ không số (tên chiếm 2 hàng lưới)
+       cho xuống tối đa 2 dòng thay vì cắt «…»; 2 × 19 px lọt trong thẻ 52 px ⇒ thẻ không cao thêm */
+    "@media(max-width:768px){.tq[data-bac='3'] .tq-the:has(.sv:empty) .t{white-space:normal;text-overflow:clip;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}}",
     ".tq[data-bac='3'] .tq-the .t{grid-area:t;font-size:13.5px;line-height:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}",
     ".tq[data-bac='3'] .tq-the .sv{grid-area:sv;line-height:0}.tq[data-bac='3'] .tq-the .sv:empty{display:none}.tq[data-bac='3'] .tq-the .sv b{font-size:14px;line-height:18px}.tq[data-bac='3'] .tq-the .sv small,.tq[data-bac='3'] .tq-the .sv .tq-bar{display:none}",
     ".tq[data-bac='3'] .tq-the .mo{grid-area:mo;font-size:0}.tq[data-bac='3'] .tq-the .mo::after{content:'→';font-size:14px}",
