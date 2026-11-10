@@ -265,7 +265,7 @@
     var p = TK.phien; if (p) goi("tk_dangxuat", { phien: p }).catch(function () {});
     /* 16/10 user «đăng xuất rồi mà vẫn thấy mục con Xác minh»: 1 lần đăng xuất = thu hồi CẢ phiên máy chủ Xác minh 8591 (trước chỉ xoá ở máy) */
     var hx = ls.get("hx-phien"); if (APP === "r" && hx) fetch(API_XM() + "/api/dang-xuat", { method: "POST", headers: { "x-hx-phien": hx } }).catch(function () {});
-    datNguoi(null, ""); TK.quyen = null; ls.set("tk-nho", null); ls.set("hx-phien", null);
+    datNguoi(null, ""); TK.quyen = null; ls.set("tk-nho", null); ls.set("hx-phien", null); ls.set("hx-phien-ds", null);
     try { window.dispatchEvent(new Event("hx-phien")); } catch (e) {}
     apQuyen(); bao();   // dựng lại thanh bên NGAY (không chờ Apps Script trả quyền khách)
     taiKhach().then(function () { apQuyen(); bao(); });
@@ -369,10 +369,19 @@
     var api = API_XM();
     /* 09/11 kho Drive (mọi máy tắt): không máy chủ nào cấp phiên — phiên tài khoản có quyền Xác minh là đủ (khoá giải mã vẫn chỉ cấp qua xmKhoaMa) */
     if (window.__HX_DRIVE) { ls.set("hx-phien", "drive"); ls.set("hx-phien-api", api); try { window.dispatchEvent(new Event("hx-phien")); } catch (e) {} return Promise.resolve(true); }
+    /* 10/11 user «laptop tắt tải rất lâu»: mỗi lần đổi máy chủ (laptop ⇄ dự phòng) là 1 lượt dang-nhap-tk = máy chủ hỏi Apps Script tk_toi (~2,5 s).
+       Phiên máy chủ sống 12 giờ, ghi đĩa ⇒ NHỚ phiên theo từng máy chủ (hx-phien-ds, gắn đuôi phiên tài khoản) — quay lại máy đã có phiên còn hạn thì dùng ngay.
+       Phiên đó hỏng (401) ⇒ index.html hxNoiLai xoá mục của máy đó rồi đổi lại như cũ. */
+    var duoi = String(TK.phien || "").slice(-10), mp = {}; try { mp = JSON.parse(ls.get("hx-phien-ds") || "{}") || {}; } catch (e) {}
+    var cu = mp[api];
+    if (cu && cu.tk === duoi && cu.phien && cu.het > Date.now() + 10 * 60e3) { ls.set("hx-phien", cu.phien); ls.set("hx-phien-api", api); try { window.dispatchEvent(new Event("hx-phien")); } catch (e) {} return Promise.resolve(true); }
     return fetch(api + "/api/dang-nhap-tk", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ phienTk: TK.phien }) })
       .then(function (r) { var ma = r.status; return r.json().then(function (j) { if (ma === 401) kiemLai(true); return j; }); })
       /* 30/10: nhớ MÁY CHỦ nào cấp phiên (hx-phien-api) — laptop tắt, trang sang máy dự phòng thì index.html hxDoMayChu thấy lệch và đổi phiên lại */
-      .then(function (j) { if (!j.phien) return false; ls.set("hx-phien", j.phien); ls.set("hx-phien-api", api); try { window.dispatchEvent(new Event("hx-phien")); } catch (e) {} return true; })
+      .then(function (j) { if (!j.phien) return false; ls.set("hx-phien", j.phien); ls.set("hx-phien-api", api);
+        try { Object.keys(mp).forEach(function (k) { if (!(mp[k] && mp[k].het > Date.now())) delete mp[k]; });
+          mp[api] = { phien: j.phien, het: +j.het || Date.now() + 11 * 3600e3, tk: duoi }; ls.set("hx-phien-ds", JSON.stringify(mp)); } catch (e) {}
+        try { window.dispatchEvent(new Event("hx-phien")); } catch (e) {} return true; })
       .catch(function () { return false; });
   }
   window.tkDoiPhienXm = doiPhienXm;
