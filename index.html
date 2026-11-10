@@ -3430,11 +3430,54 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
 <!-- 12/10 giao diện Ant Design (thanh bên · đầu trang · đường dẫn "Nhóm / Mục"), CHUNG với Audit Hasaki: bản chép
      giaodien-antd.js (nguồn ở kiemsoatkho/hasaki-giaodien-antd.js). Nạp đồng bộ ở head để khung hình đầu đã đúng kiểu. -->
 <script>window.AD_BI_DANH={"hangmuctonkho/kiemke":"kk","hangmuctonkho/tonkhobatthuong":"kk#viewAbn"};   /* 15/10 link cũ → mục gộp «Tồn kho chính xác» */ window.AD_TEN='Audit Factory'; window.AD_LOGO='factory-logo.png'; window.AD_TEN_MAU='#000'; window.AD_CHUYEN={ten:'Audit Retail', app:'retail'};</script>   <!-- 13/10 user: logo Mastige (chỉ hình tròn chữ M) + chữ màu logo -->
-<script src="giaodien-antd.js?v=20261109c"></script>
-<script src="tai-khoan.js?v=20261110a"></script>   <!-- 14/10 đăng nhập + phân quyền (bản chép từ kiemsoatkho/tai-khoan.js) -->
-<script src="tat-loc.js?v=20261109a" defer></script>   <!-- 22/10 nút «✕ Tắt lọc» · 23/10 dời vào TRONG nút «Bộ lọc» (bản chép từ kiemsoatkho/tat-loc.js) -->
+<script src="giaodien-antd.js?v=20261110h"></script>
+<script src="tai-khoan.js?v=20261110g"></script>   <!-- 14/10 đăng nhập + phân quyền (bản chép từ kiemsoatkho/tai-khoan.js) -->
+<script src="tat-loc.js?v=20261109a" defer></script><script src="lich-su-ben.js?v=20261110g" defer></script><!-- 10/11 tối Lịch sử lịch tháng + pop-up ảnh kiểu B (bản chép Retail) -->   <!-- 22/10 nút «✕ Tắt lọc» · 23/10 dời vào TRONG nút «Bộ lọc» (bản chép từ kiemsoatkho/tat-loc.js) -->
 <link rel="stylesheet" href="thanh-cuon.css?v=20261022a"><!-- 17/10 thanh cuộn chung theo theme (bản gốc hasaki/kiemsoatkho/thanh-cuon.css) -->
 <link rel="stylesheet" href="bo-loc-ngay.css?v=20261019a"><script src="bo-loc-ngay.js?v=20261023a"></script><script src="anh-nv.js?v=20261105a"></script><!-- 05/11 ảnh đại diện NV toàn dự án (bản chép Y HỆT hasaki/kiemsoatkho/anh-nv.js) --><!-- 19/10 BỘ LỌC NGÀY CHUẨN toàn dự án (bản chép Y HỆT hasaki/kiemsoatkho/bo-loc-ngay.*) -->
+<style id="plgBenRetail">
+/* 10/11 tối user «thanh bên phải Planogram Factory làm Y CHANG Retail — dữ liệu còn thiếu để trống»: 5 tab Tổng quan · Làm gì · Báo cáo ở đâu ·
+   Tài sản · Lịch sử. Khuôn thanh tab chép từ thanh-phan.css Retail (Mẫu 11, biểu tượng mặt nạ SVG), bộ chọn đổi sang vỏ Factory #plgmodal / #plgmBody */
+#plgmBody .bd-tabben{position:sticky;top:-14px;z-index:4;display:flex;margin:-14px -20px 12px;padding:4px 14px 0;background:var(--surface);border-bottom:1px solid var(--ad-chia,var(--border));overflow-x:auto;scrollbar-width:none}
+#plgmBody .bd-tabben::-webkit-scrollbar{display:none}
+#plgmBody .bd-tabben>.hp-whtab:first-child{margin-left:auto!important}#plgmBody .bd-tabben>.hp-whtab:last-child{margin-right:auto!important}
+#plgmBody .bd-tabben .hp-whtab{position:relative;flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 10px;margin:0!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;color:var(--muted);font:inherit;font-size:13px;font-weight:400;cursor:pointer}
+#plgmBody .bd-tabben .hp-whtab::before{display:none!important}
+#plgmBody .bd-tabben .hp-whtab::before{content:"";display:inline-block!important;position:static!important;inset:auto!important;flex:none;width:18px;height:18px;margin:0;border:0;border-radius:0;opacity:1;transform:none;background:currentColor!important;-webkit-mask:var(--tb-ic) center/contain no-repeat;mask:var(--tb-ic) center/contain no-repeat}
+#plgmBody .bd-tabben .hp-whtab[data-tab="tq"],#plgmBody .bd-tabben .hp-whtab[data-ptab="tq"]{--tb-ic:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M3 3h6v6H3zM11 3h6v6h-6zM3 11h6v6H3zM11 11h6v6h-6z%22/%3E%3C/svg%3E")}
+#plgmBody .bd-tabben .hp-whtab[data-tab="lam"],#plgmBody .bd-tabben .hp-whtab[data-ptab="lam"]{--tb-ic:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M4 5h12M4 10h12M4 15h7%22/%3E%3Cpath d=%22M13 15l2 2 3-4%22/%3E%3C/svg%3E")}
+#plgmBody .bd-tabben .hp-whtab[data-tab="bc"],#plgmBody .bd-tabben .hp-whtab[data-ptab="bc"]{--tb-ic:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M10 18s-5-5-5-9a5 5 0 0110 0c0 4-5 9-5 9z%22/%3E%3Ccircle cx=%2210%22 cy=%229%22 r=%221.8%22/%3E%3C/svg%3E")}
+#plgmBody .bd-tabben .hp-whtab[data-tab="ts"],#plgmBody .bd-tabben .hp-whtab[data-ptab="ts"]{--tb-ic:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M3 7l7-4 7 4v7l-7 4-7-4z%22/%3E%3Cpath d=%22M3 7l7 4 7-4M10 11v7%22/%3E%3C/svg%3E")}
+#plgmBody .bd-tabben .hp-whtab[data-tab="ls"],#plgmBody .bd-tabben .hp-whtab[data-ptab="ls"]{--tb-ic:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2210%22 cy=%2210%22 r=%227%22/%3E%3Cpath d=%22M10 6v4l3 2%22/%3E%3C/svg%3E")}
+@media(max-width:768px){#plgmodal .bd-tabben .hp-whtab{flex-direction:column!important;gap:2px!important;min-height:54px!important;font-size:11.5px!important}#plgmodal .bd-tabben .hp-whtab::after{display:none!important}#plgmodal .bd-tabben .bd-tab-so{position:absolute;top:3px;left:calc(50% + 8px)}}
+#plgmBody .bd-tabben .hp-whtab:hover{color:var(--text)}
+#plgmBody .bd-tabben .hp-whtab::after{content:'';position:absolute;left:10px;right:10px;bottom:-1px;height:2px;border-radius:2px;background:var(--accent);transform:scaleX(0);transition:transform .2s var(--ez-apple,ease)}
+#plgmBody .bd-tabben .hp-whtab.active{color:var(--accent)}
+#plgmBody .bd-tabben .hp-whtab.active::after{transform:none}
+#plgmBody .bd-tab-so{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--surface2);color:var(--muted);font-size:11px;line-height:18px;text-align:center}
+#plgmBody .bd-tab-than{animation:fadeUp .16s var(--ez-apple,ease) both}
+#plgmBody{scrollbar-gutter:stable}
+/* Mẫu 7 «Thẻ nổi đổ bóng» (khuôn hasaki-planogram.js Retail): tiêu đề + 5 tab = một thẻ trắng nổi trên nền xám nhạt */
+#plgmodal .modalbox{background:color-mix(in srgb,var(--text) 4%,var(--surface))}
+#plgmodal .modalhd{background:var(--surface);margin:12px 12px 0;border-radius:8px 8px 0 0;border-bottom:1px solid color-mix(in srgb,var(--border) 45%,transparent);
+  box-shadow:var(--shadow);clip-path:inset(-30px -30px 0 -30px);position:relative;z-index:5}
+@media(min-width:769px){#plgmodal #plgmBody .bd-tabben{margin:-14px calc(-8px - var(--sbw, 0px)) 14px -8px;border-bottom:0;border-radius:0 0 8px 8px;
+  box-shadow:var(--shadow);clip-path:inset(0 -30px -30px -30px)}}
+/* điện thoại: 5 tab CHỐT ĐÁY màn (như Retail), thẻ nổi cách mép 10 px, thân chừa đáy */
+@media(max-width:768px){#plgmodal .modalhd{margin:10px 10px 0;border-radius:8px;border-bottom:0;clip-path:none}
+  #plgmodal #plgmBody .bd-tabben{position:fixed;left:10px;right:10px;bottom:10px;top:auto;z-index:6;margin:0;padding:0 2px env(safe-area-inset-bottom);overflow:hidden;
+    border:0;border-radius:8px;box-shadow:var(--shadow)}
+  #plgmodal #plgmBody .bd-tabben .hp-whtab{flex:1 1 0;min-width:0;justify-content:center;padding:0 2px;white-space:nowrap;font-size:11px!important;letter-spacing:-.1px}
+  #plgmodal #plgmBody{padding-bottom:78px!important}}
+#plgmodal .pg-trong{padding:14px 0;color:var(--muted);font-size:12.5px}
+/* chip trạng thái yêu cầu ↗ cạnh mã (khuôn «Chờ duyệt ↗» Retail): web mã · chip; điện thoại chip · mã */
+#plgmTitle{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:nowrap}
+#plgmTitle .pg-vtchip{flex:none;font-size:11px;font-weight:600;line-height:16px;padding:1px 6px;border-radius:4px;background:var(--accent);color:var(--accent-text,#fff);text-decoration:none;white-space:nowrap}
+@media(max-width:768px){#plgmTitle{justify-content:flex-start}#plgmTitle .pg-vtchip{order:-1}
+  /* điện thoại như Retail: nhãn · giá trị cùng hàng; hàng ảnh xếp dưới nhãn */
+  #plgmBody .pg-vtrow:not(:has(.pg-vtthumbs)){display:flex;align-items:center;justify-content:space-between;gap:12px}
+  #plgmBody .pg-vtrow:not(:has(.pg-vtthumbs))>div{text-align:right;min-width:0}}
+</style>
 </head>
 <body>
 <aside id="sideNav" aria-label="Điều hướng hạng mục"></aside>
@@ -7048,7 +7091,7 @@ function plgVeTra(){
  *     trách và báo cáo gần nhất là CÙNG MỘT NGUỒN nên tuyệt đối không in "✓ đúng người trong bảng
  *     phân công": đó là so một dữ kiện với chính nó rồi trình bày như bằng chứng.
  */
-var PLGVT={loc:'',ngay:'',anh:[],anhNhan:''};
+var PLGVT={loc:'',ngay:'',anh:[],anhNhan:'',tab:'tq'};
 var PLG_PAL=['#f59e0b','#8b5cf6','#ef4444','#10b981','#ec4899','#6366f1','#0891b2','#84cc16','#2563eb','#d97706'];
 var _plgNmC={}, _plgNmI=0;
 function plgMauNguoi(n){ if(!_plgNmC[n]) _plgNmC[n]=PLG_PAL[_plgNmI++%PLG_PAL.length]; return _plgNmC[n]; }
@@ -7118,6 +7161,21 @@ function plgOpen(loc){
   plgMoModal('plgmodal');
 }
 function plgVtNgay(d){ PLGVT.ngay=d; plgVtVe(); }
+/* 10/11 tối user «thanh bên phải Planogram Factory làm Y CHANG Retail — dữ liệu còn thiếu thì để trống»: 5 tab như Retail
+   (Tổng quan · Làm gì · Báo cáo ở đâu · Tài sản · Lịch sử). Kho nguyên liệu chưa có lịch khung / cách báo cáo / sổ tài sản ⇒ 3 tab giữa trống.
+   Lịch sử = lịch tháng dùng chung lich-su-ben.js (lượt báo cáo tab yêu cầu, trước chip đầu Tổng quan → 45 ngày bộ sync quét). */
+var PLG_TAB_BEN=[['tq','Tổng quan'],['lam','Làm gì'],['bc','Báo cáo ở đâu'],['ts','Tài sản'],['ls','Lịch sử']];
+function plgVtTab(t){ PLGVT.tab=t; plgVtVe(); }
+/* lượt báo cáo (có người làm / có ảnh) của ô → dạng chung lich-su-ben.js, mới → cũ */
+function plgLuotLs(key){
+  return plgYcCua(key).filter(function(r){ return r.nguoi||r.anh.length; }).map(function(r){
+    return { id:r.id, ngay:r.atNgay||r.ngay, gio:r.atGio||'', ten:r.nguoi||'', email:/@/.test(r.nguoi||'')?r.nguoi:'', a:r.anh, t:r.anh.length }; });
+}
+function plgNgayLs(){
+  var dau=plgDsNgay().map(plgISO).sort()[0], ds=[], t=new Date(dau+'T00:00:00');
+  for(var i=1;i<=45;i++){ var d=new Date(t); d.setDate(t.getDate()-i); ds.push(plgISO(d)); }   // ngày TRƯỚC chip đầu, lùi 45 ngày (cửa sổ bộ sync)
+  return ds;
+}
 function closePlgModal(){ plgDongModal('plgmodal'); }
 /* Tab yêu cầu về SAU lúc pop-up đang mở thì vẽ lại — không để dải 7 ngày đứng im ở "đang đọc…" */
 function plgVtVeLai(){ var m=document.getElementById('plgmodal'); if(m&&m.classList.contains('show')) plgVtVe(); }
@@ -7126,19 +7184,22 @@ function plgVtVe(){
   var key=PLGVT.loc, d=PLGVT.ngay, o=PLG.by[key]||null, p=key.split('-');
   var ycs=plgYcCua(key), r=plgYcNgay(ycs,d), s=plgState(o), m=PLG_ST[s], w=plgKhoCua(key);
   /* 22/10 user (khuôn Retail, lần 4): web chỉ mã «F0-KHO-501-06» (bỏ «Cột 06 · dãy 501 ·»); điện thoại «KHO-501-06» */
+  /* 10/11 tối user «làm y khuôn Retail»: đầu thanh = mã + chip trạng thái yêu cầu ↗ (như «Chờ duyệt ↗» Retail) · dòng phụ = kho */
+  var chipLb=r?(r.stId===4?'Đã duyệt':r.stId===3?'Chờ duyệt':PLG_ST[plgYcTrangThai(r)].lb):'Planogram',
+    chipHref=r&&r.id?PLG_PG+'/details/'+encodeURIComponent(r.id):plgPgListUrl(d,key);
   document.getElementById('plgmTitle').innerHTML='<span class="pg-vt-tday">'+esc(key)+'</span>'+
-    '<span class="pg-vt-tgon">'+esc(String(key).replace(/^F0-/,''))+'</span>';
+    '<span class="pg-vt-tgon">'+esc(String(key).replace(/^F0-/,''))+'</span>'+
+    '<a class="pg-vtchip" href="'+esc(chipHref)+'" target="_blank" rel="noopener">'+esc(chipLb)+' ↗</a>';
   /* Dòng phụ: bỏ câu hướng dẫn «bấm ô ngày bên dưới…» (luật ⑦ không câu hướng dẫn) → DỮ LIỆU như Retail «Quầy kệ · T5 22/10»:
      kho giữ tồn (rút gọn) · thứ ngày đang xem. Kho đã lên đầu thanh thì thân không in lại dòng «Kho giữ tồn» (luật không lặp). */
   var khoNgan=w?w.split(' + ').map(plgTenNgan).join(' + '):'';
   var sub=document.getElementById('plgmSub');
-  sub.textContent=(khoNgan?khoNgan+' · ':'')+(d?plgThuIso(d)+' '+plgVNiso(d):'');
+  sub.textContent=khoNgan||'';
   sub.title=w||'';
   /* Hyperlink DUY NHẤT của pop-up, góc phải trên: có yêu cầu thì mở thẳng yêu cầu đó trên
      planogram, không thì mở danh sách lọc sẵn đúng vị trí + đúng ngày đang xem. */
   var pg=document.getElementById('plgmPg');
-  if(r&&r.id){ pg.href=PLG_PG+'/details/'+encodeURIComponent(r.id); pg.textContent='Yêu cầu #'+esc(r.id)+' ↗'; }
-  else { pg.href=plgPgListUrl(d,key); pg.textContent='Tìm trên planogram ↗'; }
+  pg.textContent='';   // link đã thành chip cạnh mã (khuôn Retail)
 
   /* --- Tầng 1: dải 7 ngày (cũ → mới), tô đúng hệ màu của sơ đồ --- */
   var hist=plgDsNgay().map(plgISO).sort().map(function(dd){
@@ -7151,46 +7212,14 @@ function plgVtVe(){
       '<b>'+esc(plgThuIso(dd))+'</b>'+esc(plgVNiso(dd))+'</span>';
   }).join('');
 
-  /* --- Tầng 2a: chi tiết của ĐÚNG ngày đang chọn --- */
-  var rows=[];
-  if(r){
-    var mm=PLG_ST[plgYcTrangThai(r)], sb=plgStBadge(r);
-    /* Badge hệ thống CHỈ thêm khi mang nghĩa KHÁC badge nhóm (Chờ duyệt / Đã duyệt / Bị từ chối…),
-       đúng luật themSt của Hasaki — "New" đã nằm gọn trong "Chưa vệ sinh" nên thêm là lặp. */
-    var them=sb?' '+sb:'';
-    rows.push(['Trạng thái','<span class="pg-badge" style="background:color-mix(in srgb,'+mm.c+' 15%,transparent);color:'+mm.c+'">'+esc(mm.lb)+'</span>'+them]);
-    rows.push(['Người báo cáo', r.nguoi
-      ? esc(r.nguoi)+(r.atGio?' <span class="pg-hint">lúc '+esc(r.atGio)+' '+esc(plgVNiso(r.atNgay||r.ngay))+'</span>':'')
-      : '<span class="pg-hint">— chưa có ai báo cáo trong ngày này</span>']);
-    rows.push(['Ảnh báo cáo ('+r.anh.length+')', r.anh.length
-      ? '<div class="pg-vtthumbs">'+r.anh.map(function(u,i){
-          return '<img loading="lazy" src="'+esc(u)+'" alt="Ảnh báo cáo '+(i+1)+'" data-i="'+i+'" onclick="plgAnhMo(+this.getAttribute(\'data-i\'))">';
-        }).join('')+'</div>'
-      : '<span class="pg-hint">'+(r.nguoi?'yêu cầu này không đính ảnh':'chưa có ảnh (chưa báo cáo)')+'</span>']);
-    PLGVT.anh=r.anh; PLGVT.anhNhan='Yêu cầu #'+r.id+' · '+key;
-  } else {
-    PLGVT.anh=[]; PLGVT.anhNhan='';
-    /* 4 lý do KHÁC NHAU dẫn tới "không có gì để xem" — nói rõ cái nào, vì việc phải làm khác hẳn:
-       đợi tải · sửa lỗi đọc Sheet · đi khai báo lịch trên planogram · chỉ là ngày đó không có lịch. */
-    rows.push(['Trạng thái','<span class="pg-hint">'+(
-      PLG.yc.dang ? 'đang đọc tab '+esc(PLG_TAB_YC)+'…'
-      : !PLG.yc.ok ? 'chưa đọc được tab '+esc(PLG_TAB_YC)+' — lỗi tải, thử nút Làm mới'
-      : !PLG.yc.co ? 'Kho nguyên liệu chưa có yêu cầu vệ sinh nào trên planogram nên tab '+esc(PLG_TAB_YC)+' chưa được tạo. Khai báo lịch và DUYỆT trên planogram là dải ngày phía trên tự có dữ liệu — không phải sửa dashboard.'
-      : 'Ngày '+esc(plgVNiso(d))+' vị trí này KHÔNG có yêu cầu vệ sinh trên planogram.')+'</span>']);
-  }
-
-  /* --- Tầng 2b: hiện trạng KHAI BÁO của ô (tab DANHMUC) — giữ đủ dữ kiện của bản cũ --- */
-  if(!w) rows.push(['Kho giữ tồn','<span class="pg-hint">Không có tồn ở vị trí này</span>']);   // có kho → đã ở dòng phụ đầu thanh
-  rows.push(['Trạng thái ô','<span class="pg-badge" style="background:color-mix(in srgb,'+(m.c||'#9ca3af')+' 16%,transparent);color:'+(m.c||'var(--ink2)')+'">'+esc(m.lb)+'</span>'+
-    ' <span class="pg-hint">tổng quan theo khoảng “'+esc(plgNgayLb())+'”</span>']);
-  if(o){
-    rows.push(['Có lịch vệ sinh', esc(o.coLich||'—')+
-      (o.schId?' <span class="pg-hint">lịch gốc #'+esc(o.schId)+(o.ttLich?' — '+esc(String(o.ttLich).replace(/^\d+\s*/,'')):'')+'</span>':'')]);
-    if(o.anh) rows.push(['Ảnh tiêu chuẩn',esc(o.anh)]);
-    rows.push(['Yêu cầu 45 ngày',esc(o.soYC||'0')+' — đã vệ sinh '+esc(o.daVS||'0')]);
-    if(o.ycGan) rows.push(['Yêu cầu gần nhất',esc(plgNgayGon(o.ycGan))+(o.ttYC?' — '+esc(String(o.ttYC).replace(/^\d+\s*/,'')):'')]);
-    if(o.ghi) rows.push(['Ghi chú',esc(o.ghi)]);
-  } else rows.push(['Ghi chú','Ô có trên bản vẽ nhưng chưa có dòng nào trong tab '+esc(PLG_TAB)+' — chạy lại bộ sync.']);
+  /* --- Tầng 2: Người báo cáo · Ảnh báo cáo của ĐÚNG ngày đang chọn (khuôn Retail). Thiếu dữ liệu ⇒ «—» --- */
+  var rows=[], gach='<span class="pg-hint">—</span>';
+  rows.push(['Người báo cáo', r&&r.nguoi ? esc(r.nguoi)+(r.atGio?' <span class="pg-hint">lúc '+esc(r.atGio)+' '+esc(plgVNiso(r.atNgay||r.ngay))+'</span>':'') : gach]);
+  rows.push(['Ảnh báo cáo'+(r&&r.anh.length?' ('+r.anh.length+')':''), r&&r.anh.length
+    ? '<div class="pg-vtthumbs">'+r.anh.map(function(u,i){
+        return '<img loading="lazy" src="'+esc(u)+'" alt="Ảnh báo cáo '+(i+1)+'" data-i="'+i+'" onclick="plgAnhMo(+this.getAttribute(\'data-i\'))">';
+      }).join('')+'</div>' : gach]);
+  PLGVT.anh=r?r.anh:[]; PLGVT.anhNhan=r?'Yêu cầu #'+r.id+' · '+key:'';
 
   /* --- Tầng 3: 2 thẻ song song. Bằng chứng "ai thật sự làm" ưu tiên tab YÊU CẦU (có giờ + mã
      yêu cầu), rớt về mốc "Vệ sinh gần nhất / Người vệ sinh" của tab DANHMUC (cửa sổ 45 ngày). --- */
@@ -7199,45 +7228,25 @@ function plgVtVe(){
   else if(o&&o.nguoi){ bcTen=o.nguoi; bcNgay=plgISOtu(o.vsGan); bcGio=plgGioTu(o.vsGan); bcNguon='mốc gần nhất — tab '+PLG_TAB+' (45 ngày)'; }
   var bcTuoi=bcNgay?plgTuoiIso(bcNgay):null;
 
-  var cardPt;
-  if(bcTen){
-    cardPt='<div class="pg-vtcard pt">'+
-      '<div class="hd">Phụ trách <span class="pg-badge" style="background:color-mix(in srgb,#d97706 14%,transparent);color:#d97706">Suy từ báo cáo gần nhất</span></div>'+
-      '<div class="who"><span class="av" data-anh-nv="'+esc(bcTen)+'"'+(/@/.test(bcTen)?' data-anh-em="'+esc(bcTen)+'"':'')+' style="background:'+plgMauNguoi(bcTen)+'">'+esc(plgChuDau(bcTen))+'</span>'+
-      '<div><b>'+esc(bcTen)+'</b><small>người vệ sinh ô này gần đây nhất</small></div></div>'+
-      '<div class="ln mut">kho nguyên liệu chưa có bảng phân công vệ sinh — đây là SUY DIỄN từ bằng chứng, không phải phân công chính thức</div>'+
-      (bcTuoi!=null&&bcTuoi>7?'<div class="ln" style="color:#d97706">⚠ bằng chứng đã '+bcTuoi+' ngày — chưa chắc còn phụ trách</div>':'')+
-      '</div>';
-  } else {
-    cardPt='<div class="pg-vtcard pt"><div class="hd">Phụ trách</div><div class="ln mut">'+
-      (PLG.yc.dang ? 'đang đọc dữ liệu yêu cầu…'
-       : s==='nolich' ? 'ô chưa khai báo lịch nên chưa từng phát yêu cầu — chưa có ai để quy trách nhiệm'
-       : 'chưa có báo cáo nào để suy ra người phụ trách (kho nguyên liệu chưa có bảng phân công)')+'</div></div>';
-  }
+  var avB=function(t){ return '<span class="av" data-anh-nv="'+esc(t)+'"'+(/@/.test(t)?' data-anh-em="'+esc(t)+'"':'')+' style="background:'+plgMauNguoi(t)+'">'+esc(plgChuDau(t))+'</span>'; };
+  var cardPt='<div class="pg-vtcard pt"><div class="hd">Phụ trách'+(bcTen?' <span class="pg-badge" style="background:color-mix(in srgb,var(--warn) 14%,transparent);color:var(--warn)">suy từ báo cáo gần nhất</span>':'')+'</div>'+
+    (bcTen?'<div class="who">'+avB(bcTen)+'<div><b>'+esc(bcTen)+'</b></div></div>':'<div class="ln mut">—</div>')+'</div>';
+  var cardBc='<div class="pg-vtcard ref"><div class="hd">Báo cáo gần nhất</div>'+
+    (bcTen?'<div class="who">'+avB(bcTen)+'<div><b>'+esc(bcTen)+'</b>'+(bcNgay?'<small>'+esc(plgThuIso(bcNgay))+' '+esc(plgVNiso(bcNgay))+(bcGio?' lúc '+esc(bcGio):'')+'</small>':'')+'</div></div>':'<div class="ln mut">—</div>')+'</div>';
 
-  var cardBc='<div class="pg-vtcard ref"><div class="hd">Báo cáo gần nhất '+
-    '<span class="pg-hint" style="font-size:10.5px;text-transform:none;letter-spacing:0;font-weight:500">tham khảo</span></div>';
-  if(bcTen){
-    cardBc+='<div class="who"><span class="av" data-anh-nv="'+esc(bcTen)+'"'+(/@/.test(bcTen)?' data-anh-em="'+esc(bcTen)+'"':'')+' style="background:'+plgMauNguoi(bcTen)+'">'+esc(plgChuDau(bcTen))+'</span>'+
-      '<div><b>'+esc(bcTen)+'</b><small>'+esc(bcNguon)+'</small></div></div>'+
-      (bcNgay?'<div class="ln"><b>'+esc(plgThuIso(bcNgay))+' '+esc(plgVNiso(bcNgay))+'</b>'+
-        (bcGio?' lúc <b>'+esc(bcGio)+'</b>':'')+
-        (bcTuoi!=null?' <span class="pg-hint">· '+(bcTuoi>0?bcTuoi+' ngày trước':'hôm nay')+'</span>':'')+'</div>'
-       : '<div class="ln mut">không đọc được mốc thời gian của lượt vệ sinh này</div>')+
-      /* KHÔNG kết luận "đúng/sai người": không có bảng phân công nào để đối chiếu — xem chú thích đầu khối */
-      '<div class="ln mut">chưa có bảng phân công cho kho nguyên liệu để đối chiếu đúng/sai người</div>';
-  } else {
-    cardBc+='<div class="ln mut">'+
-      (PLG.yc.dang ? 'đang đọc tab '+esc(PLG_TAB_YC)+'…'
-       : s==='nolich' ? 'ô chưa khai báo lịch vệ sinh nên chưa từng phát yêu cầu — không có lượt nào để tham chiếu'
-       : 'chưa ai báo cáo vị trí này trong 45 ngày bộ sync quét')+'</div>';
-  }
-  cardBc+='</div>';
-
-  document.getElementById('plgmBody').innerHTML=
-    '<div class="pg-vthistrow">'+hist+'</div>'+
-    rows.map(function(x){ return '<div class="pg-vtrow"><label>'+x[0]+'</label><div>'+x[1]+'</div></div>'; }).join('')+
-    '<div class="pg-vtduo">'+cardPt+cardBc+'</div>';
+  var tab=PLGVT.tab||'tq', ngLs=plgNgayLs(), tapLs={}; ngLs.forEach(function(x){ tapLs[x]=1; });
+  var luotLs=plgLuotLs(key).filter(function(l){ return tapLs[l.ngay]; }), than;
+  if(tab==='tq') than='<div class="pg-vthistrow">'+hist+'</div>'+'<div class="pg-vtduo">'+cardPt+cardBc+'</div>'+
+    rows.map(function(x){ return '<div class="pg-vtrow"><label>'+x[0]+'</label><div>'+x[1]+'</div></div>'; }).join('');
+  else if(tab==='ls') than=!window.hskLichSu ? '<div class="pg-trong">Đang tải…</div>'
+    : window.hskLichSu.ve({ khoa:'plgf|'+key, ngay:ngLs, luot:luotLs, sc:[], coThem:false, muc:[],
+        img:function(u){ return '<img loading="lazy" decoding="async" src="'+esc(u)+'" alt="">'; },
+        moAnh:function(id,vt){ window.hskLichSu.moAnh({ ma:key, luot:luotLs, id:id, i:0, vt:vt||'' }); } });
+  else than='<div class="pg-trong">Chưa có dữ liệu</div>';   // Làm gì · Báo cáo ở đâu · Tài sản: kho nguyên liệu chưa có nguồn — để trống
+  document.getElementById('plgmBody').innerHTML='<div class="bd-tabben" role="tablist" aria-label="Thông tin vị trí">'+PLG_TAB_BEN.map(function(t){
+      return '<button type="button" role="tab" class="hp-whtab'+(t[0]===tab?' active':'')+'" data-ptab="'+t[0]+'" aria-selected="'+(t[0]===tab)+'" onclick="plgVtTab(\''+t[0]+'\')">'+t[1]+
+        '</button>'; }).join('')+'</div>'+   // 10/11 khuya user: không số cạnh tên tab (như Retail)
+    '<div class="bd-tab-than" data-tab-than="'+tab+'">'+than+'</div>';
 }
 
 /* ===== LIGHTBOX ẢNH BÁO CÁO — mở từ thumbnail trong pop-up chi tiết ô ==========================
@@ -7245,6 +7254,10 @@ function plgVtVe(){
    nên nó thừa hưởng luôn animation sheetIn, nền kính mờ và thứ tự đóng bằng Escape. */
 var PLGANH={list:[],i:0,nhan:''};
 function plgAnhMo(i){
+  /* 10/11 tối: ảnh ngày chip ⇒ pop-up kiểu B như Retail (dải = mọi ảnh của đúng ô × ngày đó) */
+  if(window.hskLichSu){ var key=PLGVT.loc, d=PLGVT.ngay, cung=plgYcCua(key).filter(function(r){ return r.ngay===d && r.anh.length; }).reverse(),
+      r0=plgYcNgay(plgYcCua(key),d);
+    if(cung.length){ window.hskLichSu.moNgay({ ma:key, id:r0&&r0.id, i:i||0, luot:cung.map(function(r){ return { id:r.id, ngay:r.atNgay||r.ngay, gio:r.atGio||'', ten:r.nguoi||'', email:/@/.test(r.nguoi||'')?r.nguoi:'', a:r.anh }; }) }); return; } }
   PLGANH.list=PLGVT.anh||[]; if(!PLGANH.list.length) return;
   PLGANH.i=Math.max(0,Math.min(PLGANH.list.length-1,i||0));
   PLGANH.nhan=PLGVT.anhNhan||PLGVT.loc;

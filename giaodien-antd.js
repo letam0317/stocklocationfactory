@@ -27,7 +27,7 @@
   var BONG1 = "0 1px 2px -2px rgba(0,0,0,.16),0 3px 6px 0 rgba(0,0,0,.12),0 5px 12px 4px rgba(0,0,0,.09)";
   var BONG2 = "0 6px 16px 0 rgba(0,0,0,.08),0 3px 6px -4px rgba(0,0,0,.12),0 9px 28px 8px rgba(0,0,0,.05)";
   var VONG = "0 0 0 2px color-mix(in srgb,var(--accent) 18%,transparent)";   // quầng focus của antd, theo màu theme
-  var SEG = "#hpWhBar .hp-wb1 .hp-whtab,#bdNay .bd-seg .hp-whtab,#bdDoiHop .bd-seg .hp-whtab,#kpiChe .hp-whtab,.lsb-seg .hp-whtab";   /* 10/11 + Lịch sử thanh bên (Tất cả | Ảnh | Sửa chữa — lich-su-ben.js) */   /* 09/11 + Tổng kết Mẫu 13 (Nhân viên · Quản lý · Tổng kết nhanh) */   // 05/11 + Việc hôm nay (Theo người|Theo hạng mục) và hộp đổi người (Chỉ hôm nay|Từ nay về sau)   // thanh lọc "chọn 1 trong vài" kiểu Segmented (Kiểm kê/Bất thường nay dùng ô chọn)
+  var SEG = "#hpWhBar .hp-wb1 .hp-whtab,#bdNay .bd-seg .hp-whtab,#bdDoiHop .bd-seg .hp-whtab,#kpiChe .hp-whtab,.lsb-seg .hp-whtab,#tkHop .tk-qtab .hp-whtab";   /* 10/11 tối + bảng quyền Quản lý tài khoản (Retail | Factory) */   /* 10/11 + Lịch sử thanh bên (Tất cả | Ảnh | Sửa chữa — lich-su-ben.js) */   /* 09/11 + Tổng kết Mẫu 13 (Nhân viên · Quản lý · Tổng kết nhanh) */   // 05/11 + Việc hôm nay (Theo người|Theo hạng mục) và hộp đổi người (Chỉ hôm nay|Từ nay về sau)   // thanh lọc "chọn 1 trong vài" kiểu Segmented (Kiểm kê/Bất thường nay dùng ô chọn)
   var H = "html.ad", B = "html.ad body";
   /* 09/11 user (Retail) «Tồn kho CX — thu hẹp thanh bên trái cho gọn khít» ⇒ Retail 176 px; Factory giữ 216 (nhãn dài: Trạng thái lưu trữ…) */
   var SW = /factory|stocklocation/.test(location.pathname) ? 216 : 176;
@@ -479,7 +479,12 @@
   var ICON_TAB = { home: "mdiGauge", tong: "mdiChartBoxOutline", task: "mdiAlertCircleOutline", hangmuc: "mdiClipboardListOutline", planogram: "mdiStoreMarkerOutline", plg: "mdiStoreMarkerOutline",
     kk: "mdiFormatListCheckbox", htonbat: "mdiPackageVariantClosedRemove", abn: "mdiPackageVariantClosedRemove", xacminh: "mdiShieldCheckOutline", "xacminh:treo": "mdiPlaylistCheck", "xacminh:cam": "mdiRobotOutline", "xacminh:tg": "mdiHistory", "xacminh:sodo": "mdiCctv", maytram: "mdiMonitor",
     stock: "mdiWarehouse", sku: "mdiBarcodeScan", cd: "mdiScaleBalance", tem: "mdiTagOutline", btt: "mdiSignText", baoduong: "mdiWrenchOutline" };   // 27/10 Tài sản › Bảo dưỡng (mdi wrench-outline 7.4.47)   // 24/10 Bảng thông tin (Factory)
-  function svgIcon(ten) { var d = ICON[ten]; return d ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + d + '"/></svg>' : ""; }
+  /* 10/11 tối user chọn MẪU 8 «Ghim vị trí + sóng» (Tệp xuất › Mẫu icon Dò RFID) cho Factory › Dò RFID — icon NÉT VIỀN (không phải mdi tô đặc):
+     fill="none" trên từng nét thắng fill:currentColor của khung svg, nét theo màu chữ ⇒ đúng màu thường / đang chọn / nền tối */
+  var ICON_NET = { rfidGhim: '<path d="M12 22s-5-4.4-5-8.3a5 5 0 0 1 10 0c0 3.9-5 8.3-5 8.3z"/><circle cx="12" cy="13.7" r="1.5"/><path d="M8.6 6.4a5 5 0 0 1 6.8 0M6 3.6a8.6 8.6 0 0 1 12 0"/>' };
+  ICON_TAB.rfid = "rfidGhim";
+  function svgIcon(ten) { if (ICON_NET[ten]) return '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + ICON_NET[ten] + "</g></svg>";
+    var d = ICON[ten]; return d ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + d + '"/></svg>' : ""; }
   function ganIcon() {
     [].slice.call(document.querySelectorAll("#sideNav .s-item")).forEach(function (it) {
       var di = it.querySelector(".di"); if (!di) { di = document.createElement("span"); di.className = "di"; it.insertBefore(di, it.firstChild); }

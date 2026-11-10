@@ -139,15 +139,18 @@
   function dongMenu() { var m = document.getElementById("tkMenu"); if (m) m.remove(); }
 
   /* ---------- hộp thoại dùng chung (khuôn Modal antd, popIn sẵn có) ---------- */
-  function hop(tieuDe, than, rong) {
-    dongHop(); var o = document.createElement("div"); o.id = "tkHop";
+  function hop(tieuDe, than, rong, khoa) {   // khoa = hộp bắt buộc (không ✕, không bấm nền / Esc để đóng)
+    dongHop(); var o = document.createElement("div"); o.id = "tkHop"; if (khoa) o.dataset.khoa = "1";
     o.innerHTML = '<div class="tk-box" role="dialog" aria-modal="true" style="max-width:' + (rong || 400) + 'px"><div class="tk-hd"><b>' + e_(tieuDe) + '</b><button type="button" class="tk-x" aria-label="Đóng">×</button></div><div class="tk-bd">' + than + "</div></div>";
-    document.body.appendChild(o); o.querySelector(".tk-x").onclick = dongHop; o.onclick = function (ev) { if (ev.target === o) dongHop(); };
+    document.body.appendChild(o);
+    if (khoa) { o.querySelector(".tk-x").remove(); return o; }
+    o.querySelector(".tk-x").onclick = dongHop; o.onclick = function (ev) { if (ev.target === o) dongHop(); };
     document.addEventListener("keydown", escDong); return o;
   }
   function escDong(ev) { if (ev.key === "Escape") dongHop(); }
   var sauDong = null;   // 1 lần: hộp OTP «+ Ghi nhận» cần biết hộp đã đóng (huỷ / đăng nhập xong)
-  function dongHop() { var o = document.getElementById("tkHop"); if (o) o.remove(); document.removeEventListener("keydown", escDong); var f = sauDong; sauDong = null; if (f) f(); }
+  function dongHop(ep) { var o = document.getElementById("tkHop"); if (o && o.dataset.khoa && ep !== true) return;   // hộp bắt buộc chỉ đóng khi xong việc
+    if (o) o.remove(); document.removeEventListener("keydown", escDong); var f = sauDong; sauDong = null; if (f) f(); }
   function trangThai(o, cls, txt) { var s = o.querySelector(".tk-st"); s.className = "tk-st " + cls; s.textContent = txt; }
 
   /* ---------- 22/10 BẢN QC (qc.audit-dc.pages.dev): chỉ quản trị dùng; dấu chìm «QC» phủ toàn màn hình ----------
@@ -178,7 +181,9 @@
     var lan = function (k) { return goi("tk_dangnhap", { id: id, mk: mk }).then(function (j) {
       if (!j.nguoi || !j.phien) { if (k) return lan(0); throw new Error("Máy chủ trả thiếu thông tin tài khoản — bấm Đăng nhập lại"); }
       if (QC && j.nguoi.vaiTro !== "quantri") { goi("tk_dangxuat", { phien: j.phien }).catch(function () {}); throw new Error("Tài khoản này chỉ dùng được trên bản chính audit-dc.pages.dev"); }
-      datNguoi(j.nguoi, j.phien); TK.quyen = chuanQ(j.nguoi.quyen); nho(); apQuyen(); doiPhienXm(); bao(); return j.nguoi; }); };
+      datNguoi(j.nguoi, j.phien); TK.quyen = chuanQ(j.nguoi.quyen); nho(); apQuyen(); doiPhienXm(); bao();
+      if (j.nguoi.doiMk) setTimeout(function () { moDoiMk(true, mk); }, 350);   // 10/11 tài khoản mới (mật khẩu mặc định) ⇒ bắt buộc đổi ngay lần đầu
+      return j.nguoi; }); };
     return lan(1);
   }
   window.tkDangNhap = dangNhap;
@@ -271,15 +276,24 @@
     taiKhach().then(function () { apQuyen(); bao(); });
   }
   window.tkDangXuat = dangXuat;
-  function moDoiMk() {
-    var o = hop("Đổi mật khẩu", '<form class="tk-f"><label>Mật khẩu hiện tại<input name="cu" type="password" autocomplete="current-password" required></label>' +
-      '<label>Mật khẩu mới<input name="moi" type="password" autocomplete="new-password" minlength="4" required></label><button type="submit" class="tk-chinh">Lưu</button><div class="tk-st"></div></form>');
-    var f = o.querySelector("form"); f.cu.focus();
-    f.onsubmit = function (ev) { ev.preventDefault(); goi("tk_doimk", { phien: TK.phien, mkCu: f.cu.value, mkMoi: f.moi.value }).then(function () { trangThai(o, "ok", "Đã đổi mật khẩu."); setTimeout(dongHop, 900); }).catch(function (e) { trangThai(o, "loi", e.message); }); };
+  /* 10/11 tối user «mỗi tài khoản mới có mật khẩu mặc định 33333 — bắt buộc pop-up đổi mật khẩu ngay lần đầu đăng nhập»: batBuoc = hộp khoá
+     (không ✕ / nền / Esc), mật khẩu hiện tại điền sẵn từ lúc đăng nhập; mật khẩu mới phải khác 33333, nhập 2 lần khớp; xong máy chủ gỡ cờ doiMk */
+  var MK_MAC_DINH = "33333";
+  function moDoiMk(batBuoc, mkCu) {
+    var o = hop(batBuoc ? "Đổi mật khẩu lần đầu" : "Đổi mật khẩu", '<form class="tk-f">' + (batBuoc ? '<div class="tk-goiy">Tài khoản đang dùng mật khẩu được cấp. Đặt mật khẩu riêng để tiếp tục.</div>' : "") +
+      '<label>Mật khẩu hiện tại<input name="cu" type="password" autocomplete="current-password" required></label>' +
+      '<label>Mật khẩu mới<input name="moi" type="password" autocomplete="new-password" minlength="4" required></label>' +
+      '<label>Nhập lại mật khẩu mới<input name="moi2" type="password" autocomplete="new-password" minlength="4" required></label><button type="submit" class="tk-chinh">Lưu</button><div class="tk-st"></div></form>', 400, batBuoc);
+    var f = o.querySelector("form"); if (batBuoc && mkCu) f.cu.value = mkCu; (batBuoc && mkCu ? f.moi : f.cu).focus();
+    f.onsubmit = function (ev) { ev.preventDefault();
+      if (f.moi.value !== f.moi2.value) { trangThai(o, "loi", "Hai lần nhập mật khẩu mới không khớp."); f.moi2.focus(); return; }
+      if (f.moi.value === MK_MAC_DINH || f.moi.value === f.cu.value) { trangThai(o, "loi", "Mật khẩu mới phải khác mật khẩu được cấp."); f.moi.focus(); return; }
+      goi("tk_doimk", { phien: TK.phien, mkCu: f.cu.value, mkMoi: f.moi.value }).then(function () { if (TK.nguoi) TK.nguoi.doiMk = false; nho(); trangThai(o, "ok", "Đã đổi mật khẩu.");
+        setTimeout(function () { dongHop(true); }, 900); }).catch(function (e) { trangThai(o, "loi", e.message); }); };
   }
 
   /* ---------- Quản lý tài khoản (chỉ quản trị) ---------- */
-  var QL = null;
+  var QL = null, TAB_Q = "";   // TAB_Q: tab bảng quyền đang chọn (r = Retail · f = Factory)
   function moQuanLy() {
     var o = hop("Quản lý tài khoản", '<div class="tk-ql"><div class="tk-ds"><div class="tk-st">Đang tải…</div></div><div class="tk-sua"></div></div>', 980);
     goi("tk_ds", { phien: TK.phien }).then(function (j) { QL = j; veDs(o); suaTk(o, null); }).catch(function (e) { trangThai(o, "loi", e.message); });
@@ -288,16 +302,21 @@
   function veDs(o) {
     var el = o.querySelector(".tk-ds");
     el.innerHTML = '<button type="button" class="tk-chinh tk-them">+ Thêm tài khoản</button><div class="tk-dong tk-khach" data-id=""><b>Khách</b><span>chưa đăng nhập</span></div>' +
-      QL.ds.map(function (x) { return '<div class="tk-dong" data-id="' + e_(x.id) + '"><b>' + e_(x.id) + '</b><span>' + e_(x.ten !== x.id ? x.ten + " · " : "") + nhanVT(x) + (x.khoa ? " · đã khoá" : "") + "</span></div>"; }).join("");
+      QL.ds.map(function (x) { return '<div class="tk-dong" data-id="' + e_(x.id) + '"><b>' + e_(x.id) + '</b><span>' + e_(x.ten !== x.id ? x.ten + " · " : "") + nhanVT(x) + (x.khoa ? " · đã khoá" : "") +
+        (x.doiMk ? " · chưa đổi mật khẩu" : "") + "</span></div>"; }).join("");
     el.querySelector(".tk-them").onclick = function () { suaTk(o, { id: "", ten: "", vaiTro: "nguoidung", quyen: {}, moi: 1 }); };
     [].slice.call(el.querySelectorAll(".tk-dong")).forEach(function (d) { d.onclick = function () {
       var id = d.dataset.id; suaTk(o, id ? QL.ds.find(function (x) { return x.id === id; }) : { khach: 1, quyen: QL.khach }); }; });
   }
   function bangQuyen(q, khoa) {
     q = chuanQ(khoa ? MUC.reduce(function (a, m) { a[m[0]] = "lam"; return a; }, {}) : q);   // quản trị: hiện đủ «Xem + thao tác»
-    return '<table class="tk-q"><thead><tr><th>Mục</th><th>Không</th><th>Xem</th><th>Xem + thao tác</th></tr></thead><tbody>' +
-      NHOM.map(function (g) { return '<tr class="tk-qg"><td colspan="4">' + e_(g[0]) + "</td></tr>" + g[1].map(function (t, i) {
-        var o = function (ten, ten2, v, cls) { return '<tr' + (cls ? ' class="' + cls + '"' : "") + "><td>" + e_(ten2) + "</td>" + ["khong", "xem", "lam"].map(function (m) {
+    /* 10/11 tối user «chia Retail / Factory thành 2 nút tab»: 1 bảng, mỗi lúc chỉ hiện nhóm đang chọn (TAB_Q nhớ trong phiên; mặc định theo trang đang mở) */
+    var bo = TAB_Q || (APP === "r" ? "r" : "f");
+    return '<div class="tk-qtab" role="tablist">' + NHOM.map(function (g, gi) { var k = gi ? "f" : "r";
+        return '<button type="button" role="tab" class="hp-whtab' + (k === bo ? " active" : "") + '" data-qtab="' + k + '" aria-selected="' + (k === bo) + '">' + e_(g[0].replace(/^Audit /, "")) + "</button>"; }).join("") + "</div>" +
+      '<table class="tk-q" data-bo="' + bo + '"><thead><tr><th>Mục</th><th>Không</th><th>Xem</th><th>Xem + thao tác</th></tr></thead><tbody>' +
+      NHOM.map(function (g, gi) { var k = gi ? "f" : "r"; return g[1].map(function (t, i) {
+        var o = function (ten, ten2, v, cls) { return '<tr class="tk-g-' + k + (cls ? " " + cls : "") + '"><td>' + e_(ten2) + "</td>" + ["khong", "xem", "lam"].map(function (m) {
           return '<td><input type="radio" name="' + ten + '" value="' + m + '"' + (v === m ? " checked" : "") + (khoa ? " disabled" : "") + ' aria-label="' + e_(ten2) + " — " + m + '"></td>'; }).join("") + "</tr>"; };
         if (!t[2]) return o("q:" + t[0], t[1], q[t[0]] || "khong", t[4] === "phu" ? "tk-qphu" : "");
         /* hàng cha: chọn 1 lần cho mọi mục con; con lệch nhau thì hàng cha để trống */
@@ -321,7 +340,8 @@
     el.innerHTML = '<form class="tk-f">' + (x.khach ? '<div class="tk-tieu">Quyền của khách (người chưa đăng nhập)</div>' :
       '<div class="tk-hai"><label>ID đăng nhập<input name="id" required autocomplete="off" spellcheck="false" autocapitalize="none" value="' + e_(x.id) + '"' + (x.moi ? "" : " readonly") + ' placeholder="vd: nguyenvana"></label>' +
       '<label>Tên hiển thị<input name="ten" value="' + e_(x.ten || "") + '"></label></div>' +
-      '<div class="tk-hai"><label>' + (x.moi ? "Mật khẩu" : "Mật khẩu mới (để trống = giữ)") + '<input name="mk" type="password" autocomplete="new-password"' + (x.moi ? " required minlength=\"4\"" : "") + '></label>' +
+      '<div class="tk-hai"><label>' + (x.moi ? "Mật khẩu (mặc định — người dùng đổi ở lần đăng nhập đầu)" : "Đặt lại mật khẩu (để trống = giữ)") +
+        '<input name="mk" ' + (x.moi ? 'type="text" value="' + MK_MAC_DINH + '" readonly' : 'type="password"') + ' autocomplete="new-password"></label>' +
       '<label>Vai trò<select name="vaiTro"><option value="nguoidung"' + (qt ? "" : " selected") + '>Người dùng</option><option value="quantri"' + (qt ? " selected" : "") + ">Quản trị (toàn quyền)</option></select></label></div>" +
       '<label class="tk-chk"><input type="checkbox" name="khoa"' + (x.khoa ? " checked" : "") + "> Khoá tài khoản (không đăng nhập được)</label>") +
       '<div class="tk-qwrap">' + bangQuyen(qt ? null : x.quyen, qt) + (qt ? '<div class="tk-goiy">Quản trị luôn có toàn quyền.</div>' : "") + "</div>" +
@@ -334,6 +354,9 @@
     if (f.id) f.id.addEventListener("blur", sachId);
     if (f.vaiTro) f.vaiTro.onchange = function () { var q = f.vaiTro.value === "quantri"; f.querySelector(".tk-qwrap").innerHTML = bangQuyen(q ? null : x.quyen, q) + (q ? '<div class="tk-goiy">Quản trị luôn có toàn quyền.</div>' : ""); };
     noiQuyen(f);
+    f.addEventListener("click", function (ev) { var b = ev.target.closest("[data-qtab]"); if (!b) return; TAB_Q = b.dataset.qtab;
+      var tb = f.querySelector(".tk-q"); if (tb) tb.dataset.bo = TAB_Q;
+      [].slice.call(f.querySelectorAll("[data-qtab]")).forEach(function (x) { var on = x === b; x.classList.toggle("active", on); x.setAttribute("aria-selected", on); }); });
     var layQ = function () { var q = {}; [].slice.call(f.querySelectorAll("input[type=radio][name^='q:']:checked")).forEach(function (r) { q[r.name.slice(2)] = r.value; }); return chuanQ(q); };
     /* 26/10 user «taina1 đã phân quyền + Ghi nhận mà vẫn báo chưa được cấp»: máy chủ ghi Xem — lần lưu bị mất (2 lượt ghi trùng lúc, nay GAS khoá)
        hoặc chưa bấm Lưu. Nay: bấm chọn quyền ở tài khoản có sẵn / Khách là TỰ LƯU; sau khi lưu ĐỌC LẠI máy chủ, lệch thì báo đỏ, không báo «Đã lưu». */
@@ -393,7 +416,8 @@
   function taiKhach() { return goi("tk_khach").then(function (j) { if (!TK.nguoi) { TK.quyen = chuanQ(j.quyen); nho(); } }).catch(function () {}); }
   function kiem() {
     if (!TK.phien) return taiKhach().then(function () { datNguoi(null); apQuyen(); bao(); });
-    return goi("tk_toi", { phien: TK.phien }).then(function (j) { if (!j.nguoi) return; datNguoi(j.nguoi); TK.quyen = chuanQ(j.nguoi.quyen); nho(); apQuyen(); bao(); if (!ls.get("hx-phien")) doiPhienXm(); })
+    return goi("tk_toi", { phien: TK.phien }).then(function (j) { if (!j.nguoi) return; datNguoi(j.nguoi); TK.quyen = chuanQ(j.nguoi.quyen); nho(); apQuyen(); bao(); if (!ls.get("hx-phien")) doiPhienXm();
+      if (j.nguoi.doiMk && !document.querySelector("#tkHop[data-khoa]")) moDoiMk(true); })   // chưa đổi mật khẩu mặc định ⇒ mở lại trang vẫn bắt đổi
       .catch(function (e) { if (e.code === 401) { var co = !!TK.nguoi; datNguoi(null, ""); TK.quyen = null; ls.set("hx-phien", null);
         /* 26/10: phiên tài khoản ở Apps Script sống 6 giờ — hết thì NÓI RÕ, không để trang trông như còn đăng nhập (laptop tắt → mất mục Xác minh không lời) */
         if (co && typeof window.toast === "function") window.toast("Phiên đăng nhập đã hết hạn — bấm «Đăng nhập» ở thanh bên để đăng nhập lại.", "loi");
@@ -434,6 +458,7 @@
     ".tk-qwrap{max-height:46vh;overflow:auto;border:1px solid var(--border);border-radius:6px}",
     ".tk-q{width:100%;border-collapse:collapse;font-size:14px}.tk-q th{position:sticky;top:0;background:var(--ad-nen2,var(--surface2));font-weight:600;padding:8px 12px;text-align:center;border-bottom:1px solid var(--border)}",
     ".tk-q th:first-child,.tk-q td:first-child{text-align:left}.tk-q td{padding:6px 12px;text-align:center;border-bottom:1px solid var(--ad-chia,var(--border))}",
+    ".tk-qtab{display:inline-flex;margin:0 0 8px}.tk-qtab .hp-whtab{cursor:pointer;font:inherit}.tk-q[data-bo=r] .tk-g-f,.tk-q[data-bo=f] .tk-g-r{display:none}",
     ".tk-q .tk-qg td{font-size:12px;font-weight:600;color:var(--muted);background:var(--surface)}.tk-q input{width:16px;height:16px;accent-color:var(--accent);cursor:pointer}",
     "#sideNav .s-grp.tk-an{display:none!important}",
     ".tk-f [hidden]{display:none!important}.tk-f .tk-lk2{min-height:0;padding:0;border:0;background:none;color:var(--accent);font-weight:600;text-decoration:underline}",
