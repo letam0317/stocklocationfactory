@@ -52,7 +52,7 @@
   }
   /* «Thao tác» của từng tab = nút ghi/sửa dữ liệu. Quyền «xem» ẩn các nút này. [bộ chọn, tab sở hữu, chỉ khi đang ở tab đó] */
   var THAO_TAC = {
-    r: [[".bb-up", "r.task"], ["#hpcbar,#hpcprev", "r.kk", 1], ["#hpcbar,#hpcprev", "r.htonbat", 1]],
+    r: [[".bb-up", "r.task"], [".hp-tuchoi", "r.planogram"], ["#hpcbar,#hpcprev", "r.kk", 1], ["#hpcbar,#hpcprev", "r.htonbat", 1]],
     f: [["#pcbar,#pcprev,#hdrKkPlan", "f.kk", 1], ["#pcbar,#pcprev,#hdrKkPlan", "f.abn", 1], ["#prbar", "f.sku"], ["#tmvBtnIn", "f.tem"]]
   };
   /* 22/10 (clip user: chưa đăng nhập thấy Planogram/Tồn kho/Xác minh 1–2 giây rồi mới mất): quyền khách MẶC ĐỊNH trên trang = đúng bộ đang đặt ở máy chủ

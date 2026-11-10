@@ -27,7 +27,7 @@
   var BONG1 = "0 1px 2px -2px rgba(0,0,0,.16),0 3px 6px 0 rgba(0,0,0,.12),0 5px 12px 4px rgba(0,0,0,.09)";
   var BONG2 = "0 6px 16px 0 rgba(0,0,0,.08),0 3px 6px -4px rgba(0,0,0,.12),0 9px 28px 8px rgba(0,0,0,.05)";
   var VONG = "0 0 0 2px color-mix(in srgb,var(--accent) 18%,transparent)";   // quầng focus của antd, theo màu theme
-  var SEG = "#hpWhBar .hp-wb1 .hp-whtab,#bdNay .bd-seg .hp-whtab,#bdDoiHop .bd-seg .hp-whtab,#kpiChe .hp-whtab";   /* 09/11 + Tổng kết Mẫu 13 (Nhân viên · Quản lý · Tổng kết nhanh) */   // 05/11 + Việc hôm nay (Theo người|Theo hạng mục) và hộp đổi người (Chỉ hôm nay|Từ nay về sau)   // thanh lọc "chọn 1 trong vài" kiểu Segmented (Kiểm kê/Bất thường nay dùng ô chọn)
+  var SEG = "#hpWhBar .hp-wb1 .hp-whtab,#bdNay .bd-seg .hp-whtab,#bdDoiHop .bd-seg .hp-whtab,#kpiChe .hp-whtab,.lsb-seg .hp-whtab";   /* 10/11 + Lịch sử thanh bên (Tất cả | Ảnh | Sửa chữa — lich-su-ben.js) */   /* 09/11 + Tổng kết Mẫu 13 (Nhân viên · Quản lý · Tổng kết nhanh) */   // 05/11 + Việc hôm nay (Theo người|Theo hạng mục) và hộp đổi người (Chỉ hôm nay|Từ nay về sau)   // thanh lọc "chọn 1 trong vài" kiểu Segmented (Kiểm kê/Bất thường nay dùng ô chọn)
   var H = "html.ad", B = "html.ad body";
   /* 09/11 user (Retail) «Tồn kho CX — thu hẹp thanh bên trái cho gọn khít» ⇒ Retail 176 px; Factory giữ 216 (nhãn dài: Trạng thái lưu trữ…) */
   var SW = /factory|stocklocation/.test(location.pathname) ? 216 : 176;
