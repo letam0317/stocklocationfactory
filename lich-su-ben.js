@@ -404,15 +404,15 @@
       "#lsbLb .oo{position:relative;display:block;width:46px;height:46px;border-radius:5px;overflow:hidden;border:2px solid transparent;opacity:.5;box-sizing:border-box}#lsbLb .oo img{width:100%;height:100%;object-fit:cover;display:block}" +
       "#lsbLb .o.on .oo{opacity:1;border-color:currentColor}#lsbLb .so{position:absolute;right:2px;bottom:2px;background:color-mix(in srgb,black 70%,transparent);font-size:9.5px;line-height:13px;border-radius:4px;padding:0 4px}" +
       "#lsbLb .n{font-size:10.5px;opacity:.62;margin-top:4px;white-space:nowrap}#lsbLb .o.on .n{opacity:1;font-weight:600}" +
-      "@media(max-width:600px){#lsbLb{--dai:76px;padding:78px 8px calc(var(--dai) + 8px)}#lsbLb.ngay{--dai:58px}" +
+      "@media(max-width:560px){#lsbLb{--dai:76px;padding:78px 8px calc(var(--dai) + 8px)}#lsbLb.ngay{--dai:58px}" +
         "#lsbLb .nd,#lsbLb .nd img{max-width:calc(100vw - 16px);max-height:calc(100vh - 92px - var(--dai))}#lsbLb .mui{top:calc(78px + (100vh - 92px - var(--dai)) / 2);background:color-mix(in srgb,black 55%,transparent)}" +
         "#lsbLb .mui.tr{left:12px}#lsbLb .mui.sa{right:12px}#lsbLb .cap{max-width:calc(100vw - 16px);width:max-content;padding:5px 12px 5px 5px}" +
         "#lsbLb .h1 .gach{display:none}#lsbLb .h1 .ma{display:block;font-size:11px;line-height:15px}#lsbLb .dai{padding:6px 8px 10px}#lsbLb .dai .tr2{gap:8px}#lsbLb .oo{width:40px;height:40px}}";
     var st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
     var MUI = function (h) { return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + (h < 0 ? "m15 18-6-6 6-6" : "m9 18 6-6-6-6") + '"/></svg>'; };
     var el = document.createElement("div"); el.id = "lsbLb"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Xem ảnh");
-    el.innerHTML = '<div class="cap"></div><button type="button" class="mui tr" aria-label="Ảnh trước">' + MUI(-1) + '</button><div class="nd"></div>' +
-      '<button type="button" class="mui sa" aria-label="Ảnh sau">' + MUI(1) + '</button><div class="dai"><div class="tr2"></div></div>';
+    el.innerHTML = '<div class="cap"></div><button type="button" class="lb-btn mui tr" aria-label="Ảnh trước">' + MUI(-1) + '</button><div class="nd"></div>' +
+      '<button type="button" class="lb-btn mui sa" aria-label="Ảnh sau">' + MUI(1) + '</button><div class="dai"><div class="tr2"></div></div>';
     document.body.appendChild(el);
     var L = [], I = 0, O = null;
     function ve1() { var m = L[I]; if (!m) return; var nd = el.querySelector(".nd"), ma = String(m.ma || ""), d1 = m.tieu || m.ten || "";
