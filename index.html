@@ -15048,7 +15048,7 @@ var PR_TEM = (function(){
         '<text x="' + giua + '" y="' + (yV + caoV - 2) + '" font-size="' + coSo + '" font-weight="bold" text-anchor="middle">' + escXml(sku) + '</text>';
     }
     /* ③ đáy tem: QR phải, chữ trái */
-    var q = qrBit(d.qr), o3 = 3, qs = q ? q.n * o3 : 0, dayY = H - le + Math.round(1.5 * dotMm);
+    var q = qrBit(d.qr), o3 = 2 /* 11/11 user: QR 0,7× (3→2 điểm/ô, giữ ô nguyên điểm cho nét) tránh mất góc */, qs = q ? q.n * o3 : 0, dayY = H - le + Math.round(1.5 * dotMm);
     var yQ = dayY - Math.max(qs, Math.round(11 * dotMm)), yKe = yQ - 10;
     if (q){
       var g = '';
