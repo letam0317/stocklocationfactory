@@ -5991,7 +5991,7 @@ var CCDC_NAP={dang:null,xong:false};
 function ccdcNap(){
   if(CCDC_NAP.xong){ ccdcMo(); return; }
   if(CCDC_NAP.dang) return;
-  CCDC_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='hien-trang-ccdc.js?v=20261111l'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
+  CCDC_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='hien-trang-ccdc.js?v=20261111m'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
     .then(function(){ CCDC_NAP.xong=true; if(TOPTAB==='ccdc') ccdcMo(); })
     .catch(function(){ CCDC_NAP.dang=null; var v=document.getElementById('viewCcdc'); if(v) v.innerHTML='<div class="state" style="padding:32px 20px">Không tải được công cụ (mất mạng?). <button type="button" class="kktab" onclick="ccdcNap()">Thử lại</button></div>'; });
 }
@@ -15091,7 +15091,15 @@ var PR_TEM = (function(){
     var yc = yQ + 24;
     dongDay.forEach(function(t, i){ if (t) o += '<text x="' + x + '" y="' + (yc + i * 30) + '" font-size="21">' + t + '</text>'; });
     /* ④ tên hàng: cỡ chữ tự vừa vùng giữa mã vạch và đường kẻ đáy */
-    var hTen = yKe - yTen - 16, fit = coChuVua(String(d.pn || ''), R - x, hTen, 32, 16);
+    /* MẪU 5 (11/11 tối user chốt «Dải đen vị trí trên kẻ đáy»): dải đen ngay trên đường kẻ đáy, «VỊ TRÍ» nhỏ trái + mã vị trí
+       đậm phải. Trường `vitri` có sẵn (đi qua moRong + agent từ tem vị trí 07/09). Mã dài (6 đoạn, 19 ký tự) tự hạ cỡ chữ
+       để không đè «VỊ TRÍ». Mã do phiên 67 soát trong PDF mẫu (QR đọc được, 0 chồng/tràn). */
+    var vt = String(d.vitri || '').trim();
+    if (vt) { var coVt = Math.max(13, Math.min(21, Math.floor((R - x - 70) / (vt.length * 0.62))));
+      o += '<rect x="' + x + '" y="' + (yKe - 40) + '" width="' + (R - x) + '" height="32" fill="#000"/>' +
+        '<text x="' + (x + 8) + '" y="' + (yKe - 18) + '" font-size="13" fill="#fff" letter-spacing="1">VỊ TRÍ</text>' +
+        '<text x="' + (R - 8) + '" y="' + (yKe - 24 + Math.round(coVt * 0.35)) + '" font-size="' + coVt + '" font-weight="bold" fill="#fff" text-anchor="end">' + escXml(vt) + '</text>'; }
+    var hTen = yKe - yTen - 16 - (vt ? 46 : 0), fit = coChuVua(String(d.pn || ''), R - x, hTen, 32, 16);
     fit.dong.forEach(function(t, i){ o += '<text x="' + x + '" y="' + (yTen + 8 + fit.co + i * Math.round(fit.co * 1.22)) + '" font-size="' + fit.co + '">' + escXml(t) + '</text>'; });
     return o + '</svg>';
   }

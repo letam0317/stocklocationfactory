@@ -476,7 +476,7 @@
       var b = ev.target.closest('[data-plqr],[data-quet],[data-lam],[data-pl],[data-bo],[data-anh],[data-locpl],[data-dong],[data-thu],[data-inma],[data-ct],[data-locng]');
       if (!b || !v.contains(b)) return;
       if (b.dataset.bo != null) { ev.stopPropagation(); ev.preventDefault(); var t = CC.f.tep.splice(+b.dataset.bo, 1)[0]; if (t && t.url) URL.revokeObjectURL(t.url); veForm(); return; }
-      if (b.dataset.inma) { ev.stopPropagation(); var x = timMa(b.dataset.inma); if (x) moIn({ sku: x.sku, ten: x.ten, dv: x.dv, ma: x.ma, tt: x.phanLoai }); return; }
+      if (b.dataset.inma) { ev.stopPropagation(); var x = timMa(b.dataset.inma); if (x) moIn({ sku: x.sku, ten: x.ten, dv: x.dv, ma: x.ma, tt: x.phanLoai, viTri: x.viTri }); return; }
       if (b.dataset.thu) { ev.stopPropagation(); var y = timMa(b.dataset.thu); if (y) { y._loi = ''; dayLen(y); } return; }
       if (b.dataset.anh != null) { var tp = CC.f.tep[+b.dataset.anh]; if (!tp) return;
         if (tp.loai === 'video') { if (tp.url) window.open(tp.url, '_blank'); else if (tp.id) window.open('https://drive.google.com/file/d/' + tp.id + '/view', '_blank'); return; }
@@ -789,7 +789,7 @@
     formMoi(); veForm(); veDs(); luuDs();
     dayLen(it);
     if (inLuon) napQr().then(function () { return qrHex(LINK_CT + it.ma); }, function () { return ''; }).then(function (qr) {
-      return goiGas({ action: 'ccdc_in', sku: it.sku, ten: it.ten, sl: '', dv: it.dv, ngay: PR_TEM.ngayTem(new Date()), soTem: 1, ma: it.ma, tt: it.phanLoai, qr: qr, qrTs: it.qrTs || '', sn: it.sn || '' }, 45000);   // 11/11: Sheet IN-TEM ghi QR tài sản / S/N (phiếu có thể chưa lưu xong)
+      return goiGas({ action: 'ccdc_in', sku: it.sku, ten: it.ten, sl: '', dv: it.dv, ngay: PR_TEM.ngayTem(new Date()), soTem: 1, ma: it.ma, tt: it.phanLoai, qr: qr, qrTs: it.qrTs || '', sn: it.sn || '', viTri: it.viTri || '' }, 45000);   // 11/11: Sheet IN-TEM ghi QR tài sản / S/N (phiếu có thể chưa lưu xong)
     }).catch(function (e) { bao('Chưa gửi được lệnh in ' + it.sku + ': ' + e.message + ' — bấm In ở dòng Đã ghi nhận', 'err'); });
   }
   async function dayLen(it) {
@@ -884,7 +884,7 @@
   function moIn(o) {
     if (!o.sku) return;
     var homNay = new Date(), n = nguoi();
-    IN = { sku: o.sku, ten: o.ten || '', dv: o.dv || '', ma: o.ma || '', tt: o.tt || '', ngay: homNay, soTem: 1, qr: '' };
+    IN = { sku: o.sku, ten: o.ten || '', dv: o.dv || '', ma: o.ma || '', tt: o.tt || '', viTri: o.viTri || '', ngay: homNay, soTem: 1, qr: '' };
     $('ccInThan').innerHTML = '<div class="tem" id="ccInTem"></div><div class="luoi">' +
       '<div><label class="n">Hiện trạng</label><div class="tt">' + (IN.tt ? '<span class="cc-kqc ' + PL_LOP[IN.tt] + '">' + e_(IN.tt) + '</span>' : '<span style="color:var(--ink3);font-weight:400">Chưa phân loại</span>') + '</div></div>' +
       '<div><label class="n">Ngày in</label><div id="ccInNgay"></div></div>' +
@@ -903,7 +903,7 @@
     if (IN.ma) { var ma = IN.ma; napQr().then(function () { if (IN && IN.ma === ma) { IN.qr = qrHex(LINK_CT + ma); veTem(); } }).catch(function (e) { bao(e.message, 'warn'); }); }
   }
   function temD() { var n = nguoi();
-    return { loai: 'cc', sku: IN.sku, pn: IN.ten, tt: IN.tt, qr: IN.qr, ngay: PR_TEM.ngayTem(IN.ngay), nguoi: n ? haiChuCuoi(n.ten) : '', sl: '', uid: '', vitri: '', dv: '' }; }
+    return { loai: 'cc', sku: IN.sku, pn: IN.ten, tt: IN.tt, qr: IN.qr, ngay: PR_TEM.ngayTem(IN.ngay), nguoi: n ? haiChuCuoi(n.ten) : '', sl: '', uid: '', vitri: IN.viTri || '', dv: '' }; }   // Mẫu 5: dải vị trí
   function veTem() {
     var el = $('ccInTem'); if (!el || !IN) return;
     try { el.innerHTML = PR_TEM.mau(PR_TEM.MAU_MAC_DINH).ve(temD()); }
@@ -920,7 +920,7 @@
     if (b.id === 'ccInGo') {
       if (!nguoi()) { if (typeof tkMoDangNhap === 'function') tkMoDangNhap(); return; }
       if (IN.ma && !IN.qr) { bao('Đang dựng mã QR — bấm lại sau giây lát', 'warn'); return; }
-      var lenh = { action: 'ccdc_in', sku: IN.sku, ten: IN.ten, sl: '', dv: IN.dv, ngay: PR_TEM.ngayTem(IN.ngay), soTem: IN.soTem, ma: IN.ma, tt: IN.tt, qr: IN.qr };
+      var lenh = { action: 'ccdc_in', sku: IN.sku, ten: IN.ten, sl: '', dv: IN.dv, ngay: PR_TEM.ngayTem(IN.ngay), soTem: IN.soTem, ma: IN.ma, tt: IN.tt, qr: IN.qr, viTri: IN.viTri };
       plgDongModal('ccInModal'); bao('Đã gửi ' + IN.soTem + ' tem ' + IN.sku + ' tới máy in', 'ok');
       goiGas(lenh, 45000).then(function (j) { if (j.inLoi) bao('Máy in chưa nhận lệnh ' + lenh.sku + ': ' + j.inLoi, 'err'); })
         .catch(function (e) { bao('Chưa gửi được lệnh in ' + lenh.sku + ': ' + e.message, 'err'); });
@@ -942,7 +942,7 @@
       setTimeout(function () { var it = document.querySelector('#sideNav .s-item[data-tab="ccdc"]'); if (it) it.click(); else if (typeof showTab === 'function') showTab('ccdc'); }, 60); }); return; }
     var x = timMa(CT.ma) || CT.x; if (!x) return;
     if (k === 'sua') { CC.ds.indexOf(x) < 0 && CC.ds.unshift(x); ctDong(); moSua(x.ma); return; }
-    if (k === 'in') moIn({ sku: x.sku, ten: x.ten, dv: x.dv, ma: x.ma, tt: x.phanLoai });
+    if (k === 'in') moIn({ sku: x.sku, ten: x.ten, dv: x.dv, ma: x.ma, tt: x.phanLoai, viTri: x.viTri });
   }
   var XA = null;
   function xemAnh(x, i) { XA = { tep: x.tep || [], i: 0 }; veXemAnh(i); plgMoModal('ccAnhModal'); }
