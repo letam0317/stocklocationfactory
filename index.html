@@ -5982,7 +5982,7 @@ var CCDC_NAP={dang:null,xong:false};
 function ccdcNap(){
   if(CCDC_NAP.xong){ ccdcMo(); return; }
   if(CCDC_NAP.dang) return;
-  CCDC_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='hien-trang-ccdc.js?v=20261111b'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
+  CCDC_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='hien-trang-ccdc.js?v=20261111c'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
     .then(function(){ CCDC_NAP.xong=true; if(TOPTAB==='ccdc') ccdcMo(); })
     .catch(function(){ CCDC_NAP.dang=null; var v=document.getElementById('viewCcdc'); if(v) v.innerHTML='<div class="state" style="padding:32px 20px">Không tải được công cụ (mất mạng?). <button type="button" class="kktab" onclick="ccdcNap()">Thử lại</button></div>'; });
 }
@@ -15026,20 +15026,21 @@ var PR_TEM = (function(){
   function svgTemCc(d, mauK, opt){
     var m = mau(mauK), dotMm = opt.dotMm || 8;
     var W = Math.round(m.w * dotMm), H = Math.round(m.h * dotMm);
-    var le = Math.round(3 * dotMm), lech = Math.round((opt.lechMm || 0) * dotMm);
+    /* vi = 11/11 user «thu hẹp mỗi cạnh vô 0.1cm»: khung + nội dung lùi vào 1 mm mỗi cạnh (vạch giữ nguyên điểm in) */
+    var vi = Math.round(1 * dotMm), le = Math.round(3 * dotMm) + vi, lech = Math.round((opt.lechMm || 0) * dotMm);
     var x = le - lech, R = W - le - lech, giua = W / 2 - lech;
     var tt = String(d.tt || '').trim().toUpperCase();
     var o = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H +
       '" shape-rendering="crispEdges" font-family="Arial, Helvetica, sans-serif">' +
       '<rect width="' + W + '" height="' + H + '" fill="#fff"/>' +
-      '<rect x="' + (2 - lech) + '" y="2" width="' + (W - 4) + '" height="' + (H - 4) + '" fill="none" stroke="#000" stroke-width="2"/>';
+      '<rect x="' + (2 + vi - lech) + '" y="' + (2 + vi) + '" width="' + (W - 4 - 2 * vi) + '" height="' + (H - 4 - 2 * vi) + '" fill="none" stroke="#000" stroke-width="2"/>';
     /* ① dải hiện trạng */
     var caoDai = Math.round(7.25 * dotMm);
-    if (tt) o += '<rect x="' + (2 - lech) + '" y="2" width="' + (W - 4) + '" height="' + caoDai + '" fill="#000"/>' +
-      '<text x="' + giua + '" y="' + Math.round(caoDai * 0.73) + '" font-size="32" font-weight="bold" fill="#fff" text-anchor="middle">' + escXml(tt) + '</text>';
-    else o += '<rect x="' + (x + 2) + '" y="' + (2 + 4) + '" width="' + (R - x - 4) + '" height="' + (caoDai - 8) + '" fill="none" stroke="#000" stroke-width="3"/>';
+    if (tt) o += '<rect x="' + (2 + vi - lech) + '" y="' + (2 + vi) + '" width="' + (W - 4 - 2 * vi) + '" height="' + caoDai + '" fill="#000"/>' +
+      '<text x="' + giua + '" y="' + (vi + Math.round(caoDai * 0.73)) + '" font-size="32" font-weight="bold" fill="#fff" text-anchor="middle">' + escXml(tt) + '</text>';
+    else o += '<rect x="' + (x + 2) + '" y="' + (2 + vi + 4) + '" width="' + (R - x - 4) + '" height="' + (caoDai - 8) + '" fill="none" stroke="#000" stroke-width="3"/>';
     /* ② mã vạch + SKU khoét đáy giữa */
-    var yV = caoDai + Math.round(2 * dotMm), caoV = Math.round(8 * dotMm), sku = String(d.sku || '');
+    var yV = vi + caoDai + Math.round(2 * dotMm), caoV = Math.round(8 * dotMm), sku = String(d.sku || '');
     var v = vachRect(sku, { dotMm: dotMm, mm: m.mm || 0.25, cao: caoV, y: yV, x: 0 }), yTen = yV + caoV;
     if (v){
       var xv = Math.round(giua - v.rong / 2), coSo = Math.round(2.925 * dotMm), rongSo = Math.round(sku.length * coSo * 0.58) + 8, caoSo = Math.round(3.25 * dotMm);   /* 11/11 user: số SKU to hơn 30% (2,25→2,925 mm) */

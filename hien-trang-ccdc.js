@@ -22,6 +22,9 @@
   if (window.ccdcMo) return;
   var PL = ['Tái sử dụng', 'Sửa chữa', 'Thanh lý'];
   var PL_LOP = { 'Tái sử dụng': 'tsd', 'Sửa chữa': 'sc', 'Thanh lý': 'tl' };
+  /* 11/11 user: chữ trên NÚT «Tái sử dụng» → «Tái dùng» cho gọn. Giá trị lưu/gửi/lọc + chữ trên tem GIỮ «Tái sử dụng»
+     (GAS whitelist CCDC_PHAN_LOAI). Chỉ dùng hàm này ở chỗ hiển thị nút. */
+  function nhanPL(p) { return p === 'Tái sử dụng' ? 'Tái dùng' : p; }
   var K_DS = 'ccdc-ds-v1', TRANG = 20, MAX_ANH = 1600;
   var CC = window.CC = { ds: [], loc: '', soHien: TRANG, napLan: 0, dangNap: false, f: null, dang: {} };
   var e_ = function (s) { return (typeof esc === 'function') ? esc(s == null ? '' : s) : String(s == null ? '' : s); };
@@ -74,7 +77,10 @@
     '#viewCcdc .cc-vt b,#viewCcdc .cc-mono{font-weight:600;font-family:ui-monospace,Consolas,monospace;color:var(--ink)}',
     '#viewCcdc .cc-vt b{border:1px solid var(--line);border-radius:4px;padding:2px 6px}',
     '#viewCcdc .cc-vt .x{border:0;background:none;color:var(--ink3);cursor:pointer;font-size:14px;padding:0 4px}',
-    '#viewCcdc .cc-ts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}',
+    '#viewCcdc .cc-tsk{display:flex;align-items:center;flex-wrap:wrap;gap:4px 14px;margin-top:8px;font-size:13px;color:var(--ink2)}',
+    '#viewCcdc .cc-tsk>span{display:inline-flex;align-items:center;gap:6px;min-width:0}',
+    '#viewCcdc .cc-tsk b{font-weight:600;font-family:ui-monospace,Consolas,monospace;color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:2px 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60vw}',
+    '#viewCcdc .cc-tsk .x{border:0;background:none;color:var(--ink3);cursor:pointer;font-size:14px;padding:0 4px}',
     '#viewCcdc .cc-o{display:flex;height:38px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}',
     '#viewCcdc .cc-o input{flex:1;min-width:0;border:0;padding:0 10px;font-size:16px;background:transparent;color:var(--ink);outline:0}',
     '#viewCcdc .cc-o button{width:38px;flex:none;border:0;border-left:1px solid var(--line);background:var(--surface);color:var(--ink2);cursor:pointer;display:grid;place-items:center}',
@@ -300,9 +306,13 @@
   function veForm() {
     var el = $('ccForm'); if (!el) return; var f = CC.f, n = nguoi();
     var kq = f.sku ? '<div class="cc-kq">' + (f.status ? '<span class="cc-tag ' + (f.status === 'INACTIVE' ? 'in' : 'ac') + '">' + e_(f.status) + '</span>' : '') +
-      '<b>' + e_(f.sku) + '</b>' + (f.loai ? '<span class="cc-tag in">' + e_(f.loai) + '</span>' : '') + '<span class="ten">' + e_(f.ten) + '</span>' +
-      '<button type="button" class="cc-nut vien" data-lam="in" style="height:28px;padding:0 10px;font-size:13px">' + IC.inn + 'In tem</button>' +
+      '<b>' + e_(f.sku) + '</b>' + (f.loai ? '<span class="cc-tag in">' + e_(f.loai) + '</span>' : '') + '<span class="ten">' + e_(f.ten || 'Chưa có tên trong danh mục') + '</span>' +
+      /* 11/11 user: chỉ cho in sau khi Gửi ⇒ form không còn nút In tem (in ở dòng «Đã ghi nhận» / trang chi tiết) */
       '<button type="button" class="x" data-lam="boSku" aria-label="Bỏ SKU">✕</button></div>' : '';
+    /* 11/11 user: gom QR tài sản + S/N vào MỘT khung «Quét mã / QR»; kết quả hiện ngay chỗ 2 ô cũ */
+    var tsDong = (f.qrTs || f.sn) ? '<div class="cc-tsk">' +
+      (f.qrTs ? '<span>QR tài sản <b>' + e_(f.qrTs) + '</b><button type="button" class="x" data-lam="boTs" aria-label="Bỏ QR tài sản">✕</button></span>' : '') +
+      (f.sn ? '<span>S/N <b>' + e_(f.sn) + '</b><button type="button" class="x" data-lam="boSn" aria-label="Bỏ S/N">✕</button></span>' : '') + '</div>' : '';
     var anh = f.tep.map(function (t, i) {
       var so = t.loai === 'video' ? 'Clip ' + (f.tep.slice(0, i + 1).filter(function (x) { return x.loai === 'video'; }).length) : 'Ảnh ' + (f.tep.slice(0, i + 1).filter(function (x) { return x.loai !== 'video'; }).length);
       var nv = (t.hinh || []).length;
@@ -315,9 +325,7 @@
       '<h2>1 · SKU / Mã tài sản <small>không bắt buộc</small></h2>' +
       '<div class="cc-sku"><input id="ccSku" type="text" inputmode="text" autocomplete="off" placeholder="Gõ SKU / mã tài sản…" value="' + e_(f.maGo) + '">' +
       '<button type="button" class="cc-nut" data-lam="quet">' + IC.quet + 'Quét mã / QR</button>' +
-      '<button type="button" class="cc-nut vien" data-lam="nds">' + IC.ai + 'Nhận diện SKU</button></div>' + kq +
-      '<div class="cc-ts"><div class="cc-o"><input id="ccQrTs" type="text" autocomplete="off" placeholder="QR tài sản" value="' + e_(f.qrTs) + '"><button type="button" data-quet="qrTs" aria-label="Quét QR tài sản">' + IC.qr + '</button></div>' +
-      '<div class="cc-o"><input id="ccSn" type="text" autocomplete="off" placeholder="S/N" value="' + e_(f.sn) + '"><button type="button" data-quet="sn" aria-label="Quét S/N">' + IC.qr + '</button></div></div>' +
+      '<button type="button" class="cc-nut vien" data-lam="nds">' + IC.ai + 'Nhận diện SKU</button></div>' + kq + tsDong +
       '<div class="cc-h3">2 · Ảnh / clip hiện trạng <i>*</i></div>' +
       '<div class="cc-hai"><label class="cc-to">Chụp / quay<small>mở camera</small><input type="file" accept="image/*,video/*" capture="environment" data-tep="cam"></label>' +
       '<label class="cc-to nhat" id="ccKeo">Chọn từ máy<small>hoặc kéo thả</small><input type="file" accept="image/*,video/*" multiple data-tep="tv"></label></div>' +
@@ -326,7 +334,7 @@
       '<textarea id="ccGhiChu" placeholder="Hiện trạng, chỗ hư…">' + e_(f.ghiChu) + '</textarea>' +
       '<div class="cc-h3">Phân loại <small>không bắt buộc</small></div>' +
       '<div class="cc-pl">' + PL.map(function (p) { var on = f.phanLoai === p;
-        return '<button type="button" data-pl="' + e_(p) + '" class="' + PL_LOP[p] + (on ? ' on' : '') + (on && f.viTri ? ' co-vt' : '') + '"><span class="pl-t">' + e_(p) + '</span>' +
+        return '<button type="button" data-pl="' + e_(p) + '" class="' + PL_LOP[p] + (on ? ' on' : '') + (on && f.viTri ? ' co-vt' : '') + '"><span class="pl-t">' + e_(nhanPL(p)) + '</span>' +
           '<span class="pl-qr" data-plqr="' + e_(p) + '" title="Quét mã vị trí">' + IC.qr + '</span></button>'; }).join('') + '</div>' +
       (f.viTri ? '<div class="cc-vt">Vị trí đặt <b>' + e_(f.viTri) + '</b><button type="button" class="x" data-lam="boVt" aria-label="Bỏ vị trí">✕</button></div>' : '') +
       (f.loi ? '<div class="cc-loi">' + e_(f.loi) + '</div>' : '') +
@@ -346,8 +354,6 @@
       if (t.id === 'ccSku' && maTs(t.value)) { var v0 = t.value; t.value = ''; CC.f.maGo = ''; quetTs(v0); return; }
       if (t.id === 'ccSku') { var r = traSku(t.value), coTruoc = !!CC.f.sku; ganSku(r, 'Gõ tay', t.value.trim());
         if (!!r !== coTruoc || r) { var vt = t.selectionStart; veForm(); var o = $('ccSku'); if (o) { o.focus(); try { o.setSelectionRange(vt, vt); } catch (e) {} } } }
-      if (t.id === 'ccQrTs') { CC.f.qrTs = t.value.trim(); if (maTs(t.value)) { quetTs(t.value); return; } }
-      if (t.id === 'ccSn') CC.f.sn = t.value.trim();
       if (t.id === 'ccGhiChu') { CC.f.ghiChu = t.value; if (CC.f.loi) { CC.f.loi = ''; var l = v.querySelector('.cc-loi'); if (l) l.remove(); } }
     });
     v.addEventListener('change', function (ev) { var t = ev.target; if (t.dataset && t.dataset.tep) { themTep(t.files); t.value = ''; } });
@@ -370,10 +376,10 @@
       var lam = b.dataset.lam;
       if (lam === 'boSku') { ganSku(null, '', ''); CC.f.cach = ''; veForm(); }
       else if (lam === 'boVt') { CC.f.viTri = ''; veForm(); }
+      else if (lam === 'boTs') { CC.f.qrTs = ''; veForm(); }
+      else if (lam === 'boSn') { CC.f.sn = ''; veForm(); }
       else if (lam === 'quet') moQuet();
       else if (lam === 'nds') ndsMo();
-      else if (lam === 'in') { if (!CC.f.ma) CC.f.ma = maMoi();   // in trước khi gửi: QR trỏ đúng mã phiếu sắp gửi
-        moIn({ sku: CC.f.sku, ten: CC.f.ten, dv: CC.f.dv, ma: CC.f.ma, tt: CC.f.phanLoai }); }
       else if (lam === 'gui') gui();
       else if (lam === 'huySua') { formMoi(); veForm(); veDs(); }
       else if (lam === 'xemThem') { CC.soHien += TRANG; veDs(); }
@@ -429,6 +435,7 @@
   function tsGan(code, d) {   // điền như quét mã SKU + ô QR tài sản = code, S/N nếu đang trống
     var f = CC.f; f.qrTs = code;
     if (d) { var r = d.sku ? (traSku(d.sku) || { sku: d.sku, pn: d.ten }) : null;
+      if (r && !r.pn && d.ten) r = Object.assign({}, r, { pn: d.ten });   // luôn có tên hiện sau khi truy ra SKU
       if (r) ganSku(r, 'Quét mã', d.sku); if (d.sn && !f.sn) f.sn = d.sn; }
     veForm();
     bao(d && d.sku ? 'QR tài sản ' + code + ' → SKU ' + d.sku : 'QR tài sản ' + code + ' chưa có trong sổ khai tài sản', d && d.sku ? 'ok' : 'warn');
@@ -455,7 +462,11 @@
       if (td) td.textContent = QUET_TEN[truong];
       QTC.dich = function (ma) { tra(); if (truong !== 'viTri' && quetTs(ma)) return;
         CC.f[truong] = String(ma || '').trim().slice(0, 120); veForm(); bao(QUET_TEN[truong].replace('Quét ', 'Đã quét ') + ': ' + CC.f[truong], 'ok'); };
-    } else QTC.dich = function (ma) { tra(); if (quetTs(ma)) return; var r = traSku(ma); ganSku(r, 'Quét mã', ma); veForm(); bao(r ? 'Đã quét: ' + r.sku : 'Đã quét mã ' + ma + ' (không có trong danh mục SKU)', r ? 'ok' : 'warn'); };
+    } else QTC.dich = function (ma) { tra(); if (quetTs(ma)) return;   // ① QR tài sản → SKU + QR tài sản + S/N
+      var r = traSku(ma);
+      if (r) { ganSku(r, 'Quét mã', ma); veForm(); bao('Đã quét: ' + r.sku + (r.pn ? ' · ' + r.pn : ''), 'ok'); return; }   // ② mã SKU
+      /* ③ 11/11 user gom: không phải QR tài sản, không phải SKU ⇒ là S/N (khung Quét mã / QR thay 2 ô cũ) */
+      CC.f.sn = String(ma || '').trim().slice(0, 120); veForm(); bao('Đã quét S/N: ' + CC.f.sn, 'ok'); };
     qtcQuetMo();
     /* đóng bộ quét không quét gì ⇒ trả lại tiêu đề cũ */
     var m = $('qtcqrmodal'); if (m && td) { var canh = setInterval(function () { if (!QTC.dich) { tra(); clearInterval(canh); } }, 500); setTimeout(function () { clearInterval(canh); }, 600000); }
@@ -602,7 +613,7 @@
     var el = $('ccDs'); if (!el) return;
     var ds = CC.ds.filter(function (x) { return !CC.loc || (CC.loc === '_' ? !x.phanLoai : x.phanLoai === CC.loc); });
     $('ccDem').textContent = CC.ds.length ? '(' + (typeof nf === 'function' ? nf(CC.ds.length) : CC.ds.length) + ')' : '';
-    $('ccLoc').innerHTML = [['', 'Tất cả']].concat(PL.map(function (p) { return [p, p]; })).concat([['_', 'Chưa phân loại']]).map(function (c) {
+    $('ccLoc').innerHTML = [['', 'Tất cả']].concat(PL.map(function (p) { return [p, nhanPL(p)]; })).concat([['_', 'Chưa phân loại']]).map(function (c) {
       return '<button type="button" class="kktab' + (CC.loc === c[0] ? ' active' : '') + '" data-locpl="' + e_(c[0]) + '">' + e_(c[1]) + '</button>'; }).join('');
     if (!ds.length) { el.innerHTML = '<div class="cc-trong">' + (CC.dangNap && !CC.ds.length ? 'Đang tải…' : (CC.ds.length ? 'Không có mục nào ở bộ lọc này.' : 'Chưa có ghi nhận nào.')) + '</div>'; return; }
     el.innerHTML = ds.slice(0, CC.soHien).map(function (x) {
@@ -613,7 +624,7 @@
         '<div class="cc-t1"><span>' + e_([x.sku, x.ten || (!x.sku ? x.maGo : '')].filter(Boolean).join(' · ') || 'Không có SKU') + '</span>' + (x.phanLoai ? '<span class="cc-kqc ' + PL_LOP[x.phanLoai] + '">' + e_(x.phanLoai) + '</span>' : '') + '</div>' +
         '<div class="cc-t2">' + e_(x.ghiChu) + '</div>' +
         '<div class="cc-t3">' + av(x.nguoi, true) + '<span>' + e_(haiChuCuoi(x.nguoi)) + ' · ' + gio(x.luc) + ' · ' + [na && na + ' ảnh', nc && nc + ' clip', nv && nv + ' vùng hư'].filter(Boolean).join(' · ') + '</span>' +
-        (x.sku ? '<button type="button" class="in" data-inma="' + e_(x.ma) + '">' + IC.inn.replace('<svg', '<svg style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7"') + 'In tem</button>' : '') + '</div>' + tt + '</div></div>';
+        (x.sku && !x._cho && !x._loi ? '<button type="button" class="in" data-inma="' + e_(x.ma) + '">' + IC.inn.replace('<svg', '<svg style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7"') + 'In tem</button>' : '') + '</div>' + tt + '</div></div>';
     }).join('') + (ds.length > CC.soHien ? '<button type="button" class="kktab cc-them" data-lam="xemThem">Xem thêm</button>' : '');
   }
   function moSua(ma) {
