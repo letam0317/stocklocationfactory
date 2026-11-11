@@ -2802,6 +2802,17 @@ body.side-anim:has(.wrap :is([class*="modal"],[id$="modal"],[id$="Modal"],#light
   font-variant-numeric:tabular-nums;letter-spacing:.02em}
 .nds-marow input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}
 .nds-magoi{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:7px;font-size:11.5px;color:var(--ink3)}
+/* 11/11 danh sách gợi ý S/N · QR tài sản · phiếu IT · tên (mẫu duyệt): dòng = SKU + chip + TÊN ĐỦ dòng dưới + dòng phụ mono */
+.nds-goids{margin-top:6px;border:1px solid var(--line);border-radius:10px;background:var(--surface);box-shadow:0 6px 16px rgba(0,0,0,.08);padding:6px;max-height:min(60vh,460px);overflow:auto}
+.nds-goids .ng-nhom{font-size:11.5px;font-weight:600;color:var(--ink3);padding:6px 8px 4px}
+.nds-goids .ng-dong{display:block;width:100%;text-align:left;border:0;background:none;padding:7px 8px;border-radius:7px;cursor:pointer;color:var(--ink);font:inherit}
+.nds-goids .ng-dong+.ng-dong{border-top:1px solid var(--line)}
+.nds-goids .ng-dong:hover,.nds-goids .ng-dong:focus-visible{background:#e6f4ff;outline:none}
+.nds-goids .ng-t1{display:flex;align-items:baseline;gap:7px;font-size:13.5px}
+.nds-goids .ng-t1 b{font-family:ui-monospace,Consolas,monospace;font-weight:700}
+.nds-goids .ng-ten{display:block;font-size:13.5px;margin-top:2px;overflow-wrap:anywhere}
+.nds-goids .ng-phu{display:block;font-size:12px;color:var(--ink3);margin-top:2px;font-family:ui-monospace,Consolas,monospace;overflow-wrap:anywhere}
+.nds-goids .ng-trong{font-size:12.5px;color:var(--ink3);padding:6px 8px}
 .nds-magoi .nds-son{display:inline-block;min-width:16px;padding:0 5px;border-radius:99px;font-size:9.5px;font-weight:750;
   background:color-mix(in srgb,var(--brand2) 16%,transparent);color:var(--brand2);vertical-align:1px}
 /* Tên hàng rút gọn trong nút gợi ý SKU (22/08/2026): chữ thường 10,5px (sàn chữ điện thoại),
@@ -3632,11 +3643,13 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
       <div class="nds-marow">
         <label for="ndsMa">SKU / phần tử trên tem</label>
         <input id="ndsMa" autocomplete="off" spellcheck="false" placeholder="Gõ SKU hoặc mảnh đọc được: 422448952 · 8916123 V9B11"
-          oninput="ndsMaGo(this.value)"
+          oninput="ndsMaGo(this.value)" onfocus="ndsMayChu()"
           onkeydown="if(event.key==='Enter'){event.preventDefault();ndsTraMa();}">
         <button type="button" class="kktab nds-go" onclick="ndsTraMa()">Tra</button>
       </div>
       <div class="nds-magoi" id="ndsMaGoi" hidden></div>
+      <!-- 11/11 user duyệt «Mẫu thao tác Nhận diện SKU»: gõ S/N · QR tài sản · phiếu IT · tên sản phẩm ⇒ danh sách SKU gợi ý (tới 8 dòng) -->
+      <div class="nds-goids" id="ndsGoiDs" hidden></div>
       <div class="nds-stage" id="ndsStage">
         <!-- `webkit-playsinline` + `autoplay` là BẮT BUỘC cho iOS, không chỉ `playsinline`:
              Safari trên iPhone tự đưa <video> vào TOÀN MÀN HÌNH khi play nếu thiếu thuộc tính
@@ -5991,7 +6004,7 @@ var CCDC_NAP={dang:null,xong:false};
 function ccdcNap(){
   if(CCDC_NAP.xong){ ccdcMo(); return; }
   if(CCDC_NAP.dang) return;
-  CCDC_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='hien-trang-ccdc.js?v=20261111m'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
+  CCDC_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='hien-trang-ccdc.js?v=20261111n'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
     .then(function(){ CCDC_NAP.xong=true; if(TOPTAB==='ccdc') ccdcMo(); })
     .catch(function(){ CCDC_NAP.dang=null; var v=document.getElementById('viewCcdc'); if(v) v.innerHTML='<div class="state" style="padding:32px 20px">Không tải được công cụ (mất mạng?). <button type="button" class="kktab" onclick="ccdcNap()">Thử lại</button></div>'; });
 }
@@ -14443,7 +14456,99 @@ function ndsTenNgan(pn){
   var pt=String(pn==null?'':pn).split('/');
   return pt.slice(0,2).join(' · ').trim();
 }
+/* ============================================================================================
+ * GỢI Ý THEO S/N · QR TÀI SẢN · PHIẾU IT · TÊN SẢN PHẨM (11/11/2026 — user duyệt «Mẫu thao tác Nhận diện SKU»)
+ * Ô «SKU / phần tử trên tem» ngừng gõ ⇒ danh sách #ndsGoiDs (tới 8 dòng, tên đủ). Bấm 1 dòng = chọn SKU: trong pop-up của
+ * Hiện trạng CCDC thì điền mục 1 (ccdcNhanSku), ở tab Nhận diện SKU thì chép mã như thẻ gợi ý.
+ *  · S/N / QR tài sản / phiếu IT (1001 + 12 số): máy chủ 8591 /api/tra-ts (tra-ts.mjs) — QR/S/N trong bộ nhớ (0 lượt WMS), phiếu IT
+ *    2 lượt WMS rồi nhớ 6 giờ; gác bằng phiên tài khoản (x-tk-phien). Địa chỉ: laptop 127.0.0.1 (máy Windows) hoặc đường hầm lấy qua
+ *    Apps Script pcBangPh (cùng đường trang Retail). Máy chủ tắt ⇒ QR/S/N tra tab TAI-SAN-WMS (gviz đúng mã), phiếu IT báo không tra được.
+ *  · Tên sản phẩm: danh mục trong máy (NDS.ds), mọi mảnh gõ phải nằm trong tên (bỏ dấu), ACTIVE trước, tới 8 dòng.
+ * ============================================================================================ */
+var NDS_GOI = { hen: 0, luot: 0, may: null, mayLuc: 0 };
+function ndsBoDau(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase(); }
+function ndsMayChu(){
+  if (NDS_GOI.may && Date.now()-NDS_GOI.mayLuc < 10*60000) return Promise.resolve(NDS_GOI.may);
+  var ph = window.TK && TK.phien; if (!ph) return Promise.resolve('');
+  /* «ping» = gọi chính /api/tra-ts với mã rỗng: máy chủ ĐÚNG trả 400 «mã quá ngắn»; bản dự phòng chưa có lệnh này trả 404 ⇒ bỏ qua */
+  var ping = function(u, ms){ var c = new AbortController(); setTimeout(function(){ c.abort(); }, ms);
+    return fetch(u + '/api/tra-ts?kw=', { headers: { 'x-tk-phien': ph }, signal: c.signal }).then(function(r){ if (r.status !== 400) throw 0; return u; }); };
+  var thu = function(ds){ return ds.reduce(function(p, u){ return p.catch(function(){ return ping(u, 3000); }); }, Promise.reject(0)); };
+  var dau = /Windows NT/.test(navigator.userAgent) ? ['http://127.0.0.1:8591'] : [];
+  return thu(dau).catch(function(){
+    return fetch(APPSCRIPT_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ action:'ts_may_chu', ph: ph }) })
+      .then(function(r){ return r.json(); }).then(function(j){ return thu(j.ham || []); });
+  }).then(function(u){ NDS_GOI.may = u; NDS_GOI.mayLuc = Date.now(); return u; }).catch(function(){ NDS_GOI.may = ''; NDS_GOI.mayLuc = Date.now() - 8*60000; return ''; });
+}
+/* Dự phòng khi máy chủ tắt: tab TAI-SAN-WMS (sync-tai-san-wms.mjs, công khai đọc) — hỏi gviz ĐÚNG mã ở cột QR hoặc S/N */
+function ndsTraTsSheet(kw){
+  kw = String(kw||'').replace(/'/g,'').trim();
+  var q = "select A,B,C,D,E where A = '" + kw + "' or D = '" + kw + "'";
+  return fetch('https://docs.google.com/spreadsheets/d/1eY_oo9fAvWCTXp24x-Z0FXq9mp_jJPlTHg09qdemETs/gviz/tq?tqx=out:csv&sheet=TAI-SAN-WMS&tq=' + encodeURIComponent(q))
+    .then(function(r){ return r.text(); }).then(function(t){
+      return t.split(/\r?\n/).slice(1).map(function(l){ var c = (l.match(/"((?:[^"]|"")*)"/g) || []).map(function(x){ return x.slice(1,-1).replace(/""/g,'"'); });
+        return { qr: c[0] === '.' ? '' : c[0], sku: c[1], ten: c[2], sn: c[3], kho: c[4] }; }).filter(function(x){ return x.sku; }); });
+}
+function ndsTraTs(kw){
+  var laPhieu = /^1001\d{12}$/.test(kw);
+  return ndsMayChu().then(function(u){
+    if (!u) throw 0;
+    var c = new AbortController(); setTimeout(function(){ c.abort(); }, 8000);
+    return fetch(u + '/api/tra-ts?kw=' + encodeURIComponent(kw), { headers: { 'x-tk-phien': (window.TK && TK.phien) || '' }, signal: c.signal })
+      .then(function(r){ return r.json().then(function(j){ if (!r.ok) { if (r.status >= 500 || r.status === 404) NDS_GOI.mayLuc = 0; throw j; } return j; }); });
+  }).catch(function(){
+    if (laPhieu) return { loai: 'phieu', loi: 'Máy chủ tra phiếu IT đang tắt — thử lại sau', ds: [] };
+    return ndsTraTsSheet(kw).then(function(ds){ return { loai: 'ts', ds: ds, sheet: 1 }; }, function(){ return { loai: 'ts', ds: [] }; });
+  });
+}
+function ndsTimTen(txt){
+  var ds = (window.NDS && NDS.ds) || [], man = ndsBoDau(txt).split(/[\s,/;]+/).filter(function(x){ return x.length >= 2; });
+  if (!man.length || !/[a-z]/.test(man.join(''))) return [];
+  var ra = [];
+  for (var i = 0; i < ds.length && ra.length < 40; i++){ var t = ds[i]._bd || (ds[i]._bd = ndsBoDau(ds[i].pn));
+    if (man.every(function(m){ return t.indexOf(m) >= 0; })) ra.push(ds[i]); }
+  ra.sort(function(a, b){ return (a.status === 'INACTIVE') - (b.status === 'INACTIVE'); });
+  return ra.slice(0, 8).map(function(r){ return { sku: String(r.sku), ten: r.pn, tag: r.status || 'ACTIVE' }; });
+}
+function ndsVeGoiDs(nhom, trong){
+  var el = document.getElementById('ndsGoiDs'); if (!el) return;
+  var co = nhom.filter(function(g){ return g.dong.length; });
+  if (!co.length && !trong){ el.hidden = true; el.innerHTML = ''; return; }
+  el.hidden = false;
+  el.innerHTML = co.map(function(g){ return '<div class="ng-nhom">' + esc(g.nhom) + '</div>' + g.dong.map(function(d){
+      return '<button type="button" class="ng-dong" data-sku="' + esc(d.sku) + '" data-ten="' + esc(d.ten || '') + '"><span class="ng-t1"><b>' + esc(d.sku) + '</b>' +
+        (d.tag ? '<span class="nds-tag">' + esc(d.tag) + '</span>' : '') + '</span><span class="ng-ten">' + esc(d.ten || '') + '</span>' +
+        (d.phu ? '<span class="ng-phu">' + esc(d.phu) + '</span>' : '') + '</button>'; }).join(''); }).join('') + (co.length ? '' : '<div class="ng-trong">' + esc(trong) + '</div>');
+}
+function ndsGoiChon(sku, ten){
+  var el = document.getElementById('ndsGoiDs'); if (el){ el.hidden = true; el.innerHTML = ''; }
+  if (window.ccdcNhanSku && window.ccdcNhanSku(String(sku), { sku: String(sku), pn: ten || '' })) return;   // pop-up Hiện trạng CCDC: điền mục 1
+  var r = (NDS.ds || []).find(function(x){ return String(x.sku) === String(sku); });
+  if (r){ NDS.ket = (NDS.ket || []).filter(function(k){ return String(k.sku) !== String(sku); }).concat([r]); ndsChonSku(String(sku)); return; }
+  ndsCopyIm(String(sku)); toast('Đã copy mã SKU ' + sku + (ten ? ' · ' + ten : '') + '.', 'ok');
+}
+document.addEventListener('click', function(ev){ var b = ev.target.closest && ev.target.closest('#ndsGoiDs .ng-dong'); if (b) ndsGoiChon(b.dataset.sku, b.dataset.ten); });
+function ndsGoiHen(txt){
+  clearTimeout(NDS_GOI.hen); var luot = ++NDS_GOI.luot, kw = String(txt||'').trim();
+  if (kw.length < 2){ ndsVeGoiDs([], ''); return; }
+  NDS_GOI.hen = setTimeout(function(){
+    var ten = ndsTimTen(kw), nhom = [{ nhom: 'Danh mục SKU · khớp tên sản phẩm', dong: ten }];
+    ndsVeGoiDs(nhom, '');                                       // tên: tức thì từ danh mục trong máy
+    var laMa = /^1001\d{12}$/.test(kw) || (kw.length >= 6 && /\d/.test(kw) && !/\s/.test(kw));
+    if (!laMa) return;
+    ndsTraTs(kw).then(function(j){
+      if (luot !== NDS_GOI.luot) return;                         // đã gõ tiếp — bỏ kết quả cũ
+      var dau = [];
+      if (j.loai === 'phieu') dau.push({ nhom: j.phieu ? 'Phiếu IT ' + j.phieu.so + ' · ' + [j.phieu.kho, j.phieu.tt].filter(Boolean).join(' · ') : 'Phiếu IT ' + kw,
+        dong: (j.ds || []).map(function(d){ return { sku: d.sku, ten: d.ten, phu: 'SL ' + d.sl }; }) });
+      else if ((j.ds || []).length) dau.push({ nhom: 'Tài sản WMS · khớp ' + ((j.ds || []).every(function(d){ return String(d.qr).toLowerCase() === kw.toLowerCase(); }) ? 'QR tài sản' : 'S/N'),
+        dong: (j.ds || []).slice(0, 8).map(function(d){ return { sku: d.sku, ten: d.ten, phu: [d.qr && 'QR ' + d.qr, d.sn && 'S/N ' + d.sn, d.kho].filter(Boolean).join(' · ') }; }) });
+      ndsVeGoiDs(dau.concat(nhom), j.loi || (j.loai === 'phieu' && !(j.ds || []).length ? 'Không thấy phiếu ' + kw + ' (hoặc phiếu thuộc kho tài khoản máy không xem được)' : ''));
+    });
+  }, 350);
+}
 function ndsMaGo(txt){
+  ndsGoiHen(txt);   // 11/11 danh sách gợi ý S/N · QR tài sản · phiếu IT · tên
   var el=document.getElementById('ndsMaGoi'); if (!el) return;
   var ma=ndsGoiMa(txt), sku=ndsGoiSku(txt);
   /* Gõ ≥6 chữ số là đang chép SKU (9 số) → SKU đứng trước; 4-5 số thường là khúc giữa của mã NCC

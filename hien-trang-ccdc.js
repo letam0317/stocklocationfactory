@@ -41,6 +41,7 @@
     '#viewCcdc .cc-h3{font-size:14px;font-weight:600;margin:16px 0 8px;display:flex;align-items:baseline;gap:6px}',
     '#viewCcdc .cc-h3 i{font-style:normal;color:var(--bad,#ef4444)} #viewCcdc .cc-h3 small{font-weight:400;font-size:12px;color:var(--ink3)}',
     '#viewCcdc .cc-sku{display:flex;gap:8px;flex-wrap:wrap}',
+    '#viewCcdc .cc-sku2{display:grid;grid-template-columns:1fr 1fr} #viewCcdc .cc-sku2 .cc-nut{justify-content:center;width:100%}',
     '#viewCcdc .cc-sku input{flex:1 1 200px;min-width:0;height:38px;border:1px solid var(--line);border-radius:8px;padding:0 12px;font-size:16px;background:var(--surface);color:var(--ink)}',
     '#viewCcdc .cc-nut,.cc-pop .cc-nut{height:38px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font-size:14px;padding:0 12px;cursor:pointer;white-space:nowrap}',
     '#viewCcdc .cc-nut.vien,.cc-pop .cc-nut.vien{border-color:var(--brand2);color:var(--brand2)}',
@@ -432,7 +433,8 @@
     el.innerHTML =
       (f.sua ? '<div class="cc-sua">Đang sửa <b>' + e_(f.ma) + '</b><button type="button" data-lam="huySua">Huỷ sửa</button></div>' : '') +
       '<h2>1 · SKU / Mã tài sản <small>không bắt buộc</small></h2>' +
-      '<div class="cc-sku"><input id="ccSku" type="text" inputmode="text" autocomplete="off" placeholder="Gõ SKU / mã tài sản…" value="' + e_(f.maGo) + '">' +
+      /* 11/11 tối user duyệt mẫu: BỎ ô «Gõ SKU / mã tài sản…» — nhập tay đã có trong pop-up «Quét mã / QR», gõ S/N · QR · phiếu IT · tên ở «Nhận diện SKU» */
+      '<div class="cc-sku cc-sku2">' +
       '<button type="button" class="cc-nut" data-lam="quet">' + IC.quet + 'Quét mã / QR</button>' +
       '<button type="button" class="cc-nut vien" data-lam="nds">' + IC.ai + 'Nhận diện SKU</button></div>' + kq + tsDong +
       '<div class="cc-h3">2 · Ảnh / clip hiện trạng <i>*</i></div>' +
