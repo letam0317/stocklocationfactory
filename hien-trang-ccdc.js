@@ -73,6 +73,9 @@
     '#viewCcdc .cc-pl .pl-qr{display:flex;align-items:center;justify-content:center;width:30px;flex:none;align-self:stretch;margin:-7px 0;border-left:1px solid var(--line);color:var(--ink3)}',
     '#viewCcdc .cc-pl .pl-qr svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round}',
     '#viewCcdc .cc-pl button.on .pl-qr{border-left-color:currentColor;color:inherit}',
+    /* 11/11 tối user: mã vị trí nhập QUA biểu tượng QR trên chip phân loại (không có chỗ riêng) — thiếu thì tô đỏ chính các biểu tượng đó */
+    '#viewCcdc .cc-pl.thieu-vt .pl-qr{color:#cf1322;background:#fff1f0;border-left-color:#ffa39e;animation:ccNhayVt 1s ease 2}',
+    '@keyframes ccNhayVt{50%{background:#ffccc7}}',
     '#viewCcdc .cc-pl button.co-vt .pl-qr{background:currentColor;border-radius:0 6px 6px 0} #viewCcdc .cc-pl button.co-vt .pl-qr svg{stroke:#fff}',
     '#viewCcdc .cc-vt{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;color:var(--ink2)}',
     '#viewCcdc .cc-vt b,#viewCcdc .cc-mono{font-weight:600;font-family:ui-monospace,Consolas,monospace;color:var(--ink)}',
@@ -435,12 +438,10 @@
       '<div class="cc-h3">3 · Ghi chú <i>*</i></div>' +
       '<textarea id="ccGhiChu" placeholder="Hiện trạng, chỗ hư…">' + e_(f.ghiChu) + '</textarea>' +
       '<div class="cc-h3">Phân loại <i>*</i></div>' +
-      '<div class="cc-pl">' + PL.map(function (p) { var on = f.phanLoai === p;
+      '<div class="cc-pl' + (/vị trí/i.test(f.loi || '') && !f.viTri ? ' thieu-vt' : '') + '">' + PL.map(function (p) { var on = f.phanLoai === p;
         return '<button type="button" data-pl="' + e_(p) + '" class="' + PL_LOP[p] + (on ? ' on' : '') + (on && f.viTri ? ' co-vt' : '') + '"><span class="pl-t">' + e_(nhanPL(p)) + '</span>' +
           '<span class="pl-qr" data-plqr="' + e_(p) + '" title="Quét mã vị trí">' + IC.qr + '</span></button>'; }).join('') + '</div>' +
-      (f.viTri ? '<div class="cc-vt">Vị trí đặt <b>' + e_(f.viTri) + '</b><button type="button" class="x" data-lam="boVt" aria-label="Bỏ vị trí">✕</button></div>'
-        /* 11/11 tối user: mã vị trí BẮT BUỘC ⇒ chưa có thì hiện chỗ nhập rõ ràng (pop-up quét có ô Nhập tay) */
-        : '<div class="cc-vt">Mã vị trí <i style="color:#cf1322;font-style:normal">*</i><button type="button" class="cc-nut vien" data-lam="vt" style="height:30px;padding:0 10px;font-size:13px">' + IC.qr.replace('<svg', '<svg style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7"') + 'Quét / nhập mã vị trí</button></div>') +
+      (f.viTri ? '<div class="cc-vt">Vị trí đặt <b>' + e_(f.viTri) + '</b><button type="button" class="x" data-lam="boVt" aria-label="Bỏ vị trí">✕</button></div>' : '') +
       (f.loi ? '<div class="cc-loi">' + e_(f.loi) + '</div>' : '') +
       '<div class="cc-gui">' + (n ? av(n.ten) + '<div class="ng">Người gửi <b>' + e_(n.ten) + '</b> · ' + e_(n.id) + '</div>' : '<div class="ng">Chưa đăng nhập</div>') +
       '<button type="button" class="cc-nut xanh" data-lam="gui">' + (n ? (f.sua ? 'Lưu' : (f.sku ? 'In, gửi' : 'Gửi')) : 'Đăng nhập để gửi') + '</button></div>';
@@ -486,7 +487,6 @@
       var lam = b.dataset.lam;
       if (lam === 'boSku') { ganSku(null, '', ''); CC.f.cach = ''; veForm(); }
       else if (lam === 'boVt') { CC.f.viTri = ''; veForm(); }
-      else if (lam === 'vt') moQuet('viTri');
       else if (lam === 'cam') camMo();
       else if (lam === 'dsMo') dsMo(!CC.dsMo);
       else if (lam === 'loc') { var lb = $('ccLocBody'), mo = lb.classList.contains('collapsed'); lb.classList.toggle('collapsed', !mo); b.classList.toggle('mo', mo); if (mo) { veLocNg(); var ti = $('ccLocTim'); if (ti && window.innerWidth > 640) ti.focus(); } }
@@ -773,7 +773,7 @@
     if (!f.tep.length) { f.loi = 'Cần ít nhất 1 ảnh hoặc clip.'; veForm(); return; }
     if (!String(f.ghiChu).trim()) { f.loi = 'Cần ghi chú hiện trạng.'; veForm(); var g = $('ccGhiChu'); if (g) g.focus(); return; }
     if (!f.phanLoai) { f.loi = 'Cần chọn phân loại.'; veForm(); return; }   // 11/11 user: Phân loại bắt buộc
-    if (!String(f.viTri || '').trim()) { f.loi = 'Cần mã vị trí — bấm «Quét / nhập mã vị trí».'; veForm(); return; }   // 11/11 tối user: bắt buộc mã vị trí mới cho gửi/in
+    if (!String(f.viTri || '').trim()) { f.loi = 'Cần mã vị trí — bấm biểu tượng QR trên nút phân loại để quét / nhập.'; veForm(); return; }   // 11/11 tối user: bắt buộc mã vị trí mới cho gửi/in
     var inLuon = !f.sua && !!f.sku;                                          // 11/11 user: nút «In, gửi» = gửi + in 1 tem
     var cu = f.sua ? timMa(f.ma) : null, now = Date.now();
     var it = { ma: f.ma || maMoi(), luc: cu ? cu.luc : now, capNhat: now, nguoi: cu ? cu.nguoi : n.ten, tk: cu ? cu.tk : n.id,
