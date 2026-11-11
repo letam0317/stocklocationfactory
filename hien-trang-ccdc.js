@@ -286,7 +286,7 @@
     var mT = pop('ccTsModal', 'Chọn SKU của tài sản', '<div id="ccTsThan"></div>');
     mT.addEventListener('click', function (ev) {
       if (ev.target === mT || ev.target.closest('.mclose')) { plgDongModal('ccTsModal'); return; }
-      var b = ev.target.closest('[data-tsi]'); if (b && TS_CHON) { var d = TS_CHON; TS_CHON = null; plgDongModal('ccTsModal'); tsGan(d.code, d.ds[+b.dataset.tsi]); }
+      var b = ev.target.closest('[data-tsi]'); if (b && TS_CHON) { var d = TS_CHON; TS_CHON = null; plgDongModal('ccTsModal'); tsGan(d.code, d.ds[+b.dataset.tsi], d.laS); }
     });
     var mI = pop('ccInModal', 'In tem hiện trạng', '<div id="ccInThan"></div>');
     mI.addEventListener('click', function (ev) { if (ev.target === mI || ev.target.closest('.mclose')) plgDongModal('ccInModal'); });
@@ -332,14 +332,14 @@
       (anh ? '<div class="cc-anhs">' + anh + '</div>' : '') +
       '<div class="cc-h3">3 · Ghi chú <i>*</i></div>' +
       '<textarea id="ccGhiChu" placeholder="Hiện trạng, chỗ hư…">' + e_(f.ghiChu) + '</textarea>' +
-      '<div class="cc-h3">Phân loại <small>không bắt buộc</small></div>' +
+      '<div class="cc-h3">Phân loại <i>*</i></div>' +
       '<div class="cc-pl">' + PL.map(function (p) { var on = f.phanLoai === p;
         return '<button type="button" data-pl="' + e_(p) + '" class="' + PL_LOP[p] + (on ? ' on' : '') + (on && f.viTri ? ' co-vt' : '') + '"><span class="pl-t">' + e_(nhanPL(p)) + '</span>' +
           '<span class="pl-qr" data-plqr="' + e_(p) + '" title="Quét mã vị trí">' + IC.qr + '</span></button>'; }).join('') + '</div>' +
       (f.viTri ? '<div class="cc-vt">Vị trí đặt <b>' + e_(f.viTri) + '</b><button type="button" class="x" data-lam="boVt" aria-label="Bỏ vị trí">✕</button></div>' : '') +
       (f.loi ? '<div class="cc-loi">' + e_(f.loi) + '</div>' : '') +
       '<div class="cc-gui">' + (n ? av(n.ten) + '<div class="ng">Người gửi <b>' + e_(n.ten) + '</b> · ' + e_(n.id) + '</div>' : '<div class="ng">Chưa đăng nhập</div>') +
-      '<button type="button" class="cc-nut xanh" data-lam="gui">' + (n ? (f.sua ? 'Lưu' : 'Gửi') : 'Đăng nhập để gửi') + '</button></div>';
+      '<button type="button" class="cc-nut xanh" data-lam="gui">' + (n ? (f.sua ? 'Lưu' : (f.sku ? 'In, gửi' : 'Gửi')) : 'Đăng nhập để gửi') + '</button></div>';
   }
   function ganSku(r, cach, maGo) {
     var f = CC.f;
@@ -408,7 +408,9 @@
      Tải /export CSV (gviz chỉ trả 2 dòng) MỘT lần, đệm localStorage 6 giờ. Một mã trỏ nhiều SKU (≈39 mã) ⇒ cho chọn. */
   var TS_URL = 'https://docs.google.com/spreadsheets/d/1dUFvmLMkhSt_jRCBdxsEU0NCeCLWbca-zrm60l7I3cY/export?format=csv&gid=602603419';
   var K_TS = 'ccdc-so-ts-v1', TS = null, TSN = null, TS_CHON = null;
-  function maTs(v) { v = String(v || ''); var m = /"code"\s*:\s*"([^"]+)"/.exec(v); return m ? m[1].trim() : ''; }
+  function maTs(v) { v = String(v || ''); var m = /"code"\s*:\s*"([^"]+)"/.exec(v); if (m) return m[1].trim();
+    /* 11/11: mã tài sản THÔ (gõ tay / tem in chữ) «0-8148a2» — phiên 67 bắt: trước chỉ nhận JSON qr_mapping */
+    m = /^\s*(0-[0-9a-f]{5,8})\s*$/i.exec(v); return m ? m[1].toLowerCase() : ''; }
   function docCsv(t) {
     var R = [], r = [], c = '', q = false;
     for (var i = 0; i < t.length; i++) { var ch = t[i];
@@ -432,26 +434,51 @@
     }).finally(function () { TSN = null; });
     return TSN;
   }
-  function tsGan(code, d) {   // điền như quét mã SKU + ô QR tài sản = code, S/N nếu đang trống
-    var f = CC.f; f.qrTs = code;
+  /* TÀI SẢN WMS (11/11 user: «0-8148a2 ở WMS có mà audit-dc báo không có»): tab TAI-SAN-WMS của sheet factory (công khai đọc),
+     sync-tai-san-wms.mjs kéo WMS › Asset management (kho 170 QL1A + 130 Ấp Chánh, ~4,9k dòng, 3 giờ/lượt). Hỏi gviz ĐÚNG mã
+     (1 dòng, ~0,5 s) thay vì tải cả tab 700 KB. So cả cột QR lẫn S/N: WMS có dòng nhập QR vào ô Serial (cột QR = «.»). */
+  var TSW_URL = 'https://docs.google.com/spreadsheets/d/1eY_oo9fAvWCTXp24x-Z0FXq9mp_jJPlTHg09qdemETs/gviz/tq?tqx=out:csv&sheet=TAI-SAN-WMS&tq=';
+  function traWms(kw) {
+    kw = String(kw || '').replace(/'/g, '').trim(); if (!kw || kw.length > 80) return Promise.resolve([]);
+    var q = "select A,B,C,D,E where A = '" + kw + "' or D = '" + kw + "'";
+    return fetch(TSW_URL + encodeURIComponent(q) + '&t=' + Date.now()).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+      .then(function (t) { return docCsv(t).slice(1).filter(function (r) { return r[1]; })
+        .map(function (r) { return { qr: r[0] === '.' ? '' : r[0], sku: String(r[1]).trim(), ten: r[2] || '', sn: r[3] || '', vt: r[4] || '' }; }); });
+  }
+  /* d = 1 dòng tài sản; laQr = mã quét là QR tài sản (JSON qr_mapping / cột QR), ngược lại khớp theo S/N */
+  function tsGan(code, d, laS) {   // điền như quét mã SKU + QR tài sản + S/N
+    var f = CC.f;
+    if (laS) { f.sn = code; if (d && d.qr) f.qrTs = d.qr; } else { f.qrTs = code; if (d && d.sn && d.sn !== code && !f.sn) f.sn = d.sn; }
     if (d) { var r = d.sku ? (traSku(d.sku) || { sku: d.sku, pn: d.ten }) : null;
       if (r && !r.pn && d.ten) r = Object.assign({}, r, { pn: d.ten });   // luôn có tên hiện sau khi truy ra SKU
-      if (r) ganSku(r, 'Quét mã', d.sku); if (d.sn && !f.sn) f.sn = d.sn; }
+      if (r) ganSku(r, 'Quét mã', d.sku); }
     veForm();
-    bao(d && d.sku ? 'QR tài sản ' + code + ' → SKU ' + d.sku : 'QR tài sản ' + code + ' chưa có trong sổ khai tài sản', d && d.sku ? 'ok' : 'warn');
+    var nhan = laS ? 'S/N ' : 'QR tài sản ';
+    bao(d && d.sku ? nhan + code + ' → SKU ' + d.sku + (d.ten ? ' · ' + d.ten : '') : nhan + code + ' chưa có trong WMS / sổ khai tài sản', d && d.sku ? 'ok' : 'warn');
   }
-  /* trả true = đã xử lý như QR tài sản */
+  function tsChon(code, ds, laS) {
+    var gom = []; ds.forEach(function (x) { if (!gom.some(function (y) { return y.sku === x.sku && y.sn === x.sn; })) gom.push(x); });
+    if (gom.length <= 1) { tsGan(code, gom[0] || null, laS); return; }
+    TS_CHON = { code: code, ds: gom, laS: laS };
+    $('ccTsThan').innerHTML = '<div class="ts-ds">' + gom.map(function (x, i) { var r = traSku(x.sku);
+      return '<button type="button" data-tsi="' + i + '"><b>' + e_(x.sku) + '</b> · ' + e_((r && r.pn) || x.ten || '') +
+        '<small>' + [x.vt, x.sn && 'S/N ' + x.sn].filter(Boolean).map(e_).join(' · ') + '</small></button>'; }).join('') + '</div>';
+    plgMoModal('ccTsModal');
+  }
+  /* Tra 1 mã: WMS trước (nguồn thật, mới nhất), không có thì sổ khai kho 170 (chỉ khi là QR qr_mapping). */
+  function traTs(code, laQr) {
+    return Promise.all([traWms(code).catch(function () { return null; }), laQr ? napSoTs().catch(function () { return null; }) : null]).then(function (k) {
+      var w = k[0] || [], so = laQr && k[1] ? (k[1][code] || []).filter(function (x) { return x.sku; }) : [];
+      var laS = !laQr && w.length && w.every(function (x) { return x.qr !== code; });
+      return { ds: w.length ? w : so, laS: !!laS, loi: k[0] == null };
+    });
+  }
+  /* trả true = đã xử lý như QR tài sản (chuỗi JSON qr_mapping) */
   function quetTs(chuoi) {
     var code = maTs(chuoi); if (!code) return false;
-    napSoTs().then(function (m) {
-      var ds = (m[code] || []).filter(function (x) { return x.sku; });
-      if (ds.length <= 1) { tsGan(code, ds[0] || null); return; }
-      TS_CHON = { code: code, ds: ds };
-      $('ccTsThan').innerHTML = '<div class="ts-ds">' + ds.map(function (x, i) { var r = traSku(x.sku);
-        return '<button type="button" data-tsi="' + i + '"><b>' + e_(x.sku) + '</b> · ' + e_((r && r.pn) || x.ten || '') +
-          '<small>' + [x.vt, x.sn && 'S/N ' + x.sn].filter(Boolean).map(e_).join(' · ') + '</small></button>'; }).join('') + '</div>';
-      plgMoModal('ccTsModal');
-    }).catch(function (e) { CC.f.qrTs = code; veForm(); bao('Chưa tải được sổ khai tài sản: ' + e.message, 'warn'); });
+    bao('Đang tra QR tài sản ' + code + '…', 'info');
+    traTs(code, true).then(function (k) { tsChon(code, k.ds, false); })
+      .catch(function (e) { CC.f.qrTs = code; veForm(); bao('Chưa tra được QR tài sản: ' + e.message, 'warn'); });
     return true;
   }
   function moQuet(truong) {
@@ -465,8 +492,12 @@
     } else QTC.dich = function (ma) { tra(); if (quetTs(ma)) return;   // ① QR tài sản → SKU + QR tài sản + S/N
       var r = traSku(ma);
       if (r) { ganSku(r, 'Quét mã', ma); veForm(); bao('Đã quét: ' + r.sku + (r.pn ? ' · ' + r.pn : ''), 'ok'); return; }   // ② mã SKU
-      /* ③ 11/11 user gom: không phải QR tài sản, không phải SKU ⇒ là S/N (khung Quét mã / QR thay 2 ô cũ) */
-      CC.f.sn = String(ma || '').trim().slice(0, 120); veForm(); bao('Đã quét S/N: ' + CC.f.sn, 'ok'); };
+      /* ③ không phải JSON QR, không phải SKU ⇒ tra WMS theo QR (mã trơn «0-8148a2») hoặc S/N; không thấy ⇒ ghi là S/N */
+      var m0 = String(ma || '').trim().slice(0, 120);
+      traTs(m0, false).then(function (k) {
+        if (k.ds.length) { tsChon(m0, k.ds, k.laS); return; }
+        CC.f.sn = m0; veForm(); bao('Đã quét S/N: ' + m0 + ' (chưa có trong tài sản WMS)', 'ok');
+      }); };
     qtcQuetMo();
     /* đóng bộ quét không quét gì ⇒ trả lại tiêu đề cũ */
     var m = $('qtcqrmodal'); if (m && td) { var canh = setInterval(function () { if (!QTC.dich) { tra(); clearInterval(canh); } }, 500); setTimeout(function () { clearInterval(canh); }, 600000); }
@@ -474,17 +505,22 @@
   var NDS_CHO = null;
   function ndsMo() {
     var v = $('viewNds'), cho = $('ccNdsCho'); if (!v || !cho) return;
-    NDS_CHO = { cha: v.parentNode, sau: v.nextSibling, an: v.hidden };
-    cho.appendChild(v); v.hidden = false;
+    if (!NDS_CHO) { NDS_CHO = { cha: v.parentNode, sau: v.nextSibling, an: v.hidden }; cho.appendChild(v); }   // mở lần 2 khi đang mở: không ghi đè chỗ cũ
+    v.hidden = false;
     if (typeof NDS !== 'undefined' && !NDS.loadedOnce && typeof ndsLoad === 'function') { NDS.loadedOnce = true; ndsLoad(); }
-    window.ccdcNhanSku = function (sku, r) {
-      r = r || traSku(sku) || { sku: sku, pn: '' };
-      ganSku(r, 'Nhận diện SKU', String(sku)); ndsDong(); veForm(); bao('Đã chọn SKU ' + sku, 'ok'); return true;
-    };
     plgMoModal('ccNdsModal');
   }
+  /* 11/11 user: chọn SKU gợi ý trong pop-up ⇒ hiện ở mục 1 dưới hàng «Gõ SKU / mã tài sản…». Móc CỐ ĐỊNH (không gán/gỡ
+     theo lượt mở) — chỉ nhận khi pop-up đang chứa #viewNds; ở tab Nhận diện SKU thường thì trả false (copy mã như cũ). */
+  window.ccdcNhanSku = function (sku, r) {
+    if (!NDS_CHO) return false;
+    var dm = traSku(sku); r = dm || r || { sku: sku, pn: '' };
+    if (!r.pn && dm && dm.pn) r = Object.assign({}, r, { pn: dm.pn });
+    ganSku(r, 'Nhận diện SKU', String(sku)); ndsDong(); veForm(); bao('Đã chọn SKU ' + sku + (r.pn ? ' · ' + r.pn : ''), 'ok');
+    var k = document.querySelector('#viewCcdc .cc-kq'); if (k && k.scrollIntoView) k.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    return true;
+  };
   function ndsDong() {
-    window.ccdcNhanSku = null;
     var v = $('viewNds');
     if (v && NDS_CHO) { NDS_CHO.cha.insertBefore(v, NDS_CHO.sau); v.hidden = (typeof TOPTAB === 'undefined' || TOPTAB !== 'sku'); NDS_CHO = null; }
     if (typeof ndsRoiTab === 'function' && (typeof TOPTAB === 'undefined' || TOPTAB !== 'sku')) ndsRoiTab();
@@ -572,14 +608,19 @@
     var f = CC.f, gc = $('ccGhiChu'); if (gc) f.ghiChu = gc.value;
     if (!f.tep.length) { f.loi = 'Cần ít nhất 1 ảnh hoặc clip.'; veForm(); return; }
     if (!String(f.ghiChu).trim()) { f.loi = 'Cần ghi chú hiện trạng.'; veForm(); var g = $('ccGhiChu'); if (g) g.focus(); return; }
+    if (!f.phanLoai) { f.loi = 'Cần chọn phân loại.'; veForm(); return; }   // 11/11 user: Phân loại bắt buộc
+    var inLuon = !f.sua && !!f.sku;                                          // 11/11 user: nút «In, gửi» = gửi + in 1 tem
     var cu = f.sua ? timMa(f.ma) : null, now = Date.now();
     var it = { ma: f.ma || maMoi(), luc: cu ? cu.luc : now, capNhat: now, nguoi: cu ? cu.nguoi : n.ten, tk: cu ? cu.tk : n.id,
       sku: f.sku, maGo: f.maGo, cach: f.sku || f.maGo ? (f.cach || 'Gõ tay') : '', ten: f.ten, loai: f.loai, dv: f.dv, phanLoai: f.phanLoai,
       ghiChu: String(f.ghiChu).trim(), tep: f.tep, vung: vungCua(f.tep), viTri: f.viTri || '', qrTs: f.qrTs || '', sn: f.sn || '', soTem: cu ? cu.soTem : 0, lichSu: cu ? cu.lichSu : '', _cho: true, _dang: false, _loi: '', _vua: true };
     CC.ds = CC.ds.filter(function (x) { x._vua = false; return x.ma !== it.ma; }); CC.ds.unshift(it);
-    bao((f.sua ? 'Đã lưu · ' : 'Đã gửi · ') + (it.sku || it.maGo || it.ma), 'ok');
+    bao((f.sua ? 'Đã lưu · ' : (inLuon ? 'Đã gửi + in 1 tem · ' : 'Đã gửi · ')) + (it.sku || it.maGo || it.ma), 'ok');
     formMoi(); veForm(); veDs(); luuDs();
     dayLen(it);
+    if (inLuon) napQr().then(function () { return qrHex(LINK_CT + it.ma); }, function () { return ''; }).then(function (qr) {
+      return goiGas({ action: 'ccdc_in', sku: it.sku, ten: it.ten, sl: '', dv: it.dv, ngay: PR_TEM.ngayTem(new Date()), soTem: 1, ma: it.ma, tt: it.phanLoai, qr: qr }, 45000);
+    }).catch(function (e) { bao('Chưa gửi được lệnh in ' + it.sku + ': ' + e.message + ' — bấm In ở dòng Đã ghi nhận', 'err'); });
   }
   async function dayLen(it) {
     if (it._dang) return; it._dang = true; it._loi = ''; veDs(); choCat(it);
