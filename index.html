@@ -2009,7 +2009,7 @@ html.ad body :is(.ndsib,.fcg,.pg-seg,.nds-raw){border-radius:6px!important}
 html.ad body :is(.kkstchip,.pg-chip){border-radius:4px!important}
 html.ad body #ndsStage{border-radius:8px!important}
 html.ad body :is(.kkstchip,.kkdhead,.ndsib,.fcg,.pg-chip,.cd-dv.tinh,.cd-th,#tmvBtnIn,.cd-f .g,.cd-f b),
-html.ad body :is(#viewNds,#viewCd,#viewTem,#viewBtt,#viewRfid) :is(label,b){font-weight:600!important}
+html.ad body :is(#viewNds,#viewCd,#viewTem,#viewBtt,#viewRfid,#viewCcdc) :is(label,b){font-weight:600!important}
 html.ad body .combo-menu{border-radius:8px!important}
 /* Trạng thái lưu trữ: 5 thẻ gradient → Statistic antd (cùng ô số Bất thường / Retail): nhãn xám trên, số màu chữ, chấm màu loại */
 html.ad body .cards{gap:12px}
@@ -2945,7 +2945,7 @@ body.side-anim:has(.wrap :is([class*="modal"],[id$="modal"],[id$="Modal"],#light
 /* ===== TAB "TEM VỊ TRÍ" (07/09/2026) — nạp UID group từ Google Sheet của người dùng → tem 40×60 khuôn
    UIDgr có thêm mã vị trí + số yard. Tái dùng lưới/ô nhập của tab Chuyển đổi cân (.cd-grid/.cd-f/.cd-in),
    thẻ KPI .abntile, nút .kktab, khuôn thẻ điện thoại table.mbcard — không control riêng. ===== */
-#viewTem [hidden],#viewRfid [hidden]{display:none !important}   /* .abntiles{display:grid} và mọi display trần trong khung này không được đè thuộc tính hidden (bẫy đã ghi ở #kkFilters) */
+#viewTem [hidden],#viewRfid [hidden],#viewCcdc [hidden]{display:none !important}   /* .abntiles{display:grid} và mọi display trần trong khung này không được đè thuộc tính hidden (bẫy đã ghi ở #kkFilters) */
 #viewTem .cd-grid{grid-template-columns:minmax(0,7fr) minmax(0,5fr)}   /* bảng bên trái cần rộng hơn khung xem trước */
 @media(max-width:900px){#viewTem .cd-grid{grid-template-columns:minmax(0,1fr)}}
 .tmv-src{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -3522,6 +3522,7 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
   <button class="toptab" id="ttTem" onclick="showTab('tem')">Tem vị trí</button>
   <button class="toptab" id="ttBtt" onclick="showTab('btt')">Bảng thông tin</button>
   <button class="toptab" id="ttRfid" onclick="showTab('rfid')">Dò RFID</button>
+  <button class="toptab" id="ttCcdc" onclick="showTab('ccdc')">Hiện trạng CCDC/TSCĐ</button>
 </div>
 
 <!-- ===== TRANG TỔNG QUAN: bảng chọn hạng mục (màn hình đầu tiên) =====
@@ -4026,6 +4027,9 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
 </div>
 <!-- ===== TAB "DÒ RFID" (Công cụ kho · 03/11/2026) — lọc cây THIẾU / CHÊNH LỆCH sau kiểm kê theo Request · Ngày kiểm · Người kiểm,
      tải .csv mã tag để nạp Multi-Tag Locate (app 123RFID, súng Zebra RFD40). Ruột ở do-rfid.js (nạp lười). Nguồn tab kiemke-uidgr. -->
+<!-- ===== TAB "HIỆN TRẠNG CCDC/TSCĐ" (Công cụ kho · 11/11/2026) — ghi nhận hiện trạng công cụ dụng cụ / tài sản cố định bằng ảnh/clip + ghi chú,
+     khoanh vùng hư, phân loại Tái sử dụng · Sửa chữa · Thanh lý; gửi tức thì. Ruột ở hien-trang-ccdc.js (nạp lười). Sheet chỉ xem 1sXd8im… -->
+<div id="viewCcdc" hidden><div class="state" style="padding:32px 20px">Đang mở công cụ…</div></div>
 <div id="viewRfid" hidden>
   <div class="cd-grid">
     <section class="panel">
@@ -5563,7 +5567,7 @@ function fmtTime(ms){  // HH:mm:ss DD/MM/YYYY — NEO GIỜ VN (+07) như mọi 
    hỏng; bình thường không có lỗi thì dòng này đọc đúng một câu như user yêu cầu. */
 function capNhatThongTin(){
   /* 3 tab "Công cụ kho" đã ẩn hẳn dòng chân -> thoát ngay, không tính rồi ghi vào chỗ không ai thấy */
-  if(TOPTAB==='sku'||TOPTAB==='cd'||TOPTAB==='tem'||TOPTAB==='btt'||TOPTAB==='rfid') return;
+  if(TOPTAB==='sku'||TOPTAB==='cd'||TOPTAB==='tem'||TOPTAB==='btt'||TOPTAB==='rfid'||TOPTAB==='ccdc') return;
   var moc=LAST_SYNC_MS;   // mặc định: Metadata (mốc tồn-vị-trí)
   if(TOPTAB==='kk' && TAB_SYNC.kk) moc=TAB_SYNC.kk;
   else if(TOPTAB==='abn' && TAB_SYNC.abn) moc=TAB_SYNC.abn;
@@ -5801,7 +5805,13 @@ var HOME_MUC=[
        Đọc tab kiemke-uidgr sẵn có, không chạm WMS. */
     { t:'rfid', ten:'Dò RFID', cc:'var(--accent)', nhan:'Công cụ',
       mo:'Lọc cây thiếu hoặc chênh lệch sau kiểm kê theo request, ngày kiểm, người kiểm — tải tệp mã tag để súng RFID dò nhiều cây một lượt.',
-      muc:['Request code','Ngày kiểm','Người kiểm','Tải .csv'] }
+      muc:['Request code','Ngày kiểm','Người kiểm','Tải .csv'] },
+    /* HIỆN TRẠNG CCDC/TSCĐ (11/11/2026, user duyệt mẫu PDF): ảnh/clip + ghi chú, khoanh vùng hư, phân loại thanh lý/tái sử dụng;
+       gửi tức thì, người gửi = tài khoản đăng nhập; Sheet chỉ xem. Ruột hien-trang-ccdc.js. */
+    { t:'ccdc', ten:'Hiện trạng CCDC/TSCĐ', cc:'var(--brand2,var(--accent))', nhan:'Công cụ',
+      mo:'Chụp ảnh/clip công cụ dụng cụ, tài sản cố định + ghi chú, khoanh chỗ hư — phân loại tái sử dụng, sửa chữa hay thanh lý.',
+      muc:['Ảnh / clip','Khoanh vùng hư','Phân loại','In tem'],
+      so:function(){ var n=window.ccdcSo&&ccdcSo(); return n?{k:nf(n),l:'đã ghi nhận'}:null; } }
   ]}
 ];
 function homeMucList(it){ return typeof it.muc==='function'?it.muc():(it.muc||[]); }
@@ -5921,7 +5931,7 @@ function tipDoSlot(){
   });
 }
 function showTab(t){
-  var MAP={home:'viewHome',stock:'viewStock',kk:'viewKK',abn:'viewAbn',plg:'viewPlg',sku:'viewNds',cd:'viewCd',tem:'viewTem',btt:'viewBtt',rfid:'viewRfid'};
+  var MAP={home:'viewHome',stock:'viewStock',kk:'viewKK',abn:'viewAbn',plg:'viewPlg',sku:'viewNds',cd:'viewCd',tem:'viewTem',btt:'viewBtt',rfid:'viewRfid',ccdc:'viewCcdc'};
   if(!MAP[t]) t='home';
   var _denAbn=(t==='abn'); if(_denAbn) t='kk';   // 15/10 «Tồn kho chính xác» = Kiểm kê (trên) + Bất thường (dưới) cùng 1 trang
   TOPTAB=t;
@@ -5941,8 +5951,10 @@ function showTab(t){
   document.getElementById('ttTem').classList.toggle('active',t==='tem');
   document.getElementById('ttBtt').classList.toggle('active',t==='btt');
   document.getElementById('ttRfid').classList.toggle('active',t==='rfid');
+  document.getElementById('ttCcdc').classList.toggle('active',t==='ccdc');
   /* 4 tab "Công cụ kho" không có thanh chân trang (xem body.an-chan trong CSS) */
-  document.body.classList.toggle('an-chan', t==='sku'||t==='cd'||t==='tem'||t==='btt'||t==='rfid');
+  document.body.classList.toggle('an-chan', t==='sku'||t==='cd'||t==='tem'||t==='btt'||t==='rfid'||t==='ccdc');
+  if(t!=='ccdc' && typeof ccdcRoiTab==='function') ccdcRoiTab();
   if(t!=='sku' && typeof ndsRoiTab === 'function') ndsRoiTab();   // rời tab thì tắt camera (đèn camera sáng vô cớ + hao pin)
   if(t!=='kk'&&QTC.quetStream) qtcQuetDong();   // camera quét mã của mục Tra SL đếm cũng vậy
   if(t==='kk' && !KK.loadedOnce){ KK.loadedOnce=true; kkLoad(); }    // lazy-load lần đầu mở tab
@@ -5950,7 +5962,8 @@ function showTab(t){
   if(t==='plg' && !PLG.loadedOnce){ PLG.loadedOnce=true; plgLoad(); }
   if(t==='cd' && !CD.loadedOnce){ CD.loadedOnce=true; cdLoad(); }       // tính tay; chip Tex dùng cache danh mục, cùng lắm 1 lượt gviz
   if(t==='tem' && !TMV.loadedOnce){ TMV.loadedOnce=true; tmvLoad(); }   // đọc Sheet của người dùng đã nhớ (1 lượt gviz), không chạm WMS
-  if(t==='rfid') rfidNap();   // nạp lười do-rfid.js lần đầu; dữ liệu = tab kiemke-uidgr (cache phiên chung với Kiểm kê)
+  if(t==='rfid') rfidNap();
+  if(t==='ccdc') ccdcNap();   // nạp lười hien-trang-ccdc.js lần đầu   // nạp lười do-rfid.js lần đầu; dữ liệu = tab kiemke-uidgr (cache phiên chung với Kiểm kê)
   if(t==='btt') bttNap();   // nạp lười 2 tệp mô-đun lần đầu; các lần sau vẽ lại (đo chữ cần khung đang hiện)
   if(t==='sku' && !NDS.loadedOnce){ NDS.loadedOnce=true; ndsLoad(); }   // lazy: 1MB danh mục chỉ tải khi cần
   /* Về Tổng quan thì vẽ lại: số trên thẻ phải khớp thứ vừa xem xong (mở tab Kiểm kê rồi quay ra
@@ -5964,6 +5977,15 @@ function showTab(t){
 }
 /* Tab Bảng thông tin: mô-đun ở 2 tệp riêng (bang-thong-tin-hinh.js = nét vẽ tách từ PDF gốc ~27 KB, bang-thong-tin.js = mẫu + vẽ + in),
    chỉ tải khi mở tab lần đầu — trang chính không nặng thêm. Lỗi mạng: báo trên màn + cho bấm lại (luật offline mục 3). */
+/* Tab Hiện trạng CCDC/TSCĐ: mô-đun hien-trang-ccdc.js chỉ tải khi mở tab lần đầu (khuôn rfidNap). */
+var CCDC_NAP={dang:null,xong:false};
+function ccdcNap(){
+  if(CCDC_NAP.xong){ ccdcMo(); return; }
+  if(CCDC_NAP.dang) return;
+  CCDC_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='hien-trang-ccdc.js?v=20261111a'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
+    .then(function(){ CCDC_NAP.xong=true; if(TOPTAB==='ccdc') ccdcMo(); })
+    .catch(function(){ CCDC_NAP.dang=null; var v=document.getElementById('viewCcdc'); if(v) v.innerHTML='<div class="state" style="padding:32px 20px">Không tải được công cụ (mất mạng?). <button type="button" class="kktab" onclick="ccdcNap()">Thử lại</button></div>'; });
+}
 /* Tab Dò RFID: mô-đun do-rfid.js chỉ tải khi mở tab lần đầu. */
 var RFID_NAP={dang:null,xong:false};
 function rfidNap(){
@@ -7793,6 +7815,7 @@ function qtcQuetMo(){
         raw = String(raw || '').trim();
         if(!raw || !QTC.quetStream) return;
         var ma = qtcTachMa(raw);   // QR có thể kèm chữ/URL — bóc mã cùng luật với súng quét (ưu tiên cụm 9 số)
+        if(QTC.dich){ var dich=QTC.dich; qtcQuetDong(); dich(ma); return; }   // 11/11 nơi khác mượn bộ quét (Hiện trạng CCDC) — trả mã về đó
         document.getElementById('qtcSku').value = ma;
         qtcQuetDong();
         toast('Đã quét được mã ' + ma + ' — đang tra…', 'ok');
@@ -7961,6 +7984,7 @@ function qtcDocCode128(pixels){
 }
 
 function qtcQuetDong(){
+  QTC.dich=null;
   if(QTC.quetTimer){ clearInterval(QTC.quetTimer); QTC.quetTimer=null; }
   if(QTC.quetStream){ try{ QTC.quetStream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){} QTC.quetStream=null; }
   var v=document.getElementById('qtcVideo'); if(v) v.srcObject=null;
@@ -14668,16 +14692,7 @@ function ndsVeKetQua(ms, themInactive){
          · ĐỌC RA rồi mà DANH MỤC KHÔNG CÓ -> lỗi ở khâu ĐỒNG BỘ, không phải ở khâu đọc. Thẻ mẫu mới
            tạo sau lượt sync gần nhất là đúng ca này, và nói "chưa khớp mã" thì thủ kho đi soi lại
            tấm tem (vô ích) thay vì biết rằng danh mục đang thiếu. */
-    var maLa = ndsMaLa();
-    if (maLa.length){
-      canh='<div class="pcdnote" style="margin-bottom:10px;background:color-mix(in srgb,var(--bad) 13%,var(--surface));color:var(--ink2)">'+
-        '<b>Danh mục chưa có mã '+esc(maLa.slice(0,2).join(' · ').toUpperCase())+'.</b> Tem đọc ra mã này rồi, '+
-        'nhưng tab <code>SKU_MASTER</code> không có nó — thường là hàng/mẫu <b>mới tạo sau lượt đồng bộ '+
-        'gần nhất</b>. Mấy gợi ý dưới đây <b>KHÔNG mang mã đó</b> (chỉ cùng dạng tên), đừng chọn vội.'+
-        ndsMoiChonMa()+
-        ' <button type="button" class="kktab nds-alt" onclick="ndsTaiDanhMuc(true)">Tải lại danh mục</button>'+
-        ' <button type="button" class="kktab nds-alt" onclick="ndsTroMa()">Nhập mã</button></div>';
-    }
+    /* Banner "Danh mục chưa có mã X … đừng chọn vội" + nút Tải lại danh mục / Nhập mã ĐÃ BỎ (user 11/11/2026 — "xoá dòng này"). */
     /* Banner "Chưa khớp được MÃ HÀNG nào" ĐÃ BỎ HẲN (user 22/08/2026 — "bỏ dòng này"): 4 dòng chữ
        chắn trên Top 3 để dạy một việc mà badge loại-khớp trên từng thẻ đã nói. Banner "danh mục
        chưa có mã X" ở nhánh trên thì GIỮ — nó báo một sự cố thật (danh mục thiếu), không phải dạy. */
@@ -14766,6 +14781,7 @@ function ndsChonSku(sku){
   }
   if (!r && NDS.ds) for (var k=0;k<NDS.ds.length;k++) if (String(NDS.ds[k].sku)===String(sku)) r=NDS.ds[k];
   if (!r){ toast('Không thấy SKU '+sku+' trong danh mục.','err'); return; }
+  if (window.ccdcNhanSku && window.ccdcNhanSku(String(r.sku), r)) return;   // 11/11 pop-up Nhận diện SKU của Hiện trạng CCDC: chọn = điền ô SKU
   var dv=r.donVi||r.dv||'';
   ndsCopyIm(String(r.sku));
   toast('Đã copy mã SKU '+r.sku+(dv?(' (ĐVT '+dv+')'):'')+'.','ok');

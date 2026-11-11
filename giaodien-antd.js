@@ -483,6 +483,9 @@
      fill="none" trên từng nét thắng fill:currentColor của khung svg, nét theo màu chữ ⇒ đúng màu thường / đang chọn / nền tối */
   var ICON_NET = { rfidGhim: '<path d="M12 22s-5-4.4-5-8.3a5 5 0 0 1 10 0c0 3.9-5 8.3-5 8.3z"/><circle cx="12" cy="13.7" r="1.5"/><path d="M8.6 6.4a5 5 0 0 1 6.8 0M6 3.6a8.6 8.6 0 0 1 12 0"/>' };
   ICON_TAB.rfid = "rfidGhim";
+  /* 11/11 Factory › Hiện trạng CCDC/TSCĐ — bảng kẹp + dấu tích (nét viền, cùng kiểu Dò RFID; mẫu PDF user duyệt) */
+  ICON_NET.ccdcKep = '<path d="M9 3.5h6v2.5H9z"/><path d="M7 4.7H5.5v16h13v-16H17"/><path d="M8.6 13.2l2.3 2.3 4.6-4.6"/>';
+  ICON_TAB.ccdc = "ccdcKep";
   function svgIcon(ten) { if (ICON_NET[ten]) return '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + ICON_NET[ten] + "</g></svg>";
     var d = ICON[ten]; return d ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + d + '"/></svg>' : ""; }
   function ganIcon() {
