@@ -186,6 +186,21 @@
     '#ccTsModal .ts-ds button{display:block;text-align:left;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:10px 12px;cursor:pointer;color:var(--ink);font:inherit}',
     '#ccTsModal .ts-ds button:hover{border-color:#1677ff}',
     '#ccTsModal .ts-ds b{font-weight:600} #ccTsModal .ts-ds small{display:block;font-size:12.5px;color:var(--ink3);margin-top:2px}',
+    '#viewCcdc button.cc-to{font:inherit;font-weight:600;font-size:14.5px;width:100%}',
+    /* pop-up camera trong trang (11/11 tối: ô tệp accept ảnh+clip có capture bị Android mở thư viện) */
+    '#ccCamModal .modalbox{width:min(560px,96vw)}',
+    '#ccCamModal .cc-than{padding:0;background:#000;display:flex;flex-direction:column;overflow:hidden}',
+    '#ccCamV{width:100%;aspect-ratio:3/4;max-height:64vh;object-fit:cover;background:#000;display:block}',
+    '#ccCamModal .cam-dk{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;padding:14px 16px;background:#000;color:#e2e8f0}',
+    '#ccCamModal .cam-che{display:flex;gap:6px} #ccCamModal .cam-che button{border:1px solid #475569;background:none;color:#cbd5e1;border-radius:6px;padding:5px 12px;font-size:13px;cursor:pointer}',
+    '#ccCamModal .cam-che button.on{background:#fff;color:#111;border-color:#fff;font-weight:600}',
+    '#ccCamModal .cam-chup{width:66px;height:66px;border-radius:50%;border:4px solid #fff;background:none;padding:5px;cursor:pointer;display:grid;place-items:center}',
+    '#ccCamModal .cam-chup i{display:block;width:100%;height:100%;border-radius:50%;background:#fff;transition:all .15s}',
+    '#ccCamModal.clip .cam-chup i{background:#ef4444} #ccCamModal.dang .cam-chup i{width:26px;height:26px;border-radius:4px}',
+    '#ccCamModal .cam-phai{display:flex;flex-direction:column;align-items:flex-end;gap:6px;font-size:12.5px;color:#cbd5e1}',
+    '#ccCamModal .cam-phai .cc-nut{height:32px;padding:0 14px;font-size:13px}',
+    '#ccCamModal .cam-gio{color:#fca5a5;font-variant-numeric:tabular-nums}',
+    '@media(max-width:640px){#ccCamV{flex:1;min-height:0;max-height:none;aspect-ratio:auto}}',
     '#ccInModal .tt{height:38px;display:flex;align-items:center;border:1px solid var(--line);border-radius:8px;padding:0 10px;font-size:14px;font-weight:600}'
   ].join('\n');
   var st = document.createElement('style'); st.id = 'ccdcCss'; st.textContent = css; document.head.appendChild(st);
@@ -283,6 +298,16 @@
       document.body.appendChild(m); return m; };
     var mN = pop('ccNdsModal', 'Nhận diện SKU', '<div id="ccNdsCho"></div>');
     mN.addEventListener('click', function (ev) { if (ev.target === mN || ev.target.closest('.mclose')) ndsDong(); });
+    var mC = pop('ccCamModal', 'Chụp / quay', '<video id="ccCamV" autoplay playsinline muted></video>' +
+      '<div class="cam-dk"><div class="cam-che"><button type="button" data-cam="anh" class="on">Ảnh</button><button type="button" data-cam="clip">Clip</button></div>' +
+      '<button type="button" class="cam-chup" aria-label="Chụp"><i></i></button>' +
+      '<div class="cam-phai"><span id="ccCamSo"></span><button type="button" class="cc-nut xanh" data-cam="xong">Xong</button></div></div>');
+    mC.addEventListener('click', function (ev) {
+      if (ev.target === mC || ev.target.closest('.mclose') || ev.target.closest('[data-cam="xong"]')) { camDong(); return; }
+      var b = ev.target.closest('button'); if (!b) return;
+      if (b.classList.contains('cam-chup')) { camChup(); return; }
+      if (b.dataset.cam === 'anh' || b.dataset.cam === 'clip') { if (CAM.rec) return; CAM.che = b.dataset.cam; camVeChe(); }
+    });
     var mT = pop('ccTsModal', 'Chọn SKU của tài sản', '<div id="ccTsThan"></div>');
     mT.addEventListener('click', function (ev) {
       if (ev.target === mT || ev.target.closest('.mclose')) { plgDongModal('ccTsModal'); return; }
@@ -327,7 +352,8 @@
       '<button type="button" class="cc-nut" data-lam="quet">' + IC.quet + 'Quét mã / QR</button>' +
       '<button type="button" class="cc-nut vien" data-lam="nds">' + IC.ai + 'Nhận diện SKU</button></div>' + kq + tsDong +
       '<div class="cc-h3">2 · Ảnh / clip hiện trạng <i>*</i></div>' +
-      '<div class="cc-hai"><label class="cc-to">Chụp / quay<small>mở camera</small><input type="file" accept="image/*,video/*" capture="environment" data-tep="cam"></label>' +
+      '<div class="cc-hai"><button type="button" class="cc-to" data-lam="cam">Chụp / quay<small>mở camera</small></button>' +
+      '<input type="file" hidden id="ccCamTep" accept="image/*" capture="environment" data-tep="cam">' +
       '<label class="cc-to nhat" id="ccKeo">Chọn từ máy<small>hoặc kéo thả</small><input type="file" accept="image/*,video/*" multiple data-tep="tv"></label></div>' +
       (anh ? '<div class="cc-anhs">' + anh + '</div>' : '') +
       '<div class="cc-h3">3 · Ghi chú <i>*</i></div>' +
@@ -376,6 +402,7 @@
       var lam = b.dataset.lam;
       if (lam === 'boSku') { ganSku(null, '', ''); CC.f.cach = ''; veForm(); }
       else if (lam === 'boVt') { CC.f.viTri = ''; veForm(); }
+      else if (lam === 'cam') camMo();
       else if (lam === 'boTs') { CC.f.qrTs = ''; veForm(); }
       else if (lam === 'boSn') { CC.f.sn = ''; veForm(); }
       else if (lam === 'quet') moQuet();
@@ -398,6 +425,55 @@
       CC.f.tep.push({ loai: vid ? 'video' : 'image', blob: blob, url: URL.createObjectURL(blob), ten: f.name, hinh: [] });
     }
     CC.f.loi = ''; veForm();
+  }
+
+  /* ---------------- 4b. Pop-up camera trong trang ----------------
+     11/11 tối user: «Chụp / quay» mở THƯ VIỆN chứ không mở camera — ô tệp accept="image/*,video/*" + capture
+     thì nhiều máy Android hiện bảng chọn / thư viện. Nay mở camera bằng getUserMedia trong pop-up: chế độ Ảnh
+     (chụp nhiều tấm liền) · Clip (MediaRecorder, tự dừng 60 s). Ảnh/clip đi thẳng vào themTep như chọn tệp.
+     Không mở được camera (trình duyệt cũ / từ chối quyền) ⇒ dự phòng ô tệp accept MỘT loại + capture. */
+  var CAM = { st: null, rec: null, che: 'anh', so: 0, t0: 0, dem: 0, manh: [] };
+  function camVeChe() { var m = $('ccCamModal'); if (!m) return; m.classList.toggle('clip', CAM.che === 'clip'); m.classList.toggle('dang', !!CAM.rec);
+    m.querySelectorAll('[data-cam="anh"],[data-cam="clip"]').forEach(function (b) { b.classList.toggle('on', b.dataset.cam === CAM.che); });
+    var so = $('ccCamSo'); if (so) so.innerHTML = CAM.rec ? '<span class="cam-gio" id="ccCamGio">● 0:00</span>' : (CAM.so ? 'Đã chụp ' + CAM.so : ''); }
+  function camDuPhong() { var i = $('ccCamTep'); if (!i) return; i.accept = CAM.che === 'clip' ? 'video/*' : 'image/*'; i.click(); }
+  async function camMo() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.isSecureContext) { camDuPhong(); return; }
+    CAM.so = 0; camVeChe(); plgMoModal('ccCamModal');
+    try {
+      CAM.st = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1440 } }, audio: false });
+      if (getComputedStyle($('ccCamModal')).display === 'none') { camTat(); return; }   // đóng trước khi camera kịp mở
+      var v = $('ccCamV'); v.srcObject = CAM.st; try { await v.play(); } catch (e) { }
+    } catch (e) { camTat(); plgDongModal('ccCamModal'); bao('Không mở được camera trong trang — dùng camera của máy', 'warn'); camDuPhong(); }
+  }
+  function camTat() { if (CAM.st) CAM.st.getTracks().forEach(function (t) { t.stop(); }); CAM.st = null; var v = $('ccCamV'); if (v) v.srcObject = null; }
+  function camDong() { if (CAM.rec) { CAM.dongSau = true; CAM.rec.stop(); return; } camTat(); plgDongModal('ccCamModal'); }
+  function camChup() {
+    var v = $('ccCamV'); if (!CAM.st || !v || !v.videoWidth) return;
+    if (CAM.che === 'anh') {
+      var c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v, 0, 0);
+      c.toBlob(function (b) { if (!b) return; themTep([new File([b], 'chup-' + Date.now() + '.jpg', { type: 'image/jpeg' })]); CAM.so++; camVeChe(); }, 'image/jpeg', 0.9);
+      v.style.opacity = '.3'; setTimeout(function () { v.style.opacity = ''; }, 120); return;
+    }
+    if (CAM.rec) { CAM.rec.stop(); return; }
+    if (typeof MediaRecorder === 'undefined') { bao('Máy không hỗ trợ quay trong trang — dùng camera của máy', 'warn'); camDong(); camDuPhong(); return; }
+    var kieu = ['video/mp4', 'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'].filter(function (k) { return MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(k); })[0] || '';
+    var bat = function (st) {
+      CAM.manh = []; CAM.rec = new MediaRecorder(st, kieu ? { mimeType: kieu, videoBitsPerSecond: 2500000 } : { videoBitsPerSecond: 2500000 });
+      CAM.rec.ondataavailable = function (e) { if (e.data && e.data.size) CAM.manh.push(e.data); };
+      CAM.rec.onstop = function () {
+        clearInterval(CAM.dem); var t = (CAM.rec && CAM.rec.mimeType) || kieu || 'video/webm'; CAM.rec = null;
+        if (CAM.amThanh) { CAM.amThanh.getTracks().forEach(function (x) { x.stop(); }); CAM.amThanh = null; }
+        var b = new Blob(CAM.manh, { type: t.split(';')[0] }); CAM.manh = [];
+        if (b.size) { themTep([new File([b], 'clip-' + Date.now() + (/mp4/.test(t) ? '.mp4' : '.webm'), { type: b.type })]); CAM.so++; }
+        camVeChe(); if (CAM.dongSau) { CAM.dongSau = false; camDong(); }
+      };
+      CAM.rec.start(1000); CAM.t0 = Date.now(); camVeChe();
+      CAM.dem = setInterval(function () { var g = Math.floor((Date.now() - CAM.t0) / 1000), el = $('ccCamGio'); if (el) el.textContent = '● ' + Math.floor(g / 60) + ':' + String(g % 60).padStart(2, '0'); if (g >= 60 && CAM.rec) CAM.rec.stop(); }, 500);
+    };
+    /* tiếng: xin mic lúc bấm quay (không xin ngay khi mở — chụp ảnh không cần); từ chối thì quay không tiếng */
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function (a) { CAM.amThanh = a; bat(new MediaStream(CAM.st.getVideoTracks().concat(a.getAudioTracks()))); })
+      .catch(function () { bat(CAM.st); });
   }
 
   /* ---------------- 5. Quét mã + Nhận diện SKU (dùng lại bộ sẵn có) ---------------- */

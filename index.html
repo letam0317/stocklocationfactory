@@ -5982,7 +5982,7 @@ var CCDC_NAP={dang:null,xong:false};
 function ccdcNap(){
   if(CCDC_NAP.xong){ ccdcMo(); return; }
   if(CCDC_NAP.dang) return;
-  CCDC_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='hien-trang-ccdc.js?v=20261111d'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
+  CCDC_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='hien-trang-ccdc.js?v=20261111e'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
     .then(function(){ CCDC_NAP.xong=true; if(TOPTAB==='ccdc') ccdcMo(); })
     .catch(function(){ CCDC_NAP.dang=null; var v=document.getElementById('viewCcdc'); if(v) v.innerHTML='<div class="state" style="padding:32px 20px">Không tải được công cụ (mất mạng?). <button type="button" class="kktab" onclick="ccdcNap()">Thử lại</button></div>'; });
 }
@@ -15049,15 +15049,18 @@ var PR_TEM = (function(){
         '<text x="' + giua + '" y="' + (yV + caoV - 2) + '" font-size="' + coSo + '" font-weight="bold" text-anchor="middle">' + escXml(sku) + '</text>';
     }
     /* ③ đáy tem: QR phải, chữ trái */
-    var q = qrBit(d.qr), o3 = 2 /* 11/11 user: QR 0,7× (3→2 điểm/ô, giữ ô nguyên điểm cho nét) tránh mất góc */, qs = q ? q.n * o3 : 0, dayY = H - le + Math.round(1.5 * dotMm);
+    /* 11/11 tối user: QR TRỞ LẠI cỡ trước khi thu (3 điểm/ô) nhưng DỜI SANG TRÁI 0,5 cm (dlQr) — mép phải tem hay bị lệch/cắt */
+    var q = qrBit(d.qr), o3 = 3, qs = q ? q.n * o3 : 0, dayY = H - le + Math.round(1.5 * dotMm), dlQr = Math.round(5 * dotMm);
     var yQ = dayY - Math.max(qs, Math.round(11 * dotMm)), yKe = yQ - 10;
     if (q){
       var g = '';
       for (var r = 0; r < q.n; r++) for (var c = 0; c < q.n; c++) if (q.b[r * q.n + c] === '1') g += '<rect x="' + (c * o3) + '" y="' + (r * o3) + '" width="' + o3 + '" height="' + o3 + '"/>';
-      o += '<g transform="translate(' + (R - qs) + ',' + yQ + ')" fill="#000">' + g + '</g>';
+      o += '<g transform="translate(' + (R - qs - dlQr) + ',' + yQ + ')" fill="#000">' + g + '</g>';
     }
     o += '<line x1="' + x + '" y1="' + yKe + '" x2="' + R + '" y2="' + yKe + '" stroke="#000" stroke-width="1.5"/>';
-    var dongDay = (q ? ['<tspan font-weight="bold" font-size="22">Xem chi tiết</tspan>'] : []).concat([escXml(String(d.ngay || '')), escXml(cat(d.nguoi || '', 14))]);
+    /* chữ đáy không được chạm QR đã dời trái: tên người in cắt theo chỗ trống thật (≈ 0,55 em/ký tự) */
+    var xQr = q ? R - qs - dlQr : R, ktToiDa = Math.max(6, Math.floor((xQr - 8 - x) / (21 * 0.55)));
+    var dongDay = (q ? ['<tspan font-weight="bold" font-size="20">Xem chi tiết</tspan>'] : []).concat([escXml(String(d.ngay || '')), escXml(cat(d.nguoi || '', Math.min(14, ktToiDa)))]);
     var yc = yQ + 24;
     dongDay.forEach(function(t, i){ if (t) o += '<text x="' + x + '" y="' + (yc + i * 30) + '" font-size="21">' + t + '</text>'; });
     /* ④ tên hàng: cỡ chữ tự vừa vùng giữa mã vạch và đường kẻ đáy */
