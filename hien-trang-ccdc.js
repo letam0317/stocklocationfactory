@@ -243,7 +243,12 @@
     '#ccDsKhoi .ds-mo small.loi{color:var(--bad,#cf1322)} #ccDsKhoi .ds-mo small.cho{color:#1677ff}',
     '#ccDsKhoi .ds-mo svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;transition:transform .15s;flex:none}',
     '#ccDsKhoi.mo .ds-mo svg{transform:rotate(90deg)} #ccDsKhoi .panel-head .gian{flex:1}',
-    '#ccDsKhoi .cc-sheet{margin-left:0}',
+    '#ccDsKhoi .cc-sheet{margin-left:0;white-space:nowrap;flex:none}',
+    /* 11/11 tối (ảnh user, điện thoại): «Đã ghi nhận» + «Mở Sheet ↗» bị bẻ 2 dòng ⇒ tiêu đề không co, không xuống dòng; hẹp quá thì số đếm co lại */
+    '#ccDsKhoi .ds-mo{flex:0 1 auto;white-space:nowrap;overflow:hidden;box-shadow:none!important;background:none!important} #ccDsKhoi .ds-mo small{flex:none}',
+    '@media(max-width:480px){#ccDsKhoi .cc-sheet .mo-chu{display:none} #ccDsKhoi .panel-head{gap:6px}}',
+    '@media(max-width:359px){#ccDsKhoi .cc-sheet{display:none}}',
+    '#ccDsKhoi .panel-head .btn-filter{flex:none}',
     '#ccDsKhoi.mo .cc-loc{margin-bottom:6px}',
     '#ccDsKhoi > .filters{display:block;padding:12px}',
     '#ccDsKhoi > .filters .lbl{display:block;font-size:12px;color:var(--ink3);margin-bottom:6px}',
@@ -348,7 +353,7 @@
          Bộ lọc = nút chữ chuẩn + ngăn kéo nổi (.panel > .filters) chỉ lọc NGƯỜI GHI NHẬN */
       '<section class="panel" id="ccDsKhoi"><div class="panel-head"><button type="button" class="ds-mo" data-lam="dsMo" aria-expanded="false">' + IC.mui + 'Đã ghi nhận <small id="ccDem"></small></button>' +
         '<span class="gian"></span><button type="button" class="btn-filter" id="ccBtnLoc" data-lam="loc">Bộ lọc</button>' +
-        '<a class="cc-sheet" href="https://docs.google.com/spreadsheets/d/1sXd8imGeXriBFrUoxQlyfjESdhxv9tUxjLDfsJ06_do/edit" target="_blank" rel="noopener">Mở Sheet ↗</a></div>' +
+        '<a class="cc-sheet" href="https://docs.google.com/spreadsheets/d/1sXd8imGeXriBFrUoxQlyfjESdhxv9tUxjLDfsJ06_do/edit" target="_blank" rel="noopener"><span class="mo-chu">Mở </span>Sheet ↗</a></div>' +
         '<div class="filters collapsed" id="ccLocBody"><span class="lbl">Người ghi nhận</span><input id="ccLocTim" type="text" autocomplete="off" placeholder="Tìm tên / mã NV"><div class="cc-locng" id="ccLocNg"></div></div>' +
         '<div class="cc-loc" id="ccLoc"></div><div id="ccDs" hidden></div></section>' +
       '</div>';
