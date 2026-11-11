@@ -684,6 +684,10 @@ body.an-chan .footbar{display:none}
 /* Pop-up camera quét mã (dùng chung vỏ .modal/.modalbox — thừa hưởng sheetIn + kính mờ + Escape) */
 .qtcqrbox{width:min(520px,94vw)}
 .qtcqrbody{padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px}
+.qtcnhaptay{display:flex;gap:8px;align-items:center}
+.qtcnhaptay input{flex:1;min-width:0;height:40px;border:1px solid var(--line);border-radius:8px;padding:0 12px;font:inherit;font-size:15px;background:var(--surface);color:var(--ink)}
+.qtcnhaptay input:focus{outline:none;border-color:var(--accent)}
+.qtcnhaptay button{height:40px;flex:none}
 .qtcvidwrap{position:relative}
 .qtcvidwrap video{width:100%;aspect-ratio:4/3;background:#000;border-radius:12px;object-fit:cover;display:block}
 .qtcaim{position:absolute;inset:14% 16%;border:2px solid rgba(255,255,255,.85);border-radius:12px;pointer-events:none}
@@ -4419,6 +4423,11 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
     <div class="qtcqrbody">
       <div class="qtcvidwrap"><video id="qtcVideo" autoplay playsinline muted></video><div class="qtcaim"></div></div>
       <div class="hint" id="qtcQrHint" style="white-space:normal"></div>
+      <!-- 11/11 user «pop-up quét mã không ăn → cho phép nhập tay»: gõ / dán mã rồi Enter = như quét được -->
+      <form class="qtcnhaptay" onsubmit="event.preventDefault();qtcNhapTayGo()">
+        <input id="qtcNhapTay" type="text" autocomplete="off" enterkeyhint="done" placeholder="Hoặc nhập mã tay (SKU / QR tài sản / S/N)…">
+        <button type="submit" class="kktab nds-go">Xong</button>
+      </form>
     </div>
   </div>
 </div>
@@ -5982,7 +5991,7 @@ var CCDC_NAP={dang:null,xong:false};
 function ccdcNap(){
   if(CCDC_NAP.xong){ ccdcMo(); return; }
   if(CCDC_NAP.dang) return;
-  CCDC_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='hien-trang-ccdc.js?v=20261111g'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
+  CCDC_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='hien-trang-ccdc.js?v=20261111h'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
     .then(function(){ CCDC_NAP.xong=true; if(TOPTAB==='ccdc') ccdcMo(); })
     .catch(function(){ CCDC_NAP.dang=null; var v=document.getElementById('viewCcdc'); if(v) v.innerHTML='<div class="state" style="padding:32px 20px">Không tải được công cụ (mất mạng?). <button type="button" class="kktab" onclick="ccdcNap()">Thử lại</button></div>'; });
 }
@@ -7783,12 +7792,32 @@ function qtcUgStBadge(st){ st=String(st||''); if(!st) return ''; var ng=QTC_ST_N
   /* web: tên đủ (user 26/08 chiều); điện thoại: bản rút gọn (.ngan) — CSS đổi chỗ theo khổ màn */
   return '<span class="badge '+kkUidStCls(st)+'" title="'+esc(st)+'"><span class="full">'+esc(st)+'</span>'+(ng!==st?'<span class="ngan">'+esc(ng)+'</span>':'')+'</span>'; }
 /* --- Quét mã: camera + BarcodeDetector / Canvas Fallback (hỗ trợ cả iPhone/iOS Safari & Android/Chrome/Edge) --- */
+/* 11/11: mã bắt được / gõ tay → nơi đang mượn bộ quét (QTC.dich, vd Hiện trạng CCDC) nhận NGUYÊN chuỗi + mã đã bóc
+   (qtcTachMa cắt còn cụm số ⇒ phá QR tài sản JSON / S/N chữ-số); tab Tra SL đếm vẫn dùng mã đã bóc như cũ. */
+function qtcNhanMa(raw, tuGo){
+  raw = String(raw || '').trim(); if(!raw) return;
+  var ma = qtcTachMa(raw);
+  if(QTC.dich){ var dich=QTC.dich; qtcQuetDong(); dich(raw, ma); return; }
+  document.getElementById('qtcSku').value = tuGo ? raw : ma;
+  qtcQuetDong();
+  toast((tuGo ? 'Đã nhập mã ' : 'Đã quét được mã ') + (tuGo ? raw : ma) + ' — đang tra…', 'ok');
+  qtcTra();
+}
+function qtcNhapTayGo(){ var o=document.getElementById('qtcNhapTay'); if(!o) return; var v=o.value.trim(); if(!v){ o.focus(); return; } o.value=''; qtcNhanMa(v, true); }
+/* Máy KHÔNG có BarcodeDetector (iPhone Safari…) trước đây chỉ đọc được Code 128 ⇒ QR không bao giờ ăn. Nạp jsQR (chỉ khi cần). */
+var QTC_JSQR = null;
+function qtcNapJsQR(){ if(window.jsQR || QTC_JSQR) return; QTC_JSQR = 1;
+  var sc=document.createElement('script'); sc.src='https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js'; sc.async=true; sc.onerror=function(){ QTC_JSQR=null; }; document.head.appendChild(sc); }
 function qtcQuetMo(){
+  var o0=document.getElementById('qtcNhapTay'); if(o0) o0.value='';
   if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-    toast('Trình duyệt không cho mở camera (cần dùng HTTPS hoặc cấp quyền Camera) — gõ SKU tay.','warn');
+    plgMoModal('qtcqrmodal');
+    document.getElementById('qtcQrHint').textContent='Trình duyệt không cho mở camera (cần HTTPS hoặc quyền Camera) — nhập mã tay bên dưới.';
+    setTimeout(function(){ var o=document.getElementById('qtcNhapTay'); if(o) o.focus(); }, 80);
     return;
   }
   if(QTC.quetStream) return;   // đã mở rồi (bấm đúp)
+  if(!('BarcodeDetector' in window)) qtcNapJsQR();
   plgMoModal('qtcqrmodal');
   document.getElementById('qtcQrHint').textContent='Đang mở camera…';
 
@@ -7820,19 +7849,15 @@ function qtcQuetMo(){
         dangDo = false;
         raw = String(raw || '').trim();
         if(!raw || !QTC.quetStream) return;
-        var ma = qtcTachMa(raw);   // QR có thể kèm chữ/URL — bóc mã cùng luật với súng quét (ưu tiên cụm 9 số)
-        if(QTC.dich){ var dich=QTC.dich; qtcQuetDong(); dich(ma); return; }   // 11/11 nơi khác mượn bộ quét (Hiện trạng CCDC) — trả mã về đó
-        document.getElementById('qtcSku').value = ma;
-        qtcQuetDong();
-        toast('Đã quét được mã ' + ma + ' — đang tra…', 'ok');
-        qtcTra();
+        qtcNhanMa(raw, false);   // QR có thể kèm chữ/URL — tab Tra SL bóc mã cùng luật súng quét; nơi mượn bộ quét nhận nguyên chuỗi
       }).catch(function(){
         dangDo = false; /* khung hình chưa sẵn sàng — thử lượt sau */
       });
     }, 280);
   }).catch(function(e){
-    qtcQuetDong();
-    toast('Không mở được camera (' + (e && (e.name || e.message) || '?') + ') — gõ SKU tay.', 'err');
+    /* 11/11: KHÔNG đóng pop-up — còn ô nhập tay (trước đây đóng luôn, người dùng phải tự tìm chỗ gõ) */
+    document.getElementById('qtcQrHint').textContent = 'Không mở được camera (' + (e && (e.name || e.message) || '?') + ') — nhập mã tay bên dưới.';
+    var o=document.getElementById('qtcNhapTay'); if(o) o.focus();
   });
 }
 
@@ -7893,6 +7918,8 @@ function qtcDocCanvas(v){
     var raw128 = qtcDocCode128(bin);
     if(raw128) return raw128;
   }
+  /* 11/11: QR khi không có BarcodeDetector — jsQR (nạp lười ở qtcQuetMo) */
+  if(window.jsQR){ try { var q = window.jsQR(d, cw, ch, { inversionAttempts: 'dontInvert' }); if(q && q.data) return String(q.data); } catch(eQ){} }
   return '';
 }
 

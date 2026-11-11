@@ -587,8 +587,9 @@
       QTC.dich = function (ma) { tra(); if (truong !== 'viTri' && quetTs(ma)) return;
         CC.f[truong] = String(ma || '').trim().slice(0, 120); veForm(); bao(QUET_TEN[truong].replace('Quét ', 'Đã quét ') + ': ' + CC.f[truong], 'ok'); };
     } else QTC.dich = function (ma) { tra(); if (quetTs(ma)) return;   // ① QR tài sản → SKU + QR tài sản + S/N
-      var r = traSku(ma);
-      if (r) { ganSku(r, 'Quét mã', ma); veForm(); bao('Đã quét: ' + r.sku + (r.pn ? ' · ' + r.pn : ''), 'ok'); return; }   // ② mã SKU
+      /* bộ quét trả (nguyên chuỗi, mã đã bóc cụm số) — SKU: thử nguyên chuỗi trước, không ra thì thử mã đã bóc (QR kèm chữ/URL) */
+      var tach = arguments[1], r = traSku(ma) || (tach && tach !== ma ? traSku(tach) : null);
+      if (r) { ganSku(r, 'Quét mã', r.sku); veForm(); bao('Đã quét: ' + r.sku + (r.pn ? ' · ' + r.pn : ''), 'ok'); return; }   // ② mã SKU
       /* ③ không phải JSON QR, không phải SKU ⇒ tra WMS theo QR (mã trơn «0-8148a2») hoặc S/N; không thấy ⇒ ghi là S/N */
       var m0 = String(ma || '').trim().slice(0, 120);
       traTs(m0, false).then(function (k) {
