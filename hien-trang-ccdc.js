@@ -26,7 +26,8 @@
      (GAS whitelist CCDC_PHAN_LOAI). Chỉ dùng hàm này ở chỗ hiển thị nút. */
   function nhanPL(p) { return p === 'Tái sử dụng' ? 'Tái dùng' : p; }
   var K_DS = 'ccdc-ds-v1', TRANG = 20, MAX_ANH = 1600;
-  var CC = window.CC = { ds: [], loc: '', soHien: TRANG, napLan: 0, dangNap: false, f: null, dang: {} };
+  var CC = window.CC = { ds: [], loc: '', locNg: '', dsMo: false, soHien: TRANG, napLan: 0, dangNap: false, f: null, dang: {} };
+  try { CC.dsMo = localStorage.getItem('ccdc-ds-mo') === '1'; } catch (e) { }
   var e_ = function (s) { return (typeof esc === 'function') ? esc(s == null ? '' : s) : String(s == null ? '' : s); };
   var $ = function (id) { return document.getElementById(id); };
   var bao = function (m, t) { if (typeof toast === 'function') toast(m, t || 'ok'); };
@@ -208,12 +209,56 @@
     '#ccCamModal .cam-phai .cc-nut{height:32px;padding:0 14px;font-size:13px}',
     '#ccCamModal .cam-gio{color:#fca5a5;font-variant-numeric:tabular-nums}',
     '@media(max-width:640px){#ccCamV{flex:1;min-height:0;max-height:none;aspect-ratio:auto}}',
+    /* 11/11 user duyệt «Mẫu 1 · Thẻ Nhận diện SKU» (ưu tiên đủ tên): thẻ = cụm ACTIVE/Normal của Nhận diện SKU + SKU + TÊN ĐỦ
+       (xuống dòng, không cắt) + dòng QR tài sản · S/N; khung/nút gọn; «Đã ghi nhận» xổ xuống, Bộ lọc chỉ Người ghi nhận */
+    '#viewCcdc .cc-the{margin-top:8px;border:1px solid #b7eb8f;background:#f6ffed;border-radius:8px;overflow:hidden}',
+    '#viewCcdc .cc-the.trong{border-color:var(--line);background:var(--surface)}',
+    '#viewCcdc .cc-the-dau{display:flex;align-items:flex-start;gap:10px;padding:7px 6px 7px 10px}',
+    '#viewCcdc .cc-the-dau .nds-tags-col{margin-top:3px}',
+    '#viewCcdc .cc-the-sp{flex:1;min-width:0;display:flex;flex-direction:column}',
+    '#viewCcdc .cc-the-sp b{font-size:15px;font-weight:600;line-height:1.3}',
+    '#viewCcdc .cc-the-sp span{font-size:13px;color:var(--ink2);line-height:1.4;overflow-wrap:anywhere}',
+    '#viewCcdc .cc-the-dd{display:flex;flex-wrap:wrap;gap:2px 14px;padding:5px 6px 5px 10px;border-top:1px solid #d9f7be;font-size:12px;color:var(--ink3)}',
+    '#viewCcdc .cc-the.trong .cc-the-dd{border-top:0}',
+    '#viewCcdc .cc-the-dd>span{display:inline-flex;align-items:center;gap:4px;min-width:0;max-width:100%}',
+    '#viewCcdc .cc-the-dd b{font-family:ui-monospace,Consolas,monospace;color:var(--ink);font-weight:600;overflow-wrap:anywhere}',
+    '#viewCcdc .cc-the .x{border:0;background:none;color:#8c8c8c;font-size:13px;cursor:pointer;line-height:1;padding:2px 4px;flex:none}',
+    '#viewCcdc .panel h2{font-size:15px;margin-bottom:8px}',
+    '#viewCcdc .cc-h3{margin:12px 0 6px;font-size:13px}',
+    '#viewCcdc .cc-sku input{height:34px;font-size:15px} #viewCcdc .cc-sku .cc-nut{height:34px;font-size:13px;padding:0 10px}',
+    '#viewCcdc .cc-hai{gap:6px}',
+    '#viewCcdc .cc-to{display:flex;align-items:center;justify-content:center;gap:6px;padding:0 4px;height:36px;font-size:13.5px;border-width:1px}',
+    '#viewCcdc .cc-to small{display:none}',
+    '#viewCcdc .cc-to svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round;flex:none}',
+    '#viewCcdc textarea{min-height:58px;font-size:15px;padding:7px 10px}',
+    '#viewCcdc .cc-pl button{padding:4px 0;font-size:13px} #viewCcdc .cc-pl .pl-qr{margin:-4px 0}',
+    '#viewCcdc .cc-gui{margin-top:12px;padding-top:10px} #viewCcdc .cc-gui .cc-nut.xanh{height:34px}',
+    '#ccDsKhoi{position:relative}',
+    '#ccDsKhoi .panel-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}',
+    '#ccDsKhoi .ds-mo{display:inline-flex;align-items:center;gap:6px;border:0;background:none;padding:0;font:inherit;font-size:15px;font-weight:600;color:var(--ink);cursor:pointer;min-width:0}',
+    '#ccDsKhoi .ds-mo small{font-weight:400;color:var(--ink3);font-size:13px}',
+    '#ccDsKhoi .ds-mo small.loi{color:var(--bad,#cf1322)} #ccDsKhoi .ds-mo small.cho{color:#1677ff}',
+    '#ccDsKhoi .ds-mo svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;transition:transform .15s;flex:none}',
+    '#ccDsKhoi.mo .ds-mo svg{transform:rotate(90deg)} #ccDsKhoi .panel-head .gian{flex:1}',
+    '#ccDsKhoi .cc-sheet{margin-left:0}',
+    '#ccDsKhoi.mo .cc-loc{margin-bottom:6px}',
+    '#ccDsKhoi > .filters{display:block;padding:12px}',
+    '#ccDsKhoi > .filters .lbl{display:block;font-size:12px;color:var(--ink3);margin-bottom:6px}',
+    '#ccDsKhoi > .filters input{width:100%;height:32px;border:1px solid var(--line);border-radius:6px;padding:0 10px;font-size:14px;margin-bottom:8px;background:var(--surface);color:var(--ink)}',
+    '#ccDsKhoi .cc-locng{display:flex;gap:6px;flex-wrap:wrap;max-height:180px;overflow:auto}',
+    '#ccDsKhoi .cc-locng button{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:6px;padding:3px 10px 3px 4px;font:inherit;font-size:13px;cursor:pointer;background:var(--surface);color:var(--ink)}',
+    '#ccDsKhoi .cc-locng button.tat{padding-left:10px}',
+    '#ccDsKhoi .cc-locng button.on{border-color:#1677ff;background:#e6f4ff;color:#1677ff;font-weight:600}',
+    '#ccDsKhoi .cc-locng small{color:var(--ink3);font-weight:400}',
     '#ccInModal .tt{height:38px;display:flex;align-items:center;border:1px solid var(--line);border-radius:8px;padding:0 10px;font-size:14px;font-weight:600}'
   ].join('\n');
   var st = document.createElement('style'); st.id = 'ccdcCss'; st.textContent = css; document.head.appendChild(st);
 
   var IC = {
     quet: '<svg viewBox="0 0 20 20"><path d="M3 6V3h3M14 3h3v3M17 14v3h-3M6 17H3v-3M6 7v6M9 7v6M11 7v6M14 7v6"/></svg>',
+    cam: '<svg viewBox="0 0 20 20"><path d="M2.5 6.5h3l1.5-2h6l1.5 2h3v9h-15z"/><circle cx="10" cy="11" r="3"/></svg>',
+    tep: '<svg viewBox="0 0 20 20"><path d="M3 5h5l2 2h7v9H3z"/></svg>',
+    mui: '<svg viewBox="0 0 20 20"><path d="M7 4l6 6-6 6"/></svg>',
     ai: '<svg viewBox="0 0 20 20"><path d="M10 2l1.6 4.4L16 8l-4.4 1.6L10 14l-1.6-4.4L4 8l4.4-1.6zM15.5 13l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>',
     inn: '<svg viewBox="0 0 20 20"><path d="M6 8V3h8v5M6 14H3V8h14v6h-3M6 11h8v6H6z"/></svg>',
     qr: '<svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="6" height="6" rx="1"/><rect x="14.5" y="3.5" width="6" height="6" rx="1"/><rect x="3.5" y="14.5" width="6" height="6" rx="1"/><path d="M14.5 14.5h2.5v2.5M18 18h2.5v2.5h-2.5M20.5 14.5v.01M14.5 20.5v.01"/></svg>'
@@ -296,9 +341,13 @@
     v.innerHTML =
       '<div class="cc-grid">' +
       '<section class="panel" id="ccForm"></section>' +
-      '<section class="panel" id="ccDsKhoi"><h2>Đã ghi nhận <small id="ccDem"></small>' +
-        '<a class="cc-sheet" href="https://docs.google.com/spreadsheets/d/1sXd8imGeXriBFrUoxQlyfjESdhxv9tUxjLDfsJ06_do/edit" target="_blank" rel="noopener">Mở Sheet ↗</a></h2>' +
-        '<div class="cc-loc" id="ccLoc"></div><div id="ccDs"></div></section>' +
+      /* 11/11 user: «Đã ghi nhận» dạng mũi tên xổ xuống (mặc định ĐÓNG, bấm mới hiện lịch sử); tab phân loại vẫn ở ngoài;
+         Bộ lọc = nút chữ chuẩn + ngăn kéo nổi (.panel > .filters) chỉ lọc NGƯỜI GHI NHẬN */
+      '<section class="panel" id="ccDsKhoi"><div class="panel-head"><button type="button" class="ds-mo" data-lam="dsMo" aria-expanded="false">' + IC.mui + 'Đã ghi nhận <small id="ccDem"></small></button>' +
+        '<span class="gian"></span><button type="button" class="btn-filter" id="ccBtnLoc" data-lam="loc">Bộ lọc</button>' +
+        '<a class="cc-sheet" href="https://docs.google.com/spreadsheets/d/1sXd8imGeXriBFrUoxQlyfjESdhxv9tUxjLDfsJ06_do/edit" target="_blank" rel="noopener">Mở Sheet ↗</a></div>' +
+        '<div class="filters collapsed" id="ccLocBody"><span class="lbl">Người ghi nhận</span><input id="ccLocTim" type="text" autocomplete="off" placeholder="Tìm tên / mã NV"><div class="cc-locng" id="ccLocNg"></div></div>' +
+        '<div class="cc-loc" id="ccLoc"></div><div id="ccDs" hidden></div></section>' +
       '</div>';
     var pop = function (id, tieuDe, than) { var m = document.createElement('div'); m.id = id; m.className = 'modal cc-pop';
       m.innerHTML = '<div class="modalbox"><div class="modalhd"><div><div class="mt">' + tieuDe + '</div></div><button class="mclose" type="button">&times;</button></div><div class="cc-than">' + than + '</div></div>';
@@ -351,14 +400,20 @@
   function formMoi() { CC.f = { ma: '', sua: false, sku: '', maGo: '', cach: '', ten: '', loai: '', dv: '', status: '', tep: [], ghiChu: '', phanLoai: '', viTri: '', qrTs: '', sn: '', loi: '' }; }
   function veForm() {
     var el = $('ccForm'); if (!el) return; var f = CC.f, n = nguoi();
-    var kq = f.sku ? '<div class="cc-kq">' + (f.status ? '<span class="cc-tag ' + (f.status === 'INACTIVE' ? 'in' : 'ac') + '">' + e_(f.status) + '</span>' : '') +
-      '<b>' + e_(f.sku) + '</b>' + (f.loai ? '<span class="cc-tag in">' + e_(f.loai) + '</span>' : '') + '<span class="ten">' + e_(f.ten || 'Chưa có tên trong danh mục') + '</span>' +
-      /* 11/11 user: chỉ cho in sau khi Gửi ⇒ form không còn nút In tem (in ở dòng «Đã ghi nhận» / trang chi tiết) */
-      '<button type="button" class="x" data-lam="boSku" aria-label="Bỏ SKU">✕</button></div>' : '';
-    /* 11/11 user: gom QR tài sản + S/N vào MỘT khung «Quét mã / QR»; kết quả hiện ngay chỗ 2 ô cũ */
-    var tsDong = (f.qrTs || f.sn) ? '<div class="cc-tsk">' +
+    /* Mẫu 1 (user duyệt 11/11): cụm trạng thái y Nhận diện SKU (ACTIVE / Normal xếp dọc) + SKU + tên ĐỦ (xuống dòng);
+       QR tài sản · S/N là dòng nhỏ cuối thẻ. Chỉ có QR/S/N (chưa ra SKU) ⇒ thẻ viền thường chỉ có dòng đó. */
+    var dd = (f.qrTs || f.sn) ? '<div class="cc-the-dd">' +
       (f.qrTs ? '<span>QR tài sản <b>' + e_(f.qrTs) + '</b><button type="button" class="x" data-lam="boTs" aria-label="Bỏ QR tài sản">✕</button></span>' : '') +
       (f.sn ? '<span>S/N <b>' + e_(f.sn) + '</b><button type="button" class="x" data-lam="boSn" aria-label="Bỏ S/N">✕</button></span>' : '') + '</div>' : '';
+    var loaiSp = String(f.loai || '').trim(); loaiSp = loaiSp ? loaiSp.charAt(0).toUpperCase() + loaiSp.slice(1).toLowerCase() : '';
+    var kq = f.sku ? '<div class="cc-the"><div class="cc-the-dau">' +
+        ((f.status || loaiSp) ? '<div class="nds-tags-col">' + (f.status ? '<span class="badge ' + (f.status === 'INACTIVE' ? 'b-pend' : 'b-ok') + '">' + e_(f.status) + '</span>' : '') +
+          (loaiSp ? '<span class="nds-rank' + (/combo/i.test(loaiSp) ? ' cb' : '') + '">' + e_(loaiSp) + '</span>' : '') + '</div>' : '') +
+        '<div class="cc-the-sp"><b>' + e_(f.sku) + '</b><span>' + e_(f.ten || 'Chưa có tên trong danh mục') + '</span></div>' +
+        /* 11/11 user: chỉ cho in sau khi Gửi ⇒ form không còn nút In tem (in ở dòng «Đã ghi nhận» / trang chi tiết) */
+        '<button type="button" class="x" data-lam="boSku" aria-label="Bỏ SKU">✕</button></div>' + dd + '</div>'
+      : (dd ? '<div class="cc-the trong">' + dd + '</div>' : '');
+    var tsDong = '';
     var anh = f.tep.map(function (t, i) {
       var so = t.loai === 'video' ? 'Clip ' + (f.tep.slice(0, i + 1).filter(function (x) { return x.loai === 'video'; }).length) : 'Ảnh ' + (f.tep.slice(0, i + 1).filter(function (x) { return x.loai !== 'video'; }).length);
       var nv = (t.hinh || []).length;
@@ -373,9 +428,9 @@
       '<button type="button" class="cc-nut" data-lam="quet">' + IC.quet + 'Quét mã / QR</button>' +
       '<button type="button" class="cc-nut vien" data-lam="nds">' + IC.ai + 'Nhận diện SKU</button></div>' + kq + tsDong +
       '<div class="cc-h3">2 · Ảnh / clip hiện trạng <i>*</i></div>' +
-      '<div class="cc-hai"><button type="button" class="cc-to" data-lam="cam">Chụp / quay<small>mở camera</small></button>' +
+      '<div class="cc-hai"><button type="button" class="cc-to" data-lam="cam">' + IC.cam + 'Chụp / quay</button>' +
       '<input type="file" hidden id="ccCamTep" accept="image/*" capture="environment" data-tep="cam">' +
-      '<label class="cc-to nhat" id="ccKeo">Chọn từ máy<small>hoặc kéo thả</small><input type="file" accept="image/*,video/*" multiple data-tep="tv"></label></div>' +
+      '<label class="cc-to nhat" id="ccKeo" title="Hoặc kéo thả ảnh / clip vào đây">' + IC.tep + 'Chọn từ máy<input type="file" accept="image/*,video/*" multiple data-tep="tv"></label></div>' +
       (anh ? '<div class="cc-anhs">' + anh + '</div>' : '') +
       '<div class="cc-h3">3 · Ghi chú <i>*</i></div>' +
       '<textarea id="ccGhiChu" placeholder="Hiện trạng, chỗ hư…">' + e_(f.ghiChu) + '</textarea>' +
@@ -401,11 +456,12 @@
       if (t.id === 'ccSku' && maTs(t.value)) { var v0 = t.value; t.value = ''; CC.f.maGo = ''; quetTs(v0); return; }
       if (t.id === 'ccSku') { var r = traSku(t.value), coTruoc = !!CC.f.sku; ganSku(r, 'Gõ tay', t.value.trim());
         if (!!r !== coTruoc || r) { var vt = t.selectionStart; veForm(); var o = $('ccSku'); if (o) { o.focus(); try { o.setSelectionRange(vt, vt); } catch (e) {} } } }
+      if (t.id === 'ccLocTim') { veLocNg(); return; }
       if (t.id === 'ccGhiChu') { CC.f.ghiChu = t.value; if (CC.f.loi) { CC.f.loi = ''; var l = v.querySelector('.cc-loi'); if (l) l.remove(); } }
     });
     v.addEventListener('change', function (ev) { var t = ev.target; if (t.dataset && t.dataset.tep) { themTep(t.files); t.value = ''; } });
     v.addEventListener('click', function (ev) {
-      var b = ev.target.closest('[data-plqr],[data-quet],[data-lam],[data-pl],[data-bo],[data-anh],[data-locpl],[data-dong],[data-thu],[data-inma],[data-ct]');
+      var b = ev.target.closest('[data-plqr],[data-quet],[data-lam],[data-pl],[data-bo],[data-anh],[data-locpl],[data-dong],[data-thu],[data-inma],[data-ct],[data-locng]');
       if (!b || !v.contains(b)) return;
       if (b.dataset.bo != null) { ev.stopPropagation(); ev.preventDefault(); var t = CC.f.tep.splice(+b.dataset.bo, 1)[0]; if (t && t.url) URL.revokeObjectURL(t.url); veForm(); return; }
       if (b.dataset.inma) { ev.stopPropagation(); var x = timMa(b.dataset.inma); if (x) moIn({ sku: x.sku, ten: x.ten, dv: x.dv, ma: x.ma, tt: x.phanLoai }); return; }
@@ -414,16 +470,19 @@
         if (tp.loai === 'video') { if (tp.url) window.open(tp.url, '_blank'); else if (tp.id) window.open('https://drive.google.com/file/d/' + tp.id + '/view', '_blank'); return; }
         if (!tp.blob) { window.open('https://drive.google.com/file/d/' + (tp.ve || tp.id) + '/view', '_blank'); return; }
         veMo(+b.dataset.anh); return; }
-      if (b.dataset.plqr) { ev.stopPropagation(); CC.f.phanLoai = b.dataset.plqr; veForm(); moQuet('viTri'); return; }
+      if (b.dataset.locng != null) { CC.locNg = b.dataset.locng; CC.soHien = TRANG; if (!CC.dsMo) CC.dsMo = true; veDs(); veLocNg(); return; }
+      if (b.dataset.plqr) { ev.stopPropagation(); CC.f.phanLoai = b.dataset.plqr; if (/phân loại/i.test(CC.f.loi || '')) CC.f.loi = ''; veForm(); moQuet('viTri'); return; }
       if (b.dataset.quet) { moQuet(b.dataset.quet); return; }
       if (b.dataset.ct) { if (b.tagName === 'A') ev.preventDefault(); ctLam(b.dataset.ct); return; }
-      if (b.dataset.pl) { CC.f.phanLoai = CC.f.phanLoai === b.dataset.pl ? '' : b.dataset.pl; veForm(); return; }
-      if (b.dataset.locpl != null) { CC.loc = b.dataset.locpl; CC.soHien = TRANG; veDs(); return; }
+      if (b.dataset.pl) { CC.f.phanLoai = CC.f.phanLoai === b.dataset.pl ? '' : b.dataset.pl; if (CC.f.phanLoai && /phân loại/i.test(CC.f.loi || '')) CC.f.loi = '';   /* chọn rồi thì bỏ lỗi «Cần chọn phân loại» */ veForm(); return; }
+      if (b.dataset.locpl != null) { CC.loc = b.dataset.locpl; CC.soHien = TRANG; if (!CC.dsMo) dsMo(true); else veDs(); return; }
       if (b.dataset.dong) { moSua(b.dataset.dong); return; }
       var lam = b.dataset.lam;
       if (lam === 'boSku') { ganSku(null, '', ''); CC.f.cach = ''; veForm(); }
       else if (lam === 'boVt') { CC.f.viTri = ''; veForm(); }
       else if (lam === 'cam') camMo();
+      else if (lam === 'dsMo') dsMo(!CC.dsMo);
+      else if (lam === 'loc') { var lb = $('ccLocBody'), mo = lb.classList.contains('collapsed'); lb.classList.toggle('collapsed', !mo); b.classList.toggle('mo', mo); if (mo) { veLocNg(); var ti = $('ccLocTim'); if (ti && window.innerWidth > 640) ti.focus(); } }
       else if (lam === 'boTs') { CC.f.qrTs = ''; veForm(); }
       else if (lam === 'boSn') { CC.f.sn = ''; veForm(); }
       else if (lam === 'quet') moQuet();
@@ -748,12 +807,30 @@
     try { localStorage.setItem(K_DS, JSON.stringify({ at: Date.now(), ds: CC.ds.filter(function (x) { return !x._cho; }).slice(0, 200).map(function (x) {
       return Object.assign({}, x, { tep: x.tep.map(function (t) { return { id: t.veId || t.id, loai: t.loai, goc: t.veId ? t.id : (t.goc || '') }; }), _vua: false }); }) })); } catch (e) { }
   }
+  function dsMo(mo) { CC.dsMo = mo; try { localStorage.setItem('ccdc-ds-mo', mo ? '1' : '0'); } catch (e) { } veDs(); }
+  function veLocNg() {   // chip người ghi nhận (đếm theo danh sách đang có) — lọc ngay khi gõ
+    var el = $('ccLocNg'); if (!el) return; var tim = String(($('ccLocTim') || {}).value || '').trim().toLowerCase(), dem = {};
+    CC.ds.forEach(function (x) { if (x.nguoi) dem[x.nguoi] = (dem[x.nguoi] || 0) + 1; });
+    var ds = Object.keys(dem).sort(function (a, b) { return dem[b] - dem[a]; })
+      .filter(function (n) { return !tim || n.toLowerCase().indexOf(tim) >= 0 || CC.ds.some(function (x) { return x.nguoi === n && String(x.tk || '').toLowerCase().indexOf(tim) >= 0; }); });
+    el.innerHTML = '<button type="button" class="tat' + (!CC.locNg ? ' on' : '') + '" data-locng="">Tất cả</button>' +
+      ds.map(function (n) { return '<button type="button" data-locng="' + e_(n) + '" class="' + (CC.locNg === n ? 'on' : '') + '">' + av(n, true) + e_(haiChuCuoi(n)) + ' <small>' + dem[n] + '</small></button>'; }).join('');
+  }
   function veDs() {
     var el = $('ccDs'); if (!el) return;
-    var ds = CC.ds.filter(function (x) { return !CC.loc || (CC.loc === '_' ? !x.phanLoai : x.phanLoai === CC.loc); });
-    $('ccDem').textContent = CC.ds.length ? '(' + (typeof nf === 'function' ? nf(CC.ds.length) : CC.ds.length) + ')' : '';
+    var k = $('ccDsKhoi'); if (k) { k.classList.toggle('mo', CC.dsMo); var mb = k.querySelector('.ds-mo'); if (mb) mb.setAttribute('aria-expanded', CC.dsMo ? 'true' : 'false'); }
+    el.hidden = !CC.dsMo;
+    var bl = $('ccBtnLoc'); if (bl) bl.classList.toggle('dang-loc', !!CC.locNg);
+    var ds = CC.ds.filter(function (x) { return (!CC.loc || (CC.loc === '_' ? !x.phanLoai : x.phanLoai === CC.loc)) && (!CC.locNg || x.nguoi === CC.locNg); });
+    /* đóng mà còn lượt đang lưu / lỗi ⇒ báo ngay cạnh tiêu đề (không bắt mở mới biết) */
+    var soCho = CC.ds.filter(function (x) { return x._cho && !x._loi; }).length, soLoi = CC.ds.filter(function (x) { return x._loi; }).length;
+    $('ccDem').className = soLoi ? 'loi' : (soCho ? 'cho' : '');
+    $('ccDem').textContent = (CC.ds.length ? '(' + (typeof nf === 'function' ? nf(CC.ds.length) : CC.ds.length) + ')' : '') +
+      (soLoi ? ' · ' + soLoi + ' chưa lưu' : (soCho ? ' · đang lưu ' + soCho : ''));
     $('ccLoc').innerHTML = [['', 'Tất cả']].concat(PL.map(function (p) { return [p, nhanPL(p)]; })).concat([['_', 'Chưa phân loại']]).map(function (c) {
       return '<button type="button" class="kktab' + (CC.loc === c[0] ? ' active' : '') + '" data-locpl="' + e_(c[0]) + '">' + e_(c[1]) + '</button>'; }).join('');
+    if ($('ccLocBody') && !$('ccLocBody').classList.contains('collapsed')) veLocNg();
+    if (!CC.dsMo) { el.innerHTML = ''; return; }
     if (!ds.length) { el.innerHTML = '<div class="cc-trong">' + (CC.dangNap && !CC.ds.length ? 'Đang tải…' : (CC.ds.length ? 'Không có mục nào ở bộ lọc này.' : 'Chưa có ghi nhận nào.')) + '</div>'; return; }
     el.innerHTML = ds.slice(0, CC.soHien).map(function (x) {
       var t0 = x.tep[0] || {}, na = x.tep.filter(function (t) { return t.loai !== 'video'; }).length, nc = x.tep.length - na, nv = (x.vung || []).length;
