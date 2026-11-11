@@ -183,6 +183,13 @@
     '#ccInModal .may{height:38px;display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:0 10px;color:var(--ink3);font-size:14px;margin-top:4px}',
     '#ccInModal .day{display:flex;gap:8px;margin-top:16px} #ccInModal .day .cc-nut{flex:1}',
     '#ccTsModal .ts-ds{display:flex;flex-direction:column;gap:8px}',
+    /* pop-up xem ảnh/clip (11/11) — rộng gần hết màn, ảnh giữ tỉ lệ */
+    '#ccAnhModal .modalbox{width:min(960px,96vw);max-width:96vw}',
+    '#ccAnhModal .xa-khung{display:flex;align-items:center;justify-content:center;background:#111;border-radius:8px;min-height:240px;height:min(72vh,720px);overflow:hidden}',
+    '#ccAnhModal .xa-khung img,#ccAnhModal .xa-khung video{max-width:100%;max-height:100%;object-fit:contain;display:block}',
+    '#ccAnhModal .xa-khung iframe{width:100%;height:100%;border:0}',
+    '#ccAnhModal .xa-dieu{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:10px;font-size:14px;color:var(--ink2)}',
+    '#ccAnhModal .xa-dieu .cc-nut{min-width:44px;font-size:20px;justify-content:center}',
     '#ccTsModal .ts-ds button{display:block;text-align:left;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:10px 12px;cursor:pointer;color:var(--ink);font:inherit}',
     '#ccTsModal .ts-ds button:hover{border-color:#1677ff}',
     '#ccTsModal .ts-ds b{font-weight:600} #ccTsModal .ts-ds small{display:block;font-size:12.5px;color:var(--ink3);margin-top:2px}',
@@ -248,7 +255,7 @@
   function thumb(t) { return t.url || (t.ve && t.ve.url) || (t.id ? 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(t.ve || t.id) + '&sz=w200' : ''); }
   async function goiGas(body, han) {
     var n = nguoi(); body = Object.assign({ phien: (window.TK && TK.phien) || '' }, body);
-    if (!n || !body.phien) { var e0 = new Error('Cần đăng nhập'); e0.code = 401; throw e0; }
+    if ((!n || !body.phien) && body.action !== 'ccdc_xem') { var e0 = new Error('Cần đăng nhập'); e0.code = 401; throw e0; }   // 11/11: xem phiếu qua QR mở cho tất cả
     var ctl = typeof AbortController !== 'undefined' ? new AbortController() : null, hen = ctl ? setTimeout(function () { ctl.abort(); }, han || 60000) : 0;
     try {
       var r = await fetch(APPSCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body), signal: ctl ? ctl.signal : undefined });
@@ -313,6 +320,20 @@
       if (ev.target === mT || ev.target.closest('.mclose')) { plgDongModal('ccTsModal'); return; }
       var b = ev.target.closest('[data-tsi]'); if (b && TS_CHON) { var d = TS_CHON; TS_CHON = null; plgDongModal('ccTsModal'); tsGan(d.code, d.ds[+b.dataset.tsi], d.laS); }
     });
+    /* 11/11 user: ảnh/clip ở trang chi tiết xem NGAY trong pop-up (không trỏ sang Drive). Ảnh = thumbnail Drive cỡ lớn
+       (tệp chia sẻ «ai có link», xem được không cần đăng nhập Google); clip = khung preview của Drive nhúng trong pop-up. */
+    var mA = pop('ccAnhModal', 'Ảnh / clip hiện trạng', '<div class="xa-khung" id="ccAnhKhung"></div>' +
+      '<div class="xa-dieu"><button type="button" class="cc-nut" data-xa="-1" aria-label="Trước">‹</button><span id="ccAnhSo"></span><button type="button" class="cc-nut" data-xa="1" aria-label="Sau">›</button></div>');
+    mA.addEventListener('click', function (ev) {
+      if (ev.target === mA || ev.target.closest('.mclose')) { dongXemAnh(); return; }
+      var b = ev.target.closest('[data-xa]'); if (b && XA) veXemAnh(XA.i + (+b.dataset.xa));
+    });
+    var x0 = null;
+    mA.addEventListener('touchstart', function (ev) { x0 = ev.touches.length === 1 ? ev.touches[0].clientX : null; }, { passive: true });
+    mA.addEventListener('touchend', function (ev) { if (x0 == null || !XA) return; var dx = ev.changedTouches[0].clientX - x0; x0 = null;
+      if (Math.abs(dx) > 50) veXemAnh(XA.i + (dx < 0 ? 1 : -1)); }, { passive: true });
+    document.addEventListener('keydown', function (ev) { if (!XA || !mA.classList.contains('show') && getComputedStyle(mA).display === 'none') return;
+      if (ev.key === 'ArrowRight') veXemAnh(XA.i + 1); else if (ev.key === 'ArrowLeft') veXemAnh(XA.i - 1); });
     var mI = pop('ccInModal', 'In tem hiện trạng', '<div id="ccInThan"></div>');
     mI.addEventListener('click', function (ev) { if (ev.target === mI || ev.target.closest('.mclose')) plgDongModal('ccInModal'); });
     var ve = document.createElement('div'); ve.id = 'ccVe';
@@ -395,7 +416,7 @@
         veMo(+b.dataset.anh); return; }
       if (b.dataset.plqr) { ev.stopPropagation(); CC.f.phanLoai = b.dataset.plqr; veForm(); moQuet('viTri'); return; }
       if (b.dataset.quet) { moQuet(b.dataset.quet); return; }
-      if (b.dataset.ct) { ctLam(b.dataset.ct); return; }
+      if (b.dataset.ct) { if (b.tagName === 'A') ev.preventDefault(); ctLam(b.dataset.ct); return; }
       if (b.dataset.pl) { CC.f.phanLoai = CC.f.phanLoai === b.dataset.pl ? '' : b.dataset.pl; veForm(); return; }
       if (b.dataset.locpl != null) { CC.loc = b.dataset.locpl; CC.soHien = TRANG; veDs(); return; }
       if (b.dataset.dong) { moSua(b.dataset.dong); return; }
@@ -825,20 +846,34 @@
   }
   function ctLam(k) {
     if (k === 'lui') { ctDong(); window.scrollTo(0, 0); return; }
+    if (/^anh:\d+$/.test(k)) { var xa = timMa(CT.ma) || CT.x; if (xa) xemAnh(xa, +k.slice(4)); return; }
     if (k === 'dn') { var ma = CT.ma; if (typeof tkMoDangNhap === 'function') tkMoDangNhap(function () { window.CCDC_XEM = ma;
       setTimeout(function () { var it = document.querySelector('#sideNav .s-item[data-tab="ccdc"]'); if (it) it.click(); else if (typeof showTab === 'function') showTab('ccdc'); }, 60); }); return; }
     var x = timMa(CT.ma) || CT.x; if (!x) return;
     if (k === 'sua') { CC.ds.indexOf(x) < 0 && CC.ds.unshift(x); ctDong(); moSua(x.ma); return; }
     if (k === 'in') moIn({ sku: x.sku, ten: x.ten, dv: x.dv, ma: x.ma, tt: x.phanLoai });
   }
+  var XA = null;
+  function xemAnh(x, i) { XA = { tep: x.tep || [], i: 0 }; veXemAnh(i); plgMoModal('ccAnhModal'); }
+  function dongXemAnh() { var k = $('ccAnhKhung'); if (k) k.innerHTML = ''; XA = null; plgDongModal('ccAnhModal'); }   // gỡ iframe/video ⇒ clip dừng phát
+  function veXemAnh(i) {
+    if (!XA || !XA.tep.length) return; var n = XA.tep.length; XA.i = (i % n + n) % n;
+    var t = XA.tep[XA.i], id = t.veId || t.id, vid = t.loai === 'video', k = $('ccAnhKhung'); if (!k) return;
+    k.innerHTML = vid ? (t.url ? '<video src="' + e_(t.url) + '" controls autoplay playsinline></video>'
+        : '<iframe src="https://drive.google.com/file/d/' + encodeURIComponent(id) + '/preview" allow="autoplay; fullscreen" allowfullscreen></iframe>')
+      : '<img src="' + e_(t.url || 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(id) + '&sz=w1600') + '" alt="">';
+    var so = $('ccAnhSo'); if (so) so.textContent = (XA.i + 1) + ' / ' + n;
+    var d = document.querySelector('#ccAnhModal .xa-dieu'); if (d) d.style.display = n > 1 ? '' : 'none';
+  }
   function ctAnh(t) { var id = t.veId || t.id; return t.url || (id ? 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(id) + '&sz=w600' : ''); }
   function htmlCt(x) {
     var lop = PL_LOP[x.phanLoai] || 'trong', na = 0, nc = 0;
-    var anh = (x.tep || []).map(function (t) {
+    var anh = (x.tep || []).map(function (t, i) {
       var vid = t.loai === 'video', nhan = vid ? 'Clip ' + (++nc) : 'Ảnh ' + (++na), id = t.veId || t.id;
       var nv = vid ? 0 : (x.vung || []).filter(function (v) { return v.anh === na; }).length;
       var mo = t.url || (id ? 'https://drive.google.com/file/d/' + id + '/view' : '');
-      return '<a class="cc-anh" href="' + e_(mo) + '" target="_blank" rel="noopener"><img loading="lazy" src="' + e_(ctAnh(t)) + '" alt="">' +
+      /* 11/11 user: bấm ảnh/clip ⇒ pop-up xem ngay trong trang (data-ct="anh:i"), KHÔNG trỏ sang Drive (href chỉ là dự phòng) */
+      return '<a class="cc-anh" href="' + e_(mo) + '" data-ct="anh:' + i + '" rel="noopener"><img loading="lazy" src="' + e_(ctAnh(t)) + '" alt="">' +
         (vid ? '<span class="play"><i><svg viewBox="0 0 10 10" width="10" height="10"><path d="M2.5 1.5v7l6-3.5z" fill="#fff"/></svg></i></span>' : '') +
         '<span class="so">' + nhan + (nv ? ' · ' + nv + ' vùng' : '') + '</span></a>';
     }).join('');
@@ -847,9 +882,10 @@
     var kv = [['Mã vị trí', x.viTri], ['QR tài sản', x.qrTs], ['S/N', x.sn]].filter(function (k) { return k[1]; })
       .map(function (k) { return '<div><span>' + k[0] + '</span><b>' + e_(k[1]) + '</b></div>'; }).join('');
     var dang = x._loi ? '<div class="cc-tt loi">' + e_(x._loi) + '</div>' : (x._cho ? '<div class="cc-tt"><span class="cc-vong"></span>Đang lưu…</div>' : '');
-    return '<div class="ct-dau"><button type="button" class="lui" data-ct="lui">← Đã ghi nhận</button><span class="gian"></span>' +
-      (x.sku ? '<button type="button" class="cc-nut vien" data-ct="in">' + IC.inn + 'In tem</button>' : '') +
-      (x._dang ? '' : '<button type="button" class="cc-nut" data-ct="sua">Sửa</button>') + '</div>' +
+    var dn = !!nguoi();   // người lạ (quét QR, chưa đăng nhập): chỉ xem — không Quay lại / In / Sửa
+    return '<div class="ct-dau">' + (dn ? '<button type="button" class="lui" data-ct="lui">← Đã ghi nhận</button>' : '') + '<span class="gian"></span>' +
+      (dn && x.sku ? '<button type="button" class="cc-nut vien" data-ct="in">' + IC.inn + 'In tem</button>' : '') +
+      (dn && !x._dang ? '<button type="button" class="cc-nut" data-ct="sua">Sửa</button>' : '') + '</div>' +
       '<div class="panel"><div class="dai ' + lop + '"><span class="vach"></span><div><div class="nh">PHÂN LOẠI</div><div class="lon">' + e_(x.phanLoai || 'Chưa phân loại') + '</div></div>' +
       '<div class="sp"><b>' + e_(x.sku || x.maGo || 'Không có SKU') + '</b><span>' + e_(x.ten || '') + '</span></div></div>' +
       '<div class="than">' +
@@ -865,17 +901,16 @@
     if (!CT.ma) { if (el) el.hidden = true; if (g) g.hidden = false; return; }
     if (!el) { el = document.createElement('div'); el.id = 'ccCt'; v.appendChild(el); }
     if (g) g.hidden = true; el.hidden = false; window.scrollTo(0, 0);
-    var ma = CT.ma, x = timMa(ma);
-    if (!nguoi()) { el.innerHTML = '<div class="ct-dau"><button type="button" class="lui" data-ct="lui">← Đã ghi nhận</button></div><div class="panel"><div class="trong">Phiếu <b class="cc-mono">' + e_(ma) + '</b><br>' +
-      '<button type="button" class="cc-nut xanh" data-ct="dn">Đăng nhập để xem</button></div></div>'; return; }
-    el.innerHTML = x ? htmlCt(x) : '<div class="ct-dau"><button type="button" class="lui" data-ct="lui">← Đã ghi nhận</button></div><div class="panel"><div class="trong">Đang tải phiếu <b class="cc-mono">' + e_(ma) + '</b>…</div></div>';
+    var ma = CT.ma, x = timMa(ma), dau = nguoi() ? '<div class="ct-dau"><button type="button" class="lui" data-ct="lui">← Đã ghi nhận</button></div>' : '';
+    /* 11/11 user: xem qua QR KHÔNG cần đăng nhập (máy chủ chỉ mở ccdc_xem đúng mã, bỏ tk/lịch sử sửa) */
+    el.innerHTML = x ? htmlCt(x) : dau + '<div class="panel"><div class="trong">Đang tải phiếu <b class="cc-mono">' + e_(ma) + '</b>…</div></div>';
     if (x && x._cho) return;
     try {
       var j = await goiGas({ action: 'ccdc_xem', ma: ma }, 45000); if (CT.ma !== ma) return;
       var cu = timMa(ma); if (cu && !cu._cho) Object.assign(cu, j.x); CT.x = cu || j.x;
       var moi = htmlCt(CT.x); if (el.innerHTML !== moi) el.innerHTML = moi;
     } catch (e) { if (CT.ma !== ma || x) return;
-      el.innerHTML = '<div class="ct-dau"><button type="button" class="lui" data-ct="lui">← Đã ghi nhận</button></div><div class="panel"><div class="trong">' +
+      el.innerHTML = (nguoi() ? '<div class="ct-dau"><button type="button" class="lui" data-ct="lui">← Đã ghi nhận</button></div>' : '') + '<div class="panel"><div class="trong">' +
         (e.code === 404 ? 'Không thấy phiếu <b class="cc-mono">' + e_(ma) + '</b>' : 'Chưa tải được phiếu — ' + e_(e.message)) + '</div></div>'; }
   }
 
