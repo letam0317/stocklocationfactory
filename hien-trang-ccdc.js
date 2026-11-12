@@ -199,10 +199,32 @@
     '#ccTsModal .ts-ds button:hover{border-color:#1677ff}',
     '#ccTsModal .ts-ds b{font-weight:600} #ccTsModal .ts-ds small{display:block;font-size:12.5px;color:var(--ink3);margin-top:2px}',
     '#viewCcdc button.cc-to{font:inherit;font-weight:600;font-size:14.5px;width:100%}',
+    /* 12/11 pop-up Chuyển vị trí. Nút đầu khối KHÔNG dùng lớp .btn-filter: tat-loc.js coi .btn-filter đầu tiên trong tiêu đề là nút
+       ngăn kéo lọc và bấm hộ để đóng ⇒ mở nhầm pop-up. Lớp riêng, cùng dáng .btn-filter. */
+    '#ccDsKhoi .cc-vtnut{flex:none;display:inline-flex;align-items:center;justify-content:center;padding:0 10px;height:28px;font-size:12px;font-weight:600;line-height:1;border-radius:6px;border:1.5px solid #1677ff;background:#e6f4ff;color:#0958d9;cursor:pointer;white-space:nowrap;font-family:inherit}',   /* 12/11 user: khung nổi bật hơn */
+    '#ccDsKhoi .cc-vtnut{gap:5px} #ccDsKhoi .cc-vtnut svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}',
+    '@media(max-width:480px){#ccDsKhoi .cc-vtnut .chu{display:none} #ccDsKhoi .cc-vtnut{width:30px;padding:0}}',
+    '#ccDsKhoi .btn-filter.cc-locnut{width:30px;padding:0;gap:0} #ccDsKhoi .btn-filter.cc-locnut::after{display:none}',
+    '#ccDsKhoi .cc-locnut svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}',
+    '#ccDsKhoi .cc-vtnut:hover{background:#1677ff;color:#fff}',
+    '#ccDsKhoi .cc-vtnut svg{stroke-width:2}',
+    '#ccVtModal .modalbox{width:min(520px,96vw)} #ccVtModal .cc-than{padding:16px 18px 18px;overflow:auto}',
+    '#ccVtModal .vt-muc+.vt-muc{margin-top:16px}',
+    '#ccVtModal .vt-nhan{font-size:14px;font-weight:600;margin-bottom:8px} #ccVtModal .vt-nhan small{font-weight:400;font-size:12px;color:var(--ink3);margin-left:4px}',
+    '#ccVtModal .vt-hang{display:flex;gap:8px} #ccVtModal .vt-hang input{flex:1;min-width:0;height:38px;border:1px solid var(--line);border-radius:8px;padding:0 12px;font-size:16px;background:var(--surface);color:var(--ink)}',
+    '#ccVtModal .vt-hang .cc-nut{flex:none}',
+    '#ccVtModal .vt-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}',
+    '#ccVtModal .vt-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:6px;padding:3px 4px 3px 9px;font-size:13px;background:var(--surface)}',
+    '#ccVtModal .vt-chip b{font-weight:600;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px} #ccVtModal .vt-chip small{color:var(--ink3);font-size:12px;white-space:nowrap}',
+    '#ccVtModal .vt-chip.den{border-color:#91caff;background:#e6f4ff;color:#0958d9}',
+    '#ccVtModal .vt-chip button{border:0;background:none;color:var(--ink3);cursor:pointer;font-size:13px;padding:2px 5px;line-height:1}',
+    '#ccVtModal .vt-trong{font-size:12.5px;color:var(--ink3)}',
+    '#ccVtModal .vt-chan{margin-top:18px} #ccVtModal .vt-chan .cc-nut{width:100%}',
     /* pop-up camera trong trang (11/11 tối: ô tệp accept ảnh+clip có capture bị Android mở thư viện) */
     '#ccCamModal .modalbox{width:min(560px,96vw)}',
     '#ccCamModal .cc-than{padding:0;background:#000;display:flex;flex-direction:column;overflow:hidden}',
-    '#ccCamV{width:100%;aspect-ratio:3/4;max-height:64vh;object-fit:cover;background:#000;display:block}',
+    '#ccCamV{width:100%;aspect-ratio:3/4;max-height:64vh;max-height:58dvh;object-fit:cover;background:#000;display:block;flex:0 1 auto;min-height:0}',
+    '#ccCamModal .modalbox{max-height:94dvh} #ccCamModal .cam-dk{flex:none}',   /* 12/11 iPhone: vh tính cả thanh địa chỉ ⇒ hàng nút rơi khỏi màn */
     '#ccCamModal .cam-dk{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;padding:14px 16px;background:#000;color:#e2e8f0}',
     '#ccCamModal .cam-che{display:flex;gap:6px} #ccCamModal .cam-che button{border:1px solid #475569;background:none;color:#cbd5e1;border-radius:6px;padding:5px 12px;font-size:13px;cursor:pointer}',
     '#ccCamModal .cam-che button.on{background:#fff;color:#111;border-color:#fff;font-weight:600}',
@@ -212,6 +234,8 @@
     '#ccCamModal .cam-phai{display:flex;flex-direction:column;align-items:flex-end;gap:6px;font-size:12.5px;color:#cbd5e1}',
     '#ccCamModal .cam-phai .cc-nut{height:32px;padding:0 14px;font-size:13px}',
     '#ccCamModal .cam-gio{color:#fca5a5;font-variant-numeric:tabular-nums}',
+    '#ccCamModal .cam-may{border:0;background:#000;color:#93c5fd;font-size:13px;padding:0 16px 14px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px);cursor:pointer;text-align:center;width:100%}',
+    '#ccCamModal .cam-may[hidden]{display:none}',
     '@media(max-width:640px){#ccCamV{flex:1;min-height:0;max-height:none;aspect-ratio:auto}}',
     /* 11/11 user duyệt «Mẫu 1 · Thẻ Nhận diện SKU» (ưu tiên đủ tên): thẻ = cụm ACTIVE/Normal của Nhận diện SKU + SKU + TÊN ĐỦ
        (xuống dòng, không cắt) + dòng QR tài sản · S/N; khung/nút gọn; «Đã ghi nhận» xổ xuống, Bộ lọc chỉ Người ghi nhận */
@@ -353,8 +377,7 @@
       /* 11/11 user: «Đã ghi nhận» dạng mũi tên xổ xuống (mặc định ĐÓNG, bấm mới hiện lịch sử); tab phân loại vẫn ở ngoài;
          Bộ lọc = nút chữ chuẩn + ngăn kéo nổi (.panel > .filters) chỉ lọc NGƯỜI GHI NHẬN */
       '<section class="panel" id="ccDsKhoi"><div class="panel-head"><button type="button" class="ds-mo" data-lam="dsMo" aria-expanded="false">' + IC.mui + 'Đã ghi nhận <small id="ccDem"></small></button>' +
-        '<span class="gian"></span><button type="button" class="btn-filter" id="ccBtnLoc" data-lam="loc">Bộ lọc</button>' +
-        '<a class="cc-sheet" href="https://docs.google.com/spreadsheets/d/1sXd8imGeXriBFrUoxQlyfjESdhxv9tUxjLDfsJ06_do/edit" target="_blank" rel="noopener"><span class="mo-chu">Mở </span>Sheet ↗</a></div>' +
+        '<span class="gian"></span><button type="button" class="cc-vtnut" data-lam="vtMo" title="Chuyển vị trí" aria-label="Chuyển vị trí"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7h12M12 4l3 3-3 3M17 13H5M8 10l-3 3 3 3"/></svg><span class="chu">Chuyển vị trí</span></button><button type="button" class="btn-filter cc-locnut" id="ccBtnLoc" data-lam="loc" title="Tìm / lọc người ghi nhận" aria-label="Tìm / lọc người ghi nhận"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="M12.6 12.6 17 17"/></svg></button></div>' +   /* 12/11 user: bỏ «Sheet», Bộ lọc → biểu tượng tìm kiếm */
         '<div class="filters collapsed" id="ccLocBody"><span class="lbl">Người ghi nhận</span><input id="ccLocTim" type="text" autocomplete="off" placeholder="Tìm tên / mã NV"><div class="cc-locng" id="ccLocNg"></div></div>' +
         '<div class="cc-loc" id="ccLoc"></div><div id="ccDs" hidden></div></section>' +
       '</div>';
@@ -363,11 +386,20 @@
       document.body.appendChild(m); return m; };
     var mN = pop('ccNdsModal', 'Nhận diện SKU', '<div id="ccNdsCho"></div>');
     mN.addEventListener('click', function (ev) { if (ev.target === mN || ev.target.closest('.mclose')) ndsDong(); });
-    var mC = pop('ccCamModal', 'Chụp / quay', '<video id="ccCamV" autoplay playsinline muted></video>' +
+    /* 12/11 user «iOS bấm chụp/quay: camera toàn màn hình, không có nút chụp/quay/khoanh»: Safari / trình duyệt trong app
+       (Zalo…) đẩy <video> ra trình phát gốc nếu thiếu webkit-playsinline ⇒ mất pop-up + nút. Đủ thuộc tính + gán thuộc tính
+       JS trước khi gắn luồng (camMo); lỡ vẫn bung (webkitbeginfullscreen) ⇒ tự thoát và hiện nút «Camera máy» (camera gốc
+       của iPhone có sẵn nút chụp/quay). Nút «Camera máy» luôn có trên iPhone/iPad làm lối dự phòng. */
+    var IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    var mC = pop('ccCamModal', 'Chụp / quay', '<video id="ccCamV" autoplay playsinline webkit-playsinline muted disablepictureinpicture disableremoteplayback></video>' +
       '<div class="cam-dk"><div class="cam-che"><button type="button" data-cam="anh" class="on">Ảnh</button><button type="button" data-cam="clip">Clip</button></div>' +
       '<button type="button" class="cam-chup" aria-label="Chụp"><i></i></button>' +
-      '<div class="cam-phai"><span id="ccCamSo"></span><button type="button" class="cc-nut xanh" data-cam="xong">Xong</button></div></div>');
+      '<div class="cam-phai"><span id="ccCamSo"></span><button type="button" class="cc-nut xanh" data-cam="xong">Xong</button></div></div>' +
+      '<button type="button" class="cam-may" data-cam="may"' + (IOS ? '' : ' hidden') + '>Dùng camera máy</button>');
+    var vC = mC.querySelector('#ccCamV');
+    vC.addEventListener('webkitbeginfullscreen', function () { try { vC.webkitExitFullscreen(); } catch (e) { } var b = mC.querySelector('.cam-may'); if (b) b.hidden = false; });
     mC.addEventListener('click', function (ev) {
+      if (ev.target.closest('[data-cam="may"]')) { camDong(); camDuPhong(); return; }
       if (ev.target === mC || ev.target.closest('.mclose') || ev.target.closest('[data-cam="xong"]')) { camDong(); return; }
       var b = ev.target.closest('button'); if (!b) return;
       if (b.classList.contains('cam-chup')) { camChup(); return; }
@@ -392,6 +424,18 @@
       if (Math.abs(dx) > 50) veXemAnh(XA.i + (dx < 0 ? 1 : -1)); }, { passive: true });
     document.addEventListener('keydown', function (ev) { if (!XA || !mA.classList.contains('show') && getComputedStyle(mA).display === 'none') return;
       if (ev.key === 'ArrowRight') veXemAnh(XA.i + 1); else if (ev.key === 'ArrowLeft') veXemAnh(XA.i - 1); });
+    /* 12/11 «Chuyển vị trí»: quét NHIỀU mã vị trí nguồn → 1 mã vị trí đích ⇒ mọi phiếu đang ở nguồn đổi sang đích (ccdc_vitri) */
+    var mV = pop('ccVtModal', 'Chuyển vị trí', '<div id="ccVtThan"></div>');
+    mV.addEventListener('click', function (ev) {
+      if (ev.target === mV || ev.target.closest('.mclose')) { plgDongModal('ccVtModal'); return; }
+      var b = ev.target.closest('[data-vt]'); if (!b) return;
+      var k = b.dataset.vt;
+      if (k === 'quetTu') vtQuet('tu'); else if (k === 'quetDen') vtQuet('den');
+      else if (k === 'bo') { VT.tu.splice(+b.dataset.i, 1); vtVe(); }
+      else if (k === 'boDen') { VT.den = ''; vtVe(); }
+      else if (k === 'lam') vtLam();
+    });
+    mV.addEventListener('keydown', function (ev) { var t = ev.target; if (ev.key !== 'Enter' || !t.dataset || !t.dataset.vtgo) return; ev.preventDefault(); vtThem(t.dataset.vtgo, t.value); });
     var mI = pop('ccInModal', 'In tem hiện trạng', '<div id="ccInThan"></div>');
     mI.addEventListener('click', function (ev) { if (ev.target === mI || ev.target.closest('.mclose')) plgDongModal('ccInModal'); });
     var ve = document.createElement('div'); ve.id = 'ccVe';
@@ -504,6 +548,7 @@
       else if (lam === 'gui') gui();
       else if (lam === 'huySua') { formMoi(); veForm(); veDs(); }
       else if (lam === 'xemThem') { CC.soHien += TRANG; veDs(); }
+      else if (lam === 'vtMo') vtMo();
     });
     v.addEventListener('dragover', function (ev) { var k = ev.target.closest && ev.target.closest('#ccKeo'); if (k) { ev.preventDefault(); k.classList.add('keo'); } });
     v.addEventListener('dragleave', function (ev) { var k = ev.target.closest && ev.target.closest('#ccKeo'); if (k) k.classList.remove('keo'); });
@@ -537,7 +582,8 @@
     try {
       CAM.st = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1440 } }, audio: false });
       if (getComputedStyle($('ccCamModal')).display === 'none') { camTat(); return; }   // đóng trước khi camera kịp mở
-      var v = $('ccCamV'); v.srcObject = CAM.st; try { await v.play(); } catch (e) { }
+      var v = $('ccCamV'); v.muted = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.setAttribute('webkit-playsinline', '');   // 12/11 iPhone: thuộc tính JS trước srcObject
+      v.srcObject = CAM.st; try { await v.play(); } catch (e) { }
     } catch (e) { camTat(); plgDongModal('ccCamModal'); bao('Không mở được camera trong trang — dùng camera của máy', 'warn'); camDuPhong(); }
   }
   function camTat() { if (CAM.st) CAM.st.getTracks().forEach(function (t) { t.stop(); }); CAM.st = null; var v = $('ccCamV'); if (v) v.srcObject = null; }
@@ -672,6 +718,50 @@
     qtcQuetMo();
     /* đóng bộ quét không quét gì ⇒ trả lại tiêu đề cũ */
     var m = $('qtcqrmodal'); if (m && td) { var canh = setInterval(function () { if (!QTC.dich) { tra(); clearInterval(canh); } }, 500); setTimeout(function () { clearInterval(canh); }, 600000); }
+  }
+  /* ---------------- 5b. Chuyển vị trí hàng loạt (12/11) ---------------- */
+  var VT = { tu: [], den: '', dang: false };
+  function vtChuan(v) { return String(v || '').trim().slice(0, 60); }
+  function vtDem(ma) { var k = ma.toUpperCase(); return CC.ds.filter(function (x) { return String(x.viTri || '').trim().toUpperCase() === k; }).length; }
+  function vtMo() { VT = { tu: [], den: '', dang: false }; vtVe(); plgMoModal('ccVtModal'); }
+  function vtThem(o, v) {
+    v = vtChuan(v); if (!v) return;
+    if (o === 'den') VT.den = v;
+    else if (!VT.tu.some(function (x) { return x.toUpperCase() === v.toUpperCase(); })) VT.tu.push(v);
+    vtVe(); var i = document.querySelector('#ccVtThan [data-vtgo="' + o + '"]'); if (i) i.focus();
+  }
+  function vtQuet(o) {
+    if (typeof qtcQuetMo !== 'function' || typeof QTC === 'undefined') { bao('Chưa có bộ quét mã', 'err'); return; }
+    var td = document.querySelector('#qtcqrmodal .mt'), tdCu = td ? td.textContent : '';
+    if (td) td.textContent = o === 'den' ? 'Quét mã vị trí đích' : 'Quét mã vị trí nguồn' + (VT.tu.length ? ' (đã có ' + VT.tu.length + ')' : '');
+    QTC.dich = function (ma) { if (td) td.textContent = tdCu; vtThem(o, ma); bao((o === 'den' ? 'Vị trí đích: ' : 'Đã thêm nguồn: ') + vtChuan(ma), 'ok');
+      if (o === 'tu') setTimeout(function () { if (getComputedStyle($('ccVtModal')).display !== 'none') vtQuet('tu'); }, 700); };   // nguồn: quét liên tục tới khi đóng ✕
+    qtcQuetMo();
+    var canh = setInterval(function () { if (!QTC.dich) { if (td) td.textContent = tdCu; clearInterval(canh); } }, 500); setTimeout(function () { clearInterval(canh); }, 600000);
+  }
+  function vtVe() {
+    var el = $('ccVtThan'); if (!el) return;
+    var tong = 0, chip = VT.tu.map(function (m, i) { var n = vtDem(m); tong += n;
+      return '<span class="vt-chip"><b>' + e_(m) + '</b><small>' + n + ' phiếu</small><button type="button" data-vt="bo" data-i="' + i + '" aria-label="Bỏ">✕</button></span>'; }).join('');
+    var trungDen = VT.den && VT.tu.some(function (m) { return m.toUpperCase() === VT.den.toUpperCase(); });
+    el.innerHTML =
+      '<div class="vt-muc"><div class="vt-nhan">Từ mã vị trí / mã giỏ <small>quét liên tục nhiều mã, ✕ để dừng</small></div>' +
+        '<div class="vt-hang"><input data-vtgo="tu" type="text" autocomplete="off" enterkeyhint="done" placeholder="Gõ mã rồi Enter"><button type="button" class="cc-nut" data-vt="quetTu">' + IC.qr + 'Quét</button></div>' +
+        '<div class="vt-chips">' + (chip || '<span class="vt-trong">Chưa có mã nguồn</span>') + '</div></div>' +
+      '<div class="vt-muc"><div class="vt-nhan">Về mã vị trí</div>' +
+        (VT.den ? '<div class="vt-chips"><span class="vt-chip den"><b>' + e_(VT.den) + '</b><button type="button" data-vt="boDen" aria-label="Bỏ">✕</button></span></div>'
+          : '<div class="vt-hang"><input data-vtgo="den" type="text" autocomplete="off" enterkeyhint="done" placeholder="Gõ mã rồi Enter"><button type="button" class="cc-nut" data-vt="quetDen">' + IC.qr + 'Quét</button></div>') + '</div>' +
+      '<div class="vt-chan"><button type="button" class="cc-nut xanh" data-vt="lam"' + (!VT.tu.length || !VT.den || !tong || trungDen || VT.dang ? ' disabled' : '') + '>' +
+        (VT.dang ? 'Đang chuyển…' : 'Chuyển ' + tong + ' phiếu' + (VT.den ? ' → ' + e_(VT.den) : '')) + '</button></div>';
+  }
+  function vtLam() {
+    if (VT.dang || !VT.tu.length || !VT.den) return;
+    VT.dang = true; vtVe();
+    goiGas({ action: 'ccdc_vitri', tu: VT.tu, den: VT.den }, 60000).then(function (j) {
+      (j.doi || []).forEach(function (d) { var x = timMa(d.ma); if (x) { x.viTri = j.den; x.lichSu = d.lichSu; x.capNhat = j.capNhat; } });
+      luuDs(); veDs(); plgDongModal('ccVtModal');
+      bao('Đã chuyển ' + (j.doi || []).length + ' phiếu về ' + j.den, 'ok');
+    }).catch(function (e) { bao('Chưa chuyển được: ' + e.message, 'err'); }).finally(function () { VT.dang = false; vtVe(); });
   }
   var NDS_CHO = null;
   function ndsMo() {

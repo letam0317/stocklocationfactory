@@ -683,6 +683,10 @@ body.an-chan .footbar{display:none}
 }
 /* Pop-up camera quét mã (dùng chung vỏ .modal/.modalbox — thừa hưởng sheetIn + kính mờ + Escape) */
 .qtcqrbox{width:min(520px,94vw)}
+/* 12/11 user: bộ quét mở từ trong pop-up (Nhận diện SKU, Chuyển vị trí CCDC…) nằm DƯỚI nền pop-up đó — cùng z-index 99 mà pop-up
+   kia gắn vào body sau. Bộ quét luôn là lớp trên cùng của các pop-up; đóng / quét xong là lộ lại pop-up bên dưới. */
+#qtcqrmodal{z-index:115}
+#qtcqrmodal:not(.show){pointer-events:none}   /* đang mờ dần khi đóng (240 ms) — không chặn chạm vào pop-up vừa mở bên dưới */
 .qtcqrbody{padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px}
 .qtcnhaptay{display:flex;gap:8px;align-items:center}
 .qtcnhaptay input{flex:1;min-width:0;height:40px;border:1px solid var(--line);border-radius:8px;padding:0 12px;font:inherit;font-size:15px;background:var(--surface);color:var(--ink)}
@@ -6008,7 +6012,7 @@ var CCDC_NAP={dang:null,xong:false};
 function ccdcNap(){
   if(CCDC_NAP.xong){ ccdcMo(); return; }
   if(CCDC_NAP.dang) return;
-  CCDC_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='hien-trang-ccdc.js?v=20261111n'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
+  CCDC_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='hien-trang-ccdc.js?v=20261112b'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
     .then(function(){ CCDC_NAP.xong=true; if(TOPTAB==='ccdc') ccdcMo(); })
     .catch(function(){ CCDC_NAP.dang=null; var v=document.getElementById('viewCcdc'); if(v) v.innerHTML='<div class="state" style="padding:32px 20px">Không tải được công cụ (mất mạng?). <button type="button" class="kktab" onclick="ccdcNap()">Thử lại</button></div>'; });
 }
