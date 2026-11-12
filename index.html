@@ -2679,6 +2679,7 @@ body.side-anim:has(.wrap :is([class*="modal"],[id$="modal"],[id$="Modal"],#light
  * ============================================================================================ */
 /* Ảnh tem BÊN TRÁI, SKU gợi ý BÊN PHẢI — nhìn ảnh và đối chiếu kết quả cùng lúc, không
    phải cuộn qua lại. Cột kết quả rộng hơn vì tên hàng WMS rất dài. */
+.nds-mokhung{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;height:40px;margin-top:9px}.nds-mokhung svg{width:18px;height:18px}.nds-mokhung[hidden]{display:none}
 .nds-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:16px;align-items:start}
 @media(max-width:900px){.nds-grid{grid-template-columns:1fr}}
 
@@ -3668,7 +3669,9 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
       <div class="nds-magoi" id="ndsMaGoi" hidden></div>
       <!-- 11/11 user duyệt «Mẫu thao tác Nhận diện SKU»: gõ S/N · QR tài sản · phiếu IT · tên sản phẩm ⇒ danh sách SKU gợi ý (tới 8 dòng) -->
       <div class="nds-goids" id="ndsGoiDs" hidden></div>
-      <div class="nds-stage" id="ndsStage">
+      <!-- 12/11 user: bỏ khung camera lúc đầu, chỉ còn nút — bấm mới hiện khung (ndsMoKhung / ndsLop) -->
+      <button type="button" class="kktab nds-mokhung" id="ndsMoKhung" onclick="ndsMoKhung()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9a2 2 0 0 1 2-2h1.5l1.2-2h6.6l1.2 2H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.4"/></svg>Bật camera, chọn ảnh</button>
+      <div class="nds-stage" id="ndsStage" style="display:none">
         <!-- `webkit-playsinline` + `autoplay` là BẮT BUỘC cho iOS, không chỉ `playsinline`:
              Safari trên iPhone tự đưa <video> vào TOÀN MÀN HÌNH khi play nếu thiếu thuộc tính
              tiền tố cũ. Lúc đó khung camera phủ hết màn, nút "Chụp" (position:fixed) và hàng zoom
@@ -6022,7 +6025,7 @@ var CCDC_NAP={dang:null,xong:false};
 function ccdcNap(){
   if(CCDC_NAP.xong){ ccdcMo(); return; }
   if(CCDC_NAP.dang) return;
-  CCDC_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='hien-trang-ccdc.js?v=20261112f'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
+  CCDC_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='hien-trang-ccdc.js?v=20261112h'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
     .then(function(){ CCDC_NAP.xong=true; if(TOPTAB==='ccdc') ccdcMo(); })
     .catch(function(){ CCDC_NAP.dang=null; var v=document.getElementById('viewCcdc'); if(v) v.innerHTML='<div class="state" style="padding:32px 20px">Không tải được công cụ (mất mạng?). <button type="button" class="kktab" onclick="ccdcNap()">Thử lại</button></div>'; });
 }
@@ -13431,6 +13434,7 @@ async function ndsNapDs(rows, vanDm){
      mở, trước cả khi có rows). */
   var choGoi = NDS._goiCho || (NDS._goiCho = ndsKhoDoc());
   NDS.van = ndsVan(rows, vanDm);
+  NDS._dsTho = rows; ndsGoiLai();   // 12/11 tối: gợi ý theo tên dùng được ngay, không chờ dựng chỉ mục
   try{
     var goi = await choGoi;
     NDS._goiCho = null;                     // 4,25MB: dùng xong thì thả, đừng giữ cả phiên
@@ -13514,7 +13518,11 @@ function ndsLop(che){
   if (em) em.hidden = (che!=='trong');
   if (ai) ai.hidden = (che!=='camera');
   if (hi) hi.hidden = (che!=='camera');
+  var st=d('ndsStage'), mk=d('ndsMoKhung'), mo=che!=='trong'||NDS.moKhung;   // 12/11: khung chỉ hiện sau khi bấm «Bật camera, chọn ảnh»
+  if (st) st.style.display = mo ? '' : 'none';
+  if (mk) mk.hidden = mo;
 }
+function ndsMoKhung(){ NDS.moKhung=true; ndsLop(NDS.anh ? 'anh' : 'trong'); ndsCam(); }
 async function ndsCam(){
   var v=document.getElementById('ndsVideo');
   if (NDS.stream){ ndsTatCam(); return; }
@@ -14605,14 +14613,26 @@ function ndsQuetQr(){
   qtcQuetMo();
 }
 function ndsTimTen(txt){
-  var ds = (window.NDS && NDS.ds) || [], man = ndsBoDau(txt).split(/[\s,/;]+/).filter(function(x){ return x.length >= 2; });
+  /* 12/11 tối user: «máy in» ra máy khuếch tán (chữ «in» lọt giữa «tinh») ⇒ chấm điểm: cả cụm đúng từ > từng mảnh đứng đầu từ > lọt giữa từ.
+     Mảnh ≤2 ký tự phải đứng đầu một từ. Quét hết danh mục rồi mới xếp (không dừng ở 40 dòng đầu). */
+  var ds = (window.NDS && (NDS.ds || NDS._dsTho)) || [], bd = ndsBoDau(txt).trim(), man = bd.split(/[\s,/;]+/).filter(function(x){ return x.length >= 2; });
   if (!man.length || !/[a-z]/.test(man.join(''))) return [];
-  var ra = [];
-  for (var i = 0; i < ds.length && ra.length < 40; i++){ var t = ds[i]._bd || (ds[i]._bd = ndsBoDau(ds[i].pn));
-    if (man.every(function(m){ return t.indexOf(m) >= 0; })) ra.push(ds[i]); }
-  ra.sort(function(a, b){ return (a.status === 'INACTIVE') - (b.status === 'INACTIVE'); });
-  return ra.slice(0, 8).map(function(r){ return { sku: String(r.sku), ten: r.pn, tag: r.status || 'ACTIVE' }; });
+  var esc_ = function(x){ return x.replace(/[.*+?^${}()|[\]\\-]/g, '\\$&'); };
+  var dau = man.map(function(m){ return new RegExp('(^|[^a-z0-9])' + esc_(m)); }), tron = man.map(function(m){ return new RegExp('(^|[^a-z0-9])' + esc_(m) + '($|[^a-z0-9])'); });
+  var cum = man.length > 1 ? new RegExp('(^|[^a-z0-9])' + esc_(man.join(' ')) + '($|[^a-z0-9])') : null, ra = [];
+  for (var i = 0; i < ds.length; i++){ var t = ds[i]._bd || (ds[i]._bd = ndsBoDau(ds[i].pn)), d = 0, bo = false;
+    for (var k = 0; k < man.length; k++){ if (t.indexOf(man[k]) < 0){ bo = true; break; }
+      if (tron[k].test(t)) d += 10; else if (dau[k].test(t)) d += 6; else if (man[k].length <= 2){ bo = true; break; } }
+    if (bo) continue;
+    if (cum && cum.test(t)) d += 100;
+    if (t.indexOf(man.join(' ')) === 0) d += 30;   // tên BẮT ĐẦU bằng cụm gõ («Máy in …» trước «Dây cáp USB máy in»)
+    ra.push({ r: ds[i], d: d - (ds[i].status === 'INACTIVE' ? 50 : 0) });
+  }
+  ra.sort(function(a, b){ return b.d - a.d || a.r.pn.length - b.r.pn.length; });
+  return ra.slice(0, 8).map(function(x){ var r = x.r; return { sku: String(r.sku), ten: r.pn, tag: r.status || 'ACTIVE' }; });
 }
+/* 12/11 tối: gõ trước khi danh mục nạp xong ⇒ nạp xong tự hiện gợi ý (không cần Enter) */
+function ndsGoiLai(){ var i = document.getElementById('ndsMa'); if (i && String(i.value || '').trim().length >= 2) ndsGoiHen(i.value); }
 function ndsVeGoiDs(nhom, trong){
   var el = document.getElementById('ndsGoiDs'); if (!el) return;
   var co = nhom.filter(function(g){ return g.dong.length; });
@@ -14636,7 +14656,7 @@ function ndsGoiHen(txt){
   if (kw.length < 2){ ndsVeGoiDs([], ''); return; }
   NDS_GOI.hen = setTimeout(function(){
     var ten = ndsTimTen(kw), nhom = [{ nhom: 'Danh mục SKU · khớp tên sản phẩm', dong: ten }];
-    ndsVeGoiDs(nhom, '');                                       // tên: tức thì từ danh mục trong máy
+    ndsVeGoiDs(nhom, (NDS.ds || NDS._dsTho) ? '' : 'Đang tải danh mục SKU…');                                       // tên: tức thì từ danh mục trong máy
     var laMa = ndsLaPhieu(kw) || (kw.length >= 6 && /\d/.test(kw) && !/\s/.test(kw));
     if (!laMa) return;
     ndsTraTs(kw).then(function(j){
@@ -14649,11 +14669,12 @@ function ndsGoiHen(txt){
         dong: (j.ds || []).slice(0, 8).map(function(d){ return { sku: d.sku, ten: d.ten, phu: [d.qr && 'QR ' + d.qr, d.sn && 'S/N ' + d.sn, d.kho].filter(Boolean).join(' · ') }; }) });
       ndsVeGoiDs(dau.concat(nhom), j.loi || (j.loai === 'phieu' && !(j.ds || []).length ? 'Không thấy phiếu / PL ' + kw + ' trên WMS' : ''));
     });
-  }, 350);
+  }, 150);
 }
 function ndsMaGo(txt){
   ndsGoiHen(txt);   // 11/11 danh sách gợi ý S/N · QR tài sản · phiếu IT · tên
-  var el=document.getElementById('ndsMaGoi'); if (!el) return;
+  /* 12/11 user: bỏ dòng «Mã trong danh mục:» — ngăn kéo «Danh mục SKU · khớp tên sản phẩm» bên dưới đã gợi ý */
+  var el=document.getElementById('ndsMaGoi'); if (el){ el.hidden=true; el.innerHTML=''; } return;
   var ma=ndsGoiMa(txt), sku=ndsGoiSku(txt);
   /* Gõ ≥6 chữ số là đang chép SKU (9 số) → SKU đứng trước; 4-5 số thường là khúc giữa của mã NCC
      in trên tem (ca "5374" → F9-5374) → mã NCC đứng trước. Tổng trần 8 nút như cũ. */

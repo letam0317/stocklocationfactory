@@ -158,6 +158,11 @@
     '.cc-pop .cc-than{padding:14px 18px;overflow:auto;flex:1}',
     '#ccNdsModal .modalbox{width:min(1100px,96vw);height:min(900px,92dvh)}',
     '#ccNdsModal .cc-than{padding:0 4px} #ccNdsModal #viewNds{display:block}',
+    /* 12/11 user: «1 · Ảnh tem nhà cung cấp» khít lên trên, khung cách khung 3px */
+    '#ccNdsModal .cc-than{padding:3px} #ccNdsModal .nds-grid{gap:3px} #ccNdsModal #viewNds .panel{margin:0} #ccNdsModal #viewNds .panel>h2:first-child{margin-top:0}',
+    /* 12/11 tối user: bỏ khoảng trống khoanh đỏ — đầu pop-up, dưới khung 1, chỗ trống khung 2 ⇒ khít theo dữ liệu */
+    '#ccNdsModal .modalbox::before{margin:5px auto 0} #ccNdsModal .modalhd{padding:6px 12px 6px 14px} #ccNdsModal #viewNds .panel{padding:10px 12px} #ccNdsModal #viewNds .panel h2{margin-bottom:6px}',
+    '#ccNdsModal #ndsState{padding:8px 4px!important;min-height:0!important} #ccNdsModal #ndsFoot:empty{display:none}',
     '@media(max-width:640px){.cc-pop .modalbox{width:100%;max-height:100dvh;height:100dvh;border-radius:0}}',
     /* khoanh vùng */
     '#ccVe{position:fixed;inset:0;z-index:120;background:#0b1220;color:#fff;display:none;flex-direction:column}',
@@ -216,6 +221,9 @@
     '#ccVtModal .vt-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}',
     '#ccVtModal .vt-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:6px;padding:3px 4px 3px 9px;font-size:13px;background:var(--surface)}',
     '#ccVtModal .vt-chip b{font-weight:600;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px} #ccVtModal .vt-chip small{color:var(--ink3);font-size:12px;white-space:nowrap}',
+    /* 12/11 mã giỏ: chip cam + biểu tượng giỏ; «Vị trí đặt» hiện 2 ô bin · giỏ */
+    '#ccVtModal .vt-chip.gio,#viewCcdc .cc-vt b.gio{border-color:#ffd591;background:#fff7e6} #ccVtModal .vt-chip.gio svg,#viewCcdc .cc-vt b.gio svg{width:14px;height:14px;color:#d46b08;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}',
+    '#viewCcdc .cc-vt b.gio{display:inline-flex;align-items:center;gap:4px}',
     '#ccVtModal .vt-chip.den{border-color:#91caff;background:#e6f4ff;color:#0958d9}',
     '#ccVtModal .vt-chip button{border:0;background:none;color:var(--ink3);cursor:pointer;font-size:13px;padding:2px 5px;line-height:1}',
     '#ccVtModal .vt-trong,#ccVtXemModal .vt-trong{font-size:12.5px;color:var(--ink3)}',
@@ -486,7 +494,7 @@
   }
 
   /* ---------------- 4. Form ---------------- */
-  function formMoi() { CC.f = { ma: '', sua: false, sku: '', maGo: '', cach: '', ten: '', loai: '', dv: '', status: '', tep: [], ghiChu: '', phanLoai: '', viTri: '', qrTs: '', sn: '', loi: '' }; }
+  function formMoi() { CC.f = { ma: '', sua: false, sku: '', maGo: '', cach: '', ten: '', loai: '', dv: '', status: '', tep: [], ghiChu: '', phanLoai: '', viTri: '', gio: '', qrTs: '', sn: '', loi: '' }; }
   function veForm() {
     var el = $('ccForm'); if (!el) return; var f = CC.f, n = nguoi();
     /* Mẫu 1 (user duyệt 11/11): cụm trạng thái y Nhận diện SKU (ACTIVE / Normal xếp dọc) + SKU + tên ĐỦ (xuống dòng);
@@ -525,10 +533,10 @@
       '<div class="cc-h3">3 · Ghi chú <i>*</i></div>' +
       '<textarea id="ccGhiChu" placeholder="Hiện trạng, chỗ hư…">' + e_(f.ghiChu) + '</textarea>' +
       '<div class="cc-h3">Phân loại <i>*</i></div>' +
-      '<div class="cc-pl' + (/vị trí/i.test(f.loi || '') && !f.viTri ? ' thieu-vt' : '') + '">' + PL.map(function (p) { var on = f.phanLoai === p;
-        return '<button type="button" data-pl="' + e_(p) + '" class="' + PL_LOP[p] + (on ? ' on' : '') + (on && f.viTri ? ' co-vt' : '') + '"><span class="pl-t">' + e_(nhanPL(p)) + '</span>' +
+      '<div class="cc-pl' + (/vị trí/i.test(f.loi || '') && !f.viTri && !f.gio ? ' thieu-vt' : '') + '">' + PL.map(function (p) { var on = f.phanLoai === p;
+        return '<button type="button" data-pl="' + e_(p) + '" class="' + PL_LOP[p] + (on ? ' on' : '') + (on && (f.viTri || f.gio) ? ' co-vt' : '') + '"><span class="pl-t">' + e_(nhanPL(p)) + '</span>' +
           '<span class="pl-qr" data-plqr="' + e_(p) + '" title="Quét mã vị trí">' + IC.qr + '</span></button>'; }).join('') + '</div>' +
-      (f.viTri ? '<div class="cc-vt">Vị trí đặt <b>' + e_(f.viTri) + '</b><button type="button" class="x" data-lam="boVt" aria-label="Bỏ vị trí">✕</button></div>' : '') +
+      (f.viTri || f.gio ? '<div class="cc-vt">Vị trí đặt ' + (f.viTri ? '<b>' + e_(f.viTri) + '</b>' : '') + (f.gio ? '<b class="gio">' + IC_GIO + e_(f.gio) + '</b>' : '') + '<button type="button" class="x" data-lam="boVt" aria-label="Bỏ vị trí">✕</button></div>' : '') +
       (f.loi ? '<div class="cc-loi">' + e_(f.loi) + '</div>' : '') +
       '<div class="cc-gui">' + (n ? av(n.ten) + '<div class="ng">Người gửi <b>' + e_(n.ten) + '</b> · ' + e_(n.id) + '</div>' : '<div class="ng">Chưa đăng nhập</div>') +
       '<button type="button" class="cc-nut xanh" data-lam="gui">' + (n ? (f.sua ? 'Lưu' : (f.sku ? 'In, gửi' : 'Gửi')) : 'Đăng nhập để gửi') + '</button></div>';
@@ -573,7 +581,7 @@
       if (b.dataset.dong) { moSua(b.dataset.dong); return; }
       var lam = b.dataset.lam;
       if (lam === 'boSku') { ganSku(null, '', ''); CC.f.cach = ''; veForm(); }
-      else if (lam === 'boVt') { CC.f.viTri = ''; veForm(); }
+      else if (lam === 'boVt') { CC.f.viTri = ''; CC.f.gio = ''; veForm(); }
       else if (lam === 'cam') camMo();
       else if (lam === 'dsMo') dsMo(!CC.dsMo);
       else if (lam === 'loc') { var lb = $('ccLocBody'), mo = lb.classList.contains('collapsed'); lb.classList.toggle('collapsed', !mo); b.classList.toggle('mo', mo); if (mo) { veLocNg(); var ti = $('ccLocTim'); if (ti && window.innerWidth > 640) ti.focus(); } }
@@ -763,7 +771,7 @@
     if (gop) {
       CC.f.tep = CC.f.tep.concat(cu.tep);
       if (cu.ghiChu && cu.ghiChu !== CC.f.ghiChu) CC.f.ghiChu = (CC.f.ghiChu ? CC.f.ghiChu + '\n' : '') + cu.ghiChu;
-      if (cu.phanLoai) CC.f.phanLoai = cu.phanLoai; if (cu.viTri) CC.f.viTri = cu.viTri;
+      if (cu.phanLoai) CC.f.phanLoai = cu.phanLoai; if (cu.viTri) CC.f.viTri = cu.viTri; if (cu.gio) CC.f.gio = cu.gio;
       veForm();
     }
     bao('Đã có phiếu ' + ma + (x.sku ? ' · ' + x.sku : '') + ' — nạp lại để cập nhật' + (gop ? ' (gộp phần vừa nhập)' : ''), 'ok');
@@ -775,7 +783,9 @@
     if (truong && QUET_TEN[truong]) {
       if (td) td.textContent = QUET_TEN[truong];
       QTC.dich = function (ma) { tra(); if (truong !== 'viTri' && !CC.f.sua && napCu(ma)) return; if (truong !== 'viTri' && quetTs(ma)) return;
-        CC.f[truong] = String(ma || '').trim().slice(0, 120); if (truong === 'viTri' && /vị trí/i.test(CC.f.loi || '')) CC.f.loi = ''; veForm(); bao(QUET_TEN[truong].replace('Quét ', 'Đã quét ') + ': ' + CC.f[truong], 'ok'); };
+        var v = String(ma || '').trim().slice(0, 120);
+        if (truong === 'viTri' && v && !laBin(v)) { CC.f.gio = v.toUpperCase(); if (!CC.f.viTri) CC.f.viTri = binCuaGio(v); bao('Đã quét mã giỏ: ' + CC.f.gio, 'ok'); veForm(); return; }   // 12/11 giỏ nằm trong bin
+        CC.f[truong] = v; if (truong === 'viTri' && /vị trí/i.test(CC.f.loi || '')) CC.f.loi = ''; veForm(); bao(QUET_TEN[truong].replace('Quét ', 'Đã quét ') + ': ' + CC.f[truong], 'ok'); };
     } else QTC.dich = function (ma) { tra(); if (!CC.f.sua && napCu(ma)) return;   // ⓪ 12/11 mã duy nhất đã có phiếu ⇒ nạp lại để cập nhật
       if (quetTs(ma)) return;   // ① QR tài sản → SKU + QR tài sản + S/N
       /* bộ quét trả (nguyên chuỗi, mã đã bóc cụm số) — SKU: thử nguyên chuỗi trước, không ra thì thử mã đã bóc (QR kèm chữ/URL) */
@@ -793,8 +803,15 @@
   }
   /* ---------------- 5b. Chuyển vị trí hàng loạt (12/11) ---------------- */
   var VT = { tu: [], den: '', dang: false };
+  /* 12/11 user: mã F0-… = mã vị trí (bin), mã khác = mã giỏ; chuyển giỏ thì giỏ nằm trong bin — giữ cả 2 (cột «Mã giỏ») */
+  function laBin(m) { return /^F\d+-/i.test(String(m || '').trim()); }
+  var IC_GIO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h18l-2 11H5z"/><path d="M8 9l4-5 4 5"/></svg>';
+  /* dữ liệu cũ: ô vị trí còn chính mã giỏ (Sheet giữ để trang bản cũ chạy) ⇒ không hiện 2 lần */
+  function binRieng(x) { var v = String(x.viTri || '').trim(); return v && x.gio && v.toUpperCase() === String(x.gio).toUpperCase() ? '' : v; }
+  function oVt(x, ma) { var k = ma.toUpperCase(); return String(x.viTri || '').trim().toUpperCase() === k || String(x.gio || '').trim().toUpperCase() === k; }
+  function binCuaGio(g) { var k = String(g || '').toUpperCase(), x = CC.ds.find(function (y) { return String(y.gio || '').toUpperCase() === k && laBin(y.viTri); }); return x ? x.viTri : ''; }
   function vtChuan(v) { return String(v || '').trim().slice(0, 60); }
-  function vtDem(ma) { var k = ma.toUpperCase(); return CC.ds.filter(function (x) { return String(x.viTri || '').trim().toUpperCase() === k; }).length; }
+  function vtDem(ma) { return CC.ds.filter(function (x) { return oVt(x, ma); }).length; }
   function vtMo() { VT = { tu: [], den: '', dang: false }; vtVe(); plgMoModal('ccVtModal'); }
   function vtThem(o, v) {
     v = vtChuan(v); if (!v) return;
@@ -814,7 +831,7 @@
   function vtVe() {
     var el = $('ccVtThan'); if (!el) return;
     var tong = 0, chip = VT.tu.map(function (m, i) { var n = vtDem(m); tong += n;
-      return '<span class="vt-chip"><b>' + e_(m) + '</b><small>' + n + ' phiếu</small>' +
+      return '<span class="vt-chip' + (laBin(m) ? '' : ' gio') + '">' + (laBin(m) ? '' : IC_GIO) + '<b>' + e_(m) + '</b><small>' + n + ' phiếu</small>' +
         (n ? '<button type="button" class="mat" data-vt="xem" data-i="' + i + '" aria-label="Xem phiếu tại ' + e_(m) + '" title="Xem phiếu tại ' + e_(m) + '">' + IC.mat + '</button>' : '') +
         '<button type="button" data-vt="bo" data-i="' + i + '" aria-label="Bỏ">✕</button></span>'; }).join('');
     var trungDen = VT.den && VT.tu.some(function (m) { return m.toUpperCase() === VT.den.toUpperCase(); });
@@ -830,7 +847,7 @@
   }
   function vtXem(ma) {
     if (!ma) return; var k = ma.toUpperCase();
-    var ds = CC.ds.filter(function (x) { return String(x.viTri || '').trim().toUpperCase() === k; });
+    var ds = CC.ds.filter(function (x) { return oVt(x, k); });
     var td = document.querySelector('#ccVtXemModal .mt'); if (td) td.textContent = 'Phiếu tại ' + ma + ' · ' + ds.length;
     $('ccVtXemThan').innerHTML = ds.length ? ds.map(function (x) {
       var anh = (x.tep || []).map(function (t, i) { var src = thumb(t);
@@ -849,7 +866,7 @@
     if (VT.dang || !VT.tu.length || !VT.den) return;
     VT.dang = true; vtVe();
     goiGas({ action: 'ccdc_vitri', tu: VT.tu, den: VT.den }, 60000).then(function (j) {
-      (j.doi || []).forEach(function (d) { var x = timMa(d.ma); if (x) { x.viTri = j.den; x.lichSu = d.lichSu; x.capNhat = j.capNhat; } });
+      (j.doi || []).forEach(function (d) { var x = timMa(d.ma); if (x) { x.viTri = d.viTri != null ? d.viTri : j.den; if (d.gio != null) x.gio = d.gio; x.lichSu = d.lichSu; x.capNhat = j.capNhat; } });
       luuDs(); veDs(); plgDongModal('ccVtModal');
       bao('Đã chuyển ' + (j.doi || []).length + ' phiếu về ' + j.den, 'ok');
     }).catch(function (e) { bao('Chưa chuyển được: ' + e.message, 'err'); }).finally(function () { VT.dang = false; vtVe(); });
@@ -961,12 +978,12 @@
     if (!f.tep.length) { f.loi = 'Cần ít nhất 1 ảnh hoặc clip.'; veForm(); return; }
     if (!String(f.ghiChu).trim()) { f.loi = 'Cần ghi chú hiện trạng.'; veForm(); var g = $('ccGhiChu'); if (g) g.focus(); return; }
     if (!f.phanLoai) { f.loi = 'Cần chọn phân loại.'; veForm(); return; }   // 11/11 user: Phân loại bắt buộc
-    if (!String(f.viTri || '').trim()) { f.loi = 'Cần mã vị trí — bấm biểu tượng QR trên nút phân loại để quét / nhập.'; veForm(); return; }   // 11/11 tối user: bắt buộc mã vị trí mới cho gửi/in
+    if (!String(f.viTri || '').trim() && !String(f.gio || '').trim()) { f.loi = 'Cần mã vị trí — bấm biểu tượng QR trên nút phân loại để quét / nhập.'; veForm(); return; }   // 11/11 tối user: bắt buộc mã vị trí mới cho gửi/in
     var inLuon = !f.sua && !!f.sku;                                          // 11/11 user: nút «In, gửi» = gửi + in 1 tem
     var cu = f.sua ? timMa(f.ma) : null, now = Date.now();
     var it = { ma: f.ma || maMoi(), luc: cu ? cu.luc : now, capNhat: now, nguoi: cu ? cu.nguoi : n.ten, tk: cu ? cu.tk : n.id,
       sku: f.sku, maGo: f.maGo, cach: f.sku || f.maGo ? (f.cach || 'Gõ tay') : '', ten: f.ten, loai: f.loai, dv: f.dv, phanLoai: f.phanLoai,
-      ghiChu: String(f.ghiChu).trim(), tep: f.tep, vung: vungCua(f.tep), viTri: f.viTri || '', qrTs: f.qrTs || '', sn: f.sn || '', soTem: cu ? cu.soTem : 0, lichSu: cu ? cu.lichSu : '', _cho: true, _dang: false, _loi: '', _vua: true };
+      ghiChu: String(f.ghiChu).trim(), tep: f.tep, vung: vungCua(f.tep), viTri: f.viTri || '', gio: f.gio || '', qrTs: f.qrTs || '', sn: f.sn || '', soTem: cu ? cu.soTem : 0, lichSu: cu ? cu.lichSu : '', _cho: true, _dang: false, _loi: '', _vua: true };
     CC.ds = CC.ds.filter(function (x) { x._vua = false; return x.ma !== it.ma; }); CC.ds.unshift(it);
     bao((f.sua ? 'Đã lưu · ' : (inLuon ? 'Đã gửi + in 1 tem · ' : 'Đã gửi · ')) + (it.sku || it.maGo || it.ma), 'ok');
     formMoi(); veForm(); veDs(); luuDs();
@@ -989,7 +1006,7 @@
       await Promise.all([chay(), chay(), chay()]);
       /* tệp có khoanh: link chính = bản đã vẽ, kèm «(gốc)» */
       var tep = it.tep.map(function (t) { return t.veId ? { id: t.veId, loai: 'image', goc: t.id } : { id: t.id, loai: t.loai, goc: t.goc || '' }; });
-      var kq = await goiGas({ action: 'ccdc_ghi', ghi: { ma: it.ma, sku: it.sku, maGo: it.maGo, cach: it.cach, ten: it.ten, loai: it.loai, dv: it.dv, phanLoai: it.phanLoai, ghiChu: it.ghiChu, vung: it.vung, tep: tep, viTri: it.viTri || '', qrTs: it.qrTs || '', sn: it.sn || '' } }, 60000);
+      var kq = await goiGas({ action: 'ccdc_ghi', ghi: { ma: it.ma, sku: it.sku, maGo: it.maGo, cach: it.cach, ten: it.ten, loai: it.loai, dv: it.dv, phanLoai: it.phanLoai, ghiChu: it.ghiChu, vung: it.vung, tep: tep, viTri: it.viTri || '', gio: it.gio || '', qrTs: it.qrTs || '', sn: it.sn || '' } }, 60000);
       it._cho = false; it._tien = ''; if (kq.lichSu != null) it.lichSu = kq.lichSu; if (kq.luc) it.luc = kq.luc;
       choXoa(it.ma);
     } catch (e) {
@@ -1042,7 +1059,7 @@
   function moSua(ma) {
     var x = timMa(ma); if (!x) return;
     if (x._dang) { bao('Mục này đang lưu — chờ xong rồi sửa', 'warn'); return; }
-    CC.f = { ma: x.ma, sua: true, sku: x.sku, maGo: x.maGo || x.sku, cach: x.cach, ten: x.ten, loai: x.loai, dv: x.dv, status: '', ghiChu: x.ghiChu, phanLoai: x.phanLoai, viTri: x.viTri || '', qrTs: x.qrTs || '', sn: x.sn || '', loi: '',
+    CC.f = { ma: x.ma, sua: true, sku: x.sku, maGo: x.maGo || x.sku, cach: x.cach, ten: x.ten, loai: x.loai, dv: x.dv, status: '', ghiChu: x.ghiChu, phanLoai: x.phanLoai, viTri: binRieng(x), gio: x.gio || '', qrTs: x.qrTs || '', sn: x.sn || '', loi: '',
       tep: x.tep.map(function (t) { var hinhCu = []; return Object.assign({}, t, { hinh: hinhCu }); }) };
     /* vùng hư cũ gắn lại theo thứ tự ảnh (chỉ để đếm/hiện; ảnh đã lên Drive không vẽ lại được) */
     var na = 0; CC.f.tep.forEach(function (t) { if (t.loai === 'video') return; na++; t.hinh = (x.vung || []).filter(function (v) { return v.anh === na; }).map(function (v) { return { k: 'x', nd: v.nd }; }); });
@@ -1153,7 +1170,7 @@
     }).join('');
     var nhieuAnh = (x.tep || []).filter(function (t) { return t.loai !== 'video'; }).length > 1;
     var vung = (x.vung || []).map(function (v) { return '<div class="vg"><i>' + v.so + '</i>' + (nhieuAnh ? 'Ảnh ' + v.anh + ' · ' : '') + e_(v.nd || '') + '</div>'; }).join('');
-    var kv = [['Mã vị trí', x.viTri], ['QR tài sản', x.qrTs], ['S/N', x.sn]].filter(function (k) { return k[1]; })
+    var kv = [['Mã vị trí', binRieng(x)], ['Mã giỏ', x.gio], ['QR tài sản', x.qrTs], ['S/N', x.sn]].filter(function (k) { return k[1]; })
       .map(function (k) { return '<div><span>' + k[0] + '</span><b>' + e_(k[1]) + '</b></div>'; }).join('');
     var dang = x._loi ? '<div class="cc-tt loi">' + e_(x._loi) + '</div>' : (x._cho ? '<div class="cc-tt"><span class="cc-vong"></span>Đang lưu…</div>' : '');
     var dn = !!nguoi();   // người lạ (quét QR, chưa đăng nhập): chỉ xem — không Quay lại / In / Sửa
