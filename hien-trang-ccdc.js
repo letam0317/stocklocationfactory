@@ -218,7 +218,22 @@
     '#ccVtModal .vt-chip b{font-weight:600;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px} #ccVtModal .vt-chip small{color:var(--ink3);font-size:12px;white-space:nowrap}',
     '#ccVtModal .vt-chip.den{border-color:#91caff;background:#e6f4ff;color:#0958d9}',
     '#ccVtModal .vt-chip button{border:0;background:none;color:var(--ink3);cursor:pointer;font-size:13px;padding:2px 5px;line-height:1}',
-    '#ccVtModal .vt-trong{font-size:12.5px;color:var(--ink3)}',
+    '#ccVtModal .vt-trong,#ccVtXemModal .vt-trong{font-size:12.5px;color:var(--ink3)}',
+    '#ccVtModal .vt-chip button.mat{color:#1677ff;padding:2px 4px;display:inline-flex}',
+    '#ccVtModal .vt-chip button.mat svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}',
+    /* 12/11 tấm xem «Phiếu tại <mã>». Tầng: Chuyển vị trí (99) < tấm xem (101) < ảnh phóng to (102) < bộ quét (115, index.html) */
+    '#ccVtXemModal{z-index:101} #ccAnhModal{z-index:102}',
+    '#ccVtXemModal .modalbox{width:min(560px,96vw)} #ccVtXemModal .cc-than{padding:12px 16px 16px;overflow:auto}',
+    '#ccVtXemModal .vx-dong{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--surface)} #ccVtXemModal .vx-dong+.vx-dong{margin-top:8px}',
+    '#ccVtXemModal .vx-t1{display:flex;align-items:center;gap:8px;justify-content:space-between} #ccVtXemModal .vx-t1 b{font-size:14px;font-weight:600;font-family:ui-monospace,Consolas,monospace}',
+    '#ccVtXemModal .vx-chua{font-size:12px;color:var(--ink3)}',
+    '#ccVtXemModal .vx-ten{font-size:13.5px;color:var(--ink);margin-top:3px}',
+    '#ccVtXemModal .vx-gc{font-size:13px;color:var(--ink2);margin-top:4px;white-space:pre-wrap}',
+    '#ccVtXemModal .vx-anhs{display:flex;gap:6px;overflow-x:auto;margin-top:8px}',
+    '#ccVtXemModal .vx-anh{position:relative;flex:none;width:64px;height:64px;border:1px solid var(--line);border-radius:6px;overflow:hidden;padding:0;background:#f5f5f5;cursor:pointer}',
+    '#ccVtXemModal .vx-anh img{width:100%;height:100%;object-fit:cover;display:block}',
+    '#ccVtXemModal .vx-anh i{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-style:normal;font-size:16px;background:rgba(0,0,0,.25)}',
+    '#ccVtXemModal .vx-t3{font-size:12px;color:var(--ink3);margin-top:6px}',
     '#ccVtModal .vt-chan{margin-top:18px} #ccVtModal .vt-chan .cc-nut{width:100%}',
     /* pop-up camera trong trang (11/11 tối: ô tệp accept ảnh+clip có capture bị Android mở thư viện) */
     '#ccCamModal .modalbox{width:min(560px,96vw)}',
@@ -293,7 +308,9 @@
     '#viewCcdc #ccForm > h2 small,#viewCcdc #ccForm .cc-h3 small,#viewCcdc #ccDsKhoi .ds-mo small{font-size:12.5px;font-weight:400;color:var(--ink3);letter-spacing:0}',
     '#viewCcdc #ccDsKhoi .ds-mo svg{margin-left:-2px}',
     /* 12/11 điện thoại: pop-up = tấm trượt đáy RỘNG HẾT MÀN (khuôn ở index.html) — bề rộng riêng từng pop-up chỉ cho máy tính */
-    '@media(max-width:768px){#ccNdsModal .modalbox,#ccCamModal .modalbox,#ccTsModal .modalbox,#ccAnhModal .modalbox,#ccInModal .modalbox,#ccVtModal .modalbox{width:100%;max-width:100%}}'
+    '@media(max-width:768px){#ccNdsModal .modalbox,#ccCamModal .modalbox,#ccTsModal .modalbox,#ccAnhModal .modalbox,#ccInModal .modalbox,#ccVtModal .modalbox,#ccVtXemModal .modalbox{width:100%;max-width:100%}' +
+      /* tấm trượt đáy CAO VỪA NỘI DUNG (luật cũ ≤640 ép 100dvh); Nhận diện SKU + camera vẫn cao hết màn */
+      ' #ccVtModal .modalbox,#ccVtXemModal .modalbox,#ccTsModal .modalbox,#ccInModal .modalbox{height:auto}}'
   ].join('\n');
   var st = document.createElement('style'); st.id = 'ccdcCss'; st.textContent = css; document.head.appendChild(st);
 
@@ -304,6 +321,7 @@
     mui: '<svg viewBox="0 0 20 20"><path d="M7 4l6 6-6 6"/></svg>',
     ai: '<svg viewBox="0 0 20 20"><path d="M10 2l1.6 4.4L16 8l-4.4 1.6L10 14l-1.6-4.4L4 8l4.4-1.6zM15.5 13l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>',
     inn: '<svg viewBox="0 0 20 20"><path d="M6 8V3h8v5M6 14H3V8h14v6h-3M6 11h8v6H6z"/></svg>',
+    mat: '<svg viewBox="0 0 20 20"><path d="M1.5 10s3.2-5.5 8.5-5.5S18.5 10 18.5 10 15.3 15.5 10 15.5 1.5 10 1.5 10z"/><circle cx="10" cy="10" r="2.6"/></svg>',   // 12/11 nút mắt «Xem phiếu tại vị trí»
     qr: '<svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="6" height="6" rx="1"/><rect x="14.5" y="3.5" width="6" height="6" rx="1"/><rect x="3.5" y="14.5" width="6" height="6" rx="1"/><path d="M14.5 14.5h2.5v2.5M18 18h2.5v2.5h-2.5M20.5 14.5v.01M14.5 20.5v.01"/></svg>'
   };
   /* QR trên tem: link CHÍNH (kể cả khi in từ bản xem trước) — ngắn để mã QR nhỏ (≤ 29×29 ô) */
@@ -422,6 +440,13 @@
     });
     /* 11/11 user: ảnh/clip ở trang chi tiết xem NGAY trong pop-up (không trỏ sang Drive). Ảnh = thumbnail Drive cỡ lớn
        (tệp chia sẻ «ai có link», xem được không cần đăng nhập Google); clip = khung preview của Drive nhúng trong pop-up. */
+    /* 12/11 user: nút MẮT cạnh mỗi mã nguồn ở «Chuyển vị trí» ⇒ tấm trượt đáy: các phiếu đang ở mã đó (ảnh · SKU · tên SP · ghi chú ·
+       phương án). Tạo TRƯỚC ccAnhModal để ảnh phóng to (bấm ảnh) nổi trên nó. */
+    var mX = pop('ccVtXemModal', 'Phiếu tại vị trí', '<div id="ccVtXemThan"></div>');
+    mX.addEventListener('click', function (ev) {
+      if (ev.target === mX || ev.target.closest('.mclose')) { plgDongModal('ccVtXemModal'); return; }
+      var a = ev.target.closest('[data-vxanh]'); if (a) { var x = timMa(a.dataset.vxanh); if (x) xemAnh(x, +a.dataset.i || 0); }
+    });
     var mA = pop('ccAnhModal', 'Ảnh / clip hiện trạng', '<div class="xa-khung" id="ccAnhKhung"></div>' +
       '<div class="xa-dieu"><button type="button" class="cc-nut" data-xa="-1" aria-label="Trước">‹</button><span id="ccAnhSo"></span><button type="button" class="cc-nut" data-xa="1" aria-label="Sau">›</button></div>');
     mA.addEventListener('click', function (ev) {
@@ -442,6 +467,7 @@
       var k = b.dataset.vt;
       if (k === 'quetTu') vtQuet('tu'); else if (k === 'quetDen') vtQuet('den');
       else if (k === 'bo') { VT.tu.splice(+b.dataset.i, 1); vtVe(); }
+      else if (k === 'xem') vtXem(VT.tu[+b.dataset.i]);
       else if (k === 'boDen') { VT.den = ''; vtVe(); }
       else if (k === 'lam') vtLam();
     });
@@ -788,7 +814,9 @@
   function vtVe() {
     var el = $('ccVtThan'); if (!el) return;
     var tong = 0, chip = VT.tu.map(function (m, i) { var n = vtDem(m); tong += n;
-      return '<span class="vt-chip"><b>' + e_(m) + '</b><small>' + n + ' phiếu</small><button type="button" data-vt="bo" data-i="' + i + '" aria-label="Bỏ">✕</button></span>'; }).join('');
+      return '<span class="vt-chip"><b>' + e_(m) + '</b><small>' + n + ' phiếu</small>' +
+        (n ? '<button type="button" class="mat" data-vt="xem" data-i="' + i + '" aria-label="Xem phiếu tại ' + e_(m) + '" title="Xem phiếu tại ' + e_(m) + '">' + IC.mat + '</button>' : '') +
+        '<button type="button" data-vt="bo" data-i="' + i + '" aria-label="Bỏ">✕</button></span>'; }).join('');
     var trungDen = VT.den && VT.tu.some(function (m) { return m.toUpperCase() === VT.den.toUpperCase(); });
     el.innerHTML =
       '<div class="vt-muc"><div class="vt-nhan">Từ mã vị trí / mã giỏ <small>quét liên tục nhiều mã, ✕ để dừng</small></div>' +
@@ -799,6 +827,23 @@
           : '<div class="vt-hang"><input data-vtgo="den" type="text" autocomplete="off" enterkeyhint="done" placeholder="Gõ mã rồi Enter"><button type="button" class="cc-nut" data-vt="quetDen">' + IC.qr + 'Quét</button></div>') + '</div>' +
       '<div class="vt-chan"><button type="button" class="cc-nut xanh" data-vt="lam"' + (!VT.tu.length || !VT.den || !tong || trungDen || VT.dang ? ' disabled' : '') + '>' +
         (VT.dang ? 'Đang chuyển…' : 'Chuyển ' + tong + ' phiếu' + (VT.den ? ' → ' + e_(VT.den) : '')) + '</button></div>';
+  }
+  function vtXem(ma) {
+    if (!ma) return; var k = ma.toUpperCase();
+    var ds = CC.ds.filter(function (x) { return String(x.viTri || '').trim().toUpperCase() === k; });
+    var td = document.querySelector('#ccVtXemModal .mt'); if (td) td.textContent = 'Phiếu tại ' + ma + ' · ' + ds.length;
+    $('ccVtXemThan').innerHTML = ds.length ? ds.map(function (x) {
+      var anh = (x.tep || []).map(function (t, i) { var src = thumb(t);
+        return '<button type="button" class="vx-anh" data-vxanh="' + e_(x.ma) + '" data-i="' + i + '" aria-label="Xem ảnh">' + (src ? '<img loading="lazy" src="' + e_(src) + '" alt="">' : '') +
+          (t.loai === 'video' ? '<i><svg viewBox="0 0 10 10" width="12" height="12"><path d="M2.5 1.5v7l6-3.5z" fill="#fff"/></svg></i>' : '') + '</button>'; }).join('');
+      return '<div class="vx-dong"><div class="vx-t1"><b>' + e_(x.sku || 'Không có SKU') + '</b>' +
+        (x.phanLoai ? '<span class="cc-kqc ' + PL_LOP[x.phanLoai] + '">' + e_(x.phanLoai) + '</span>' : '<span class="vx-chua">Chưa phân loại</span>') + '</div>' +
+        (x.ten ? '<div class="vx-ten">' + e_(x.ten) + '</div>' : '') +
+        (x.ghiChu ? '<div class="vx-gc">' + e_(x.ghiChu) + '</div>' : '') +
+        (anh ? '<div class="vx-anhs">' + anh + '</div>' : '') +
+        '<div class="vx-t3">' + e_(haiChuCuoi(x.nguoi)) + ' · ' + gio(x.capNhat || x.luc) + ' · ' + e_(x.ma) + '</div></div>';
+    }).join('') : '<div class="vt-trong">Chưa có phiếu nào ở ' + e_(ma) + '</div>';
+    plgMoModal('ccVtXemModal');
   }
   function vtLam() {
     if (VT.dang || !VT.tu.length || !VT.den) return;
