@@ -2797,7 +2797,7 @@ body.side-anim:has(.wrap :is([class*="modal"],[id$="modal"],[id$="Modal"],#light
    và khoảng thở với khung nằm ở `#ndsStage{margin-top}` — một chỗ duy nhất, khỏi cộng dồn margin. */
 .nds-marow{display:flex;gap:8px;align-items:center;margin-top:2px;flex-wrap:wrap}
 .nds-marow label{font-size:12px;font-weight:700;color:var(--ink2);white-space:nowrap}
-.nds-marow input{flex:1;min-width:150px;height:34px;border:1px solid var(--border);border-radius:8px;
+.nds-marow input{flex:1;min-width:96px;height:34px;border:1px solid var(--border);border-radius:8px;
   background:var(--surface);color:var(--ink);padding:0 11px;font-size:13px;font-family:inherit;outline:none;
   font-variant-numeric:tabular-nums;letter-spacing:.02em}
 .nds-marow input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}
@@ -2833,6 +2833,8 @@ body.side-anim:has(.wrap :is([class*="modal"],[id$="modal"],[id$="Modal"],#light
 .kktab{transition:transform .16s var(--ez-apple),box-shadow .25s ease,background .2s ease,border-color .2s ease}
 .kktab.nds-go{background:var(--accent);border-color:var(--accent);color:var(--accent-text)}
 .kktab.nds-go:hover{background:var(--accent-hover);border-color:var(--accent-hover);box-shadow:var(--shadow)}
+.kktab.nds-qr{width:34px;height:34px;padding:0;display:inline-flex;align-items:center;justify-content:center;flex:0 0 34px}
+.kktab.nds-qr svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .kktab:disabled{opacity:.45;cursor:not-allowed}
 .kktab:focus-visible,.nds-file:focus-within{outline:2px solid var(--accent);outline-offset:2px}
 .nds-file{display:inline-flex;align-items:center;cursor:pointer}
@@ -3642,10 +3644,12 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
            (gợi ý kèm tên hàng), chữ lẫn số vẫn là đường mã NCC như cũ. -->
       <div class="nds-marow">
         <label for="ndsMa">SKU / phần tử trên tem</label>
-        <input id="ndsMa" autocomplete="off" spellcheck="false" placeholder="Gõ SKU hoặc mảnh đọc được: 422448952 · 8916123 V9B11"
+        <input id="ndsMa" autocomplete="off" spellcheck="false" placeholder="Gõ phần tử/Quét SKU/mã IT"
           oninput="ndsMaGo(this.value)" onfocus="ndsMayChu()"
           onkeydown="if(event.key==='Enter'){event.preventDefault();ndsTraMa();}">
         <button type="button" class="kktab nds-go" onclick="ndsTraMa()">Tra</button>
+        <!-- 12/11 user: icon QR ngang hàng bên phải nút Tra — mượn bộ quét chung qtcQuetMo (QTC.dich) -->
+        <button type="button" class="kktab nds-qr" onclick="ndsQuetQr()" title="Quét QR / mã vạch" aria-label="Quét QR / mã vạch"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4"/><rect x="6" y="6" width="3" height="3"/><rect x="11" y="6" width="3" height="3"/><rect x="6" y="11" width="3" height="3"/><path d="M11 11h3v3"/></svg></button>
       </div>
       <div class="nds-magoi" id="ndsMaGoi" hidden></div>
       <!-- 11/11 user duyệt «Mẫu thao tác Nhận diện SKU»: gõ S/N · QR tài sản · phiếu IT · tên sản phẩm ⇒ danh sách SKU gợi ý (tới 8 dòng) -->
@@ -4434,7 +4438,7 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
   <div class="modalbox qtcqrbox">
     <div class="modalhd"><div><div class="mt">Quét mã SKU</div></div><button class="mclose" onclick="qtcQuetDong()">&times;</button></div>
     <div class="qtcqrbody">
-      <div class="qtcvidwrap"><video id="qtcVideo" autoplay playsinline muted></video><div class="qtcaim"></div></div>
+      <div class="qtcvidwrap"><video id="qtcVideo" autoplay playsinline webkit-playsinline muted disablepictureinpicture disableremoteplayback></video><div class="qtcaim"></div></div>
       <div class="hint" id="qtcQrHint" style="white-space:normal"></div>
       <!-- 11/11 user «pop-up quét mã không ăn → cho phép nhập tay»: gõ / dán mã rồi Enter = như quét được -->
       <form class="qtcnhaptay" onsubmit="event.preventDefault();qtcNhapTayGo()">
@@ -7820,7 +7824,21 @@ function qtcNhapTayGo(){ var o=document.getElementById('qtcNhapTay'); if(!o) ret
 /* Máy KHÔNG có BarcodeDetector (iPhone Safari…) trước đây chỉ đọc được Code 128 ⇒ QR không bao giờ ăn. Nạp jsQR (chỉ khi cần). */
 var QTC_JSQR = null;
 function qtcNapJsQR(){ if(window.jsQR || QTC_JSQR) return; QTC_JSQR = 1;
-  var sc=document.createElement('script'); sc.src='https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js'; sc.async=true; sc.onerror=function(){ QTC_JSQR=null; }; document.head.appendChild(sc); }
+  var sc=document.createElement('script'); sc.src='https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js'; sc.async=true; sc.onerror=function(){ QTC_JSQR=null; }; document.head.appendChild(sc);
+  qtcNapZxing(); }
+/* 12/11 user «iPhone bấm quét QR: camera hiện nhưng không ra kết quả». iPhone Safari KHÔNG có BarcodeDetector ⇒ trước chỉ
+   còn jsQR trên khung đã thu về 640 px (QR nhỏ trên tem vỡ nét). Nạp bộ đọc zxing (WebAssembly, barcode-detector@3.0.8 —
+   cùng giao diện BarcodeDetector, đọc QR + Code 128/39/EAN/DataMatrix). Tệp .wasm trỏ về cdn.jsdelivr.net (CSP cho phép;
+   mặc định của gói là fastly.jsdelivr.net — bị chặn). jsQR vẫn giữ làm lưới cuối. */
+var QTC_ZX = null;
+function qtcNapZxing(){ if(QTC_ZX) return; QTC_ZX = 1;
+  var sc=document.createElement('script'); sc.src='https://cdn.jsdelivr.net/npm/barcode-detector@3.0.8/dist/iife/ponyfill.js'; sc.async=true;
+  sc.onload=function(){ try {
+      var A = window.BarcodeDetectionAPI; if(!A) return;
+      A.setZXingModuleOverrides({ locateFile: function(p, pre){ var m = /_(.+?)\.wasm$/.exec(p); return m ? 'https://cdn.jsdelivr.net/npm/zxing-wasm@' + A.ZXING_WASM_VERSION + '/dist/' + m[1] + '/' + p : pre + p; } });
+      QTC.bdZx = new A.BarcodeDetector({ formats:['qr_code','code_128','code_39','ean_13','ean_8','itf','upc_a','upc_e','data_matrix'] });
+    } catch(e){ QTC_ZX = null; } };
+  sc.onerror=function(){ QTC_ZX = null; }; document.head.appendChild(sc); }
 function qtcQuetMo(){
   var o0=document.getElementById('qtcNhapTay'); if(o0) o0.value='';
   if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
@@ -7850,6 +7868,7 @@ function qtcQuetMo(){
       v.setAttribute('playsinline', '');
       v.setAttribute('webkit-playsinline', '');
       v.setAttribute('muted', '');
+      v.muted = true; v.playsInline = true;   // 12/11 iPhone: THUỘC TÍNH (không chỉ attribute) — thiếu là Safari phát video toàn màn hình, che pop-up
       v.srcObject = stream;
       v.play().catch(function(){});
     }
@@ -7888,6 +7907,13 @@ function qtcQuetDoc(v){
     } catch(e) {
       return Promise.resolve(qtcDocCanvas(v));
     }
+  }
+  /* 12/11 iPhone: bộ đọc zxing (nạp lười ở qtcNapZxing) — chưa sẵn / không ra thì rơi về jsQR + Code 128 tự viết */
+  if(QTC.bdZx && v && v.readyState >= 2){
+    return QTC.bdZx.detect(v).then(function(kq){
+      var raw = (kq && kq[0] && String(kq[0].rawValue || '').trim()) || '';
+      return raw || qtcDocCanvas(v);
+    }).catch(function(){ return qtcDocCanvas(v); });
   }
   return Promise.resolve(qtcDocCanvas(v));
 }
@@ -7933,6 +7959,15 @@ function qtcDocCanvas(v){
   }
   /* 11/11: QR khi không có BarcodeDetector — jsQR (nạp lười ở qtcQuetMo) */
   if(window.jsQR){ try { var q = window.jsQR(d, cw, ch, { inversionAttempts: 'dontInvert' }); if(q && q.data) return String(q.data); } catch(eQ){} }
+  /* 12/11: QR nhỏ — cắt vùng giữa (khung ngắm) ở độ phân giải gốc rồi đọc lại (khung thu 640 px làm QR tem vỡ nét) */
+  if(window.jsQR && vw > cw){ try {
+    var sw = Math.round(vw * 0.6), sh = Math.round(vh * 0.6), k = Math.min(1, 720 / sw), tw = Math.round(sw * k), th = Math.round(sh * k);
+    if(!QTC.can2) QTC.can2 = document.createElement('canvas');
+    if(QTC.can2.width !== tw || QTC.can2.height !== th){ QTC.can2.width = tw; QTC.can2.height = th; }
+    var c2 = QTC.can2.getContext('2d', { willReadFrequently: true });
+    c2.drawImage(v, Math.round((vw - sw) / 2), Math.round((vh - sh) / 2), sw, sh, 0, 0, tw, th);
+    var q2 = window.jsQR(c2.getImageData(0, 0, tw, th).data, tw, th, { inversionAttempts: 'dontInvert' }); if(q2 && q2.data) return String(q2.data);
+  } catch(eQ2){} }
   return '';
 }
 
@@ -14330,6 +14365,7 @@ function ndsTraMa(){
   var o=document.getElementById('ndsMa'); if (!o) return;
   var raw=String(o.value||'').trim();
   if (!raw){ toast('Gõ SKU nội bộ, hoặc mảnh đọc được trên tem (mã · màu · thông số), cách nhau bằng dấu cách.','warn'); o.focus(); return; }
+  if (ndsLaPhieu(raw)){ ndsGoiHen(raw); return; }   // 12/11 số phiếu / PL ⇒ chỉ danh sách hàng trong phiếu, không dò danh mục («Không SKU nào…» là sai)
   if (!NDS.cm){ toast('Danh mục chưa tải xong — đợi một nhịp rồi tra lại.','warn'); return; }
 
   /* Tách thành PHẦN TỬ: cắt ở dấu phẩy, gạch chéo và khoảng trắng. Cắt cả khoảng trắng là CÓ CHỦ Ý
@@ -14489,8 +14525,10 @@ function ndsTraTsSheet(kw){
       return t.split(/\r?\n/).slice(1).map(function(l){ var c = (l.match(/"((?:[^"]|"")*)"/g) || []).map(function(x){ return x.slice(1,-1).replace(/""/g,'"'); });
         return { qr: c[0] === '.' ? '' : c[0], sku: c[1], ten: c[2], sn: c[3], kho: c[4] }; }).filter(function(x){ return x.sku; }); });
 }
+/* 12/11 số chứng từ WMS tra được: 1001 phiếu nhập · 1007 phiếu chuyển kho IT · 1014 số PL in trên kiện (+12 số) */
+function ndsLaPhieu(kw){ return /^10(01|07|14)\d{12}$/.test(String(kw||'').trim()); }
 function ndsTraTs(kw){
-  var laPhieu = /^1001\d{12}$/.test(kw);
+  var laPhieu = ndsLaPhieu(kw);
   return ndsMayChu().then(function(u){
     if (!u) throw 0;
     var c = new AbortController(); setTimeout(function(){ c.abort(); }, 8000);
@@ -14500,6 +14538,20 @@ function ndsTraTs(kw){
     if (laPhieu) return { loai: 'phieu', loi: 'Máy chủ tra phiếu IT đang tắt — thử lại sau', ds: [] };
     return ndsTraTsSheet(kw).then(function(ds){ return { loai: 'ts', ds: ds, sheet: 1 }; }, function(){ return { loai: 'ts', ds: [] }; });
   });
+}
+/* 12/11 nút QR cạnh «Tra»: mượn bộ quét chung (qtcQuetMo) — bắt được mã thì điền ô và tra như gõ tay.
+   QR tài sản dạng JSON {"code":"0-xxxx"} ⇒ lấy code; SKU 9 số ⇒ Tra danh mục; còn lại (phiếu / PL / QR / S/N) ⇒ danh sách gợi ý. */
+function ndsQuetQr(){
+  if (typeof qtcQuetMo !== 'function' || typeof QTC === 'undefined'){ toast('Chưa có bộ quét mã', 'err'); return; }
+  QTC.dich = function(raw){
+    var v = String(raw || '').trim(), m = /"code"\s*:\s*"([^"]+)"/.exec(v); if (m) v = m[1].trim();
+    v = v.slice(0, 80);
+    var o = document.getElementById('ndsMa'); if (!o) return;
+    o.value = v; ndsMaGo(v);
+    if (/^\d{9}$/.test(v)) ndsTraMa();
+    toast('Đã quét: ' + v, 'ok');
+  };
+  qtcQuetMo();
 }
 function ndsTimTen(txt){
   var ds = (window.NDS && NDS.ds) || [], man = ndsBoDau(txt).split(/[\s,/;]+/).filter(function(x){ return x.length >= 2; });
@@ -14534,16 +14586,17 @@ function ndsGoiHen(txt){
   NDS_GOI.hen = setTimeout(function(){
     var ten = ndsTimTen(kw), nhom = [{ nhom: 'Danh mục SKU · khớp tên sản phẩm', dong: ten }];
     ndsVeGoiDs(nhom, '');                                       // tên: tức thì từ danh mục trong máy
-    var laMa = /^1001\d{12}$/.test(kw) || (kw.length >= 6 && /\d/.test(kw) && !/\s/.test(kw));
+    var laMa = ndsLaPhieu(kw) || (kw.length >= 6 && /\d/.test(kw) && !/\s/.test(kw));
     if (!laMa) return;
     ndsTraTs(kw).then(function(j){
       if (luot !== NDS_GOI.luot) return;                         // đã gõ tiếp — bỏ kết quả cũ
       var dau = [];
-      if (j.loai === 'phieu') dau.push({ nhom: j.phieu ? 'Phiếu IT ' + j.phieu.so + ' · ' + [j.phieu.kho, j.phieu.tt].filter(Boolean).join(' · ') : 'Phiếu IT ' + kw,
+      var p = j.phieu, tenP = p && p.loai === 'PL' ? 'Kiện PL ' + p.so + (p.kien ? ' (' + p.kien + ')' : '') + ' · IT ' + p.it : 'Phiếu IT ' + kw;   // 12/11 PL 1014 ⇒ hàng của phiếu IT chứa kiện
+      if (j.loai === 'phieu') dau.push({ nhom: p ? tenP + ' · ' + [p.kho, p.tt].filter(Boolean).join(' · ') : tenP,
         dong: (j.ds || []).map(function(d){ return { sku: d.sku, ten: d.ten, phu: 'SL ' + d.sl }; }) });
       else if ((j.ds || []).length) dau.push({ nhom: 'Tài sản WMS · khớp ' + ((j.ds || []).every(function(d){ return String(d.qr).toLowerCase() === kw.toLowerCase(); }) ? 'QR tài sản' : 'S/N'),
         dong: (j.ds || []).slice(0, 8).map(function(d){ return { sku: d.sku, ten: d.ten, phu: [d.qr && 'QR ' + d.qr, d.sn && 'S/N ' + d.sn, d.kho].filter(Boolean).join(' · ') }; }) });
-      ndsVeGoiDs(dau.concat(nhom), j.loi || (j.loai === 'phieu' && !(j.ds || []).length ? 'Không thấy phiếu ' + kw + ' (hoặc phiếu thuộc kho tài khoản máy không xem được)' : ''));
+      ndsVeGoiDs(dau.concat(nhom), j.loi || (j.loai === 'phieu' && !(j.ds || []).length ? 'Không thấy phiếu / PL ' + kw + ' trên WMS' : ''));
     });
   }, 350);
 }
