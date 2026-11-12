@@ -27,7 +27,7 @@
   function nhanPL(p) { return p === 'Tái sử dụng' ? 'Tái dùng' : p; }
   var K_DS = 'ccdc-ds-v1', TRANG = 20, MAX_ANH = 1600;
   var CC = window.CC = { ds: [], loc: '', locNg: '', dsMo: false, soHien: TRANG, napLan: 0, dangNap: false, f: null, dang: {} };
-  try { CC.dsMo = localStorage.getItem('ccdc-ds-mo') === '1'; } catch (e) { }
+  /* 12/11 user: «Đã ghi nhận» mặc định LUÔN ẩn — không nhớ trạng thái mở của lần trước */
   var e_ = function (s) { return (typeof esc === 'function') ? esc(s == null ? '' : s) : String(s == null ? '' : s); };
   var $ = function (id) { return document.getElementById(id); };
   var bao = function (m, t) { if (typeof toast === 'function') toast(m, t || 'ok'); };
@@ -283,7 +283,17 @@
     '#ccDsKhoi .cc-locng button.tat{padding-left:10px}',
     '#ccDsKhoi .cc-locng button.on{border-color:#1677ff;background:#e6f4ff;color:#1677ff;font-weight:600}',
     '#ccDsKhoi .cc-locng small{color:var(--ink3);font-weight:400}',
-    '#ccInModal .tt{height:38px;display:flex;align-items:center;border:1px solid var(--line);border-radius:8px;padding:0 10px;font-size:14px;font-weight:600}'
+    '#ccInModal .tt{height:38px;display:flex;align-items:center;border:1px solid var(--line);border-radius:8px;padding:0 10px;font-size:14px;font-weight:600}',
+    /* 12/11 user: tiêu đề mục (1 · SKU / Mã tài sản · 2 · Ảnh / clip · 3 · Ghi chú · Phân loại · Đã ghi nhận) ĐỒNG BỘ cỡ / nét chữ
+       và nổi hơn nội dung: 15px đậm 600 (khuôn antd TK-04: 400/600) + vạch xanh trái vẽ bằng ::before (TK-04 cấm viền 1 cạnh).
+       Đặt CUỐI mảng + 2 id ⇒ thắng mọi luật cũ (kể cả khối điện thoại). */
+    '#viewCcdc #ccForm > h2,#viewCcdc #ccForm .cc-h3,#viewCcdc #ccDsKhoi .ds-mo{font-size:15px;font-weight:600;color:var(--ink);line-height:1.35;letter-spacing:.01em;position:relative;padding-left:11px}',
+    '#viewCcdc #ccForm > h2::before,#viewCcdc #ccForm .cc-h3::before,#viewCcdc #ccDsKhoi .ds-mo::before{content:"";position:absolute;left:0;top:2px;bottom:2px;width:3px;border-radius:4px;background:#1677ff}',
+    '#viewCcdc #ccForm > h2{margin:0 0 10px} #viewCcdc #ccForm .cc-h3{margin:18px 0 8px}',
+    '#viewCcdc #ccForm > h2 small,#viewCcdc #ccForm .cc-h3 small,#viewCcdc #ccDsKhoi .ds-mo small{font-size:12.5px;font-weight:400;color:var(--ink3);letter-spacing:0}',
+    '#viewCcdc #ccDsKhoi .ds-mo svg{margin-left:-2px}',
+    /* 12/11 điện thoại: pop-up = tấm trượt đáy RỘNG HẾT MÀN (khuôn ở index.html) — bề rộng riêng từng pop-up chỉ cho máy tính */
+    '@media(max-width:768px){#ccNdsModal .modalbox,#ccCamModal .modalbox,#ccTsModal .modalbox,#ccAnhModal .modalbox,#ccInModal .modalbox,#ccVtModal .modalbox{width:100%;max-width:100%}}'
   ].join('\n');
   var st = document.createElement('style'); st.id = 'ccdcCss'; st.textContent = css; document.head.appendChild(st);
 
@@ -697,15 +707,51 @@
       .catch(function (e) { CC.f.qrTs = code; veForm(); bao('Chưa tra được QR tài sản: ' + e.message, 'warn'); });
     return true;
   }
+  /* 12/11 user: QR tài sản · S/N · QR «Xem chi tiết» trên tem là DUY NHẤT — quét lại mà Sheet đã có phiếu ⇒ nạp lại phiếu đó
+     vào form (SKU, ảnh/clip, ghi chú, phân loại, mã vị trí) để cập nhật, y như bấm «Sửa». Trả true nếu đã nhận.
+     · QR «Xem chi tiết» = LINK_CT + mã phiếu ⇒ tìm trong danh sách, không có thì hỏi ccdc_xem (đúng mã) rồi mở sửa.
+     · QR tài sản (JSON «code» hoặc mã trơn 0-xxxx) / S/N ⇒ khớp cột QR tài sản / S/N (không phân biệt hoa thường), phiếu MỚI NHẤT. */
+  function napCu(raw) {
+    raw = String(raw || '').trim(); if (!raw) return false;
+    var m = /[?&]cc=([\w-]{6,30})/.exec(raw);
+    if (m) {
+      var ma = m[1]; if (timMa(ma)) { moSuaQuet(ma); return true; }
+      bao('Đang mở phiếu ' + ma + '…', 'info');
+      goiGas({ action: 'ccdc_xem', ma: ma }, 45000).then(function (j) {
+        if (!j.x) throw new Error('Không thấy phiếu');
+        if (!timMa(ma)) { CC.ds.push(j.x); luuDs(); veDs(); }
+        moSuaQuet(ma);
+      }).catch(function (e) { bao('Không mở được phiếu ' + ma + ': ' + e.message, 'err'); });
+      return true;
+    }
+    var k = (maTs(raw) || raw).toLowerCase();
+    var x = CC.ds.filter(function (y) { return !y._cho && ((y.qrTs && String(y.qrTs).toLowerCase() === k) || (y.sn && String(y.sn).toLowerCase() === k)); })
+      .sort(function (a, b) { return (b.capNhat || b.luc || 0) - (a.capNhat || a.luc || 0); })[0];
+    if (!x) return false;
+    moSuaQuet(x.ma); return true;
+  }
+  function moSuaQuet(ma) {
+    var cu = CC.f; moSua(ma); var x = timMa(ma); if (!x || CC.f.ma !== ma) return;
+    /* phần đang nhập dở cho phiếu mới (ảnh/clip, ghi chú, phân loại, vị trí) GỘP vào phiếu cũ — không mất */
+    var gop = cu && !cu.sua ? (cu.tep || []).length + (cu.ghiChu ? 1 : 0) : 0;
+    if (gop) {
+      CC.f.tep = CC.f.tep.concat(cu.tep);
+      if (cu.ghiChu && cu.ghiChu !== CC.f.ghiChu) CC.f.ghiChu = (CC.f.ghiChu ? CC.f.ghiChu + '\n' : '') + cu.ghiChu;
+      if (cu.phanLoai) CC.f.phanLoai = cu.phanLoai; if (cu.viTri) CC.f.viTri = cu.viTri;
+      veForm();
+    }
+    bao('Đã có phiếu ' + ma + (x.sku ? ' · ' + x.sku : '') + ' — nạp lại để cập nhật' + (gop ? ' (gộp phần vừa nhập)' : ''), 'ok');
+  }
   function moQuet(truong) {
     if (typeof qtcQuetMo !== 'function' || typeof QTC === 'undefined') { bao('Chưa có bộ quét mã', 'err'); return; }
     var td = document.querySelector('#qtcqrmodal .mt'), tdCu = td ? td.textContent : '';
     var tra = function () { if (td) td.textContent = tdCu; };
     if (truong && QUET_TEN[truong]) {
       if (td) td.textContent = QUET_TEN[truong];
-      QTC.dich = function (ma) { tra(); if (truong !== 'viTri' && quetTs(ma)) return;
+      QTC.dich = function (ma) { tra(); if (truong !== 'viTri' && !CC.f.sua && napCu(ma)) return; if (truong !== 'viTri' && quetTs(ma)) return;
         CC.f[truong] = String(ma || '').trim().slice(0, 120); if (truong === 'viTri' && /vị trí/i.test(CC.f.loi || '')) CC.f.loi = ''; veForm(); bao(QUET_TEN[truong].replace('Quét ', 'Đã quét ') + ': ' + CC.f[truong], 'ok'); };
-    } else QTC.dich = function (ma) { tra(); if (quetTs(ma)) return;   // ① QR tài sản → SKU + QR tài sản + S/N
+    } else QTC.dich = function (ma) { tra(); if (!CC.f.sua && napCu(ma)) return;   // ⓪ 12/11 mã duy nhất đã có phiếu ⇒ nạp lại để cập nhật
+      if (quetTs(ma)) return;   // ① QR tài sản → SKU + QR tài sản + S/N
       /* bộ quét trả (nguyên chuỗi, mã đã bóc cụm số) — SKU: thử nguyên chuỗi trước, không ra thì thử mã đã bóc (QR kèm chữ/URL) */
       var tach = arguments[1], r = traSku(ma) || (tach && tach !== ma ? traSku(tach) : null);
       if (r) { ganSku(r, 'Quét mã', r.sku); veForm(); bao('Đã quét: ' + r.sku + (r.pn ? ' · ' + r.pn : ''), 'ok'); return; }   // ② mã SKU
@@ -912,7 +958,7 @@
     try { localStorage.setItem(K_DS, JSON.stringify({ at: Date.now(), ds: CC.ds.filter(function (x) { return !x._cho; }).slice(0, 200).map(function (x) {
       return Object.assign({}, x, { tep: x.tep.map(function (t) { return { id: t.veId || t.id, loai: t.loai, goc: t.veId ? t.id : (t.goc || '') }; }), _vua: false }); }) })); } catch (e) { }
   }
-  function dsMo(mo) { CC.dsMo = mo; try { localStorage.setItem('ccdc-ds-mo', mo ? '1' : '0'); } catch (e) { } veDs(); }
+  function dsMo(mo) { CC.dsMo = mo; veDs(); }
   function veLocNg() {   // chip người ghi nhận (đếm theo danh sách đang có) — lọc ngay khi gõ
     var el = $('ccLocNg'); if (!el) return; var tim = String(($('ccLocTim') || {}).value || '').trim().toLowerCase(), dem = {};
     CC.ds.forEach(function (x) { if (x.nguoi) dem[x.nguoi] = (dem[x.nguoi] || 0) + 1; });

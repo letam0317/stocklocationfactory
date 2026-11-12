@@ -687,6 +687,16 @@ body.an-chan .footbar{display:none}
    kia gắn vào body sau. Bộ quét luôn là lớp trên cùng của các pop-up; đóng / quét xong là lộ lại pop-up bên dưới. */
 #qtcqrmodal{z-index:115}
 #qtcqrmodal:not(.show){pointer-events:none}   /* đang mờ dần khi đóng (240 ms) — không chặn chạm vào pop-up vừa mở bên dưới */
+/* 12/11 user: pop-up trên ĐIỆN THOẠI = TẤM TRƯỢT LÊN TỪ ĐÁY (máy tính giữ giữa màn). Áp cho pop-up Hiện trạng CCDC (.cc-pop: Nhận diện SKU,
+   Chụp/quay, Chọn SKU tài sản, Ảnh, In tem, Chuyển vị trí) + bộ quét mã. Vuốt lùi đóng 1 lớp: factoryLop (cuối mục pop-up). */
+@keyframes truotDay{0%{transform:translate3d(0,100%,0)}100%{transform:none}}
+@media(max-width:768px){
+  .modal.cc-pop,#qtcqrmodal{align-items:flex-end;padding:0}
+  .modal.cc-pop .modalbox,#qtcqrmodal .modalbox{width:100%;max-width:100%;max-height:92vh;max-height:92dvh;border-radius:8px 8px 0 0;padding-bottom:env(safe-area-inset-bottom,0px)}
+  .modal.show.cc-pop .modalbox,#qtcqrmodal.show .modalbox{animation:truotDay .3s cubic-bezier(.2,.8,.2,1)}
+  @media(prefers-reduced-motion:reduce){.modal.show.cc-pop .modalbox,#qtcqrmodal.show .modalbox{animation:none}}
+  .modal.cc-pop .modalbox::before,#qtcqrmodal .modalbox::before{content:"";display:block;width:36px;height:4px;border-radius:4px;background:var(--line,#d9d9d9);margin:8px auto 0;flex:none}
+}
 .qtcqrbody{padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px}
 .qtcnhaptay{display:flex;gap:8px;align-items:center}
 .qtcnhaptay input{flex:1;min-width:0;height:40px;border:1px solid var(--line);border-radius:8px;padding:0 12px;font:inherit;font-size:15px;background:var(--surface);color:var(--ink)}
@@ -6012,7 +6022,7 @@ var CCDC_NAP={dang:null,xong:false};
 function ccdcNap(){
   if(CCDC_NAP.xong){ ccdcMo(); return; }
   if(CCDC_NAP.dang) return;
-  CCDC_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='hien-trang-ccdc.js?v=20261112b'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
+  CCDC_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='hien-trang-ccdc.js?v=20261112d'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
     .then(function(){ CCDC_NAP.xong=true; if(TOPTAB==='ccdc') ccdcMo(); })
     .catch(function(){ CCDC_NAP.dang=null; var v=document.getElementById('viewCcdc'); if(v) v.innerHTML='<div class="state" style="padding:32px 20px">Không tải được công cụ (mất mạng?). <button type="button" class="kktab" onclick="ccdcNap()">Thử lại</button></div>'; });
 }
@@ -7345,6 +7355,43 @@ function plgDongModal(id){
   m.classList.remove('show');
   setTimeout(function(){ m.style.display='none'; },240);
 }
+/* 12/11 user «vuốt lùi thì đóng 1 lớp» — khuôn hskLop của Retail (LUẬT 25/10) mang sang Factory: mỗi LỚP mở (pop-up .modal có .show,
+   khung khoanh vùng #ccVe.mo) ghi 1 nấc lịch sử; vuốt lùi / Back đóng ĐÚNG lớp trên cùng, không rời trang; đóng bằng nút thì tự rút nấc.
+   ≥2 lớp: Esc cũng đóng đúng lớp trên. Đóng = bấm nút ✕ của chính lớp đó (chạy đúng hàm đóng của mô-đun: tắt camera, trả #viewNds…).
+   #ntmodal tự giữ nấc riêng (NT_LOP) ⇒ bỏ qua. */
+window.factoryLop=(function(){
+  var ds=[], nuot=0, dang=new Set();
+  function laLop(el){ return el.id!=='ntmodal' && ((el.classList.contains('modal') && el.classList.contains('show')) || (el.id==='ccVe' && el.classList.contains('mo'))); }
+  function dongEl(el){
+    if(el.id==='qtcqrmodal' && typeof qtcQuetDong==='function'){ qtcQuetDong(); return; }
+    if(el.id==='ccVe'){ var h=el.querySelector('.huy'); if(h) h.click(); return; }
+    var x=el.querySelector('.mclose'); if(x){ x.click(); return; }
+    if(el.id) plgDongModal(el.id); else el.classList.remove('show');
+  }
+  function day(el){ var k='l'+Date.now()+Math.random(); el.__lopK=k; ds.push({k:k, el:el}); try{ history.pushState(Object.assign({}, history.state||{}, {fLop:ds.length}), ''); }catch(e){} }
+  function rut(el){ var i=-1; for(var j=0;j<ds.length;j++) if(ds[j].el===el){ i=j; break; } if(i<0) return; ds.splice(i,1);
+    if(history.state && history.state.fLop){ nuot++; history.back(); } }
+  window.addEventListener('popstate', function(e){
+    if(nuot){ nuot--; e.stopImmediatePropagation(); return; }
+    var x=ds.pop(); if(!x) return;
+    e.stopImmediatePropagation(); dang.delete(x.el);   // nấc này chỉ là lớp — bộ «link theo tab» không đổi tab
+    try{ dongEl(x.el); }catch(er){}
+  }, true);
+  window.addEventListener('keydown', function(e){
+    if(e.key!=='Escape' || ds.length<2 || document.querySelector('[aria-expanded="true"]')) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    var x=ds.pop(); dang.delete(x.el); try{ dongEl(x.el); }catch(er){}
+    if(history.state && history.state.fLop){ nuot++; history.back(); }
+  }, true);
+  function quet(){
+    document.querySelectorAll('.modal,#ccVe').forEach(function(el){ if(laLop(el) && !dang.has(el)){ dang.add(el); day(el); } });
+    dang.forEach(function(el){ if(!el.isConnected || !laLop(el)){ dang.delete(el); rut(el); } });
+  }
+  var hen=0; new MutationObserver(function(ms){ if(hen) return;
+    if(!ms.some(function(m){ return m.target.matches && m.target.matches('.modal,#ccVe'); })) return;
+    hen=requestAnimationFrame(function(){ hen=0; quet(); }); }).observe(document.body,{attributes:true,attributeFilter:['class'],subtree:true});
+  return { ds:function(){ return ds.map(function(x){ return x.el.id; }); } };
+})();
 
 /* ===== Tab Kiểm kê (Physical Count) — port nguyên logic từ QC, đọc tab kiemke-sku / kiemke-location ===== */
 var KK={loadedOnce:false,data:{sku:[],loc:[]},loaded:0,tab:'sku',wh:'',st:'',range:'all',q:'',refDay:0};
