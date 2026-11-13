@@ -15481,10 +15481,28 @@ var PR_TEM = (function(){
     fit.dong.forEach(function(t, i){ o += '<text x="' + x + '" y="' + (yTen + 8 + fit.co + i * Math.round(fit.co * 1.22)) + '" font-size="' + fit.co + '">' + escXml(t) + '</text>'; });
     return o + '</svg>';
   }
+  /* ---------- 1d-quater. TEM NHẬN DIỆN MÁY IN (loai 'mi', 13/11/2026) ----------
+     User duyệt «Mẫu 4» (PDF «Mẫu tem Máy in 1 - Máy in 2 (ngang 40x60)»): khung mảnh · «Máy in» bên trái · số trắng trong ô đen bên phải.
+     IN NGANG: giấy 40 × 60 dọc ⇒ vẽ bản ngang 60 × 40 rồi xoay −90°. Nội dung = d.pn đúng nguyên văn («Máy in 1»): chữ trước số
+     cuối ⇒ phần chữ trái, số vào ô đen; không có số cuối ⇒ cả chuỗi giữa khung. Toạ độ theo bản mẫu 480 × 320 điểm (8 điểm/mm). */
+  function svgTemMi(d, mauK, opt){
+    var m = mau(mauK), dotMm = opt.dotMm || 8, W = Math.round(m.w * dotMm), H = Math.round(m.h * dotMm), lech = Math.round((opt.lechMm || 0) * dotMm);
+    var s = String(d.pn || '').trim(), t = /^(.*\S)\s+(\d{1,3})$/.exec(s), chu = t ? t[1] : s, so = t ? t[2] : '';
+    var o = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" shape-rendering="crispEdges" font-family="Arial, Helvetica, sans-serif">' +
+      '<rect width="' + W + '" height="' + H + '" fill="#fff"/>' +
+      '<g transform="translate(' + (-lech) + ',' + H + ') rotate(-90) scale(' + (H / 480) + ',' + (W / 320) + ')">' +
+      '<rect x="16" y="16" width="448" height="288" fill="none" stroke="#000" stroke-width="4"/>';
+    if (so) o += '<rect x="294" y="16" width="170" height="288" fill="#000"/>' +
+      '<text x="155" y="186" font-size="72" font-weight="bold" text-anchor="middle">' + escXml(chu) + '</text>' +
+      '<text x="379" y="226" font-size="190" font-weight="bold" fill="#fff" text-anchor="middle">' + escXml(so) + '</text>';
+    else o += '<text x="240" y="186" font-size="72" font-weight="bold" text-anchor="middle">' + escXml(chu) + '</text>';
+    return o + '</g></svg>';
+  }
   function svgTem(d, mauK, opt){
     opt = opt || {};
     if (d && d.loai === 'cc') return svgTemCc(d, mauK, opt);
     if (d && d.loai === 'cs') return svgTemCs(d, mauK, opt);
+    if (d && d.loai === 'mi') return svgTemMi(d, mauK, opt);
     var m = mau(mauK), dotMm = opt.dotMm || 8;
     var W = Math.round(m.w * dotMm), H = Math.round(m.h * dotMm);
     /* LỀ 3mm (trước 1,6mm). Vì sao phải rộng: vùng in của máy in lệch phải ~2mm so với mép giấy nên
