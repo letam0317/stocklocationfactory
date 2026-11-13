@@ -6045,7 +6045,7 @@ var CCDC_NAP={dang:null,xong:false};
 function ccdcNap(){
   if(CCDC_NAP.xong){ ccdcMo(); return; }
   if(CCDC_NAP.dang) return;
-  CCDC_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='hien-trang-ccdc.js?v=20261113b'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
+  CCDC_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='hien-trang-ccdc.js?v=20261113c'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
     .then(function(){ CCDC_NAP.xong=true; if(TOPTAB==='ccdc') ccdcMo(); })
     .catch(function(){ CCDC_NAP.dang=null; var v=document.getElementById('viewCcdc'); if(v) v.innerHTML='<div class="state" style="padding:32px 20px">Không tải được công cụ (mất mạng?). <button type="button" class="kktab" onclick="ccdcNap()">Thử lại</button></div>'; });
 }
@@ -14634,6 +14634,22 @@ function ndsTraTs(kw){
     if (laPhieu) return { loai: 'phieu', loi: 'Máy chủ tra phiếu IT đang tắt — thử lại sau', ds: [] };
     return ndsTraTsSheet(kw).then(function(ds){ return { loai: 'ts', ds: ds, sheet: 1 }; }, function(){ return { loai: 'ts', ds: [] }; });
   });
+}
+/* 13/11 ảnh sản phẩm + ngành hàng của 1 SKU (máy chủ 8591 /api/tra-ts?sp=, nguồn = API trang WMS «QR Generator»).
+   Nhớ trong phiên theo SKU — kể cả lượt hỏng, để thẻ SKU vẽ lại không hỏi lặp. Máy chủ tắt ⇒ { tat: 1 }. */
+var NDS_SP = {};
+function ndsTraSp(sku){
+  sku = String(sku||'').trim(); if (!/^\d{6,12}$/.test(sku)) return Promise.resolve({ sku: sku, khongThay: 1 });
+  if (NDS_SP[sku]) return NDS_SP[sku];
+  var p = ndsMayChu().then(function(u){
+    if (!u) return { sku: sku, tat: 1 };
+    var c = new AbortController(); setTimeout(function(){ c.abort(); }, 8000);
+    return fetch(u + '/api/tra-ts?sp=' + sku, { headers: { 'x-tk-phien': (window.TK && TK.phien) || '' }, signal: c.signal })
+      .then(function(r){ return r.json().then(function(j){ if (!r.ok) { if (r.status >= 500 || r.status === 404) NDS_GOI.mayLuc = 0; throw j; } return j; }); });
+  }).catch(function(){ return { sku: sku, tat: 1 }; });
+  NDS_SP[sku] = p;
+  p.then(function(k){ if (k.tat) setTimeout(function(){ if (NDS_SP[sku] === p) delete NDS_SP[sku]; }, 60000); });   // máy chủ tắt: 1 phút sau cho hỏi lại
+  return p;
 }
 /* 12/11 nút QR cạnh «Tra»: mượn bộ quét chung (qtcQuetMo) — bắt được mã thì điền ô và tra như gõ tay.
    QR tài sản dạng JSON {"code":"0-xxxx"} ⇒ lấy code; SKU 9 số ⇒ Tra danh mục; còn lại (phiếu / PL / QR / S/N) ⇒ danh sách gợi ý. */

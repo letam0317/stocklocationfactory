@@ -353,7 +353,17 @@
     /* ===== 13/11 user duyệt «Mẫu … bản 4 + bản 6» ===== */
     /* thẻ SKU: chip (.sku-tags, index.html) sát mép trái 1,7 px · SKU 18,5/700 + ngành hàng (.sku-cate khung chốt cứng) · tên ĐỦ (xuống dòng) · ✕ một cột phải */
     '#viewCcdc .cc-the .cc-the-dau{display:grid;grid-template-columns:auto minmax(0,1fr) 28px;align-items:start;gap:6px;padding:5px 6px 5px 1.7px}',
-    '#viewCcdc .cc-the .cc-the-dau .sku-tags{margin-top:3px}',
+    '#viewCcdc .cc-the .cc-the-trai{display:flex;flex-direction:column;align-items:stretch;gap:3px;margin-top:3px}',
+    /* nút mắt: cùng bề ngang cột chip, cao 18; vùng chạm nới bằng ::after (không đẩy bố cục) */
+    '#viewCcdc .cc-the .cc-mat{position:relative;display:grid;place-items:center;height:18px;padding:0;border:1px solid #91caff;border-radius:3px;background:#e6f4ff;color:#1677ff;cursor:pointer}',
+    '#viewCcdc .cc-the .cc-mat::after{content:"";position:absolute;inset:-6px -4px}',
+    '#viewCcdc .cc-the .cc-mat svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.6}',
+    '#ccSpModal{z-index:101} #ccSpModal .cc-than{padding:14px 16px 16px}',
+    '@media(min-width:769px){#ccSpModal .modalbox{width:min(520px,96vw)}}',
+    '@media(max-width:768px){#ccSpModal .modalbox{width:100%;max-width:100%;height:auto}}',
+    '#ccSpModal .sp-khung{display:flex;align-items:center;justify-content:center;min-height:240px;height:min(60vh,520px);background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;color:var(--ink3);font-size:13.5px;text-align:center;padding:12px;box-sizing:border-box}',
+    '#ccSpModal .sp-khung img{max-width:100%;max-height:100%;object-fit:contain;display:block}',
+    '#ccSpModal .sp-dong{margin-top:8px;font-size:13px;color:var(--ink2);overflow-wrap:anywhere}',
     '#viewCcdc .cc-the .cc-the-h{display:flex;align-items:center;gap:8px;min-width:0}',
     '#viewCcdc .cc-the .cc-the-sp b{font-size:18.5px;font-weight:600;line-height:1.2}',
     '#viewCcdc .cc-the .cc-the-sp>span{font-size:14.5px;line-height:1.3;color:var(--ink);overflow-wrap:anywhere}',
@@ -551,6 +561,9 @@
       if (ev.target === mX || ev.target.closest('.mclose')) { plgDongModal('ccVtXemModal'); return; }
       var a = ev.target.closest('[data-vxanh]'); if (a) { var x = timMa(a.dataset.vxanh); if (x) xemAnh(x, +a.dataset.i || 0); }
     });
+    /* 13/11 tấm «Ảnh sản phẩm» (nút mắt ở thẻ SKU): ảnh từ WMS (như trang QR Generator) + nhãn hiệu */
+    var mS = pop('ccSpModal', 'Ảnh sản phẩm', '<div class="sp-khung" id="ccSpKhung"></div><div class="sp-dong" id="ccSpDong"></div>');
+    mS.addEventListener('click', function (ev) { if (ev.target === mS || ev.target.closest('.mclose')) plgDongModal('ccSpModal'); });
     var mA = pop('ccAnhModal', 'Ảnh / clip hiện trạng', '<div class="xa-khung" id="ccAnhKhung"></div>' +
       '<div class="xa-dieu"><button type="button" class="cc-nut" data-xa="-1" aria-label="Trước">‹</button><span id="ccAnhSo"></span><button type="button" class="cc-nut" data-xa="1" aria-label="Sau">›</button></div>');
     mA.addEventListener('click', function (ev) {
@@ -609,7 +622,10 @@
         (dau ? '<button type="button" class="cc-them" data-lam="themTs" aria-label="Thêm / đổi QR tài sản, S/N" title="Thêm / đổi QR tài sản, S/N"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg></button>' : '') +
         (gt ? '<button type="button" class="x" data-lam="' + bo + '" aria-label="' + nhanBo + '">✕</button>' : ''); };
     var dd2 = '<div class="cc-the-dd">' + hangTs('QR tài sản', f.qrTs, 'boTs', 'Bỏ QR tài sản', true) + hangTs('S/N', f.sn, 'boSn', 'Bỏ S/N', false) + '</div>';
-    var kq = f.sku ? '<div class="cc-the"><div class="cc-the-dau">' + chipTags +
+    /* 13/11 user: nút MẮT ngay dưới chip Normal ⇒ pop-up ảnh sản phẩm (spMo). Ngành hàng thiếu trong danh mục ⇒ hỏi máy chủ 1 lần rồi vẽ lại */
+    var trai = '<div class="cc-the-trai">' + chipTags + '<button type="button" class="cc-mat" data-lam="anhSp" aria-label="Xem ảnh sản phẩm" title="Xem ảnh sản phẩm">' + IC.mat + '</button></div>';
+    if (f.sku && !cateF && typeof ndsTraSp === 'function') { var skuC = f.sku; ndsTraSp(skuC).then(function (k) { if (k && k.cate && CC.f.sku === skuC && !CC.f.cate) { CC.f.cate = k.cate; veForm(); } }); }
+    var kq = f.sku ? '<div class="cc-the"><div class="cc-the-dau">' + trai +
         '<div class="cc-the-sp"><div class="cc-the-h"><b>' + e_(f.sku) + '</b>' + (typeof ndsChipCate === 'function' ? ndsChipCate(cateF) : '') + '</div><span>' + e_(f.ten || 'Chưa có tên trong danh mục') + '</span></div>' +
         /* 11/11 user: chỉ cho in sau khi Gửi ⇒ form không còn nút In tem (in ở dòng «Đã ghi nhận» / trang chi tiết) */
         '<button type="button" class="x" data-lam="boSku" aria-label="Bỏ SKU">✕</button></div>' + dd2 + '</div>'
@@ -694,6 +710,7 @@
       else if (lam === 'boTs') { CC.f.qrTs = ''; veForm(); }
       else if (lam === 'boSn') { CC.f.sn = ''; veForm(); }
       else if (lam === 'themTs') qsMo();
+      else if (lam === 'anhSp') spMo(CC.f.sku);
       else if (lam === 'chonIn') chonMo('');
       else if (lam === 'quet') moQuet();
       else if (lam === 'nds') ndsMo();
@@ -1315,6 +1332,26 @@
     var x = timMa(CT.ma) || CT.x; if (!x) return;
     if (k === 'sua') { CC.ds.indexOf(x) < 0 && CC.ds.unshift(x); ctDong(); moSua(x.ma); return; }
     if (k === 'in') moIn({ sku: x.sku, ten: x.ten, dv: x.dv, ma: x.ma, tt: x.phanLoai, viTri: vtTem(x) });
+  }
+  /* 13/11 tấm «Ảnh sản phẩm»: mở ngay với dòng «Đang tải…», có kết quả thì thay (bấm SKU khác giữa chừng ⇒ bỏ kết quả cũ) */
+  var SP_DANG = '';
+  function spMo(sku) {
+    if (!sku) return; SP_DANG = sku;
+    var k = $('ccSpKhung'), d = $('ccSpDong'); if (!k) return;
+    k.textContent = 'Đang tải ảnh…'; d.textContent = '';
+    var h = document.querySelector('#ccSpModal .mt'); if (h) h.textContent = 'Ảnh sản phẩm · ' + sku;
+    plgMoModal('ccSpModal');
+    (typeof ndsTraSp === 'function' ? ndsTraSp(sku) : Promise.resolve({ tat: 1 })).then(function (r) {
+      if (SP_DANG !== sku) return;
+      if (r.tat) { k.textContent = 'Máy chủ tra ảnh đang tắt — thử lại sau'; return; }
+      if (r.cate && CC.f.sku === sku && !CC.f.cate) { CC.f.cate = r.cate; veForm(); }
+      d.textContent = r.hieu ? 'Nhãn hiệu: ' + r.hieu : '';
+      if (!r.anh) { k.textContent = r.khongThay ? 'Không tìm thấy SKU này trên WMS' : 'SKU này chưa có ảnh trên WMS'; return; }
+      var im = new Image(); im.alt = '';
+      im.onload = function () { if (SP_DANG === sku) { k.textContent = ''; k.appendChild(im); } };
+      im.onerror = function () { if (SP_DANG === sku) k.textContent = 'Không tải được ảnh — thử lại sau'; };
+      im.src = r.anh;
+    });
   }
   var XA = null;
   function xemAnh(x, i) { XA = { tep: x.tep || [], i: 0 }; veXemAnh(i); plgMoModal('ccAnhModal'); }
