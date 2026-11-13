@@ -956,10 +956,17 @@
   var CHON = { mau: '', may: '', sau: '' };
   function temXem(mau, d) { try { return PR_TEM.mau(PR_TEM.MAU_MAC_DINH).ve(Object.assign({}, d, { loai: mau === 'sku' ? 'cs' : 'cc' })); } catch (e) { return ''; } }
   function nutMay(chon, tien) { return '<div class="cc-doan">' + MAY_IN.map(function (m) { return '<button type="button" class="kktab hai' + (chon === m[0] ? ' active' : '') + '" data-' + tien + '="may:' + m[0] + '"><b>' + m[1] + '</b><small>' + MAY_MODEL + '</small></button>'; }).join('') + '</div>'; }
+  var CHON_QR = '';
   function chonMo(sau) { var c = chonDoc() || {}; CHON = { mau: c.mau || '', may: c.may || '', sau: sau || '' }; chonVe(); plgMoModal('ccChonModal'); }
   function chonVe() {
     var el = $('ccChonThan'); if (!el) return; var f = CC.f || {}, n = nguoi(), dm = f.sku ? traSku(f.sku) : null;
-    var d = { sku: f.sku || '000000000', pn: f.ten || 'Tên sản phẩm', tt: f.phanLoai || '', qr: '', ngay: PR_TEM.ngayTem(new Date()), nguoi: n ? haiChuCuoi(n.ten) : '', vitri: vtTem(f), cate: f.cate || (dm && dm.cate) || '', sl: '', uid: '', dv: '' };
+    /* 13/11 user «tem mẫu phải đầy đủ thông tin / QR / PA xử lý»: lấy phiếu đang nhập; trường nào còn trống thì điền MẪU (đúng khuôn tem thật):
+       SKU + tên + ngành hàng mẫu, PA «Thanh lý», vị trí mẫu, QR dựng thật (link chi tiết phiếu mẫu) */
+    var coSku = !!f.sku;
+    var d = { sku: f.sku || '214600019', pn: coSku ? (f.ten || 'Tên sản phẩm') : 'DX Pant Ngăn Rụng Tóc 650ML', tt: f.phanLoai || 'Thanh lý', qr: CHON_QR || '',
+      ngay: PR_TEM.ngayTem(new Date()), nguoi: n ? haiChuCuoi(n.ten) : 'Chí Tâm', vitri: vtTem(f) || 'F0-A12-502-01-01-01',
+      cate: coSku ? (f.cate || (dm && dm.cate) || '') : 'Sức Khỏe - Làm Đẹp', sl: '', uid: '', dv: '' };
+    if (!CHON_QR) napQr().then(function () { CHON_QR = qrHex(LINK_CT + (f.ma || 'CC261113-MAU01')); if ($('ccChonModal') && $('ccChonModal').classList.contains('show')) chonVe(); }).catch(function () { });
     el.innerHTML = '<div class="cc-chon-tem">' + MAU_IN.map(function (m) { return '<button type="button" data-chon="mau:' + m[0] + '" class="' + (CHON.mau === m[0] ? 'on' : '') + '">' + temXem(m[0], d) + '<span>' + m[1] + '</span></button>'; }).join('') + '</div>' +
       '<label class="q-nh">Máy in</label>' + nutMay(CHON.may, 'chon') +
       '<button type="button" class="cc-nut xanh q-luu" data-chon="luu"' + (CHON.mau && CHON.may ? '' : ' disabled') + '>' + (CHON.sau === 'gui' ? 'Lưu, in' : 'Lưu') + '</button>';
