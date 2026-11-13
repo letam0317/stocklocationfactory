@@ -630,7 +630,7 @@
   }
 
   /* ---------------- 4. Form ---------------- */
-  function formMoi() { CC.f = { ma: '', sua: false, sku: '', maGo: '', cach: '', ten: '', loai: '', dv: '', status: '', tep: [], ghiChu: '', phanLoai: '', viTri: '', gio: '', qrTs: '', sn: '', loi: '' }; }
+  function formMoi() { CC.f = { ma: '', sua: false, tuDo: false, sku: '', maGo: '', cach: '', ten: '', loai: '', dv: '', status: '', tep: [], ghiChu: '', phanLoai: '', viTri: '', gio: '', qrTs: '', sn: '', loi: '' }; }
   function veForm() {
     var el = $('ccForm'); if (!el) return; var f = CC.f, n = nguoi();
     var sao = mauSkuDangChon() ? '' : ' <i>*</i>', chonIn = chonDoc();   // 13/11 mẫu «Thông tin SKU»: chỉ SKU bắt buộc ⇒ các mục dưới bỏ dấu *
@@ -656,6 +656,10 @@
         '<div class="cc-the-sp"><div class="cc-the-h"><b>' + e_(f.sku) + '</b>' + (typeof ndsChipCate === 'function' ? ndsChipCate(cateF) : '') + '</div><span>' + matSp(f.sku) + e_(f.ten || 'Chưa có tên trong danh mục') + '</span></div>' +
         /* 11/11 user: chỉ cho in sau khi Gửi ⇒ form không còn nút In tem (in ở dòng «Đã ghi nhận» / trang chi tiết) */
         '<button type="button" class="x" data-lam="boSku" aria-label="Bỏ SKU">✕</button></div>' + dd2 + '</div>'
+      /* 13/11 user (riêng tamlc): tên tự do — CCDC không có trên WMS, phiếu chỉ để lưu ảnh + nhận diện; không SKU nên không in tem */
+      : f.tuDo ? '<div class="cc-the"><div class="cc-the-dau"><span class="sku-tags"><i style="color:#d46b08;border-color:#ffd591">Tự do</i></span>' +
+        '<div class="cc-the-sp"><div class="cc-the-h"><b>Không có trên WMS</b></div><span>' + e_(f.ten) + '</span></div>' +
+        '<button type="button" class="x" data-lam="boSku" aria-label="Bỏ tên tự do">✕</button></div>' + dd2 + '</div>'
       : (dd ? '<div class="cc-the trong">' + dd2 + '</div>' : '');
     var tsDong = '';
     var anh = f.tep.map(function (t, i) {
@@ -702,6 +706,7 @@
     var f = CC.f;
     if (r) { f.sku = String(r.sku); f.ten = r.pn || ''; f.status = r.status || ''; f.loai = r.type || ''; f.dv = r.donVi || dvCua(r.pn); f.cate = r.cate || ''; }
     else { f.sku = ''; f.ten = ''; f.status = ''; f.loai = ''; f.dv = ''; f.cate = ''; }
+    f.tuDo = false;
     if (maGo != null) f.maGo = maGo; if (cach) f.cach = cach;
   }
   function veGanSuKien() {
@@ -1112,6 +1117,17 @@
     var k = document.querySelector('#viewCcdc .cc-the'); if (k && k.scrollIntoView) k.scrollIntoView({ block: 'center', behavior: 'smooth' });
     return true;
   };
+  /* 13/11 user: RIÊNG tài khoản tamlc được gõ tên sản phẩm tự do (không cần đúng SKU) — lưu ảnh, nhận diện CCDC chưa có tên trên WMS.
+     Phiếu ghi sku trống · maGo + tên = chữ đã gõ · cách «Gõ tay» (GAS chỉ nhận 3 cách cũ ⇒ khỏi deploy GAS). */
+  function laTamlc() { var n = nguoi(); return !!(n && String(n.id || '').toLowerCase() === 'tamlc'); }
+  window.ccdcTuDo = function () { return !!NDS_CHO && laTamlc(); };
+  window.ccdcNhanTuDo = function (ten) {
+    ten = String(ten || '').replace(/\s+/g, ' ').trim().slice(0, 200); if (!ten || !window.ccdcTuDo()) return false;
+    ganSku(null, 'Gõ tay', ten.slice(0, 60)); CC.f.ten = ten; CC.f.tuDo = true;
+    ndsDong(); veForm(); bao('Đã nhận tên tự do: ' + ten, 'ok');
+    var k = document.querySelector('#viewCcdc .cc-the'); if (k && k.scrollIntoView) k.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    return true;
+  };
   function ndsDong() {
     var v = $('viewNds');
     if (v && NDS_CHO) { NDS_CHO.cha.insertBefore(v, NDS_CHO.sau); v.hidden = (typeof TOPTAB === 'undefined' || TOPTAB !== 'sku'); NDS_CHO = null; }
@@ -1200,7 +1216,8 @@
     var f = CC.f, gc = $('ccGhiChu'); if (gc) f.ghiChu = gc.value;
     /* 13/11 user «ràng thông tin bắt buộc theo mẫu in» — mẫu Phương án xử lý: SKU (QR tài sản / S/N không bắt buộc) · ảnh/clip · ghi chú · phân loại.
        Phiếu CŨ chưa có SKU vẫn sửa / lưu được (không chặn dữ liệu đã ghi trước ngày 13/11). */
-    if (!f.sku && !f.sua) { f.loi = 'Cần SKU — bấm «Quét mã / QR» hoặc «Nhận diện SKU».'; veForm(); var fo0 = $('ccForm'); if (fo0 && fo0.scrollIntoView) fo0.scrollIntoView({ block: 'start', behavior: 'smooth' }); return; }
+    if (f.tuDo && mauSkuDangChon() && !f.sua) { f.loi = 'Tên tự do không có SKU nên không in tem «Thông tin SKU» — đổi mẫu in sang «Phương án xử lý» để lưu ảnh.'; veForm(); return; }
+    if (!f.sku && !f.tuDo && !f.sua) { f.loi ='Cần SKU — bấm «Quét mã / QR» hoặc «Nhận diện SKU».'; veForm(); var fo0 = $('ccForm'); if (fo0 && fo0.scrollIntoView) fo0.scrollIntoView({ block: 'start', behavior: 'smooth' }); return; }
     if (f.sku && !chonDoc() && (!f.sua || inSua)) { chonMo(inSua ? 'guiIn' : 'gui'); return; }           // lần đầu trên máy này: bắt buộc chọn mẫu in + máy in rồi mới gửi / in
     var mauSku = mauSkuDangChon();                                           // mẫu «Thông tin SKU»: chỉ SKU bắt buộc
     if (mauSku && !f.sua && !(f.soTemIn >= 1)) { f.loi = 'Cần số lượng tem.'; veForm(); var oT = $('ccSoTem'); if (oT) oT.focus(); return; }   // 13/11 mẫu «Thông tin SKU»
@@ -1312,7 +1329,7 @@
   function moSua(ma) {
     var x = timMa(ma); if (!x) return;
     if (x._dang) { bao('Mục này đang lưu — chờ xong rồi sửa', 'warn'); return; }
-    CC.f = { ma: x.ma, sua: true, sku: x.sku, maGo: x.maGo || x.sku, cach: x.cach, ten: x.ten, loai: x.loai, dv: x.dv, status: '', ghiChu: x.ghiChu, phanLoai: x.phanLoai, viTri: binRieng(x), gio: x.gio || '', qrTs: x.qrTs || '', sn: x.sn || '', loi: '',
+    CC.f = { ma: x.ma, sua: true, tuDo: !x.sku && !!x.ten, sku: x.sku, maGo: x.maGo || x.sku, cach: x.cach, ten: x.ten, loai: x.loai, dv: x.dv, status: '', ghiChu: x.ghiChu, phanLoai: x.phanLoai, viTri: binRieng(x), gio: x.gio || '', qrTs: x.qrTs || '', sn: x.sn || '', loi: '',
       tep: x.tep.map(function (t) { var hinhCu = []; return Object.assign({}, t, { hinh: hinhCu }); }) };
     /* vùng hư cũ gắn lại theo thứ tự ảnh (chỉ để đếm/hiện; ảnh đã lên Drive không vẽ lại được) */
     var na = 0; CC.f.tep.forEach(function (t) { if (t.loai === 'video') return; na++; t.hinh = (x.vung || []).filter(function (v) { return v.anh === na; }).map(function (v) { return { k: 'x', nd: v.nd }; }); });
