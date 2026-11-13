@@ -2679,9 +2679,10 @@ body.side-anim:has(.wrap :is([class*="modal"],[id$="modal"],[id$="Modal"],#light
  * ============================================================================================ */
 /* Ảnh tem BÊN TRÁI, SKU gợi ý BÊN PHẢI — nhìn ảnh và đối chiếu kết quả cùng lúc, không
    phải cuộn qua lại. Cột kết quả rộng hơn vì tên hàng WMS rất dài. */
-.nds-mokhung{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;height:40px;margin-top:9px}.nds-mokhung svg{width:18px;height:18px}.nds-mokhung[hidden]{display:none}
+.nds-mokhung{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;height:40px;margin-top:0}.nds-mokhung svg{width:18px;height:18px}.nds-mokhung[hidden]{display:none}
 .nds-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:16px;align-items:start}
 @media(max-width:900px){.nds-grid{grid-template-columns:1fr}}
+.nds-trai{display:flex;flex-direction:column;gap:16px;min-width:0}   /* 13/11 thẻ 1 Mã phiếu + thẻ 2 Ảnh tem chung cột trái */
 
 /* --- Khung xem trước: khoá tỉ lệ 4/3, ảnh/video luôn "contain" để không cắt mất góc tem --- */
 /* ⚠ BẪY ĐÃ CẮN 19/08/2026 — "khung bị chia đôi màn hình".
@@ -2745,7 +2746,7 @@ body.side-anim:has(.wrap :is([class*="modal"],[id$="modal"],[id$="Modal"],#light
 .ndsib.dang:hover{background:#f5222d;border-color:#f5222d}
 .ndsib.flash svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linejoin:round;display:block}
 .ndsib.flash.on{background:#fadb14;border-color:#fadb14;color:#1f1f1f}.ndsib.flash.on svg{fill:currentColor}
-/* 13/11 trong pop-up Hiện trạng CCDC: đã có ngăn kéo gợi ý ⇒ bỏ «3 · Từ khoá nhận diện»; «2 · SKU gợi ý» chỉ hiện khi đã có ảnh tem
+/* 13/11 trong pop-up Hiện trạng CCDC: đã có ngăn kéo gợi ý ⇒ bỏ «4 · Từ khoá nhận diện»; «3 · SKU gợi ý» (trước 13/11 là 3 · / 2 ·) chỉ hiện khi đã có ảnh tem
    (kết quả máy đọc ảnh hiện ở đó). Trình duyệt chưa có :has() thì giữ như cũ. */
 #ccNdsModal .nds-muc3{display:none}
 #ccNdsModal #viewNds:not(:has(#ndsShot:not([hidden]))) .nds-muc2{display:none}
@@ -3669,9 +3670,11 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
 <div id="viewNds" hidden>
 
   <div class="nds-grid">
-    <!-- ---------- BƯỚC 1: ảnh tem ---------- -->
-    <section class="panel">
-      <h2>1 · Ảnh tem nhà cung cấp</h2>
+    <!-- 13/11 user: tách bước 1 cũ thành 2 thẻ cùng cột trái — «1 · Mã phiếu PO/IT hoặc tên sản phẩm» (chỉ khung ô gõ + Tra + QR)
+         và «2 · Ảnh tem nhà cung cấp» (nút Bật camera, chọn ảnh + khung). .nds-trai giữ 2 thẻ chung cột trái của .nds-grid. -->
+    <div class="nds-trai">
+    <section class="panel nds-muc0">
+      <h2>1 · Mã phiếu PO/IT hoặc tên sản phẩm</h2>
       <!-- Ô GÕ MÃ — đường chắc chắn nhất và nhanh nhất. Sự cố thật 19/08/2026: tem in F9-5374
            (mã CÓ trong danh mục) nhưng AI không đọc ra, máy trả về SKU khác mã. Mã hàng luôn in to
            rõ trên tem NCC, gõ 7 ký tự là xong.
@@ -3682,8 +3685,8 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
            phiếu kiểm kê thì gõ thẳng là ra, khỏi đi vòng qua tem. Gõ toàn số là máy tra cột SKU
            (gợi ý kèm tên hàng), chữ lẫn số vẫn là đường mã NCC như cũ. -->
       <div class="nds-marow">
-        <label for="ndsMa">SKU / phần tử trên tem</label>
-        <input id="ndsMa" autocomplete="off" spellcheck="false" placeholder="Gõ phần tử/Quét SKU/mã IT"
+        <!-- 13/11 user: bỏ nhãn trên ô (tiêu đề thẻ đã nói rõ) — ô nhận SKU · mã PO · phiếu IT/PL · QR/S/N tài sản · tên hàng · chữ trên tem -->
+        <input id="ndsMa" aria-label="Mã phiếu PO/IT hoặc tên sản phẩm" autocomplete="off" spellcheck="false" placeholder="SKU, mã PO, phiếu IT, S/N, tên hàng…"
           oninput="ndsMaGo(this.value)" onfocus="ndsMayChu()"
           onkeydown="if(event.key==='Enter'){event.preventDefault();ndsTraMa();}">
         <button type="button" class="kktab nds-go" onclick="ndsTraMa()">Tra</button>
@@ -3693,6 +3696,9 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
       <div class="nds-magoi" id="ndsMaGoi" hidden></div>
       <!-- 11/11 user duyệt «Mẫu thao tác Nhận diện SKU»: gõ S/N · QR tài sản · phiếu IT · tên sản phẩm ⇒ danh sách SKU gợi ý (tới 8 dòng) -->
       <div class="nds-goids" id="ndsGoiDs" hidden></div>
+    </section>
+    <section class="panel nds-muc1">
+      <h2>2 · Ảnh tem nhà cung cấp</h2>
       <!-- 12/11 user: bỏ khung camera lúc đầu, chỉ còn nút — bấm mới hiện khung (ndsMoKhung / ndsLop) -->
       <button type="button" class="kktab nds-mokhung" id="ndsMoKhung" onclick="ndsMoKhung()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9a2 2 0 0 1 2-2h1.5l1.2-2h6.6l1.2 2H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.4"/></svg>Bật camera, chọn ảnh</button>
       <div class="nds-stage" id="ndsStage" style="display:none">
@@ -3745,11 +3751,12 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
           title="Nhờ AI đọc — dùng khi tem chữ nhỏ / nhoè / nghiêng mà OCR đọc lệch. Có tốn hạn mức ngày">Nhờ AI đọc</button>
       </div>
     </section>
+    </div>
 
     <!-- ---------- BƯỚC 2: SKU gợi ý — ĐẶT NGAY DƯỚI ẢNH vì đây là thứ người dùng cần;
          từ khoá tụt xuống bước 3 vì nó là công cụ SỬA khi máy đọc nhầm, không phải bước phải làm ---------- -->
     <section class="panel nds-muc2">
-      <h2>2 · SKU gợi ý</h2>
+      <h2>3 · SKU gợi ý</h2>
       <div class="nds-cards" id="ndsCards"></div>
       <div id="ndsState" class="state" style="padding:34px 20px">Chụp hoặc chọn ảnh tem ở bước 1 — máy tự nhận diện ngay.</div>
       <div class="nds-why" id="ndsFoot"></div>
@@ -3757,7 +3764,7 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
 
     <!-- ---------- BƯỚC 3: từ khoá (công cụ sửa) ---------- -->
     <section class="panel nds-muc3" style="grid-column:1/-1">
-      <h2>3 · Từ khoá nhận diện
+      <h2>4 · Từ khoá nhận diện
         <span class="pg-chip" id="ndsKwN" style="margin-left:auto">0 từ khoá</span></h2>
       <div class="nds-tags" id="ndsTags"><div class="nds-tagempty">Chưa có từ khoá</div></div>
       <div class="nds-addrow">
@@ -14465,7 +14472,7 @@ function ndsDoiScope(active){
 function ndsTraMa(){
   var o=document.getElementById('ndsMa'); if (!o) return;
   var raw=String(o.value||'').trim();
-  if (!raw){ toast('Gõ SKU nội bộ, hoặc mảnh đọc được trên tem (mã · màu · thông số), cách nhau bằng dấu cách.','warn'); o.focus(); return; }
+  if (!raw){ toast('Gõ SKU, mã PO, phiếu IT, S/N, tên hàng — hoặc mảnh đọc được trên tem (mã · màu · thông số), cách nhau bằng dấu cách.','warn'); o.focus(); return; }
   if (ndsLaPhieu(raw)){ ndsGoiHen(raw); return; }   // 12/11 số phiếu / PL ⇒ chỉ danh sách hàng trong phiếu, không dò danh mục («Không SKU nào…» là sai)
   if (!NDS.cm){ toast('Danh mục chưa tải xong — đợi một nhịp rồi tra lại.','warn'); return; }
 
@@ -14595,7 +14602,7 @@ function ndsTenNgan(pn){
 }
 /* ============================================================================================
  * GỢI Ý THEO S/N · QR TÀI SẢN · PHIẾU IT · TÊN SẢN PHẨM (11/11/2026 — user duyệt «Mẫu thao tác Nhận diện SKU»)
- * Ô «SKU / phần tử trên tem» ngừng gõ ⇒ danh sách #ndsGoiDs (tới 8 dòng, tên đủ). Bấm 1 dòng = chọn SKU: trong pop-up của
+ * Ô «Mã hoặc tên hàng» (trước 13/11: «SKU / phần tử trên tem») ngừng gõ ⇒ danh sách #ndsGoiDs (tới 8 dòng, tên đủ). Bấm 1 dòng = chọn SKU: trong pop-up của
  * Hiện trạng CCDC thì điền mục 1 (ccdcNhanSku), ở tab Nhận diện SKU thì chép mã như thẻ gợi ý.
  *  · S/N / QR tài sản / phiếu IT (1001 + 12 số): máy chủ 8591 /api/tra-ts (tra-ts.mjs) — QR/S/N trong bộ nhớ (0 lượt WMS), phiếu IT
  *    2 lượt WMS rồi nhớ 6 giờ; gác bằng phiên tài khoản (x-tk-phien). Địa chỉ: laptop 127.0.0.1 (máy Windows) hoặc đường hầm lấy qua
@@ -14626,8 +14633,10 @@ function ndsTraTsSheet(kw){
       return t.split(/\r?\n/).slice(1).map(function(l){ var c = (l.match(/"((?:[^"]|"")*)"/g) || []).map(function(x){ return x.slice(1,-1).replace(/""/g,'"'); });
         return { qr: c[0] === '.' ? '' : c[0], sku: c[1], ten: c[2], sn: c[3], kho: c[4] }; }).filter(function(x){ return x.sku; }); });
 }
-/* 12/11 số chứng từ WMS tra được: 1001 phiếu nhập · 1007 phiếu chuyển kho IT · 1014 số PL in trên kiện (+12 số) */
-function ndsLaPhieu(kw){ return /^10(01|07|14)\d{12}$/.test(String(kw||'').trim()); }
+/* 12/11 số chứng từ WMS tra được: 1001 phiếu nhập · 1007 phiếu chuyển kho IT · 1014 số PL in trên kiện (+12 số)
+   13/11 + mã PO (mã nhập hàng): 1001 + 10 số ⇒ hàng của mọi phiếu nhập thuộc PO (tra-ts.mjs traPo) */
+function ndsLaPo(kw){ return /^1001\d{10}$/.test(String(kw||'').trim()); }
+function ndsLaPhieu(kw){ kw = String(kw||'').trim(); return /^10(01|07|14)\d{12}$/.test(kw) || ndsLaPo(kw); }
 function ndsTraTs(kw){
   var laPhieu = ndsLaPhieu(kw);
   return ndsMayChu().then(function(u){
@@ -14636,7 +14645,7 @@ function ndsTraTs(kw){
     return fetch(u + '/api/tra-ts?kw=' + encodeURIComponent(kw), { headers: { 'x-tk-phien': (window.TK && TK.phien) || '' }, signal: c.signal })
       .then(function(r){ return r.json().then(function(j){ if (!r.ok) { if (r.status >= 500 || r.status === 404) NDS_GOI.mayLuc = 0; throw j; } return j; }); });
   }).catch(function(){
-    if (laPhieu) return { loai: 'phieu', loi: 'Máy chủ tra phiếu IT đang tắt — thử lại sau', ds: [] };
+    if (laPhieu) return { loai: 'phieu', loi: 'Máy chủ tra ' + (ndsLaPo(kw) ? 'mã PO' : 'phiếu IT') + ' đang tắt — thử lại sau', ds: [] };
     return ndsTraTsSheet(kw).then(function(ds){ return { loai: 'ts', ds: ds, sheet: 1 }; }, function(){ return { loai: 'ts', ds: [] }; });
   });
 }
@@ -14771,12 +14780,13 @@ function ndsGoiHen(txt){
     ndsTraTs(kw).then(function(j){
       if (luot !== NDS_GOI.luot) return;                         // đã gõ tiếp — bỏ kết quả cũ
       var dau = [];
-      var p = j.phieu, tenP = p && p.loai === 'PL' ? 'Kiện PL ' + p.so + (p.kien ? ' (' + p.kien + ')' : '') + ' · IT ' + p.it : 'Phiếu IT ' + kw;   // 12/11 PL 1014 ⇒ hàng của phiếu IT chứa kiện
-      if (j.loai === 'phieu') dau.push({ nhom: p ? tenP + ' · ' + [p.kho, p.tt].filter(Boolean).join(' · ') : tenP,
+      var p = j.phieu, tenP = p && p.loai === 'PL' ? 'Kiện PL ' + p.so + (p.kien ? ' (' + p.kien + ')' : '') + ' · IT ' + p.it   // 12/11 PL 1014 ⇒ hàng của phiếu IT chứa kiện
+        : ndsLaPo(kw) ? 'PO ' + kw + (p && p.nPhieu > 1 ? ' (' + p.nPhieu + ' phiếu nhập)' : '') : 'Phiếu IT ' + kw;   // 13/11 mã PO
+      if (j.loai === 'phieu') dau.push({ nhom: p ? tenP + ' · ' + [p.ncc, p.kho, p.tt].filter(Boolean).join(' · ') : tenP,
         dong: (j.ds || []).map(function(d){ return { sku: d.sku, ten: d.ten, phu: 'SL ' + d.sl }; }) });
       else if ((j.ds || []).length) dau.push({ nhom: 'Tài sản WMS · khớp ' + ((j.ds || []).every(function(d){ return String(d.qr).toLowerCase() === kw.toLowerCase(); }) ? 'QR tài sản' : 'S/N'),
         dong: (j.ds || []).slice(0, 8).map(function(d){ return { sku: d.sku, ten: d.ten, phu: [d.qr && 'QR ' + d.qr, d.sn && 'S/N ' + d.sn, d.kho].filter(Boolean).join(' · ') }; }) });
-      ndsVeGoiDs(dau.concat(nhom), j.loi || (j.loai === 'phieu' && !(j.ds || []).length ? 'Không thấy phiếu / PL ' + kw + ' trên WMS' : ''));
+      ndsVeGoiDs(dau.concat(nhom), j.loi || (j.loai === 'phieu' && !(j.ds || []).length ? 'Không thấy ' + (ndsLaPo(kw) ? 'PO' : 'phiếu / PL') + ' ' + kw + ' trên WMS' : ''));
     });
   }, 150);
 }
