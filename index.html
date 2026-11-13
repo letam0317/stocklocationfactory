@@ -2740,6 +2740,15 @@ body.side-anim:has(.wrap :is([class*="modal"],[id$="modal"],[id$="Modal"],#light
 .ndsib.chinh{background:var(--accent);border-color:var(--accent);color:var(--accent-text)}
 .ndsib.chinh:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
 .ndsib.tron{padding:6px 0;width:34px;font-size:15px;line-height:1}
+/* 13/11: camera đang bật ⇒ nút «Tắt camera» đỏ; nút flash (đèn) chỉ hiện trên máy có đèn điều khiển được (ndsFlashKiem) */
+.ndsib.dang{background:#ff4d4f;border-color:#ff4d4f;color:#fff}
+.ndsib.dang:hover{background:#f5222d;border-color:#f5222d}
+.ndsib.flash svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linejoin:round;display:block}
+.ndsib.flash.on{background:#fadb14;border-color:#fadb14;color:#1f1f1f}.ndsib.flash.on svg{fill:currentColor}
+/* 13/11 trong pop-up Hiện trạng CCDC: đã có ngăn kéo gợi ý ⇒ bỏ «3 · Từ khoá nhận diện»; «2 · SKU gợi ý» chỉ hiện khi đã có ảnh tem
+   (kết quả máy đọc ảnh hiện ở đó). Trình duyệt chưa có :has() thì giữ như cũ. */
+#ccNdsModal .nds-muc3{display:none}
+#ccNdsModal #viewNds:not(:has(#ndsShot:not([hidden]))) .nds-muc2{display:none}
 @media(max-width:430px){ .ndsib{padding:6px 10px;font-size:12px} .ndsib.tron{width:32px} }
 /* Khung ngắm: 4 góc mảnh — nhắc thủ kho đưa TEM lọt trong khung, không cần canh chuẩn */
 .nds-aim{position:absolute;inset:12%;pointer-events:none;opacity:.55}
@@ -2818,15 +2827,25 @@ body.side-anim:has(.wrap :is([class*="modal"],[id$="modal"],[id$="Modal"],#light
 .nds-marow input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}
 .nds-magoi{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:7px;font-size:11.5px;color:var(--ink3)}
 /* 11/11 danh sách gợi ý S/N · QR tài sản · phiếu IT · tên (mẫu duyệt): dòng = SKU + chip + TÊN ĐỦ dòng dưới + dòng phụ mono */
-.nds-goids{margin-top:6px;border:1px solid var(--line);border-radius:10px;background:var(--surface);box-shadow:0 6px 16px rgba(0,0,0,.08);padding:6px;max-height:min(60vh,460px);overflow:auto}
-.nds-goids .ng-nhom{font-size:11.5px;font-weight:600;color:var(--ink3);padding:6px 8px 4px}
-.nds-goids .ng-dong{display:block;width:100%;text-align:left;border:0;background:none;padding:7px 8px;border-radius:7px;cursor:pointer;color:var(--ink);font:inherit}
+.nds-goids{margin-top:6px;border:1px solid var(--line);border-radius:8px;background:var(--surface);box-shadow:0 6px 16px rgba(0,0,0,.08);padding:0;max-height:min(60vh,460px);overflow:auto}
+.nds-goids .ng-nhom{font-size:11px;font-weight:600;color:var(--ink3);padding:3px 6px 2px}
+.nds-goids .ng-dong{display:flex;align-items:flex-start;gap:6px;width:100%;text-align:left;border:0;background:none;padding:3px 4px 3px 1.7px;border-radius:0;cursor:pointer;color:var(--ink);font:inherit}
 .nds-goids .ng-dong+.ng-dong{border-top:1px solid var(--line)}
 .nds-goids .ng-dong:hover,.nds-goids .ng-dong:focus-visible{background:#e6f4ff;outline:none}
-.nds-goids .ng-t1{display:flex;align-items:baseline;gap:7px;font-size:13.5px}
-.nds-goids .ng-t1 b{font-family:ui-monospace,Consolas,monospace;font-weight:700}
-.nds-goids .ng-ten{display:block;font-size:13.5px;margin-top:2px;overflow-wrap:anywhere}
-.nds-goids .ng-phu{display:block;font-size:12px;color:var(--ink3);margin-top:2px;font-family:ui-monospace,Consolas,monospace;overflow-wrap:anywhere}
+.nds-goids .ng-nd{flex:1;min-width:0;display:flex;flex-direction:column}
+.nds-goids .ng-t1{display:flex;align-items:center;gap:6px;min-width:0}
+.nds-goids .ng-t1 b{font-size:15.5px;font-weight:600;line-height:1.2}
+.nds-goids .ng-ten{display:block;font-size:13px;line-height:1.22;overflow-wrap:anywhere}
+.nds-goids .ng-phu{display:block;font-size:11.5px;line-height:1.3;color:var(--ink3);font-family:ui-monospace,Consolas,monospace;overflow-wrap:anywhere}
+.nds-goids .ng-dong.ina .ng-t1 b,.nds-goids .ng-dong.ina .ng-ten{color:#8c8c8c}
+.nds-goids .sku-tags{margin-top:2px}
+.nds-goids .sku-cate{width:112px;height:18px;line-height:16px;font-size:11.5px}
+/* 13/11 chip dùng chung (ngăn kéo gợi ý + thẻ SKU Hiện trạng CCDC): 2 chip trạng thái / loại cùng cỡ, có khung, xếp chồng;
+   ngành hàng 1 màu, khung chốt cứng (chữ tự co bằng ndsCoCate) */
+.sku-tags{display:flex;flex-direction:column;align-items:stretch;gap:2px;flex:none}
+.sku-tags i{font-style:normal;display:flex;align-items:center;justify-content:center;height:14.4px;padding:0 4px;box-sizing:border-box;border:1px solid var(--line);border-radius:3px;background:var(--surface);color:var(--ink);font-size:8.4px;font-weight:600;line-height:1;white-space:nowrap}
+.sku-tags i.act{color:#52c41a}.sku-tags i.ina{color:#8c8c8c}
+.sku-cate{font-style:normal;display:flex;align-items:center;justify-content:center;flex:none;width:124px;height:22px;padding:0 5px;box-sizing:border-box;border:1px solid #adc6ff;border-radius:4px;background:#f0f5ff;color:#1d39c4;font-size:12.5px;font-weight:600;line-height:1;white-space:nowrap;overflow:hidden}
 .nds-goids .ng-trong{font-size:12.5px;color:var(--ink3);padding:6px 8px}
 .nds-magoi .nds-son{display:inline-block;min-width:16px;padding:0 5px;border-radius:99px;font-size:9.5px;font-weight:750;
   background:color-mix(in srgb,var(--brand2) 16%,transparent);color:var(--brand2);vertical-align:1px}
@@ -3692,6 +3711,7 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
           <button type="button" class="ndsib" id="ndsBtnCam" onclick="ndsCam()">Bật camera</button>
           <label class="ndsib nds-file" onclick="ndsHamNongGas('chon-anh')">Chọn ảnh
             <input type="file" accept="image/*" hidden onchange="ndsChonFile(this)"></label>
+          <button type="button" class="ndsib tron flash" id="ndsBtnFlash" onclick="ndsFlash()" title="Bật / tắt đèn flash" aria-label="Bật / tắt đèn flash" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M11.5 2 4.5 11.2h4.6L8 18l7.5-9.6h-4.7z"/></svg></button>
           <span class="sp"></span>
           <button type="button" class="ndsib tron" onclick="ndsXoay(-90)" title="Xoay ngược chiều kim đồng hồ 90°" aria-label="Xoay trái">⟲</button>
           <button type="button" class="ndsib tron" onclick="ndsXoay(90)" title="Xoay theo chiều kim đồng hồ 90°" aria-label="Xoay phải">⟳</button>
@@ -3723,7 +3743,7 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
 
     <!-- ---------- BƯỚC 2: SKU gợi ý — ĐẶT NGAY DƯỚI ẢNH vì đây là thứ người dùng cần;
          từ khoá tụt xuống bước 3 vì nó là công cụ SỬA khi máy đọc nhầm, không phải bước phải làm ---------- -->
-    <section class="panel">
+    <section class="panel nds-muc2">
       <h2>2 · SKU gợi ý</h2>
       <div class="nds-cards" id="ndsCards"></div>
       <div id="ndsState" class="state" style="padding:34px 20px">Chụp hoặc chọn ảnh tem ở bước 1 — máy tự nhận diện ngay.</div>
@@ -3731,7 +3751,7 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
     </section>
 
     <!-- ---------- BƯỚC 3: từ khoá (công cụ sửa) ---------- -->
-    <section class="panel" style="grid-column:1/-1">
+    <section class="panel nds-muc3" style="grid-column:1/-1">
       <h2>3 · Từ khoá nhận diện
         <span class="pg-chip" id="ndsKwN" style="margin-left:auto">0 từ khoá</span></h2>
       <div class="nds-tags" id="ndsTags"><div class="nds-tagempty">Chưa có từ khoá</div></div>
@@ -6025,7 +6045,7 @@ var CCDC_NAP={dang:null,xong:false};
 function ccdcNap(){
   if(CCDC_NAP.xong){ ccdcMo(); return; }
   if(CCDC_NAP.dang) return;
-  CCDC_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='hien-trang-ccdc.js?v=20261112h'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
+  CCDC_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='hien-trang-ccdc.js?v=20261113b'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
     .then(function(){ CCDC_NAP.xong=true; if(TOPTAB==='ccdc') ccdcMo(); })
     .catch(function(){ CCDC_NAP.dang=null; var v=document.getElementById('viewCcdc'); if(v) v.innerHTML='<div class="state" style="padding:32px 20px">Không tải được công cụ (mất mạng?). <button type="button" class="kktab" onclick="ccdcNap()">Thử lại</button></div>'; });
 }
@@ -13179,7 +13199,7 @@ function ndsBocGviz(resp){
   if (!resp || resp.status==='error' || !resp.table) return null;
   var cols = (resp.table.cols||[]).map(function(c){ return String(c.label||c.id||'').trim().toUpperCase(); });
   if (cols[0]!=='SKU' || cols[1]!=='PRODUCTNAME') return null;
-  var iT=cols.indexOf('TYPE'), iS=cols.indexOf('STATUS'), iQ=cols.indexOf('INVENTORY_QTY');
+  var iT=cols.indexOf('TYPE'), iS=cols.indexOf('STATUS'), iQ=cols.indexOf('INVENTORY_QTY'), iC=cols.indexOf('CATEGORY');   // 13/11 CATEGORY = ngành hàng WMS (cột 7, sync-sku-master) — tab bản cũ chưa có cột thì để trống
   var ra=[], rows=resp.table.rows||[];
   for (var i=0;i<rows.length;i++){
     var c=rows[i].c||[]; var v=function(k){ return (k>=0&&c[k]&&c[k].v!=null)?c[k].v:''; };
@@ -13188,7 +13208,7 @@ function ndsBocGviz(resp){
     ra.push({ sku:sku, pn:String(v(1)),
       type:(String(v(iT)).toUpperCase()==='COMBO')?'COMBO':'NORMAL',
       status:(String(v(iS)).toUpperCase()==='INACTIVE')?'INACTIVE':'ACTIVE',
-      qty:Number(v(iQ))||0 });
+      qty:Number(v(iQ))||0, cate:String(v(iC)||'').trim() });
   }
   return ra.length?ra:null;
 }
@@ -13550,9 +13570,25 @@ async function ndsCam(){
   }
   await v.play().catch(function(){});
   ndsHienChup(true);
-  document.getElementById('ndsBtnCam').textContent='Tắt camera';
+  var bc=document.getElementById('ndsBtnCam'); bc.textContent='Tắt camera'; bc.classList.add('dang');
   ndsDungZoom();
+  camFlashKiem(ndsTrack(), document.getElementById('ndsBtnFlash'));
 }
+/* ĐÈN FLASH (13/11 user: «thêm nút bật chụp flash ở cả camera nhận diện SKU và camera chụp/quay»). Trình duyệt chỉ điều khiển được đèn
+   qua ràng buộc `torch` của luồng video: có ở đa số Android (Chrome), KHÔNG có ở iPhone / máy tính ⇒ nút ẨN khi máy không khai `torch`
+   (không vẽ nút bấm không ăn). Dùng chung cho camera «Chụp / quay» của Hiện trạng CCDC (hien-trang-ccdc.js gọi 2 hàm này).
+   KHÔNG đụng thuộc tính của thẻ <video> (playsinline / webkit-playsinline / muted) — thiếu là iPhone bung camera toàn màn hình (lỗi 12/11). */
+function camFlashKiem(track, nut){
+  if (!nut) return false; nut.classList.remove('on'); nut.hidden = true;
+  var cap=null; try{ cap = track && track.getCapabilities ? track.getCapabilities() : null; }catch(e){}
+  var co = !!(cap && cap.torch); nut.hidden = !co; return co;
+}
+function camFlashDat(track, nut, bat){
+  if (!track || !track.applyConstraints || !nut) return;
+  track.applyConstraints({ advanced:[{ torch: !!bat }] }).then(function(){ nut.classList.toggle('on', !!bat); })
+    .catch(function(){ nut.classList.remove('on'); toast('Máy này không bật được đèn flash.','warn'); });
+}
+function ndsFlash(){ var n=document.getElementById('ndsBtnFlash'); camFlashDat(ndsTrack(), n, !(n && n.classList.contains('on'))); }
 
 /* ============================================================================================
  * ZOOM — chữa đúng cái vòng luẩn quẩn của tem NHỎ: để xa thì chữ quá bé, để gần thì máy KHÔNG
@@ -13615,7 +13651,8 @@ function ndsTatCam(){
   if (NDS.stream){ NDS.stream.getTracks().forEach(function(t){ t.stop(); }); NDS.stream=null; }
   var v=document.getElementById('ndsVideo'); if (v) v.srcObject=null;
   ndsHienChup(false);
-  var c=document.getElementById('ndsBtnCam'); if (c) c.textContent='Bật camera';
+  var c=document.getElementById('ndsBtnCam'); if (c){ c.textContent='Bật camera'; c.classList.remove('dang'); }
+  var fl=document.getElementById('ndsBtnFlash'); if (fl){ fl.hidden=true; fl.classList.remove('on'); }
   var zr=document.getElementById('ndsZoomRow'); if (zr) zr.hidden=true;
   if (v) v.style.transform='';
   ndsLop(NDS.anh ? 'anh' : 'trong');
@@ -14631,6 +14668,23 @@ function ndsTimTen(txt){
   ra.sort(function(a, b){ return b.d - a.d || a.r.pn.length - b.r.pn.length; });
   return ra.slice(0, 8).map(function(x){ var r = x.r; return { sku: String(r.sku), ten: r.pn, tag: r.status || 'ACTIVE' }; });
 }
+/* 13/11 user duyệt «Mẫu … bản 4 + bản 6»: chip trạng thái / loại / ngành hàng dùng CHUNG cho ngăn kéo gợi ý và thẻ SKU của Hiện trạng CCDC.
+   ACTIVE chữ xanh lá nhạt · INACTIVE chữ xám · Normal không màu · ngành hàng (cate) MỘT màu, khung CHỐT CỨNG — chữ dài tự co cho vừa. */
+function ndsDongSku(sku){
+  var ds = (window.NDS && (NDS.ds || NDS._dsTho)) || []; if (!ds.length) return null;
+  if (NDS._mapSku !== ds){ NDS._mapSku = ds; NDS._theoSku = {}; for (var i = 0; i < ds.length; i++) NDS._theoSku[String(ds[i].sku)] = ds[i]; }
+  return NDS._theoSku[String(sku)] || null;
+}
+function ndsChipTags(status, loai){
+  var st = String(status || 'ACTIVE').toUpperCase() === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE', l = String(loai || 'NORMAL').toUpperCase() === 'COMBO' ? 'Combo' : 'Normal';
+  return '<span class="sku-tags"><i class="' + (st === 'INACTIVE' ? 'ina' : 'act') + '">' + st + '</i><i>' + l + '</i></span>';
+}
+function ndsChipCate(cate){ cate = String(cate || '').trim(); return cate ? '<i class="sku-cate">' + esc(cate) + '</i>' : ''; }
+function ndsCoCate(goc){   // khung cate chốt cứng (CSS) ⇒ hạ cỡ chữ tới khi vừa; gọi sau mỗi lần vẽ
+  /* transition:none — máy bật «giảm chuyển động» thì trang ép mọi thuộc tính chuyển 0,01 ms ⇒ đo ngay sau khi đổi cỡ chữ vẫn ra số CŨ, vòng lặp tụt thẳng về 6 px */
+  (goc || document).querySelectorAll('.sku-cate').forEach(function(c){ c.style.transition = 'none'; c.style.fontSize = ''; var co = parseFloat(getComputedStyle(c).fontSize) || 12.5;
+    while (c.scrollWidth > c.clientWidth + 0.5 && co > 6){ co -= 0.25; c.style.fontSize = co + 'px'; } });
+}
 /* 12/11 tối: gõ trước khi danh mục nạp xong ⇒ nạp xong tự hiện gợi ý (không cần Enter) */
 function ndsGoiLai(){ var i = document.getElementById('ndsMa'); if (i && String(i.value || '').trim().length >= 2) ndsGoiHen(i.value); }
 function ndsVeGoiDs(nhom, trong){
@@ -14638,10 +14692,13 @@ function ndsVeGoiDs(nhom, trong){
   var co = nhom.filter(function(g){ return g.dong.length; });
   if (!co.length && !trong){ el.hidden = true; el.innerHTML = ''; return; }
   el.hidden = false;
+  /* 13/11: mỗi hàng = chip ACTIVE / Normal · SKU + ngành hàng · tên ĐỦ, hàng khít (khuôn thẻ SKU Hiện trạng CCDC) */
   el.innerHTML = co.map(function(g){ return '<div class="ng-nhom">' + esc(g.nhom) + '</div>' + g.dong.map(function(d){
-      return '<button type="button" class="ng-dong" data-sku="' + esc(d.sku) + '" data-ten="' + esc(d.ten || '') + '"><span class="ng-t1"><b>' + esc(d.sku) + '</b>' +
-        (d.tag ? '<span class="nds-tag">' + esc(d.tag) + '</span>' : '') + '</span><span class="ng-ten">' + esc(d.ten || '') + '</span>' +
-        (d.phu ? '<span class="ng-phu">' + esc(d.phu) + '</span>' : '') + '</button>'; }).join(''); }).join('') + (co.length ? '' : '<div class="ng-trong">' + esc(trong) + '</div>');
+      var r = ndsDongSku(d.sku) || {}, st = d.tag || r.status || 'ACTIVE';
+      return '<button type="button" class="ng-dong' + (String(st).toUpperCase() === 'INACTIVE' ? ' ina' : '') + '" data-sku="' + esc(d.sku) + '" data-ten="' + esc(d.ten || '') + '">' + ndsChipTags(st, r.type) +
+        '<span class="ng-nd"><span class="ng-t1"><b>' + esc(d.sku) + '</b>' + ndsChipCate(r.cate) + '</span><span class="ng-ten">' + esc(d.ten || r.pn || '') + '</span>' +
+        (d.phu ? '<span class="ng-phu">' + esc(d.phu) + '</span>' : '') + '</span></button>'; }).join(''); }).join('') + (co.length ? '' : '<div class="ng-trong">' + esc(trong) + '</div>');
+  ndsCoCate(el);
 }
 function ndsGoiChon(sku, ten){
   var el = document.getElementById('ndsGoiDs'); if (el){ el.hidden = true; el.innerHTML = ''; }
@@ -15333,9 +15390,49 @@ var PR_TEM = (function(){
     fit.dong.forEach(function(t, i){ o += '<text x="' + x + '" y="' + (yTen + 8 + fit.co + i * Math.round(fit.co * 1.22)) + '" font-size="' + fit.co + '">' + escXml(t) + '</text>'; });
     return o + '</svg>';
   }
+  /* ---------- 1d-ter. TEM «THÔNG TIN SKU» của Hiện trạng CCDC (loai 'cs', 13/11/2026) ----------
+     User 13/11: «mẫu tem 40×60 chia 2 mẫu: mẫu có sẵn gọi là Phương án xử lý; mẫu tiếp theo là Thông tin SKU: cate / SKU / productname /
+     người / ngày in». Cùng khung, lề, mã vạch như tem 'cc'; dải đầu tem = NGÀNH HÀNG (cate, chữ tự hạ cỡ cho vừa; SKU chưa có ngành hàng
+     thì dải để khung trống); KHÔNG có QR / hiện trạng / vị trí ⇒ tên hàng được vùng rộng hơn; đáy: ngày in trái · người in phải.
+     Trường mới `cate` phải đi qua moRong (dưới) + anhTem / dongCoTen / conTem của in-tem-agent.mjs — bẫy «trường mới» lần thứ SÁU. */
+  function svgTemCs(d, mauK, opt){
+    var m = mau(mauK), dotMm = opt.dotMm || 8;
+    var W = Math.round(m.w * dotMm), H = Math.round(m.h * dotMm);
+    var vi = Math.round(1 * dotMm), le = Math.round(3 * dotMm) + vi, lech = Math.round((opt.lechMm || 0) * dotMm);
+    var x = le - lech, R = W - le - lech, giua = W / 2 - lech;
+    var o = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H +
+      '" shape-rendering="crispEdges" font-family="Arial, Helvetica, sans-serif">' +
+      '<rect width="' + W + '" height="' + H + '" fill="#fff"/>' +
+      '<rect x="' + (2 + vi - lech) + '" y="' + (2 + vi) + '" width="' + (W - 4 - 2 * vi) + '" height="' + (H - 4 - 2 * vi) + '" fill="none" stroke="#000" stroke-width="2"/>';
+    /* ① dải ngành hàng */
+    var caoDai = Math.round(7.25 * dotMm), cate = String(d.cate || '').trim().toUpperCase();
+    if (cate){ var coC = Math.max(15, Math.min(32, Math.floor((W - 4 - 2 * vi - 20) / (cate.length * 0.64))));
+      o += '<rect x="' + (2 + vi - lech) + '" y="' + (2 + vi) + '" width="' + (W - 4 - 2 * vi) + '" height="' + caoDai + '" fill="#000"/>' +
+        '<text x="' + giua + '" y="' + (vi + Math.round(caoDai / 2) + Math.round(coC * 0.38) + 2) + '" font-size="' + coC + '" font-weight="bold" fill="#fff" text-anchor="middle">' + escXml(cate) + '</text>'; }
+    else o += '<rect x="' + (x + 2) + '" y="' + (2 + vi + 4) + '" width="' + (R - x - 4) + '" height="' + (caoDai - 8) + '" fill="none" stroke="#000" stroke-width="3"/>';
+    /* ② mã vạch + SKU khoét đáy giữa (y như tem 'cc') */
+    var yV = vi + caoDai + Math.round(2 * dotMm), caoV = Math.round(8 * dotMm), sku = String(d.sku || '');
+    var v = vachRect(sku, { dotMm: dotMm, mm: m.mm || 0.25, cao: caoV, y: yV, x: 0 }), yTen = yV + caoV;
+    if (v){
+      var xv = Math.round(giua - v.rong / 2), coSo = Math.round(2.925 * dotMm), rongSo = Math.round(sku.length * coSo * 0.58) + 8, caoSo = Math.round(3.25 * dotMm);
+      o += '<g transform="translate(' + xv + ',0)">' + v.rects + '</g>' +
+        '<rect x="' + (giua - rongSo / 2) + '" y="' + (yV + caoV - caoSo) + '" width="' + rongSo + '" height="' + (caoSo + 1) + '" fill="#fff"/>' +
+        '<text x="' + giua + '" y="' + (yV + caoV - 2) + '" font-size="' + coSo + '" font-weight="bold" text-anchor="middle">' + escXml(sku) + '</text>';
+    }
+    /* ③ đáy: kẻ ngang · ngày in (trái) · người in (phải) */
+    var yKe = H - le - 30;
+    o += '<line x1="' + x + '" y1="' + yKe + '" x2="' + R + '" y2="' + yKe + '" stroke="#000" stroke-width="1.5"/>' +
+      '<text x="' + x + '" y="' + (yKe + 30) + '" font-size="21">' + escXml(String(d.ngay || '')) + '</text>' +
+      '<text x="' + R + '" y="' + (yKe + 30) + '" font-size="21" text-anchor="end">' + escXml(cat(d.nguoi || '', 14)) + '</text>';
+    /* ④ tên hàng: tự vừa vùng giữa mã vạch và đường kẻ đáy */
+    var fit = coChuVua(String(d.pn || ''), R - x, yKe - yTen - 16, 34, 16);
+    fit.dong.forEach(function(t, i){ o += '<text x="' + x + '" y="' + (yTen + 8 + fit.co + i * Math.round(fit.co * 1.22)) + '" font-size="' + fit.co + '">' + escXml(t) + '</text>'; });
+    return o + '</svg>';
+  }
   function svgTem(d, mauK, opt){
     opt = opt || {};
     if (d && d.loai === 'cc') return svgTemCc(d, mauK, opt);
+    if (d && d.loai === 'cs') return svgTemCs(d, mauK, opt);
     var m = mau(mauK), dotMm = opt.dotMm || 8;
     var W = Math.round(m.w * dotMm), H = Math.round(m.h * dotMm);
     /* LỀ 3mm (trước 1,6mm). Vì sao phải rộng: vùng in của máy in lệch phải ~2mm so với mép giấy nên
@@ -15602,14 +15699,15 @@ var PR_TEM = (function(){
     (ds || []).forEach(function(r){
       var l = tachSl(r.slHang);
       if (l.length > 1){
-        l.forEach(function(x){ ra.push({ sku: r.sku, pn: r.pn, slHang: x, mau: r.mau, uid: r.uid || '', loai: r.loai || '', vitri: r.vitri || '', dv: r.dv || '', tt: r.tt || '', qr: r.qr || '', nguoi: r.nguoi || '' }); });
+        l.forEach(function(x){ ra.push({ sku: r.sku, pn: r.pn, slHang: x, mau: r.mau, uid: r.uid || '', loai: r.loai || '', vitri: r.vitri || '', dv: r.dv || '', tt: r.tt || '', qr: r.qr || '', nguoi: r.nguoi || '', cate: r.cate || '' }); });
         return;
       }
       var n = Math.max(0, Number(r.sl) || 0);
       /* vitri/dv (07/09/2026): tem vị trí — mã vị trí đầy đủ + đơn vị (mm → in kèm yard). Rơi ở đây là
          pop-up có mà máy in không — cùng bẫy 23/08 (trường mới phải đi qua moRong). */
       /* tt/qr/nguoi (11/11/2026) = TEM HIỆN TRẠNG CCDC (loai 'cc'): hiện trạng · QR trang chi tiết · người in. */
-      for (var i = 0; i < n; i++) ra.push({ sku: r.sku, pn: r.pn, slHang: l.length ? l[0] : (r.slHang || ''), mau: r.mau, uid: r.uid || '', loai: r.loai || '', vitri: r.vitri || '', dv: r.dv || '', tt: r.tt || '', qr: r.qr || '', nguoi: r.nguoi || '' });
+      /* cate (13/11/2026) = ngành hàng của TEM «THÔNG TIN SKU» (loai 'cs') */
+      for (var i = 0; i < n; i++) ra.push({ sku: r.sku, pn: r.pn, slHang: l.length ? l[0] : (r.slHang || ''), mau: r.mau, uid: r.uid || '', loai: r.loai || '', vitri: r.vitri || '', dv: r.dv || '', tt: r.tt || '', qr: r.qr || '', nguoi: r.nguoi || '', cate: r.cate || '' });
     });
     return ra;
   }
