@@ -430,6 +430,7 @@
   /* ---------------- 1. Tiện ích ---------------- */
   function maMoi() { var d = new Date(), p = function (n) { return (n < 10 ? '0' : '') + n; };
     return 'CC' + String(d.getFullYear()).slice(2) + p(d.getMonth() + 1) + p(d.getDate()) + '-' + Math.random().toString(36).slice(2, 7).toUpperCase(); }
+  function gioPhut(ms) { var d = new Date(ms), p = function (n) { return (n < 10 ? '0' : '') + n; }; return p(d.getHours()) + ':' + p(d.getMinutes()); }
   function gio(ms) { if (!ms) return ''; var d = new Date(ms), p = function (n) { return (n < 10 ? '0' : '') + n; };
     return p(d.getHours()) + ':' + p(d.getMinutes()) + ' ' + p(d.getDate()) + '/' + p(d.getMonth() + 1); }
   function haiChuCuoi(t) { var w = String(t || '').trim().split(/\s+/); return w.slice(-2).join(' '); }
@@ -685,7 +686,7 @@
       if (!b || !v.contains(b)) return;
       if (b.dataset.bo != null) { ev.stopPropagation(); ev.preventDefault(); var t = CC.f.tep.splice(+b.dataset.bo, 1)[0]; if (t && t.url) URL.revokeObjectURL(t.url); veForm(); return; }
       if (b.dataset.inma) { ev.stopPropagation(); var x = timMa(b.dataset.inma); if (x) moIn({ sku: x.sku, ten: x.ten, dv: x.dv, ma: x.ma, tt: x.phanLoai, viTri: vtTem(x) }); return; }
-      if (b.dataset.thu) { ev.stopPropagation(); var y = timMa(b.dataset.thu); if (y) { y._loi = ''; dayLen(y); } return; }
+      if (b.dataset.thu) { ev.stopPropagation(); var y = timMa(b.dataset.thu); if (y) { y._loi = ''; y._hen = 0; dayLen(y); } return; }
       if (b.dataset.anh != null) { var tp = CC.f.tep[+b.dataset.anh]; if (!tp) return;
         if (tp.loai === 'video') { if (tp.url) window.open(tp.url, '_blank'); else if (tp.id) window.open('https://drive.google.com/file/d/' + tp.id + '/view', '_blank'); return; }
         if (!tp.blob) { window.open('https://drive.google.com/file/d/' + (tp.ve || tp.id) + '/view', '_blank'); return; }
@@ -1195,8 +1196,16 @@
       var kq = await goiGas({ action: 'ccdc_ghi', ghi: { mauIn: it.mauIn || 'pa', ma: it.ma, sku: it.sku, maGo: it.maGo, cach: it.cach, ten: it.ten, loai: it.loai, dv: it.dv, phanLoai: it.phanLoai, ghiChu: it.ghiChu, vung: it.vung, tep: tep, viTri: it.viTri || '', gio: it.gio || '', qrTs: it.qrTs || '', sn: it.sn || '' } }, 60000);
       it._cho = false; it._tien = ''; if (kq.lichSu != null) it.lichSu = kq.lichSu; if (kq.luc) it.luc = kq.luc;
       choXoa(it.ma);
+      it._lan = 0; it._hen = 0;
     } catch (e) {
-      it._loi = e.code === 401 ? 'Phiên đăng nhập hết hạn — đăng nhập lại rồi thử' : ('Chưa lưu — ' + (e.name === 'AbortError' ? 'mạng chậm' : e.message));
+      /* 13/11 «Đã vượt quá giới hạn: Drive» / mạng chậm / Apps Script chập chờn = lỗi TẠM ⇒ tự gửi lại 20 s → 40 s → 1′ → 2′ → 5′ (rồi 5′ mãi),
+         dòng hiện «tự lưu lại lúc …» thay chữ đỏ. Ảnh vẫn nằm trong kho chờ (IndexedDB) nên đóng trang mở lại cũng gửi tiếp. */
+      var tam = e.code !== 401 && (e.name === 'AbortError' || /giới hạn|Limit Exceeded|quota|Rate|too many|Service|HTML|Failed to fetch|NetworkError|Load failed|phản hồi lạ/i.test(String(e.message || e)));
+      if (tam) {
+        it._lan = (it._lan || 0) + 1; var giay = [20, 40, 60, 120, 300][Math.min(it._lan - 1, 4)];
+        it._loi = ''; it._hen = Date.now() + giay * 1000;
+        setTimeout(function () { if (it._hen && Date.now() >= it._hen - 500) { it._hen = 0; dayLen(it); } }, giay * 1000);
+      } else it._loi = e.code === 401 ? 'Phiên đăng nhập hết hạn — đăng nhập lại rồi thử' : ('Chưa lưu — ' + e.message);
     } finally { it._dang = false; veDs(); luuDs(); }
   }
 
@@ -1234,6 +1243,7 @@
     el.innerHTML = ds.slice(0, CC.soHien).map(function (x) {
       var t0 = x.tep[0] || {}, na = x.tep.filter(function (t) { return t.loai !== 'video'; }).length, nc = x.tep.length - na, nv = (x.vung || []).length;
       var tt = x._loi ? '<div class="cc-tt loi">' + e_(x._loi) + ' · <button type="button" data-thu="' + e_(x.ma) + '">thử lại</button></div>'
+        : x._hen ? '<div class="cc-tt">Máy chủ đang bận — tự lưu lại lúc ' + gioPhut(x._hen) + ' · <button type="button" data-thu="' + e_(x.ma) + '">lưu ngay</button></div>'
         : (x._cho ? '<div class="cc-tt"><span class="cc-vong"></span>Đang lưu' + (x._tien ? ' ' + e_(x._tien) : '') + '…</div>' : '');
       return '<div class="cc-dong' + (x._vua ? ' vua' : '') + '" data-dong="' + e_(x.ma) + '"><div class="cc-tb">' + (thumb(t0) ? '<img loading="lazy" src="' + e_(thumb(t0)) + '" alt="">' : '') + '</div><div class="cc-nd">' +
         '<div class="cc-t1"><span>' + (x.sku && x.ten ? e_(x.sku) + ' · ' + matSp(x.sku) + e_(x.ten) : e_([x.sku, x.ten || (!x.sku ? x.maGo : '')].filter(Boolean).join(' · ') || 'Không có SKU')) + '</span>' + (x.phanLoai ? '<span class="cc-kqc ' + PL_LOP[x.phanLoai] + '">' + e_(x.phanLoai) + '</span>' : '') + '</div>' +
