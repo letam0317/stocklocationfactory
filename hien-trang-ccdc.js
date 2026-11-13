@@ -354,6 +354,10 @@
     /* thẻ SKU: chip (.sku-tags, index.html) sát mép trái 1,7 px · SKU 18,5/700 + ngành hàng (.sku-cate khung chốt cứng) · tên ĐỦ (xuống dòng) · ✕ một cột phải */
     '#viewCcdc .cc-the .cc-the-dau{display:grid;grid-template-columns:auto minmax(0,1fr) 28px;align-items:start;gap:6px;padding:5px 6px 5px 1.7px}',
     '#viewCcdc .cc-the .cc-the-dau .sku-tags{margin-top:3px}',
+    /* 13/11 ô «Số lượng tem» (mẫu Thông tin SKU) — cùng khuôn ô bước số của pop-up In tem */
+    '#viewCcdc .cc-bac{display:flex;gap:6px;max-width:240px}',
+    '#viewCcdc .cc-bac input.o{flex:1;min-width:0;height:40px;border:1px solid var(--line);border-radius:8px;padding:0 10px;font:inherit;font-size:16px;text-align:center;background:var(--surface);color:var(--ink)}',
+    '#viewCcdc .cc-bac .cc-nut{width:44px;height:40px;padding:0;flex:none;justify-content:center;font-size:18px}',
     '#ccSpModal{z-index:101} #ccSpModal .cc-than{padding:14px 16px 16px}',
     '@media(min-width:769px){#ccSpModal .modalbox{width:min(520px,96vw)}}',
     '@media(max-width:768px){#ccSpModal .modalbox{width:100%;max-width:100%;height:auto}}',
@@ -679,6 +683,12 @@
         return '<button type="button" data-pl="' + e_(p) + '" class="' + PL_LOP[p] + (on ? ' on' : '') + (on && (f.viTri || f.gio) ? ' co-vt' : '') + '"><span class="pl-t">' + e_(nhanPL(p)) + '</span>' +
           '<span class="pl-qr" data-plqr="' + e_(p) + '" title="Quét mã vị trí">' + IC.qr + '</span></button>'; }).join('') + '</div>' +
       (f.viTri || f.gio ? '<div class="cc-vt">Vị trí đặt ' + (f.viTri ? '<b>' + e_(f.viTri) + '</b>' : '') + (f.gio ? '<b class="gio">' + IC_GIO + e_(f.gio) + '</b>' : '') + '<button type="button" class="x" data-lam="boVt" aria-label="Bỏ vị trí">✕</button></div>' : '') +
+      /* 13/11 user: mẫu in «Thông tin SKU» ⇒ ô SỐ LƯỢNG TEM (bắt buộc) ngay dưới Phân loại; mẫu «Phương án xử lý» ⇒ ẩn (in 1 tem như cũ).
+         Sửa phiếu không in ⇒ không hiện. Bước ± đổi số tại chỗ (không vẽ lại form ⇒ không nhảy). */
+      (mauSkuDangChon() && !f.sua ? '<div class="cc-h3">Số lượng tem <i>*</i></div><div class="cc-bac">' +
+        '<button type="button" class="cc-nut" data-lam="slTem:-1" aria-label="Bớt 1 tem">−</button>' +
+        '<input id="ccSoTem" class="o" inputmode="numeric" autocomplete="off" placeholder="Số tem" value="' + (f.soTemIn || '') + '">' +
+        '<button type="button" class="cc-nut" data-lam="slTem:1" aria-label="Thêm 1 tem">+</button></div>' : '') +
       (f.loi ? '<div class="cc-loi">' + e_(f.loi) + '</div>' : '') +
       (chonIn && n && !f.sua ? '<div class="cc-chon"><button type="button" data-lam="chonIn" aria-label="Đổi mẫu in, máy in" title="Đổi mẫu in, máy in"><b>' + e_(tenTheo(MAU_IN, chonIn.mau)) + '</b> · ' + e_(tenTheo(MAY_IN, chonIn.may)) + IC_BUT + '</button></div>' : '') +
       '<div class="cc-gui">' + (n ? av(n.ten) + '<div class="ng">Người gửi <b>' + e_(n.ten) + '</b> · ' + e_(n.id) + '</div>' : '<div class="ng">Chưa đăng nhập</div>') +
@@ -703,8 +713,10 @@
         if (!r && g0.length >= 6) CC._tsT = setTimeout(function () { var o2 = $('ccSku'); if (!o2 || o2.value.trim() !== g0 || CC.f.sku) return;
           traTs(g0, false).then(function (k) { var o3 = $('ccSku'); if (!k.ds.length || !o3 || o3.value.trim() !== g0) return; o3.value = ''; CC.f.maGo = ''; tsChon(g0, k.ds, k.laS); }); }, 800); }
       if (t.id === 'ccLocTim') { veLocNg(); return; }
-      if (t.id === 'ccGhiChu') { CC.f.ghiChu = t.value; if (CC.f.loi) { CC.f.loi = ''; var l = v.querySelector('.cc-loi'); if (l) l.remove(); } }
+      if (t.id === 'ccGhiChu') { CC.f.ghiChu = t.value; boLoiForm(); }
+      if (t.id === 'ccSoTem') { var s0 = t.value.replace(/\D/g, ''); CC.f.soTemIn = s0 ? Math.max(1, Math.min(50, +s0)) : 0; if (String(CC.f.soTemIn || '') !== t.value) t.value = CC.f.soTemIn || ''; boLoiForm(); }
     });
+    function boLoiForm() { if (CC.f.loi) { CC.f.loi = ''; var l = v.querySelector('.cc-loi'); if (l) l.remove(); } }
     v.addEventListener('change', function (ev) { var t = ev.target; if (t.dataset && t.dataset.tep) { themTep(t.files); t.value = ''; } });
     v.addEventListener('click', function (ev) {
       var b = ev.target.closest('[data-plqr],[data-quet],[data-lam],[data-pl],[data-bo],[data-anh],[data-locpl],[data-dong],[data-thu],[data-inma],[data-ct],[data-locng]');
@@ -733,6 +745,7 @@
       else if (lam === 'boSn') { CC.f.sn = ''; veForm(); }
       else if (lam === 'themTs') qsMo();
       else if (lam === 'chonIn') chonMo('');
+      else if (/^slTem:-?1$/.test(lam)) { CC.f.soTemIn = Math.max(1, Math.min(50, (CC.f.soTemIn || 0) + (+lam.slice(6)))); var oS = $('ccSoTem'); if (oS) oS.value = CC.f.soTemIn; boLoiForm(); }
       else if (lam === 'quet') moQuet();
       else if (lam === 'nds') ndsMo();
       else if (lam === 'gui') gui();
@@ -1186,22 +1199,24 @@
     if (!f.sku && !f.sua) { f.loi = 'Cần SKU — bấm «Quét mã / QR» hoặc «Nhận diện SKU».'; veForm(); var fo0 = $('ccForm'); if (fo0 && fo0.scrollIntoView) fo0.scrollIntoView({ block: 'start', behavior: 'smooth' }); return; }
     if (!f.sua && f.sku && !chonDoc()) { chonMo('gui'); return; }           // lần đầu trên máy này: bắt buộc chọn mẫu in + máy in rồi mới gửi / in
     var mauSku = mauSkuDangChon();                                           // mẫu «Thông tin SKU»: chỉ SKU bắt buộc
+    if (mauSku && !f.sua && !(f.soTemIn >= 1)) { f.loi = 'Cần số lượng tem.'; veForm(); var oT = $('ccSoTem'); if (oT) oT.focus(); return; }   // 13/11 mẫu «Thông tin SKU»
     if (!mauSku && !f.tep.length) { f.loi = 'Cần ít nhất 1 ảnh hoặc clip.'; veForm(); return; }
     if (!mauSku && !String(f.ghiChu).trim()) { f.loi = 'Cần ghi chú hiện trạng.'; veForm(); var g = $('ccGhiChu'); if (g) g.focus(); return; }
     if (!mauSku && !f.phanLoai) { f.loi = 'Cần chọn phân loại.'; veForm(); return; }   // 11/11 user: Phân loại bắt buộc
     if (!mauSku && !String(f.viTri || '').trim() && !String(f.gio || '').trim()) { f.loi = 'Cần mã vị trí — bấm biểu tượng QR trên nút phân loại để quét / nhập.'; veForm(); return; }   // 11/11 tối user: bắt buộc mã vị trí mới cho gửi/in
     var lg = loiGio(f); if (lg) { f.loi = lg; veForm(); return; }           // 13/11: giỏ phải đúng phương án (TSD / TL / SC)
     var inLuon = !f.sua && !!f.sku;                                          // 11/11 user: nút «In, gửi» = gửi + in 1 tem
+    var soIn = mauSku ? Math.max(1, Math.min(50, f.soTemIn || 1)) : 1;      // 13/11 mẫu «Thông tin SKU» in đúng số tem đã nhập
     var cu = f.sua ? timMa(f.ma) : null, now = Date.now();
     var it = { mauIn: mauSku ? 'sku' : 'pa', cate: f.cate || ((traSku(f.sku) || {}).cate) || '', ma: f.ma || maMoi(), luc: cu ? cu.luc : now, capNhat: now, nguoi: cu ? cu.nguoi : n.ten, tk: cu ? cu.tk : n.id,
       sku: f.sku, maGo: f.maGo, cach: f.sku || f.maGo ? (f.cach || 'Gõ tay') : '', ten: f.ten, loai: f.loai, dv: f.dv, phanLoai: f.phanLoai,
       ghiChu: String(f.ghiChu).trim(), tep: f.tep, vung: vungCua(f.tep), viTri: f.viTri || '', gio: f.gio || '', qrTs: f.qrTs || '', sn: f.sn || '', soTem: cu ? cu.soTem : 0, lichSu: cu ? cu.lichSu : '', _cho: true, _dang: false, _loi: '', _vua: true };
     CC.ds = CC.ds.filter(function (x) { x._vua = false; return x.ma !== it.ma; }); CC.ds.unshift(it);
-    bao((f.sua ? 'Đã lưu · ' : (inLuon ? 'Đã gửi + in 1 tem · ' : 'Đã gửi · ')) + (it.sku || it.maGo || it.ma), 'ok');
+    bao((f.sua ? 'Đã lưu · ' : (inLuon ? 'Đã gửi + in ' + soIn + ' tem · ' : 'Đã gửi · ')) + (it.sku || it.maGo || it.ma), 'ok');
     formMoi(); veForm(); veDs(); luuDs();
     dayLen(it);
     if (inLuon) napQr().then(function () { return qrHex(LINK_CT + it.ma); }, function () { return ''; }).then(function (qr) {
-      return goiGas({ action: 'ccdc_in', sku: it.sku, ten: it.ten, sl: '', dv: it.dv, ngay: PR_TEM.ngayTem(new Date()), soTem: 1, ma: it.ma, tt: it.phanLoai, qr: qr, qrTs: it.qrTs || '', sn: it.sn || '', viTri: vtTem(it), mauIn: it.mauIn, may: (chonDoc() || {}).may || '', cate: it.cate || '' }, 45000);   // 11/11: Sheet IN-TEM ghi QR tài sản / S/N (phiếu có thể chưa lưu xong)
+      return goiGas({ action: 'ccdc_in', sku: it.sku, ten: it.ten, sl: '', dv: it.dv, ngay: PR_TEM.ngayTem(new Date()), soTem: soIn, ma: it.ma, tt: it.phanLoai, qr: qr, qrTs: it.qrTs || '', sn: it.sn || '', viTri: vtTem(it), mauIn: it.mauIn, may: (chonDoc() || {}).may || '', cate: it.cate || '' }, 45000);   // 11/11: Sheet IN-TEM ghi QR tài sản / S/N (phiếu có thể chưa lưu xong)
     }).catch(function (e) { bao('Chưa gửi được lệnh in ' + it.sku + ': ' + e.message + ' — bấm In ở dòng Đã ghi nhận', 'err'); });
   }
   async function dayLen(it) {
