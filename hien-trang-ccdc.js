@@ -447,7 +447,32 @@
     if (v.length >= 5) for (var j = 0; j < ds.length; j++) if (String(ds[j].sku).indexOf(v) === 0) { dem++; hit = ds[j]; if (dem > 1) return null; }
     return hit;
   }
-  function thumb(t) { return t.url || (t.ve && t.ve.url) || (t.id ? 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(t.ve || t.id) + '&sz=w200' : ''); }
+  /* 13/11 Drive hết chỗ (mất gói Pro) ⇒ tệp lưu tạm trên máy chủ laptop 8591 (/api/ccdc-tep, ccdc-tep.mjs), mã «LT_<14 số>_<16 hex>».
+     Địa chỉ máy chủ (127.0.0.1 trên laptop / đường hầm trên điện thoại) lấy qua ndsMayChu — có rồi thì vẽ lại danh sách. */
+  var LT_GOC = '', DRIVE_DAY = 0;
+  function laLt(id) { return /^LT_\d{14}_[0-9a-f]{16}$/.test(String(id || '')); }
+  function urlLt(id) { return LT_GOC ? LT_GOC + '/api/ccdc-tep/' + id : ''; }
+  function urlTep(id, sz) { return laLt(id) ? urlLt(id) : 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(id) + '&sz=' + sz; }
+  function moTep(id) { return laLt(id) ? urlLt(id) : 'https://drive.google.com/file/d/' + id + '/view'; }
+  function thumb(t) { return t.url || (t.ve && t.ve.url) || (t.id ? (laLt(t.ve || t.id) && t.loai === 'video' ? '' : urlTep(t.ve || t.id, 'w200')) : ''); }
+  /* tải 1 tệp: Drive trước; Drive báo hết hạn mức ⇒ 30 phút tới đi thẳng máy chủ laptop */
+  async function taiTep(ma, blob, mime, ten, han) {
+    if (Date.now() > DRIVE_DAY) {
+      try { return (await goiGas({ action: 'ccdc_tai', ma: ma, mime: mime, ten: ten, base64: await docB64(blob) }, han)).id; }
+      catch (e) { if (!/giới hạn|Limit Exceeded|quota|storage|dung lượng/i.test(String(e.message || e))) throw e; DRIVE_DAY = Date.now() + 30 * 60000; }
+    }
+    var u = typeof ndsMayChu === 'function' ? await ndsMayChu() : '';
+    if (!u) throw new Error('Drive vượt giới hạn, máy chủ laptop đang tắt');
+    var ctl = typeof AbortController !== 'undefined' ? new AbortController() : null, hen = ctl ? setTimeout(function () { ctl.abort(); }, han || 90000) : 0;
+    try {
+      var r = await fetch(u + '/api/ccdc-tep', { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8', 'x-tk-phien': (window.TK && TK.phien) || '' },
+        body: JSON.stringify({ ma: ma, mime: mime, ten: ten, base64: await docB64(blob) }), signal: ctl ? ctl.signal : undefined });
+      var j = await r.json().catch(function () { return {}; });
+      if (!r.ok || j.status !== 'success') { var e2 = new Error(j.loi || ('máy chủ laptop trả ' + r.status)); if (r.status === 401) e2.code = 401; throw e2; }
+      if (!LT_GOC) LT_GOC = u;
+      return j.id;
+    } finally { if (hen) clearTimeout(hen); }
+  }
   async function goiGas(body, han) {
     var n = nguoi(); body = Object.assign({ phien: (window.TK && TK.phien) || '' }, body);
     if ((!n || !body.phien) && body.action !== 'ccdc_xem') { var e0 = new Error('Cần đăng nhập'); e0.code = 401; throw e0; }   // 11/11: xem phiếu qua QR mở cho tất cả
@@ -688,8 +713,8 @@
       if (b.dataset.inma) { ev.stopPropagation(); var x = timMa(b.dataset.inma); if (x) moIn({ sku: x.sku, ten: x.ten, dv: x.dv, ma: x.ma, tt: x.phanLoai, viTri: vtTem(x) }); return; }
       if (b.dataset.thu) { ev.stopPropagation(); var y = timMa(b.dataset.thu); if (y) { y._loi = ''; y._hen = 0; dayLen(y); } return; }
       if (b.dataset.anh != null) { var tp = CC.f.tep[+b.dataset.anh]; if (!tp) return;
-        if (tp.loai === 'video') { if (tp.url) window.open(tp.url, '_blank'); else if (tp.id) window.open('https://drive.google.com/file/d/' + tp.id + '/view', '_blank'); return; }
-        if (!tp.blob) { window.open('https://drive.google.com/file/d/' + (tp.ve || tp.id) + '/view', '_blank'); return; }
+        if (tp.loai === 'video') { if (tp.url) window.open(tp.url, '_blank'); else if (tp.id) window.open(moTep(tp.id), '_blank'); return; }
+        if (!tp.blob) { window.open(moTep(tp.ve || tp.id), '_blank'); return; }
         veMo(+b.dataset.anh); return; }
       if (b.dataset.locng != null) { CC.locNg = b.dataset.locng; CC.soHien = TRANG; if (!CC.dsMo) CC.dsMo = true; veDs(); veLocNg(); return; }
       if (b.dataset.plqr) { ev.stopPropagation(); CC.f.phanLoai = b.dataset.plqr; if (/phân loại/i.test(CC.f.loi || '')) CC.f.loi = ''; veForm(); moQuet('viTri'); return; }
@@ -1186,8 +1211,8 @@
       it._tien = can.length ? '0/' + can.length : ''; veDs();
       var hang = can.slice(), chay = async function () {
         while (hang.length) { var t = hang.shift();
-          if (!t.id) { var r = await goiGas({ action: 'ccdc_tai', ma: it.ma, mime: t.blob.type || (t.loai === 'video' ? 'video/mp4' : 'image/jpeg'), ten: t.ten || (t.loai === 'video' ? 'clip.mp4' : 'anh.jpg'), base64: await docB64(t.blob) }, t.loai === 'video' ? 300000 : 90000); t.id = r.id; }
-          if (t.ve && t.ve.blob && !t.veId) { var r2 = await goiGas({ action: 'ccdc_tai', ma: it.ma, mime: 'image/jpeg', ten: 'khoanh.jpg', base64: await docB64(t.ve.blob) }, 90000); t.veId = r2.id; }
+          if (!t.id) t.id = await taiTep(it.ma, t.blob, t.blob.type || (t.loai === 'video' ? 'video/mp4' : 'image/jpeg'), t.ten || (t.loai === 'video' ? 'clip.mp4' : 'anh.jpg'), t.loai === 'video' ? 300000 : 90000);
+          if (t.ve && t.ve.blob && !t.veId) t.veId = await taiTep(it.ma, t.ve.blob, 'image/jpeg', 'khoanh.jpg', 90000);
           xong++; it._tien = xong + '/' + can.length; veDs(); choCat(it);
         } };
       await Promise.all([chay(), chay(), chay()]);
@@ -1379,26 +1404,28 @@
     var chay = function () { ds.slice(0, 8).forEach(function (s) { ndsSpNap(s); }); };
     if (typeof requestIdleCallback === 'function') requestIdleCallback(chay, { timeout: 1500 }); else setTimeout(chay, 300);
   }
-  setTimeout(function () { if (window.TK && TK.phien && typeof ndsMayChu === 'function') ndsMayChu(); }, 800);
+  /* làm nóng + lấy địa chỉ máy chủ laptop cho ảnh «LT_…» (Drive hết chỗ 13/11) — có rồi thì vẽ lại danh sách / trang chi tiết */
+  setTimeout(function () { if (window.TK && TK.phien && typeof ndsMayChu === 'function') ndsMayChu().then(function (u) { if (u && u !== LT_GOC) { LT_GOC = u; veDs(); if (CT.ma) veCt(); } }); }, 800);
   var XA = null;
   function xemAnh(x, i) { XA = { tep: x.tep || [], i: 0 }; veXemAnh(i); plgMoModal('ccAnhModal'); }
   function dongXemAnh() { var k = $('ccAnhKhung'); if (k) k.innerHTML = ''; XA = null; plgDongModal('ccAnhModal'); }   // gỡ iframe/video ⇒ clip dừng phát
   function veXemAnh(i) {
     if (!XA || !XA.tep.length) return; var n = XA.tep.length; XA.i = (i % n + n) % n;
     var t = XA.tep[XA.i], id = t.veId || t.id, vid = t.loai === 'video', k = $('ccAnhKhung'); if (!k) return;
-    k.innerHTML = vid ? (t.url ? '<video src="' + e_(t.url) + '" controls autoplay playsinline></video>'
+    var vSrc = t.url || (laLt(id) ? urlLt(id) : '');
+    k.innerHTML = vid ? (vSrc ? '<video src="' + e_(vSrc) + '" controls autoplay playsinline></video>'
         : '<iframe src="https://drive.google.com/file/d/' + encodeURIComponent(id) + '/preview" allow="autoplay; fullscreen" allowfullscreen></iframe>')
-      : '<img src="' + e_(t.url || 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(id) + '&sz=w1600') + '" alt="">';
+      : '<img src="' + e_(t.url || urlTep(id, 'w1600')) + '" alt="">';
     var so = $('ccAnhSo'); if (so) so.textContent = (XA.i + 1) + ' / ' + n;
     var d = document.querySelector('#ccAnhModal .xa-dieu'); if (d) d.style.display = n > 1 ? '' : 'none';
   }
-  function ctAnh(t) { var id = t.veId || t.id; return t.url || (id ? 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(id) + '&sz=w600' : ''); }
+  function ctAnh(t) { var id = t.veId || t.id; return t.url || (id ? (laLt(id) && t.loai === 'video' ? '' : urlTep(id, 'w600')) : ''); }
   function htmlCt(x) {
     var lop = PL_LOP[x.phanLoai] || 'trong', na = 0, nc = 0;
     var anh = (x.tep || []).map(function (t, i) {
       var vid = t.loai === 'video', nhan = vid ? 'Clip ' + (++nc) : 'Ảnh ' + (++na), id = t.veId || t.id;
       var nv = vid ? 0 : (x.vung || []).filter(function (v) { return v.anh === na; }).length;
-      var mo = t.url || (id ? 'https://drive.google.com/file/d/' + id + '/view' : '');
+      var mo = t.url || (id ? moTep(id) : '');
       /* 11/11 user: bấm ảnh/clip ⇒ pop-up xem ngay trong trang (data-ct="anh:i"), KHÔNG trỏ sang Drive (href chỉ là dự phòng) */
       return '<a class="cc-anh" href="' + e_(mo) + '" data-ct="anh:' + i + '" rel="noopener"><img loading="lazy" src="' + e_(ctAnh(t)) + '" alt="">' +
         (vid ? '<span class="play"><i><svg viewBox="0 0 10 10" width="10" height="10"><path d="M2.5 1.5v7l6-3.5z" fill="#fff"/></svg></i></span>' : '') +
