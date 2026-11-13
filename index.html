@@ -2845,6 +2845,11 @@ body.side-anim:has(.wrap :is([class*="modal"],[id$="modal"],[id$="Modal"],#light
 .sku-tags{display:flex;flex-direction:column;align-items:stretch;gap:2px;flex:none}
 .sku-tags i{font-style:normal;display:flex;align-items:center;justify-content:center;height:14.4px;padding:0 4px;box-sizing:border-box;border:1px solid var(--line);border-radius:3px;background:var(--surface);color:var(--ink);font-size:8.4px;font-weight:600;line-height:1;white-space:nowrap}
 .sku-tags i.act{color:#52c41a}.sku-tags i.ina{color:#8c8c8c}
+/* 13/11 mắt đầu tên sản phẩm: chỉ icon, cao bằng dòng chữ; vùng chạm nới bằng ::after (không đẩy chữ) */
+.mat-sp{position:relative;display:inline-flex;align-items:center;justify-content:center;vertical-align:-0.18em;width:1.25em;height:1.1em;margin:0 4px 0 0;padding:0;border:0;background:none;color:#1677ff!important;cursor:pointer;flex:none}
+.mat-sp svg{width:1.15em;height:1.15em;fill:none;stroke:currentColor;stroke-width:1.7}
+.mat-sp::after{content:"";position:absolute;inset:-8px -6px}
+.mat-sp:focus-visible{outline:2px solid #91caff;outline-offset:1px;border-radius:3px}
 .sku-cate{font-style:normal;display:flex;align-items:center;justify-content:center;flex:none;width:124px;height:22px;padding:0 5px;box-sizing:border-box;border:1px solid #adc6ff;border-radius:4px;background:#f0f5ff;color:#1d39c4;font-size:12.5px;font-weight:600;line-height:1;white-space:nowrap;overflow:hidden}
 .nds-goids .ng-trong{font-size:12.5px;color:var(--ink3);padding:6px 8px}
 .nds-magoi .nds-son{display:inline-block;min-width:16px;padding:0 5px;border-radius:99px;font-size:9.5px;font-weight:750;
@@ -6045,7 +6050,7 @@ var CCDC_NAP={dang:null,xong:false};
 function ccdcNap(){
   if(CCDC_NAP.xong){ ccdcMo(); return; }
   if(CCDC_NAP.dang) return;
-  CCDC_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='hien-trang-ccdc.js?v=20261113c'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
+  CCDC_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='hien-trang-ccdc.js?v=20261113d'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
     .then(function(){ CCDC_NAP.xong=true; if(TOPTAB==='ccdc') ccdcMo(); })
     .catch(function(){ CCDC_NAP.dang=null; var v=document.getElementById('viewCcdc'); if(v) v.innerHTML='<div class="state" style="padding:32px 20px">Không tải được công cụ (mất mạng?). <button type="button" class="kktab" onclick="ccdcNap()">Thử lại</button></div>'; });
 }
@@ -14651,6 +14656,37 @@ function ndsTraSp(sku){
   p.then(function(k){ if (k.tat) setTimeout(function(){ if (NDS_SP[sku] === p) delete NDS_SP[sku]; }, 60000); });   // máy chủ tắt: 1 phút sau cho hỏi lại
   return p;
 }
+/* 13/11 user duyệt «Mẫu nút mắt đầu tên sản phẩm»: mắt = CHỈ icon (không khung, không nền) đứng ngay ĐẦU tên sản phẩm ở mọi chỗ có tên
+   (thẻ SKU, ngăn kéo gợi ý, Đã ghi nhận, Phiếu tại vị trí, trang chi tiết). Bấm ⇒ pop-up ảnh (window.ccdcAnhSp, hien-trang-ccdc.js).
+   «Dưới 1 s»: tải SẴN dữ liệu + ảnh (ndsSpNap) lúc thẻ hiện / lúc rê chuột hay chạm vào mắt; ảnh đã tải giữ trong NDS_ANH ⇒ mở lại tức thì. */
+var NDS_ANH = {};
+function ndsMat(sku){
+  /* chưa đăng nhập (xem phiếu qua QR) ⇒ máy chủ không cho tra ⇒ không vẽ mắt (khỏi bấm ra «máy chủ tắt») */
+  sku = String(sku||'').trim(); if (!/^\d{6,12}$/.test(sku) || typeof window.ccdcAnhSp !== 'function' || !(window.TK && TK.phien)) return '';
+  return '<span class="mat-sp" role="button" tabindex="0" data-mat-sku="' + sku + '" title="Xem ảnh sản phẩm" aria-label="Xem ảnh sản phẩm"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M1.5 10s3.2-5.5 8.5-5.5S18.5 10 18.5 10 15.3 15.5 10 15.5 1.5 10 1.5 10z"/><circle cx="10" cy="10" r="2.6"/></svg></span>';
+}
+function ndsSpNap(sku){   // trả Promise<{k, im}>: im = ảnh ĐÃ tải xong (hoặc null)
+  if (NDS_ANH[sku]) return NDS_ANH[sku];
+  var p = ndsTraSp(sku).then(function(k){
+    if (!k || !k.anh) return { k: k, im: null };
+    var tai = function(src){ return new Promise(function(ok){ var im = new Image(); im.alt = ''; im.decoding = 'async'; im.onload = function(){ ok(im); }; im.onerror = function(){ ok(null); }; im.src = src; }); };
+    return tai(k.anh).then(function(im){ return im || (k.anhGoc ? tai(k.anhGoc) : null); }).then(function(im){ return { k: k, im: im }; });
+  });
+  NDS_ANH[sku] = p;
+  p.then(function(r){ if (!r.im || (r.k && r.k.tat)) delete NDS_ANH[sku]; });   // hỏng / máy chủ tắt ⇒ lần sau hỏi lại
+  return p;
+}
+(function(){
+  var lay = function(ev){ var t = ev.target; return t && t.closest ? t.closest('[data-mat-sku]') : null; };
+  var truoc = function(ev){ var m = lay(ev); if (m) ndsSpNap(m.dataset.matSku); };
+  document.addEventListener('pointerover', truoc, true);
+  document.addEventListener('pointerdown', truoc, true);
+  document.addEventListener('focusin', truoc, true);
+  /* pha BẮT (capture) trên document: chạy TRƯỚC lượt bấm của hàng gợi ý / dòng Đã ghi nhận ⇒ bấm mắt chỉ mở ảnh, không chọn SKU */
+  var mo = function(ev){ var m = lay(ev); if (!m) return; ev.preventDefault(); ev.stopPropagation(); if (typeof window.ccdcAnhSp === 'function') window.ccdcAnhSp(m.dataset.matSku); };
+  document.addEventListener('click', mo, true);
+  document.addEventListener('keydown', function(ev){ if ((ev.key === 'Enter' || ev.key === ' ') && lay(ev)) mo(ev); }, true);
+})();
 /* 12/11 nút QR cạnh «Tra»: mượn bộ quét chung (qtcQuetMo) — bắt được mã thì điền ô và tra như gõ tay.
    QR tài sản dạng JSON {"code":"0-xxxx"} ⇒ lấy code; SKU 9 số ⇒ Tra danh mục; còn lại (phiếu / PL / QR / S/N) ⇒ danh sách gợi ý. */
 function ndsQuetQr(){
@@ -14712,7 +14748,7 @@ function ndsVeGoiDs(nhom, trong){
   el.innerHTML = co.map(function(g){ return '<div class="ng-nhom">' + esc(g.nhom) + '</div>' + g.dong.map(function(d){
       var r = ndsDongSku(d.sku) || {}, st = d.tag || r.status || 'ACTIVE';
       return '<button type="button" class="ng-dong' + (String(st).toUpperCase() === 'INACTIVE' ? ' ina' : '') + '" data-sku="' + esc(d.sku) + '" data-ten="' + esc(d.ten || '') + '">' + ndsChipTags(st, r.type) +
-        '<span class="ng-nd"><span class="ng-t1"><b>' + esc(d.sku) + '</b>' + ndsChipCate(r.cate) + '</span><span class="ng-ten">' + esc(d.ten || r.pn || '') + '</span>' +
+        '<span class="ng-nd"><span class="ng-t1"><b>' + esc(d.sku) + '</b>' + ndsChipCate(r.cate) + '</span><span class="ng-ten">' + ndsMat(d.sku) + esc(d.ten || r.pn || '') + '</span>' +
         (d.phu ? '<span class="ng-phu">' + esc(d.phu) + '</span>' : '') + '</span></button>'; }).join(''); }).join('') + (co.length ? '' : '<div class="ng-trong">' + esc(trong) + '</div>');
   ndsCoCate(el);
 }
