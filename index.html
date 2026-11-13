@@ -14787,12 +14787,17 @@ function ndsVeGoiDs(nhom, trong){
   var co = nhom.filter(function(g){ return g.dong.length; });
   /* 13/11 user: RIÊNG tamlc, trong pop-up Hiện trạng CCDC ⇒ dòng «Dùng tên tự do» đứng đầu: ghi phiếu (ảnh + tên gõ) cho CCDC không có trên WMS */
   var kw = String((document.getElementById('ndsMa') || {}).value || '').trim(), tuDo = kw.length >= 2 && typeof window.ccdcTuDo === 'function' && window.ccdcTuDo();
+  /* 13/11 user: tên tự do đã nhập / in / lưu trước đó khớp chữ gõ ⇒ gợi ý như SKU (nhóm riêng, trên cùng); trùng y chữ gõ thì bỏ dòng «tên tự do» mới */
+  var cu = tuDo && typeof window.ccdcTenTuDoCu === 'function' ? window.ccdcTenTuDoCu(kw) : [], kwBd = ndsBoDau(kw).replace(/\s+/g, ' ').trim();
+  var trungCu = cu.some(function(x){ return x.bd === kwBd; });
   if (!co.length && !trong && !tuDo){ el.hidden = true; el.innerHTML = ''; NDS_GOI.cho = null; return; }
   el.hidden = false; el.scrollTop = 0;
   /* 13/11: mỗi hàng = chip ACTIVE / Normal · SKU + ngành hàng · tên ĐỦ, hàng khít (khuôn thẻ SKU Hiện trạng CCDC) */
   NDS_GOI.cho = []; co.forEach(function(g){ NDS_GOI.cho.push({ nhom: g.nhom }); NDS_GOI.cho.push.apply(NDS_GOI.cho, g.dong); });
-  el.innerHTML = (tuDo ? '<div class="ng-nhom">Không có trên WMS · lưu tên tự do</div><button type="button" class="ng-dong ng-tudo" data-tudo="' + esc(kw) + '">' +
-      '<span class="sku-tags"><i>Tự do</i></span><span class="ng-nd"><span class="ng-ten">' + esc(kw) + '</span></span></button>' : '') +
+  var dongTuDo = function(ten, phu){ return '<button type="button" class="ng-dong ng-tudo" data-tudo="' + esc(ten) + '">' +
+      '<span class="sku-tags"><i>Tự do</i></span><span class="ng-nd"><span class="ng-ten">' + esc(ten) + '</span>' + (phu ? '<span class="ng-phu">' + esc(phu) + '</span>' : '') + '</span></button>'; };
+  el.innerHTML = (cu.length ? '<div class="ng-nhom">Tên tự do đã ghi trước đó</div>' + cu.map(function(x){ return dongTuDo(x.ten, x.phu); }).join('') : '') +
+    (tuDo && !trungCu ? '<div class="ng-nhom">Không có trên WMS · lưu tên tự do</div>' + dongTuDo(kw, '') : '') +
     (co.length || !trong ? '' : '<div class="ng-trong">' + esc(trong) + '</div>');
   ndsGoiThem(el);
   ndsGoiCao(el);
@@ -15462,7 +15467,7 @@ var PR_TEM = (function(){
     else o += '<rect x="' + (x + 2) + '" y="' + (2 + vi + 4) + '" width="' + (R - x - 4) + '" height="' + (caoDai - 8) + '" fill="none" stroke="#000" stroke-width="3"/>';
     /* ② mã vạch + SKU khoét đáy giữa */
     var yV = vi + caoDai + Math.round(2 * dotMm), caoV = Math.round(8 * dotMm), sku = String(d.sku || '');
-    var v = vachRect(sku, { dotMm: dotMm, mm: m.mm || 0.25, cao: caoV, y: yV, x: 0 }), yTen = yV + caoV;
+    var v = sku ? vachRect(sku, { dotMm: dotMm, mm: m.mm || 0.25, cao: caoV, y: yV, x: 0 }) : null, yTen = v ? yV + caoV : yV - Math.round(1.5 * dotMm);   // 13/11 phiếu tên tự do (không SKU): không mã vạch ⇒ tên dời lên lấp chỗ
     if (v){
       var xv = Math.round(giua - v.rong / 2), coSo = Math.round(2.925 * dotMm), rongSo = Math.round(sku.length * coSo * 0.58) + 8, caoSo = Math.round(3.25 * dotMm);   /* 11/11 user: số SKU to hơn 30% (2,25→2,925 mm) */
       o += '<g transform="translate(' + xv + ',0)">' + v.rects + '</g>' +
@@ -15519,7 +15524,7 @@ var PR_TEM = (function(){
     else o += '<rect x="' + (x + 2) + '" y="' + (2 + vi + 4) + '" width="' + (R - x - 4) + '" height="' + (caoDai - 8) + '" fill="none" stroke="#000" stroke-width="3"/>';
     /* ② mã vạch + SKU khoét đáy giữa (y như tem 'cc') */
     var yV = vi + caoDai + Math.round(2 * dotMm), caoV = Math.round(8 * dotMm), sku = String(d.sku || '');
-    var v = vachRect(sku, { dotMm: dotMm, mm: m.mm || 0.25, cao: caoV, y: yV, x: 0 }), yTen = yV + caoV;
+    var v = sku ? vachRect(sku, { dotMm: dotMm, mm: m.mm || 0.25, cao: caoV, y: yV, x: 0 }) : null, yTen = v ? yV + caoV : yV - Math.round(1.5 * dotMm);   // 13/11 phiếu tên tự do (không SKU): không mã vạch ⇒ tên dời lên lấp chỗ
     if (v){
       var xv = Math.round(giua - v.rong / 2), coSo = Math.round(2.925 * dotMm), rongSo = Math.round(sku.length * coSo * 0.58) + 8, caoSo = Math.round(3.25 * dotMm);
       o += '<g transform="translate(' + xv + ',0)">' + v.rects + '</g>' +

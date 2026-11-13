@@ -698,8 +698,8 @@
       (chonIn && n ? '<div class="cc-chon"><button type="button" data-lam="chonIn" aria-label="Đổi mẫu in, máy in" title="Đổi mẫu in, máy in"><b>' + e_(tenTheo(MAU_IN, chonIn.mau)) + '</b> · ' + e_(tenTheo(MAY_IN, chonIn.may)) + IC_BUT + '</button></div>' : '') +
       '<div class="cc-gui">' + (n ? av(n.ten) + '<div class="ng">Người gửi <b>' + e_(n.ten) + '</b> · ' + e_(n.id) + '</div>' : '<div class="ng">Chưa đăng nhập</div>') +
       /* 13/11 user: SỬA phiếu + mẫu «Phương án xử lý» ⇒ 2 nút «Lưu» (chỉ lưu) · «In, lưu» (lưu + in 1 tem); mẫu «Thông tin SKU» khi sửa chỉ «Lưu» */
-      (n && f.sua && f.sku && !mauSkuDangChon() ? '<button type="button" class="cc-nut hai" data-lam="gui">Lưu</button><button type="button" class="cc-nut xanh hai" data-lam="guiIn">In, lưu</button></div>'
-        : '<button type="button" class="cc-nut xanh" data-lam="gui">' + (n ? (f.sua ? 'Lưu' : (mauSkuDangChon() ? 'In tem' : (f.sku ? 'In, gửi' : 'Gửi'))) : 'Đăng nhập để gửi') + '</button></div>');   // 13/11 mẫu «Thông tin SKU» chỉ in, không lưu
+      (n && f.sua && (f.sku || f.tuDo) && !mauSkuDangChon() ? '<button type="button" class="cc-nut hai" data-lam="gui">Lưu</button><button type="button" class="cc-nut xanh hai" data-lam="guiIn">In, lưu</button></div>'
+        : '<button type="button" class="cc-nut xanh" data-lam="gui">' + (n ? (f.sua ? 'Lưu' : (mauSkuDangChon() ? 'In tem' : (f.sku || f.tuDo ? 'In, gửi' : 'Gửi'))) : 'Đăng nhập để gửi') + '</button></div>');   // 13/11 mẫu «Thông tin SKU» chỉ in, không lưu
     if (typeof ndsCoCate === 'function') ndsCoCate(el);   // khung ngành hàng chốt cứng ⇒ chữ dài tự co
   }
   function ganSku(r, cach, maGo) {
@@ -1128,6 +1128,28 @@
     var k = document.querySelector('#viewCcdc .cc-the'); if (k && k.scrollIntoView) k.scrollIntoView({ block: 'center', behavior: 'smooth' });
     return true;
   };
+  /* 13/11 user: gõ khớp TÊN TỰ DO đã nhập / in / lưu trước đó (VD «Ắc quy Panasonic PW1212P1 12V 7.5Ah») ⇒ ngăn kéo vẫn gợi ý như SKU.
+     Nguồn: phiếu Đã ghi nhận không SKU (CC.ds) + sổ trên máy (tên đã chọn — gồm cả tên chỉ in mẫu «Thông tin SKU», không có phiếu). */
+  var K_TUDO = 'ccdc-ten-tu-do';
+  function tuDoSo() { try { var a = JSON.parse(localStorage.getItem(K_TUDO) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+  function tuDoGhiNho(ten) {
+    try { var bd = boDau(ten), a = tuDoSo().filter(function (x) { return x && boDau(x.ten) !== bd; }); a.unshift({ ten: ten, luc: Date.now() });
+      localStorage.setItem(K_TUDO, JSON.stringify(a.slice(0, 300))); } catch (e) { }
+  }
+  function boDau(s) { return typeof ndsBoDau === 'function' ? ndsBoDau(String(s || '')).replace(/\s+/g, ' ').trim() : String(s || '').toLowerCase().replace(/\s+/g, ' ').trim(); }
+  window.ccdcTenTuDoCu = function (kw) {
+    if (!window.ccdcTuDo()) return [];
+    var man = boDau(kw).split(/[\s,/;]+/).filter(function (x) { return x.length >= 1; }); if (!man.length) return [];
+    var gom = {};
+    function them(ten, luc, phieu) { ten = String(ten || '').replace(/\s+/g, ' ').trim(); if (!ten) return; var k = boDau(ten);
+      var g = gom[k] || (gom[k] = { ten: ten, luc: 0, n: 0, bd: k }); if (luc > g.luc) { g.luc = luc; g.ten = ten; } if (phieu) g.n++; }
+    CC.ds.forEach(function (x) { if (!x.sku && x.ten) them(x.ten, Number(x.capNhat || x.luc) || 0, true); });
+    tuDoSo().forEach(function (x) { if (x) them(x.ten, Number(x.luc) || 0, false); });
+    return Object.keys(gom).map(function (k) { return gom[k]; })
+      .filter(function (g) { return man.every(function (m) { return g.bd.indexOf(m) >= 0; }); })
+      .sort(function (a, b) { return b.luc - a.luc; })
+      .map(function (g) { return { ten: g.ten, bd: g.bd, phu: g.n ? g.n + ' phiếu đã ghi' : 'Đã in' }; });
+  };
   function ndsDong() {
     var v = $('viewNds');
     if (v && NDS_CHO) { NDS_CHO.cha.insertBefore(v, NDS_CHO.sau); v.hidden = (typeof TOPTAB === 'undefined' || TOPTAB !== 'sku'); NDS_CHO = null; }
@@ -1216,16 +1238,15 @@
     var f = CC.f, gc = $('ccGhiChu'); if (gc) f.ghiChu = gc.value;
     /* 13/11 user «ràng thông tin bắt buộc theo mẫu in» — mẫu Phương án xử lý: SKU (QR tài sản / S/N không bắt buộc) · ảnh/clip · ghi chú · phân loại.
        Phiếu CŨ chưa có SKU vẫn sửa / lưu được (không chặn dữ liệu đã ghi trước ngày 13/11). */
-    if (f.tuDo && mauSkuDangChon() && !f.sua) { f.loi = 'Tên tự do không có SKU nên không in tem «Thông tin SKU» — đổi mẫu in sang «Phương án xử lý» để lưu ảnh.'; veForm(); return; }
     if (!f.sku && !f.tuDo && !f.sua) { f.loi ='Cần SKU — bấm «Quét mã / QR» hoặc «Nhận diện SKU».'; veForm(); var fo0 = $('ccForm'); if (fo0 && fo0.scrollIntoView) fo0.scrollIntoView({ block: 'start', behavior: 'smooth' }); return; }
-    if (f.sku && !chonDoc() && (!f.sua || inSua)) { chonMo(inSua ? 'guiIn' : 'gui'); return; }           // lần đầu trên máy này: bắt buộc chọn mẫu in + máy in rồi mới gửi / in
+    if ((f.sku || f.tuDo) && !chonDoc() && (!f.sua || inSua)) { chonMo(inSua ? 'guiIn' : 'gui'); return; }           // lần đầu trên máy này: bắt buộc chọn mẫu in + máy in rồi mới gửi / in
     var mauSku = mauSkuDangChon();                                           // mẫu «Thông tin SKU»: chỉ SKU bắt buộc
     if (mauSku && !f.sua && !(f.soTemIn >= 1)) { f.loi = 'Cần số lượng tem.'; veForm(); var oT = $('ccSoTem'); if (oT) oT.focus(); return; }   // 13/11 mẫu «Thông tin SKU»
     /* 13/11 user «chọn mẫu in Thông tin SKU thì không cần lưu / tính vào Đã ghi nhận» ⇒ CHỈ gửi lệnh in (không ccdc_ghi, không thêm dòng).
        Không có gì lưu lại nên giữ nguyên form tới khi lệnh in vào hàng đợi (hỏng thì bấm lại được ngay). */
     if (mauSku && !f.sua) {
-      if (f._dangIn) return; f._dangIn = true;
-      var soT = Math.max(1, Math.min(50, f.soTemIn || 1)), skuT = f.sku, nutT = document.querySelector('#viewCcdc [data-lam="gui"]');
+      if (f._dangIn) return; f._dangIn = true; if (f.tuDo) tuDoGhiNho(f.ten);
+      var soT = Math.max(1, Math.min(50, f.soTemIn || 1)), skuT = f.sku || f.ten, nutT = document.querySelector('#viewCcdc [data-lam="gui"]');
       if (nutT) { nutT.disabled = true; nutT.textContent = 'Đang gửi lệnh in…'; }
       goiGas({ action: 'ccdc_in', sku: f.sku, ten: f.ten, sl: '', dv: f.dv, ngay: PR_TEM.ngayTem(new Date()), soTem: soT, ma: '', tt: '', qr: '', qrTs: f.qrTs || '', sn: f.sn || '', viTri: '',
         mauIn: 'sku', may: (chonDoc() || {}).may || '', cate: f.cate || ((traSku(f.sku) || {}).cate) || '' }, 45000)
@@ -1238,7 +1259,7 @@
     if (!mauSku && !f.phanLoai) { f.loi = 'Cần chọn phân loại.'; veForm(); return; }   // 11/11 user: Phân loại bắt buộc
     if (!mauSku && !String(f.viTri || '').trim() && !String(f.gio || '').trim()) { f.loi = 'Cần mã vị trí — bấm biểu tượng QR trên nút phân loại để quét / nhập.'; veForm(); return; }   // 11/11 tối user: bắt buộc mã vị trí mới cho gửi/in
     var lg = loiGio(f); if (lg) { f.loi = lg; veForm(); return; }           // 13/11: giỏ phải đúng phương án (TSD / TL / SC)
-    var inLuon = !!f.sku && (!f.sua || (inSua && !mauSku));                                          // 11/11 user: nút «In, gửi» = gửi + in 1 tem
+    var inLuon = !!(f.sku || f.tuDo) && (!f.sua || (inSua && !mauSku));                                          // 11/11 user: nút «In, gửi» = gửi + in 1 tem
     var soIn = mauSku ? Math.max(1, Math.min(50, f.soTemIn || 1)) : 1;      // 13/11 mẫu «Thông tin SKU» in đúng số tem đã nhập
     var cu = f.sua ? timMa(f.ma) : null, now = Date.now();
     var it = { mauIn: mauSku ? 'sku' : 'pa', cate: f.cate || ((traSku(f.sku) || {}).cate) || '', ma: f.ma || maMoi(), luc: cu ? cu.luc : now, capNhat: now, nguoi: cu ? cu.nguoi : n.ten, tk: cu ? cu.tk : n.id,
@@ -1247,10 +1268,10 @@
     CC.ds = CC.ds.filter(function (x) { x._vua = false; return x.ma !== it.ma; }); CC.ds.unshift(it);
     bao((f.sua ? (inLuon ? 'Đã lưu + in 1 tem · ' : 'Đã lưu · ') : (inLuon ? 'Đã gửi + in ' + soIn + ' tem · ' : 'Đã gửi · ')) + (it.sku || it.maGo || it.ma), 'ok');
     formMoi(); veForm(); veDs(); luuDs();
-    dayLen(it);
+    dayLen(it); if (f.tuDo) tuDoGhiNho(it.ten);
     if (inLuon) napQr().then(function () { return qrHex(LINK_CT + it.ma); }, function () { return ''; }).then(function (qr) {
       return goiGas({ action: 'ccdc_in', sku: it.sku, ten: it.ten, sl: '', dv: it.dv, ngay: PR_TEM.ngayTem(new Date()), soTem: soIn, ma: it.ma, tt: it.phanLoai, qr: qr, qrTs: it.qrTs || '', sn: it.sn || '', viTri: vtTem(it), mauIn: it.mauIn, may: (chonDoc() || {}).may || '', cate: it.cate || '' }, 45000);   // 11/11: Sheet IN-TEM ghi QR tài sản / S/N (phiếu có thể chưa lưu xong)
-    }).catch(function (e) { bao('Chưa gửi được lệnh in ' + it.sku + ': ' + e.message + ' — bấm In ở dòng Đã ghi nhận', 'err'); });
+    }).catch(function (e) { bao('Chưa gửi được lệnh in ' + (it.sku || it.ten) + ': ' + e.message + ' — bấm In ở dòng Đã ghi nhận', 'err'); });
   }
   async function dayLen(it) {
     if (it._dang) return; it._dang = true; it._loi = ''; veDs(); choCat(it);
@@ -1322,7 +1343,7 @@
         '<div class="cc-t1"><span>' + (x.sku && x.ten ? e_(x.sku) + ' · ' + matSp(x.sku) + e_(x.ten) : e_([x.sku, x.ten || (!x.sku ? x.maGo : '')].filter(Boolean).join(' · ') || 'Không có SKU')) + '</span>' + (x.phanLoai ? '<span class="cc-kqc ' + PL_LOP[x.phanLoai] + '">' + e_(x.phanLoai) + '</span>' : '') + '</div>' +
         '<div class="cc-t2">' + e_(x.ghiChu) + '</div>' +
         '<div class="cc-t3">' + av(x.nguoi, true) + '<span>' + e_(haiChuCuoi(x.nguoi)) + ' · ' + gio(x.luc) + ' · ' + [na && na + ' ảnh', nc && nc + ' clip', nv && nv + ' vùng hư'].filter(Boolean).join(' · ') + '</span>' +
-        (x.sku && !x._cho && !x._loi ? '<button type="button" class="in" data-inma="' + e_(x.ma) + '">' + IC.inn.replace('<svg', '<svg style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7"') + 'In tem</button>' : '') + '</div>' + tt + '</div></div>';
+        ((x.sku || x.ten) && !x._cho && !x._loi ? '<button type="button" class="in" data-inma="' + e_(x.ma) + '">' + IC.inn.replace('<svg', '<svg style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7"') + 'In tem</button>' : '') + '</div>' + tt + '</div></div>';
     }).join('') + (ds.length > CC.soHien ? '<button type="button" class="kktab cc-them" data-lam="xemThem">Xem thêm</button>' : '');
     spNapSan(ds.slice(0, 8).map(function (x) { return x.sku; }));
   }
@@ -1352,7 +1373,7 @@
   /* ---------------- 9. In tem — TEM HIỆN TRẠNG 40×60 (PR_TEM loai 'cc', Mẫu 2 user chốt 11/11) ---------------- */
   var IN = null;
   function moIn(o) {
-    if (!o.sku) return;
+    if (!o.sku && !o.ten) return;   // 13/11 phiếu tên tự do (không SKU) vẫn in được — tem không mã vạch
     var homNay = new Date(), n = nguoi();
     IN = { sku: o.sku, ten: o.ten || '', dv: o.dv || '', ma: o.ma || '', tt: o.tt || '', viTri: o.viTri || '', ngay: homNay, soTem: 1, qr: '' };
     var c0 = chonDoc() || {}; IN.mau = c0.mau || 'pa'; IN.may = c0.may || 'may-in-laptop'; IN.cate = o.cate || ((traSku(o.sku) || {}).cate) || '';   // 13/11 mặc định theo lựa chọn đã lưu
@@ -1381,7 +1402,7 @@
   function veTem() {
     var el = $('ccInTem'); if (!el || !IN) return;
     try { el.innerHTML = PR_TEM.mau(PR_TEM.MAU_MAC_DINH).ve(temD()); }
-    catch (e) { el.textContent = IN.sku; }
+    catch (e) { el.textContent = IN.sku || IN.ten; }
   }
   document.addEventListener('input', function (ev) {
     if (!IN) return; var t = ev.target;
@@ -1397,7 +1418,7 @@
       if (IN.mau !== 'sku' && IN.ma && !IN.qr) { bao('Đang dựng mã QR — bấm lại sau giây lát', 'warn'); return; }   // tem «Thông tin SKU» không có QR
       var lenh = { action: 'ccdc_in', sku: IN.sku, ten: IN.ten, sl: '', dv: IN.dv, ngay: PR_TEM.ngayTem(IN.ngay), soTem: IN.soTem, ma: IN.ma, tt: IN.tt, qr: IN.qr, viTri: IN.viTri, mauIn: IN.mau, may: IN.may, cate: IN.cate || '' };
       chonLuu({ mau: IN.mau, may: IN.may }); if ($('ccForm')) veForm();   // lựa chọn mới thành mặc định cho lần sau
-      plgDongModal('ccInModal'); bao('Đã gửi ' + IN.soTem + ' tem ' + IN.sku + ' tới máy in', 'ok');
+      plgDongModal('ccInModal'); bao('Đã gửi ' + IN.soTem + ' tem ' + (IN.sku || IN.ten) + ' tới máy in', 'ok');
       goiGas(lenh, 45000).then(function (j) { if (j.inLoi) bao('Máy in chưa nhận lệnh ' + lenh.sku + ': ' + j.inLoi, 'err'); })
         .catch(function (e) { bao('Chưa gửi được lệnh in ' + lenh.sku + ': ' + e.message, 'err'); });
     }
