@@ -695,7 +695,7 @@
       '<div class="cc-gui">' + (n ? av(n.ten) + '<div class="ng">Người gửi <b>' + e_(n.ten) + '</b> · ' + e_(n.id) + '</div>' : '<div class="ng">Chưa đăng nhập</div>') +
       /* 13/11 user: SỬA phiếu + mẫu «Phương án xử lý» ⇒ 2 nút «Lưu» (chỉ lưu) · «In, lưu» (lưu + in 1 tem); mẫu «Thông tin SKU» khi sửa chỉ «Lưu» */
       (n && f.sua && f.sku && !mauSkuDangChon() ? '<button type="button" class="cc-nut hai" data-lam="gui">Lưu</button><button type="button" class="cc-nut xanh hai" data-lam="guiIn">In, lưu</button></div>'
-        : '<button type="button" class="cc-nut xanh" data-lam="gui">' + (n ? (f.sua ? 'Lưu' : (f.sku ? 'In, gửi' : 'Gửi')) : 'Đăng nhập để gửi') + '</button></div>');
+        : '<button type="button" class="cc-nut xanh" data-lam="gui">' + (n ? (f.sua ? 'Lưu' : (mauSkuDangChon() ? 'In tem' : (f.sku ? 'In, gửi' : 'Gửi'))) : 'Đăng nhập để gửi') + '</button></div>');   // 13/11 mẫu «Thông tin SKU» chỉ in, không lưu
     if (typeof ndsCoCate === 'function') ndsCoCate(el);   // khung ngành hàng chốt cứng ⇒ chữ dài tự co
   }
   function ganSku(r, cach, maGo) {
@@ -1204,6 +1204,18 @@
     if (f.sku && !chonDoc() && (!f.sua || inSua)) { chonMo(inSua ? 'guiIn' : 'gui'); return; }           // lần đầu trên máy này: bắt buộc chọn mẫu in + máy in rồi mới gửi / in
     var mauSku = mauSkuDangChon();                                           // mẫu «Thông tin SKU»: chỉ SKU bắt buộc
     if (mauSku && !f.sua && !(f.soTemIn >= 1)) { f.loi = 'Cần số lượng tem.'; veForm(); var oT = $('ccSoTem'); if (oT) oT.focus(); return; }   // 13/11 mẫu «Thông tin SKU»
+    /* 13/11 user «chọn mẫu in Thông tin SKU thì không cần lưu / tính vào Đã ghi nhận» ⇒ CHỈ gửi lệnh in (không ccdc_ghi, không thêm dòng).
+       Không có gì lưu lại nên giữ nguyên form tới khi lệnh in vào hàng đợi (hỏng thì bấm lại được ngay). */
+    if (mauSku && !f.sua) {
+      if (f._dangIn) return; f._dangIn = true;
+      var soT = Math.max(1, Math.min(50, f.soTemIn || 1)), skuT = f.sku, nutT = document.querySelector('#viewCcdc [data-lam="gui"]');
+      if (nutT) { nutT.disabled = true; nutT.textContent = 'Đang gửi lệnh in…'; }
+      goiGas({ action: 'ccdc_in', sku: f.sku, ten: f.ten, sl: '', dv: f.dv, ngay: PR_TEM.ngayTem(new Date()), soTem: soT, ma: '', tt: '', qr: '', qrTs: f.qrTs || '', sn: f.sn || '', viTri: '',
+        mauIn: 'sku', may: (chonDoc() || {}).may || '', cate: f.cate || ((traSku(f.sku) || {}).cate) || '' }, 45000)
+        .then(function () { if (CC.f === f) { formMoi(); veForm(); } bao('Đã gửi in ' + soT + ' tem · ' + skuT, 'ok'); })
+        .catch(function (e) { f._dangIn = false; if (CC.f === f) veForm(); bao('Chưa gửi được lệnh in ' + skuT + ': ' + e.message + ' — bấm «In tem» lại', 'err'); });
+      return;
+    }
     if (!mauSku && !f.tep.length) { f.loi = 'Cần ít nhất 1 ảnh hoặc clip.'; veForm(); return; }
     if (!mauSku && !String(f.ghiChu).trim()) { f.loi = 'Cần ghi chú hiện trạng.'; veForm(); var g = $('ccGhiChu'); if (g) g.focus(); return; }
     if (!mauSku && !f.phanLoai) { f.loi = 'Cần chọn phân loại.'; veForm(); return; }   // 11/11 user: Phân loại bắt buộc
