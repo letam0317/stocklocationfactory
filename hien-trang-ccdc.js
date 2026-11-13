@@ -138,6 +138,7 @@
     '#viewCcdc .cc-gui .ng{flex:1;font-size:13.5px;color:var(--ink3);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
     '#viewCcdc .cc-gui .ng b{color:var(--ink);font-weight:600}',
     '#viewCcdc .cc-gui .cc-nut.xanh{padding:0 28px}',
+    '#viewCcdc .cc-gui .cc-nut.hai{padding:0 16px;flex:none;white-space:nowrap}',
     '.cc-av{width:28px;height:28px;border-radius:50%;background:#1677ff;color:#fff;display:inline-grid;place-items:center;font-size:11px;font-weight:600;flex:none;overflow:hidden}',
     '.cc-av.n{width:22px;height:22px;font-size:9px} .cc-av img{width:100%;height:100%;object-fit:cover}',
     '#viewCcdc .cc-loi{color:var(--bad,#cf1322);font-size:13px;margin-top:6px}',
@@ -297,7 +298,7 @@
     '#viewCcdc .cc-to svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round;flex:none}',
     '#viewCcdc textarea{min-height:58px;font-size:15px;padding:7px 10px}',
     '#viewCcdc .cc-pl button{padding:4px 0;font-size:13px} #viewCcdc .cc-pl .pl-qr{margin:-4px 0}',
-    '#viewCcdc .cc-gui{margin-top:12px;padding-top:10px} #viewCcdc .cc-gui .cc-nut.xanh{height:34px}',
+    '#viewCcdc .cc-gui{margin-top:12px;padding-top:10px} #viewCcdc .cc-gui .cc-nut.xanh,#viewCcdc .cc-gui .cc-nut.hai{height:34px}',
     '#ccDsKhoi{position:relative}',
     '#ccDsKhoi .panel-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}',
     '#ccDsKhoi .ds-mo{display:inline-flex;align-items:center;gap:6px;border:0;background:none;padding:0;font:inherit;font-size:15px;font-weight:600;color:var(--ink);cursor:pointer;min-width:0}',
@@ -690,9 +691,11 @@
         '<input id="ccSoTem" class="o" inputmode="numeric" autocomplete="off" placeholder="Số tem" value="' + (f.soTemIn || '') + '">' +
         '<button type="button" class="cc-nut" data-lam="slTem:1" aria-label="Thêm 1 tem">+</button></div>' : '') +
       (f.loi ? '<div class="cc-loi">' + e_(f.loi) + '</div>' : '') +
-      (chonIn && n && !f.sua ? '<div class="cc-chon"><button type="button" data-lam="chonIn" aria-label="Đổi mẫu in, máy in" title="Đổi mẫu in, máy in"><b>' + e_(tenTheo(MAU_IN, chonIn.mau)) + '</b> · ' + e_(tenTheo(MAY_IN, chonIn.may)) + IC_BUT + '</button></div>' : '') +
+      (chonIn && n ? '<div class="cc-chon"><button type="button" data-lam="chonIn" aria-label="Đổi mẫu in, máy in" title="Đổi mẫu in, máy in"><b>' + e_(tenTheo(MAU_IN, chonIn.mau)) + '</b> · ' + e_(tenTheo(MAY_IN, chonIn.may)) + IC_BUT + '</button></div>' : '') +
       '<div class="cc-gui">' + (n ? av(n.ten) + '<div class="ng">Người gửi <b>' + e_(n.ten) + '</b> · ' + e_(n.id) + '</div>' : '<div class="ng">Chưa đăng nhập</div>') +
-      '<button type="button" class="cc-nut xanh" data-lam="gui">' + (n ? (f.sua ? 'Lưu' : (f.sku ? 'In, gửi' : 'Gửi')) : 'Đăng nhập để gửi') + '</button></div>';
+      /* 13/11 user: SỬA phiếu + mẫu «Phương án xử lý» ⇒ 2 nút «Lưu» (chỉ lưu) · «In, lưu» (lưu + in 1 tem); mẫu «Thông tin SKU» khi sửa chỉ «Lưu» */
+      (n && f.sua && f.sku && !mauSkuDangChon() ? '<button type="button" class="cc-nut hai" data-lam="gui">Lưu</button><button type="button" class="cc-nut xanh hai" data-lam="guiIn">In, lưu</button></div>'
+        : '<button type="button" class="cc-nut xanh" data-lam="gui">' + (n ? (f.sua ? 'Lưu' : (f.sku ? 'In, gửi' : 'Gửi')) : 'Đăng nhập để gửi') + '</button></div>');
     if (typeof ndsCoCate === 'function') ndsCoCate(el);   // khung ngành hàng chốt cứng ⇒ chữ dài tự co
   }
   function ganSku(r, cach, maGo) {
@@ -749,6 +752,7 @@
       else if (lam === 'quet') moQuet();
       else if (lam === 'nds') ndsMo();
       else if (lam === 'gui') gui();
+      else if (lam === 'guiIn') gui(true);
       else if (lam === 'huySua') { formMoi(); veForm(); veDs(); }
       else if (lam === 'xemThem') { CC.soHien += TRANG; veDs(); }
       else if (lam === 'vtMo') vtMo();
@@ -1008,9 +1012,9 @@
     if (!CHON_QR) napQr().then(function () { CHON_QR = qrHex(LINK_CT + (f.ma || 'CC261113-MAU01')); if ($('ccChonModal') && $('ccChonModal').classList.contains('show')) chonVe(); }).catch(function () { });
     el.innerHTML = '<div class="cc-chon-tem">' + MAU_IN.map(function (m) { return '<button type="button" data-chon="mau:' + m[0] + '" class="' + (CHON.mau === m[0] ? 'on' : '') + '">' + temXem(m[0], d) + '<span>' + m[1] + '</span></button>'; }).join('') + '</div>' +
       '<label class="q-nh">Máy in</label>' + nutMay(CHON.may, 'chon') +
-      '<button type="button" class="cc-nut xanh q-luu" data-chon="luu"' + (CHON.mau && CHON.may ? '' : ' disabled') + '>' + (CHON.sau === 'gui' ? 'Lưu, in' : 'Lưu') + '</button>';
+      '<button type="button" class="cc-nut xanh q-luu" data-chon="luu"' + (CHON.mau && CHON.may ? '' : ' disabled') + '>' + (CHON.sau === 'gui' || CHON.sau === 'guiIn' ? 'Lưu, in' : 'Lưu') + '</button>';
   }
-  function chonXong() { if (!coTrong(MAU_IN, CHON.mau) || !coTrong(MAY_IN, CHON.may)) return; var sau = CHON.sau; chonLuu(CHON); plgDongModal('ccChonModal'); veForm(); if (sau === 'gui') gui(); }
+  function chonXong() { if (!coTrong(MAU_IN, CHON.mau) || !coTrong(MAY_IN, CHON.may)) return; var sau = CHON.sau; chonLuu(CHON); plgDongModal('ccChonModal'); veForm(); if (sau === 'gui') gui(); else if (sau === 'guiIn') gui(true); }
   /* ---------------- 5b. Chuyển vị trí hàng loạt (12/11) ---------------- */
   var VT = { tu: [], den: '', dang: false };
   /* 12/11 user: mã F0-… = mã vị trí (bin), mã khác = mã giỏ; chuyển giỏ thì giỏ nằm trong bin — giữ cả 2 (cột «Mã giỏ») */
@@ -1191,13 +1195,13 @@
 
   /* ---------------- 7. Gửi tức thì + chạy nền ---------------- */
   function vungCua(tep) { var out = [], na = 0; tep.forEach(function (t) { if (t.loai === 'video') return; na++; (t.hinh || []).forEach(function (h, j) { out.push({ anh: na, so: j + 1, nd: h.nd || '' }); }); }); return out; }
-  function gui() {
+  function gui(inSua) {   // inSua = nút «In, lưu» khi sửa phiếu (mẫu Phương án xử lý)
     var n = nguoi(); if (!n) { if (typeof tkMoDangNhap === 'function') tkMoDangNhap(); return; }
     var f = CC.f, gc = $('ccGhiChu'); if (gc) f.ghiChu = gc.value;
     /* 13/11 user «ràng thông tin bắt buộc theo mẫu in» — mẫu Phương án xử lý: SKU (QR tài sản / S/N không bắt buộc) · ảnh/clip · ghi chú · phân loại.
        Phiếu CŨ chưa có SKU vẫn sửa / lưu được (không chặn dữ liệu đã ghi trước ngày 13/11). */
     if (!f.sku && !f.sua) { f.loi = 'Cần SKU — bấm «Quét mã / QR» hoặc «Nhận diện SKU».'; veForm(); var fo0 = $('ccForm'); if (fo0 && fo0.scrollIntoView) fo0.scrollIntoView({ block: 'start', behavior: 'smooth' }); return; }
-    if (!f.sua && f.sku && !chonDoc()) { chonMo('gui'); return; }           // lần đầu trên máy này: bắt buộc chọn mẫu in + máy in rồi mới gửi / in
+    if (f.sku && !chonDoc() && (!f.sua || inSua)) { chonMo(inSua ? 'guiIn' : 'gui'); return; }           // lần đầu trên máy này: bắt buộc chọn mẫu in + máy in rồi mới gửi / in
     var mauSku = mauSkuDangChon();                                           // mẫu «Thông tin SKU»: chỉ SKU bắt buộc
     if (mauSku && !f.sua && !(f.soTemIn >= 1)) { f.loi = 'Cần số lượng tem.'; veForm(); var oT = $('ccSoTem'); if (oT) oT.focus(); return; }   // 13/11 mẫu «Thông tin SKU»
     if (!mauSku && !f.tep.length) { f.loi = 'Cần ít nhất 1 ảnh hoặc clip.'; veForm(); return; }
@@ -1205,14 +1209,14 @@
     if (!mauSku && !f.phanLoai) { f.loi = 'Cần chọn phân loại.'; veForm(); return; }   // 11/11 user: Phân loại bắt buộc
     if (!mauSku && !String(f.viTri || '').trim() && !String(f.gio || '').trim()) { f.loi = 'Cần mã vị trí — bấm biểu tượng QR trên nút phân loại để quét / nhập.'; veForm(); return; }   // 11/11 tối user: bắt buộc mã vị trí mới cho gửi/in
     var lg = loiGio(f); if (lg) { f.loi = lg; veForm(); return; }           // 13/11: giỏ phải đúng phương án (TSD / TL / SC)
-    var inLuon = !f.sua && !!f.sku;                                          // 11/11 user: nút «In, gửi» = gửi + in 1 tem
+    var inLuon = !!f.sku && (!f.sua || (inSua && !mauSku));                                          // 11/11 user: nút «In, gửi» = gửi + in 1 tem
     var soIn = mauSku ? Math.max(1, Math.min(50, f.soTemIn || 1)) : 1;      // 13/11 mẫu «Thông tin SKU» in đúng số tem đã nhập
     var cu = f.sua ? timMa(f.ma) : null, now = Date.now();
     var it = { mauIn: mauSku ? 'sku' : 'pa', cate: f.cate || ((traSku(f.sku) || {}).cate) || '', ma: f.ma || maMoi(), luc: cu ? cu.luc : now, capNhat: now, nguoi: cu ? cu.nguoi : n.ten, tk: cu ? cu.tk : n.id,
       sku: f.sku, maGo: f.maGo, cach: f.sku || f.maGo ? (f.cach || 'Gõ tay') : '', ten: f.ten, loai: f.loai, dv: f.dv, phanLoai: f.phanLoai,
       ghiChu: String(f.ghiChu).trim(), tep: f.tep, vung: vungCua(f.tep), viTri: f.viTri || '', gio: f.gio || '', qrTs: f.qrTs || '', sn: f.sn || '', soTem: cu ? cu.soTem : 0, lichSu: cu ? cu.lichSu : '', _cho: true, _dang: false, _loi: '', _vua: true };
     CC.ds = CC.ds.filter(function (x) { x._vua = false; return x.ma !== it.ma; }); CC.ds.unshift(it);
-    bao((f.sua ? 'Đã lưu · ' : (inLuon ? 'Đã gửi + in ' + soIn + ' tem · ' : 'Đã gửi · ')) + (it.sku || it.maGo || it.ma), 'ok');
+    bao((f.sua ? (inLuon ? 'Đã lưu + in 1 tem · ' : 'Đã lưu · ') : (inLuon ? 'Đã gửi + in ' + soIn + ' tem · ' : 'Đã gửi · ')) + (it.sku || it.maGo || it.ma), 'ok');
     formMoi(); veForm(); veDs(); luuDs();
     dayLen(it);
     if (inLuon) napQr().then(function () { return qrHex(LINK_CT + it.ma); }, function () { return ''; }).then(function (qr) {
