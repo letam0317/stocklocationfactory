@@ -543,6 +543,16 @@
     var coQ = function (k) { var p = String(k || "").split(":"); k = p[0] === "xacminh" && p[1] && p[1] !== "sodo" ? "xm." + p[1] : p[0];
       return typeof window.tkCo !== "function" || !k || k === "home" || window.tkCo((TQ_APP === "factory" ? "f." : "r.") + k); };
     var cs = (cfg.chiSo || []).filter(function (c) { return c && (!c.tab || coQ(c.tab)); });
+    /* 14/11 TK-31 (đo: hàng chỉ số Factory hiện sau ~0,9 s, đẩy cả lưới thẻ xuống 141px): nguồn về muộn ⇒ ô chỉ số chưa có số lấy từ BẢN NHỚ lần trước (≤24 giờ, theo nhãn)
+       trong 8 s đầu sau khi mở trang; nguồn về thì thay số tại chỗ. Quá 8 s vẫn thiếu thì vẽ đúng thực tế (ô đó thật sự không có). */
+    try { var KCS = "tq-cs-" + TQ_APP, nho = JSON.parse(localStorage.getItem(KCS) || "null"), cu = nho && Date.now() - nho.ts < 864e5 ? nho.ds || [] : [];
+      if (cs.length) { var coNhan = {}; cs.forEach(function (c) { coNhan[c.nhan] = 1; });
+        var moi = cs.map(function (c) { return { tab: c.tab, nhan: c.nhan, so: c.so, phu: c.phu, tien: c.tien, mau: c.mau }; });
+        if (performance.now() < 8000) { var gop = []; cu.forEach(function (c) { if (!coNhan[c.nhan] && (!c.tab || coQ(c.tab))) gop.push(c); });
+          if (gop.length) { var thuTu = cu.map(function (c) { return c.nhan; }); cs = cs.concat(gop).sort(function (x, y) { var i = thuTu.indexOf(x.nhan), j = thuTu.indexOf(y.nhan); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j); }); } }
+        if (!gop || !gop.length) localStorage.setItem(KCS, JSON.stringify({ ts: Date.now(), ds: moi }));
+      } else if (performance.now() < 8000) cs = cu.filter(function (c) { return !c.tab || coQ(c.tab); });
+    } catch (e) {}
     cfg = { chiSo: cfg.chiSo, nhom: (cfg.nhom || []).map(function (g) { var g2 = {}; for (var k in g) g2[k] = g[k]; g2.muc = g.khoa && !(window.TK && window.TK.nguoi) ? (g.muc || []) : (g.muc || []).filter(function (m) { return coQ(m.k); }); return g2; }).filter(function (g) { return g.muc.length; }) };
     var h = cs.length ? '<div class="tq-cs n' + cs.length + '">' + cs.map(function (c) {
       return '<div class="tq-o"' + (c.mau ? ' style="--cc:' + c.mau + '"' : '') + '><div class="n">' + escT(c.nhan) + '</div><div class="v"' + (c.tien == null && c.mau ? ' style="color:' + c.mau + '"' : "") + ">" + escT(c.so) + "</div>" +

@@ -1999,6 +1999,15 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
 #viewPlg .pg-legbox::-webkit-scrollbar{display:none}
 #viewPlg .pg-legbox > :is(button,span.tinh){flex:0 0 auto;white-space:nowrap}
 html.ad body #viewPlg .pg-ttile{border-radius:8px}
+/* 14/11 tối (qc-khung-dong-bo --chi=B ở 1845): 4 dáng còn lệch Retail —
+   thẻ Planogram có bóng nhẹ như .hp-panel; chip chú giải 12/600 như .hp-legchip; nút thanh công cụ (.kktab ở Nhận diện SKU, Chuyển đổi cân, Tem vị trí, Bảng thông tin)
+   cao 30 đệm 10 như .hsk-nut Retail (điện thoại giữ vùng chạm 40); đầu bảng Dò RFID 13/600 như đầu bảng Retail. */
+#viewPlg section.panel{box-shadow:0 1px 3px rgba(0,0,0,.05)}
+#viewPlg .pg-legbox > :is(button,span.tinh){font-size:12px}
+@media(min-width:769px){
+  html.ad body :is(#viewNds,#viewCd,#viewTem,#viewBtt,#viewRfid,#viewCcdc) .kktab{height:30px;min-height:30px;padding:0 10px}
+  html.ad body #viewRfid thead th{font-size:13px}
+}
 html.ad body #viewPlg .pg-ttile b{font-weight:780}
 html.ad body #viewPlg .pg-tdrow{border-radius:0;min-height:48px}
 html.ad body #plgList .pg-chipbar .pg-whtab{height:32px;min-height:32px;padding:4px 6px}
@@ -3503,7 +3512,7 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
 <!-- 12/10 giao diện Ant Design (thanh bên · đầu trang · đường dẫn "Nhóm / Mục"), CHUNG với Audit Hasaki: bản chép
      giaodien-antd.js (nguồn ở kiemsoatkho/hasaki-giaodien-antd.js). Nạp đồng bộ ở head để khung hình đầu đã đúng kiểu. -->
 <script>window.AD_BI_DANH={"hangmuctonkho/kiemke":"kk","hangmuctonkho/tonkhobatthuong":"kk#viewAbn"};   /* 15/10 link cũ → mục gộp «Tồn kho chính xác» */ window.AD_TEN='Audit Factory'; window.AD_LOGO='factory-logo.png'; window.AD_TEN_MAU='#000'; window.AD_CHUYEN={ten:'Audit Retail', app:'retail'};</script>   <!-- 13/10 user: logo Mastige (chỉ hình tròn chữ M) + chữ màu logo -->
-<script src="giaodien-antd.js?v=20261114c"></script>
+<script src="giaodien-antd.js?v=20261114d"></script>
 <script src="tai-khoan.js?v=20261110g"></script>   <!-- 14/10 đăng nhập + phân quyền (bản chép từ kiemsoatkho/tai-khoan.js) -->
 <script src="tat-loc.js?v=20261109a" defer></script><script src="lich-su-ben.js?v=20261110g" defer></script><!-- 10/11 tối Lịch sử lịch tháng + pop-up ảnh kiểu B (bản chép Retail) -->   <!-- 22/10 nút «✕ Tắt lọc» · 23/10 dời vào TRONG nút «Bộ lọc» (bản chép từ kiemsoatkho/tat-loc.js) -->
 <link rel="stylesheet" href="hieu-ung.css?v=20261114a"><!-- 14/11 biến hiệu ứng chung (TK-30) -->
