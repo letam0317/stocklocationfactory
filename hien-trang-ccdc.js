@@ -365,6 +365,11 @@
     '#ccSpModal .sp-khung{display:flex;align-items:center;justify-content:center;min-height:240px;height:min(60vh,520px);background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;color:var(--ink3);font-size:13.5px;text-align:center;padding:12px;box-sizing:border-box}',
     '#ccSpModal .sp-khung img{max-width:100%;max-height:100%;object-fit:contain;display:block}',
     '#ccSpModal .sp-dong{margin-top:8px;font-size:13px;color:var(--ink2);overflow-wrap:anywhere}',
+    /* 14/11 user duyệt mẫu: Kho (chỉ khi có QR tài sản) + Cost ngay dưới tiêu đề — dòng GIỮ CHỖ sẵn 1 hàng ⇒ số về sau không đẩy ảnh */
+    '#ccSpModal .sp-tt{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 16px;min-height:19px;margin-bottom:8px;font-size:13px;line-height:19px;color:var(--ink3)}',
+    '#ccSpModal .sp-tt span{min-width:0;overflow-wrap:anywhere}',
+    '#ccSpModal .sp-tt .cost{white-space:nowrap;margin-left:auto}',
+    '#ccSpModal .sp-tt b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}',
     '#viewCcdc .cc-the .cc-the-h{display:flex;align-items:center;gap:8px;min-width:0}',
     '#viewCcdc .cc-the .cc-the-sp b{font-size:18.5px;font-weight:600;line-height:1.2}',
     '#viewCcdc .cc-the .cc-the-sp>span{font-size:14.5px;line-height:1.3;color:var(--ink);overflow-wrap:anywhere}',
@@ -589,7 +594,7 @@
       var a = ev.target.closest('[data-vxanh]'); if (a) { var x = timMa(a.dataset.vxanh); if (x) xemAnh(x, +a.dataset.i || 0); }
     });
     /* 13/11 tấm «Ảnh sản phẩm» (nút mắt ở thẻ SKU): ảnh từ WMS (như trang QR Generator) + nhãn hiệu */
-    var mS = pop('ccSpModal', 'Ảnh sản phẩm', '<div class="sp-khung" id="ccSpKhung"></div><div class="sp-dong" id="ccSpDong"></div>');
+    var mS = pop('ccSpModal', 'Ảnh sản phẩm', '<div class="sp-tt" id="ccSpTt"></div><div class="sp-khung" id="ccSpKhung"></div><div class="sp-dong" id="ccSpDong"></div>');
     mS.addEventListener('click', function (ev) { if (ev.target === mS || ev.target.closest('.mclose')) plgDongModal('ccSpModal'); });
     var mA = pop('ccAnhModal', 'Ảnh / clip hiện trạng', '<div class="xa-khung" id="ccAnhKhung"></div>' +
       '<div class="xa-dieu"><button type="button" class="cc-nut" data-xa="-1" aria-label="Trước">‹</button><span id="ccAnhSo"></span><button type="button" class="cc-nut" data-xa="1" aria-label="Sau">›</button></div>');
@@ -653,7 +658,7 @@
        ngành hàng thiếu trong danh mục ⇒ lấy từ chính lượt tải sẵn đó rồi vẽ lại */
     if (f.sku && typeof ndsSpNap === 'function') { var skuC = f.sku; ndsSpNap(skuC).then(function (r) { var k = r && r.k; if (k && k.cate && CC.f.sku === skuC && !CC.f.cate && !cateF) { CC.f.cate = k.cate; veForm(); } }); }
     var kq = f.sku ? '<div class="cc-the"><div class="cc-the-dau">' + chipTags +
-        '<div class="cc-the-sp"><div class="cc-the-h"><b>' + e_(f.sku) + '</b>' + (typeof ndsChipCate === 'function' ? ndsChipCate(cateF) : '') + '</div><span>' + matSp(f.sku) + e_(f.ten || 'Chưa có tên trong danh mục') + '</span></div>' +
+        '<div class="cc-the-sp"><div class="cc-the-h"><b>' + e_(f.sku) + '</b>' + (typeof ndsChipCate === 'function' ? ndsChipCate(cateF) : '') + '</div><span>' + matSp(f.sku, f.qrTs) + e_(f.ten || 'Chưa có tên trong danh mục') + '</span></div>' +
         /* 11/11 user: chỉ cho in sau khi Gửi ⇒ form không còn nút In tem (in ở dòng «Đã ghi nhận» / trang chi tiết) */
         '<button type="button" class="x" data-lam="boSku" aria-label="Bỏ SKU">✕</button></div>' + dd2 + '</div>'
       /* 13/11 user (riêng tamlc): tên tự do — CCDC không có trên WMS, phiếu chỉ để lưu ảnh + nhận diện; không SKU nên không in tem */
@@ -1083,7 +1088,7 @@
           (t.loai === 'video' ? '<i><svg viewBox="0 0 10 10" width="12" height="12"><path d="M2.5 1.5v7l6-3.5z" fill="#fff"/></svg></i>' : '') + '</button>'; }).join('');
       return '<div class="vx-dong"><div class="vx-t1"><b>' + e_(x.sku || 'Không có SKU') + '</b>' +
         (x.phanLoai ? '<span class="cc-kqc ' + PL_LOP[x.phanLoai] + '">' + e_(x.phanLoai) + '</span>' : '<span class="vx-chua">Chưa phân loại</span>') + '</div>' +
-        (x.ten ? '<div class="vx-ten">' + matSp(x.sku) + e_(x.ten) + '</div>' : '') +
+        (x.ten ? '<div class="vx-ten">' + matSp(x.sku, x.qrTs) + e_(x.ten) + '</div>' : '') +
         (x.ghiChu ? '<div class="vx-gc">' + e_(x.ghiChu) + '</div>' : '') +
         (anh ? '<div class="vx-anhs">' + anh + '</div>' : '') +
         '<div class="vx-t3">' + e_(haiChuCuoi(x.nguoi)) + ' · ' + gio(x.capNhat || x.luc) + ' · ' + e_(x.ma) + '</div></div>';
@@ -1340,7 +1345,7 @@
         : x._hen ? '<div class="cc-tt">Máy chủ đang bận — tự lưu lại lúc ' + gioPhut(x._hen) + ' · <button type="button" data-thu="' + e_(x.ma) + '">lưu ngay</button></div>'
         : (x._cho ? '<div class="cc-tt"><span class="cc-vong"></span>Đang lưu' + (x._tien ? ' ' + e_(x._tien) : '') + '…</div>' : '');
       return '<div class="cc-dong' + (x._vua ? ' vua' : '') + '" data-dong="' + e_(x.ma) + '"><div class="cc-tb">' + (thumb(t0) ? '<img loading="lazy" src="' + e_(thumb(t0)) + '" alt="">' : '') + '</div><div class="cc-nd">' +
-        '<div class="cc-t1"><span>' + (x.sku && x.ten ? e_(x.sku) + ' · ' + matSp(x.sku) + e_(x.ten) : e_([x.sku, x.ten || (!x.sku ? x.maGo : '')].filter(Boolean).join(' · ') || 'Không có SKU')) + '</span>' + (x.phanLoai ? '<span class="cc-kqc ' + PL_LOP[x.phanLoai] + '">' + e_(x.phanLoai) + '</span>' : '') + '</div>' +
+        '<div class="cc-t1"><span>' + (x.sku && x.ten ? e_(x.sku) + ' · ' + matSp(x.sku, x.qrTs) + e_(x.ten) : e_([x.sku, x.ten || (!x.sku ? x.maGo : '')].filter(Boolean).join(' · ') || 'Không có SKU')) + '</span>' + (x.phanLoai ? '<span class="cc-kqc ' + PL_LOP[x.phanLoai] + '">' + e_(x.phanLoai) + '</span>' : '') + '</div>' +
         '<div class="cc-t2">' + e_(x.ghiChu) + '</div>' +
         '<div class="cc-t3">' + av(x.nguoi, true) + '<span>' + e_(haiChuCuoi(x.nguoi)) + ' · ' + gio(x.luc) + ' · ' + [na && na + ' ảnh', nc && nc + ' clip', nv && nv + ' vùng hư'].filter(Boolean).join(' · ') + '</span>' +
         ((x.sku || x.ten) && !x._cho && !x._loi ? '<button type="button" class="in" data-inma="' + e_(x.ma) + '">' + IC.inn.replace('<svg', '<svg style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7"') + 'In tem</button>' : '') + '</div>' + tt + '</div></div>';
@@ -1443,11 +1448,30 @@
   }
   /* 13/11 tấm «Ảnh sản phẩm» (mắt đầu tên sản phẩm). Ảnh lấy qua ndsSpNap (index.html) — thường đã TẢI SẴN lúc thẻ hiện / lúc chạm mắt
      ⇒ mở là có ảnh ngay; chưa xong thì hiện «Đang tải…» rồi thay. Bấm SKU khác giữa chừng ⇒ bỏ kết quả cũ. */
-  function matSp(sku) { return typeof ndsMat === 'function' ? ndsMat(sku) : ''; }
-  var SP_DANG = '';
+  /* 14/11 user: tấm mắt hiện thêm KHO đang tồn tài sản (chỉ khi phiếu có QR tài sản) + COST của SKU. Mắt mang kèm QR tài sản của dòng
+     (data-mat-qr); lượt bấm do index.html bắt (chỉ truyền SKU) ⇒ ghi QR lại ở pha bắt của window (chạy trước) rồi spMo đọc. */
+  function matSp(sku, qr) { var h = typeof ndsMat === 'function' ? ndsMat(sku) : ''; return h && qr ? h.replace(' data-mat-sku=', ' data-mat-qr="' + e_(qr) + '" data-mat-sku=') : h; }
+  var SP_DANG = '', SP_QR = '', KHO_TS = {};
+  ['click', 'keydown'].forEach(function (t) { window.addEventListener(t, function (ev) { var m = ev.target && ev.target.closest ? ev.target.closest('[data-mat-sku]') : null; if (m) SP_QR = m.dataset.matQr || ''; }, true); });
+  /* Kho của 1 QR tài sản: máy chủ 8591 /api/tra-ts?kw= (tra trong bộ nhớ, 0 lượt WMS); máy chủ tắt ⇒ tab TAI-SAN-WMS (gviz). Không ra thì lần sau hỏi lại. */
+  function khoTs(qr, sku) {
+    qr = String(qr || '').trim(); var kh = qr.toLowerCase() + '|' + sku; if (qr.length < 4) return Promise.resolve('');
+    if (KHO_TS[kh]) return KHO_TS[kh];
+    var chon = function (ds) { ds = (ds || []).filter(function (x) { return String(x.qr || '').toLowerCase() === qr.toLowerCase(); });
+      var x = ds.filter(function (y) { return String(y.sku) === sku; })[0] || ds[0]; return x ? String(x.kho || x.vt || '') : ''; };
+    var p = (typeof ndsMayChu === 'function' ? ndsMayChu() : Promise.resolve('')).then(function (u) {
+      if (!u) return null; var c = new AbortController(); setTimeout(function () { c.abort(); }, 4000);
+      return fetch(u + '/api/tra-ts?kw=' + encodeURIComponent(qr), { headers: { 'x-tk-phien': (window.TK && TK.phien) || '' }, signal: c.signal })
+        .then(function (r) { return r.ok ? r.json() : null; }).then(function (j) { return j && j.loai === 'ts' && j.coSo ? chon(j.ds) : null; });
+    }).catch(function () { return null; })
+      .then(function (kho) { return kho != null ? kho : traWms(qr).then(chon).catch(function () { return ''; }); });
+    KHO_TS[kh] = p; p.then(function (kho) { if (!kho) delete KHO_TS[kh]; });
+    return p;
+  }
   function spMo(sku) {
-    sku = String(sku || ''); if (!sku || typeof ndsSpNap !== 'function') return; SP_DANG = sku;
-    var k = $('ccSpKhung'), d = $('ccSpDong'); if (!k) return;
+    sku = String(sku || ''); var qr = SP_QR; SP_QR = ''; if (!sku || typeof ndsSpNap !== 'function') return; SP_DANG = sku;
+    var k = $('ccSpKhung'), d = $('ccSpDong'), tt = $('ccSpTt'); if (!k) return;
+    if (tt) tt.textContent = '';
     var h = document.querySelector('#ccSpModal .mt'); if (h) h.textContent = 'Ảnh sản phẩm · ' + sku;
     k.textContent = 'Đang tải ảnh…'; d.textContent = '';
     var t0 = Date.now(), ve = function (r) {
@@ -1460,9 +1484,15 @@
       if (!r.im) { k.textContent = 'Không tải được ảnh — thử lại sau'; return; }
       k.textContent = ''; k.appendChild(r.im); window.CCDC_SP_MS = Date.now() - t0;   // bộ đo đọc số này
     };
-    var p = ndsSpNap(sku);
+    var p = ndsSpNap(sku), pk = qr ? khoTs(qr, sku) : Promise.resolve('');
     plgMoModal('ccSpModal');
     p.then(ve);
+    /* Kho + Cost vẽ MỘT lần khi cả hai đã về (dòng giữ chỗ sẵn) — máy chủ bản cũ chưa trả cost ⇒ không vẽ chữ Cost */
+    Promise.all([p, pk]).then(function (a) {
+      if (SP_DANG !== sku || !tt) return; var x = (a[0] && a[0].k) || {}, kho = a[1], c = Number(x.cost);
+      tt.innerHTML = (kho ? '<span>Kho <b>' + e_(kho) + '</b></span>' : '') +
+        (x.cost === undefined || x.tat ? '' : '<span class="cost">Cost <b>' + (c > 0 ? Math.round(c).toLocaleString('vi-VN') + ' đ' : 'chưa có') + '</b></span>');
+    });
   }
   window.ccdcAnhSp = spMo;
   /* tải sẵn cho các dòng ĐANG HIỆN (Đã ghi nhận 8 dòng đầu, tấm Phiếu tại, trang chi tiết) lúc trình duyệt rảnh — máy chủ nhớ 24 giờ nên
@@ -1510,7 +1540,7 @@
       (dn && x.sku ? '<button type="button" class="cc-nut vien" data-ct="in">' + IC.inn + 'In tem</button>' : '') +
       (dn && !x._dang ? '<button type="button" class="cc-nut" data-ct="sua">Sửa</button>' : '') + '</div>' +
       '<div class="panel"><div class="dai ' + lop + '"><span class="vach"></span><div><div class="nh">PHÂN LOẠI</div><div class="lon">' + e_(x.phanLoai || 'Chưa phân loại') + '</div></div>' +
-      '<div class="sp"><b>' + e_(x.sku || x.maGo || 'Không có SKU') + '</b><span>' + (x.ten ? matSp(x.sku) : '') + e_(x.ten || '') + '</span></div></div>' +
+      '<div class="sp"><b>' + e_(x.sku || x.maGo || 'Không có SKU') + '</b><span>' + (x.ten ? matSp(x.sku, x.qrTs) : '') + e_(x.ten || '') + '</span></div></div>' +
       '<div class="than">' +
       '<div class="muc"><h4>3 · Ghi chú</h4><div class="gc">' + e_(x.ghiChu || '') + '</div></div>' +
       '<div class="muc"><h4>2 · Ảnh / clip</h4><div><div class="anhs">' + anh + '</div>' + (vung ? '<div style="margin-top:8px">' + vung + '</div>' : '') + '</div></div>' +
