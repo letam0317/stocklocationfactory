@@ -4878,6 +4878,7 @@ var CAT_DATA = {};                     // cate -> {sh,pe,whs:[[kho,skuSh,skuPe],
    Chuyển đổi cân (cdF / cdSo) giữ kiểu cũ vì có đọc ngược số người gõ — đổi là sai dữ liệu. */
 function nf(x){ return (x||0).toLocaleString('vi-VN'); }
 /* CT2: tỷ lệ %% chính xác — tối đa 2 số lẻ, số nguyên thì không hiện .00 (99.12% giữ nguyên, 100% ra 100%) */
+function nfT(x,n){ return Number(x||0).toFixed(n).replace('.',','); }   /* 15/11: số thập phân hiện cho người đọc dùng dấu phẩy (như Retail) */
 function pct(v){ return String(Number((v||0).toFixed(2))).replace('.',',')+'%'; }
 function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
 function isShelf(loc){ var s=(loc||'').toString().trim().toUpperCase(); return !(s.indexOf('F0-A0')===0||s.indexOf('F00-A00')===0); }
@@ -5183,7 +5184,7 @@ function phNice(v){ var p=Math.pow(10,Math.floor(Math.log10(Math.max(1,v)))); va
 function phKey(ms){ var t=new Date(ms); function p(n){ return (n<10?'0':'')+n; } return t.getUTCFullYear()+'-'+p(t.getUTCMonth()+1)+'-'+p(t.getUTCDate()); }
 function phDM(d){ return d.slice(8,10)+'/'+d.slice(5,7); }
 /* Số rút gọn cho nhãn trong thân cột mảnh: 2318 -> 2.3k, 580 giữ nguyên (tooltip + số Tổng vẫn đầy đủ) */
-function nfK(x){ if(x<1000) return nf(x); var s=(x/1000).toFixed(1).replace(/\.0$/,''); return s+'k'; }
+function nfK(x){ if(x<1000) return nf(x); var s=(x/1000).toFixed(1).replace(/\.0$/,'').replace('.',','); return s+'k'; }
 function renderHistory(){
   try{
     renderSparks();
@@ -5381,7 +5382,7 @@ function render(groups,whDiv){
     '<section class="cards">'+
     '<div class="card c1"><div class="k">'+nf(gSh)+'</div><div class="l">SKU đã lên kệ</div></div>'+
     '<div class="card c2"><div class="k">'+nf(gPe)+'</div><div class="l">SKU còn cần lên kệ'+tipMuc(TIP.stock)+'</div></div>'+
-    '<div class="card c3"><div class="k">'+rate.toFixed(1)+'%</div><div class="l">Tỷ lệ đã lên kệ</div></div>'+
+    '<div class="card c3"><div class="k">'+nfT(rate,1)+'%</div><div class="l">Tỷ lệ đã lên kệ</div></div>'+
     '<div class="card c4"><div class="k">'+whKeys.length+'</div><div class="l">Kho (warehouse)</div></div>'+
     '<div class="card c5"><div class="k">'+groups.length+'</div><div class="l">Nhóm Kho × Cate</div></div>'+
     '</section>'+
@@ -8705,7 +8706,7 @@ function kkRenderPanel(kind){
   function fcMoTa(f){
     if(f.mode!=='chuan') return 'Chưa có bộ số chuẩn tốc độ cho phạm vi này.';
     var arr=[]; for(var g in f.secG){ if(f.nhom[g]) arr.push(KK_NHOM_TEN[g]+' ≈'+Math.round(f.secG[g])+'s/mã × '+nf(f.nhom[g])+' còn lại'); }
-    return 'Tính theo BỘ SỐ CHUẨN đo từ '+f.chuan.ten+': '+arr.join(' · ')+' → khối lượng ≈'+(f.effort/3600).toFixed(1)+' giờ. '+
+    return 'Tính theo BỘ SỐ CHUẨN đo từ '+f.chuan.ten+': '+arr.join(' · ')+' → khối lượng ≈'+nfT(f.effort/3600,1)+' giờ. '+
       'Công suất chuẩn ≈'+Math.round(f.capNgay/60)+' phút/ngày ('+f.nguoiTB+' người × '+Math.round(f.phutNguoi)+' phút/người/ngày) → ≈'+nf(f.ngay)+' ngày làm việc. Chủ nhật nghỉ — ETA đã bỏ qua CN. Tự tính lại theo kho đang lọc.';
   }
   var fcOpen=' data-k="'+kind+'" onclick="kkFcOpen(this.getAttribute(\'data-k\'))"';   // bấm ô -> pop-up dự báo + mô phỏng nhân sự
@@ -8893,7 +8894,7 @@ function kkFcOpen(kind){
       (fc.thucDo?' Thực đo tại chỗ (phiếu kèm giờ trong phạm vi lọc): ≈'+Math.round(fc.thucDo.sec)+'s/mã · '+nf(fc.thucDo.n)+' mẫu — chỉ tham chiếu.':'')+'</div>'+
       '<div class="fchero"><span class="d'+(fc.slow?' bad':'')+'">'+(fc.slow?'&gt;6 tháng':fc.eta)+'</span><span class="n">≈'+nf(fc.ngay)+' ngày làm việc theo nhịp chuẩn (đã né Chủ nhật)</span></div>'+
       '<div class="fcfacts">'+gList+
-      '<div class="fcfact"><b>≈'+(fc.effort/3600).toFixed(1)+' giờ</b><span>khối lượng còn lại (giờ người hiệu dụng)</span></div>'+
+      '<div class="fcfact"><b>≈'+nfT(fc.effort/3600,1)+' giờ</b><span>khối lượng còn lại (giờ người hiệu dụng)</span></div>'+
       '<div class="fcfact"><b>≈'+Math.round(fc.capNgay/60)+' phút/ngày</b><span>công suất chuẩn · đo '+nf(p.n||0)+' phiếu / '+(p.ngay||0)+' ngày</span></div>'+
       '<div class="fcfact"><b>≈'+fc.nguoiTB+' người/ngày</b><span>nhân sự kiểm TB của đợt chuẩn</span></div>'+
       '<div class="fcfact"><b>≈'+Math.round(fc.phutNguoi)+' phút/người</b><span>khung giờ kiểm TB 1 người/ngày</span></div>'+
@@ -8973,11 +8974,11 @@ function kkFcSim(){
   var startMs=FC_DP.start?Date.parse(FC_DP.start+'T00:00:00Z'):kkTodayMsVN(); if(isNaN(startMs)) startMs=kkTodayMsVN();
   var soLam=Math.ceil(load/(N*secNguoi));
   if(soLam>150){   // cùng trần ">6 tháng" với tầng ① — quá xa thì ngày cụ thể vô nghĩa (vòng ETA cũng chỉ dò 800 ngày lịch) — A8
-    out.innerHTML='<span class="d bad">&gt;6 tháng</span><span class="n">≈'+nf(soLam)+' ngày làm việc · '+nf(nMa)+' mã ≈'+(load/3600).toFixed(1)+' giờ công · '+N+' người × '+Math.round(secNguoi/60)+' phút/ngày — tăng nhân sự hoặc thời lượng để rút ngắn.</span>';
+    out.innerHTML='<span class="d bad">&gt;6 tháng</span><span class="n">≈'+nf(soLam)+' ngày làm việc · '+nf(nMa)+' mã ≈'+nfT(load/3600,1)+' giờ công · '+N+' người × '+Math.round(secNguoi/60)+' phút/ngày — tăng nhân sự hoặc thời lượng để rút ngắn.</span>';
     need.textContent=''; return;
   }
   var endMs=kkEtaFrom(startMs,soLam);
-  out.innerHTML='<span class="d">'+kkFcFmt(endMs)+'</span><span class="n">kết thúc dự kiến · bắt đầu '+kkFcFmt(startMs)+' → ≈'+nf(soLam)+' ngày làm việc (né CN) · '+nf(nMa)+' mã ≈'+(load/3600).toFixed(1)+' giờ công · '+N+' người × '+Math.round(secNguoi/60)+' phút/ngày · phạm vi: '+(base==='tong'?'TOÀN BỘ (kiểm lại từ đầu)':'còn lại chưa kiểm')+'</span>';
+  out.innerHTML='<span class="d">'+kkFcFmt(endMs)+'</span><span class="n">kết thúc dự kiến · bắt đầu '+kkFcFmt(startMs)+' → ≈'+nf(soLam)+' ngày làm việc (né CN) · '+nf(nMa)+' mã ≈'+nfT(load/3600,1)+' giờ công · '+N+' người × '+Math.round(secNguoi/60)+' phút/ngày · phạm vi: '+(base==='tong'?'TOÀN BỘ (kiểm lại từ đầu)':'còn lại chưa kiểm')+'</span>';
   var txt='';
   if(FC_DP.end){
     var tms=Date.parse(FC_DP.end+'T00:00:00Z'), wd=0;
