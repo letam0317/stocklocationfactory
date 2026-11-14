@@ -1,0 +1,53 @@
+/* thanh-ben.css (14/11/2026) — VỎ THANH BÊN PHẢI DÙNG CHUNG audit-dc. Retail + Factory nạp bản chép y hệt (cai-pc/bo-thiet-ke.json › chep). Luật TK-29.
+   User 14/11: «thanh bên phải Planogram Retail tỉ mỉ, Factory chỉ 80%», «thanh bên CCTV quá to, không đồng bộ», «khung tiêu đề + tab kiểu Planogram đẹp — áp toàn bộ».
+   Trước đó: 4 công thức bề rộng (720 · ~929 · clamp 26vw · 14vw), 3 bộ đệm đầu thanh, 4 kiểu hiệu ứng, 4 mốc màn hình, mỗi mục tự viết.
+   CHỐT (user duyệt 14/11):
+     · 2 NẤC bề rộng: thường --tb-rong (720) cho mọi mục · rộng --tb-rong-lon CHỈ khi thân có .hx-tb-luoi (Xác minh: clip + cột quyết định).
+     · KHÔNG phủ nền: lớp vỏ trong suốt, bấm xuyên được ⇒ đang mở vẫn bấm dòng / ô khác để đổi nội dung tại chỗ.
+     · MẪU 7 «thẻ nổi đổ bóng» là mặc định: nền thanh xám nhạt, tiêu đề (+ thanh tab) là thẻ trắng bo 8 nổi lên. Không backdrop-filter (TK-16).
+     · Một hiệu ứng: hộp trượt translate 100% → 0 trong --t-cham. Một mốc điện thoại: 768px (phủ ngang, top 0, đầu trang trượt lên).
+   VỎ hiện có: #modal.hx-ben (Vi phạm · Xác minh · CCTV — window.hskThanhBen), #hpVtModal (Planogram · Bảo dưỡng Retail), #plgmodal (Planogram Factory).
+   MỤC MỚI: dùng lớp .tb-vo > .tb-hop > .tb-dau + .tb-than — KHÔNG viết bề rộng / hiệu ứng / đệm riêng (qc-sau-code mã soát TBRONG chặn). */
+:root{
+  --tb-rong:min(720px,96vw);
+  --tb-rong-lon:calc(100vw - clamp(340px,26vw,420px));
+  --tb-dau-dem:12px 20px;
+  --tb-dau-cao:56px;
+  --tb-than-dem:14px 20px 20px;
+  --tb-le:12px;                                                  /* lề quanh thẻ tiêu đề nổi */
+  --tb-nen:color-mix(in srgb,var(--text) 4%,var(--surface));
+}
+/* ===== lớp vỏ: trong suốt, không chặn bấm ===== */
+:is(.tb-vo,#modal.hx-ben,#hpVtModal,#plgmodal){left:0!important;right:0;align-items:stretch!important;justify-content:flex-end!important;padding:0!important;
+  background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;pointer-events:none;overflow:visible}
+/* ===== hộp: bám mép phải, cao trọn, trượt ===== */
+:is(.tb-vo,#modal.hx-ben,#hpVtModal,#plgmodal)>:is(.tb-hop,.modal-box,.hp-modalbox,.modalbox){pointer-events:auto;flex:none;margin:0;
+  width:var(--tb-rong)!important;max-width:none;height:100%;max-height:none!important;border-radius:0!important;border:0;border-left:1px solid var(--border);
+  background:var(--tb-nen);box-shadow:-10px 0 28px color-mix(in srgb,#000 16%,transparent);opacity:1;
+  animation:none!important;transform:translate3d(100%,0,0);transition:transform var(--t-cham,.3s) var(--ez-apple,ease)}
+:is(.tb-vo,#modal.hx-ben,#hpVtModal,#plgmodal).show>:is(.tb-hop,.modal-box,.hp-modalbox,.modalbox){transform:none}
+@media(min-width:769px){:is(.tb-vo,#modal.hx-ben):has(.hx-tb-luoi)>:is(.tb-hop,.modal-box){width:var(--tb-rong-lon)!important}}   /* nấc rộng chỉ máy tính; điện thoại mọi thanh phủ ngang */
+/* ===== đầu thanh = thẻ nổi (Mẫu 7) ===== */
+:is(.tb-vo,#modal.hx-ben,#hpVtModal,#plgmodal) :is(.tb-dau,.modal-head,.hp-modalhd,.modalhd){background:var(--surface);margin:var(--tb-le) var(--tb-le) 0;
+  padding:var(--tb-dau-dem);min-height:var(--tb-dau-cao);border-radius:8px;border:0;box-shadow:var(--shadow);z-index:5;flex:none}
+:is(.tb-vo,#hpVtModal,#plgmodal) :is(.tb-dau,.hp-modalhd,.modalhd){position:relative}
+/* vỏ #modal: cả hộp cuộn ⇒ thẻ tiêu đề dính đỉnh, dải nền xám che phần nội dung cuộn qua lề trên / hai bên */
+#modal.hx-ben .modal-head{position:sticky;top:var(--tb-le)}
+#modal.hx-ben .modal-head::before{content:"";position:absolute;inset:calc(-1*var(--tb-le)) calc(-1*var(--tb-le)) -1px;background:var(--tb-nen);z-index:-1;border-radius:0}
+#modal.hx-ben .modal-head::after{content:"";position:absolute;inset:0;background:var(--surface);border-radius:8px;box-shadow:var(--shadow);z-index:-1}
+/* tiêu đề 16/600 mọi thanh */
+:is(.tb-vo,#modal.hx-ben,#hpVtModal,#plgmodal) :is(.tb-tieude,.mt,.vp-mt1,.hx-mt1){font-size:16px;font-weight:600}
+/* ===== điện thoại: một mốc 768 ===== */
+@media(max-width:768px){
+  :is(.tb-vo,#modal.hx-ben,#hpVtModal,#plgmodal){top:0!important}
+  :is(.tb-vo,#modal.hx-ben,#hpVtModal,#plgmodal)>:is(.tb-hop,.modal-box,.hp-modalbox,.modalbox){width:100vw!important;border-left:0}
+  body>header,.main>header,header{transition:translate var(--t-cham,.3s) var(--ez-apple,ease)}
+  body:has(:is(.tb-vo,#modal.hx-ben,#hpVtModal,#plgmodal).show) header{translate:0 -100%;pointer-events:none}
+  body:has(:is(.tb-vo,#modal.hx-ben,#hpVtModal,#plgmodal).show) #sideToggle{opacity:0!important;pointer-events:none!important}
+  :root{--tb-le:10px}
+}
+/* khối dính bên trong thân (clip, quyết định, dải bước) lấy NỀN CỦA THANH — không để mảng trắng loang trên nền xám (14/11 soát ảnh 1366×768) */
+#modal.hx-ben .hx-tb-luoi>.hx-tb-khung>:is([data-tp=quyetdinh],[data-tp=clip]),#modal.hx-ben .vp-buoc{background:var(--tb-nen)!important}
+/* 14/11 qc-popup-tran (điện thoại): pop-up mô-đun cao 100vh nằm trong lớp phủ bắt đầu DƯỚI đầu trang (top = --pop-tren) ⇒ đáy hộp lọt ngoài màn 26–52 px,
+   dòng cuối không cuộn tới. Hộp không bao giờ cao hơn lớp phủ chứa nó. */
+@media(max-width:768px){html body :is(.hp-modal,.hk-modal,.ht-modal,.hpc-modal,.fk-modal,.fs-modal)>*{max-height:100%!important}}

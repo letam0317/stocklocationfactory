@@ -29,5 +29,5 @@
 #modal .modal-box,#statModal .modal-box,#ghiModal .gm-box,#hmModal .hmm-box,.modalbox,.hp-modalbox,.hk-modalbox,.hpc-box{will-change:auto!important}
 @media (max-width:768px),(pointer:coarse){
   *,*::before,*::after{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
-  .wrap>header:not(.hdr){background:var(--bg)!important}
+  html:not(.ad) .wrap>header:not(.hdr){background:var(--bg)!important}   /* 14/11: giao diện mới (html.ad) đầu trang nền trắng đặc sẵn — điện thoại Retail trước bị xám, lệch máy tính và Factory */
 }

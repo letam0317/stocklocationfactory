@@ -428,6 +428,25 @@ body.an-chan .footbar{display:none}
 #viewKK:not([hidden])::before,#viewAbn:not([hidden])::before{display:block;margin:0 -24px;padding:16px 24px;border-bottom:1px solid var(--ad-chia,var(--border));background:var(--surface);border-radius:8px 8px 0 0;font-size:16px;font-weight:600;line-height:24px;color:var(--text)}
 #viewKK:not([hidden])::before{display:none!important;content:""}
 #viewAbn:not([hidden])::before{content:"Bất thường"}
+/* 14/11 user chốt «Kiểm kê theo Retail: 2 khung rời» (thay khung bọc 15/10): bỏ khung bọc #viewKK; mỗi khối SKU / mã vị trí = 1 khung thư viện,
+   đầu khung 40px (tên 14/600 + ghi chú loại + nút Bộ lọc 28px) y khuôn #pane-kk .hk-panel của Retail. Bộ lọc vẫn MỘT bộ dùng chung:
+   nút ở 2 đầu khung là bản soi của #kkBtnLoc (kkTachKhung), khối lọc trượt ra ngay trên 2 khung. */
+html body #viewKK:not([hidden]){border:0!important;border-radius:0!important;background:transparent!important;padding:0!important;margin-bottom:16px}
+html.ad body #viewKK#viewKK .kk-dau-panel{border:0!important;background:none!important;margin:0!important;padding:0!important;box-shadow:none!important}
+#viewKK .kk-dau-panel>.panel-head{display:none!important}
+html body #viewKK .kk-dau-panel>.filters:not(.collapsed){border:1px solid var(--ad-chia,var(--border));border-radius:8px;background:var(--surface);margin-bottom:16px}
+html body #viewKK .grid2.even{gap:16px!important;align-items:start}
+html body #viewKK .grid2.even>section.panel{border:1px solid var(--ad-chia,var(--border))!important;border-radius:8px!important;background:var(--surface)!important;box-shadow:none!important;padding:0 0 12px!important;margin:0!important;min-width:0}
+html.ad body #viewKK#viewKK .grid2.even>section.panel>:not(h2){margin-left:16px!important;margin-right:16px!important}
+html body #viewKK .grid2.even>section.panel>h2{display:flex;align-items:center;gap:8px;height:40px;min-height:40px;box-sizing:border-box;flex-wrap:nowrap!important;margin:0 0 12px!important;padding:0 16px!important;border-bottom:1px solid var(--ad-chia,var(--border));white-space:nowrap;min-width:0}
+#viewKK .grid2.even>section.panel>h2 .ph-td{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px}
+#viewKK .grid2.even>section.panel>h2 .ph-dem{flex:0 1000 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+
+.kkstchip b{font-weight:600}
+#viewKK .grid2.even>section.panel>h2 .kk-loc-soi{margin-left:auto;flex:none}
+@media(max-width:768px){html body #viewKK:not([hidden]){margin-bottom:12px}html body #viewKK .grid2.even{gap:12px!important}html body #viewKK .grid2.even>section.panel{padding:0 0 10px!important}html.ad body #viewKK#viewKK .grid2.even>section.panel>:not(h2){margin-left:12px!important;margin-right:12px!important}html body #viewKK .grid2.even>section.panel>h2{height:38px;min-height:38px;margin:0 0 10px!important;padding:0 12px!important;gap:6px}}
+@media(max-width:560px){html.ad body #viewKK#viewKK .grid2.even>section.panel>:not(h2){margin-left:8px!important;margin-right:8px!important}html.ad body #viewKK#viewKK .grid2.even>section.panel>h2{padding:0 8px!important;gap:4px}}
+html.ad body #viewKK .kkstchip{font-weight:400!important}
 @media(max-width:768px){#viewKK:not([hidden]),#viewAbn:not([hidden]){padding:0 8px 8px}#viewAbn:not([hidden])::before{margin:0 -8px 12px;padding:10px 16px}}
 
 /* ===== NÚT BỘ LỌC CHUẨN DỰ ÁN (.btn-filter) ===== */
@@ -682,7 +701,11 @@ body.an-chan .footbar{display:none}
   table.mbcard.qtctbl td.mb-tag{order:2;margin-left:auto;flex:1 0 auto;text-align:right !important}
 }
 /* Pop-up camera quét mã (dùng chung vỏ .modal/.modalbox — thừa hưởng sheetIn + kính mờ + Escape) */
-.qtcqrbox{width:min(520px,94vw)}
+/* 14/11 user «nhấn icon QR bất kỳ → pop-up tràn màn (máy tính)»: luật này đứng TRƯỚC luật gốc .modalbox{width:min(1280px,96vw)} cùng độ ưu tiên ⇒ bị đè,
+   hộp rộng 1280 px, khung camera 4:3 cao hơn màn. Nay gắn .modalbox. (thắng luật gốc) + thân tự cuộn + camera không cao quá nửa màn. Đo: qc-popup-tran.mjs */
+.modalbox.qtcqrbox{width:min(520px,94vw);overflow:hidden}
+.modalbox.qtcqrbox .qtcqrbody{overflow-y:auto;min-height:0}
+.modalbox.qtcqrbox .qtcvidwrap video{max-height:50vh}
 /* 12/11 user: bộ quét mở từ trong pop-up (Nhận diện SKU, Chuyển vị trí CCDC…) nằm DƯỚI nền pop-up đó — cùng z-index 99 mà pop-up
    kia gắn vào body sau. Bộ quét luôn là lớp trên cùng của các pop-up; đóng / quét xong là lộ lại pop-up bên dưới. */
 #qtcqrmodal{z-index:115}
@@ -1970,6 +1993,18 @@ body.ovl-open #pcbar,body.ovl-open #pcprev{display:none}   /* modal tạo lệnh
    bù lại phần đệm 14px trên / 8px trái của .pg-wrap (đệm đó vẫn giữ cho bản vẽ, ô phóng khi hover không bị cắt) */
 #viewPlg .pg-wrap > .pg-legbox{margin:-14px 0 12px -8px!important}
 @media(max-width:640px){#viewPlg .pg-wrap > .pg-legbox{margin:-10px -10px 10px -10px!important;max-width:none!important}}
+/* 14/11 thân Planogram Y KHUÔN Retail (đo cặp #pane-planogram ⇄ #viewPlg ở 1366): chú giải LUÔN 1 hàng ở mọi bề rộng (số chip đổi theo dữ liệu ⇒ không được rớt hàng đẩy sơ đồ —
+   cùng luật với .hp-legrow Retail); thẻ số bo 8, số 20/780; hàng «Cần xử lý» cao 48 không bo; chip lọc danh sách cao 32 đệm 4 6, số 600; nút tiêu đề 11/600; đệm khung 12 14. */
+#viewPlg .pg-legbox{flex-wrap:nowrap!important;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;min-width:0}
+#viewPlg .pg-legbox::-webkit-scrollbar{display:none}
+#viewPlg .pg-legbox > :is(button,span.tinh){flex:0 0 auto;white-space:nowrap}
+html.ad body #viewPlg .pg-ttile{border-radius:8px}
+html.ad body #viewPlg .pg-ttile b{font-weight:780}
+html.ad body #viewPlg .pg-tdrow{border-radius:0;min-height:48px}
+html.ad body #plgList .pg-chipbar .pg-whtab{height:32px;min-height:32px;padding:4px 6px}
+html.ad body #plgList .pg-chipbar .pg-whtab b{font-weight:600}
+html.ad body #viewPlg .pg-h2btn{font-weight:600}
+@media(min-width:769px){html.ad body #viewPlg section.panel{padding:12px 14px}}
 /* 22/10 user (khuôn .hp-legrow Retail điện thoại): chú giải 1 HÀNG cuộn ngang (không xuống 3–4 hàng), chip cao 40px dễ chạm */
 @media(max-width:720px){
   #viewPlg .pg-legbox{flex-wrap:nowrap!important;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;min-width:0;padding-bottom:2px!important}
@@ -2423,49 +2458,8 @@ html.ad body .nds-tools{background:color-mix(in srgb,#000 45%,transparent)!impor
    Khuôn class bê nguyên .hp-vt* của hasaki-planogram.js, chỉ đổi biến màu sang token của trang này
    (--ink/--ink2/--ink3/--line/--surface/--accent thay cho --text/--muted/--border/--accent) và
    dùng lại combo animation popIn + focus ring sẵn có, không dựng control trần. */
-.pg-vtrow{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;padding:10px 0;
-  border-bottom:1px solid var(--line);font-size:12.5px;color:var(--ink)}
-.pg-vtrow:last-child{border-bottom:0}
-.pg-vtrow label{font-size:10.5px;font-weight:650;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;padding-top:2px}
-.pg-vtrow .pg-badge{white-space:normal}
-@media(max-width:560px){ .pg-vtrow{grid-template-columns:minmax(0,1fr);gap:4px} }
-/* Dải 7 ngày: mỗi ngày một ô tô ĐÚNG hệ màu của sơ đồ (cùng CELLST) — ngày không có yêu cầu là
-   nét đứt, y như ô "chưa khai báo lịch" trên bản vẽ. */
-.pg-vthistrow{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 14px}
-.pg-vthist{position:relative;min-width:52px;padding:5px 8px;border-radius:9px;text-align:center;
-  font-size:10.5px;font-weight:650;color:#fff;cursor:pointer;line-height:1.3;border:2px solid transparent;
-  transition:transform .16s var(--ez-apple)}
-.pg-vthist b{display:block;font-size:9px;opacity:.85}
-.pg-vthist.inkdark{color:#422006}
-.pg-vthist.trong{background:transparent;border:2px dashed color-mix(in srgb,var(--ink3) 50%,transparent);color:var(--ink3)}
-.pg-vthist.on{border-color:var(--ink);transform:scale(1.08);box-shadow:var(--shadow)}
-.pg-vthist:hover{transform:scale(1.08)}
-.pg-vthist:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.pg-vtthumbs{display:flex;flex-wrap:wrap;gap:6px}
-.pg-vtthumbs img{width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--line);
-  cursor:zoom-in;background:color-mix(in srgb,var(--ink3) 14%,transparent);transition:transform .16s var(--ez-apple)}
-.pg-vtthumbs img:hover{transform:scale(1.1)}
-.pg-vtduo{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 0}
-@media(max-width:560px){ .pg-vtduo{grid-template-columns:1fr} }
-.pg-vtcard{border:1px solid var(--line);border-radius:12px;padding:11px 12px;display:flex;flex-direction:column;gap:8px;
-  background:color-mix(in srgb,var(--ink3) 6%,var(--surface));animation:popIn .34s var(--ez-apple) both}
-.pg-vtcard.pt{border-color:color-mix(in srgb,var(--accent) 32%,transparent);
-  background:color-mix(in srgb,var(--accent) 7%,var(--surface))}
-.pg-vtcard.ref{animation-delay:.06s}
-.pg-vtcard .hd{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:10.5px;font-weight:700;
-  color:var(--ink3);text-transform:uppercase;letter-spacing:.04em}
-.pg-vtcard .who{display:flex;align-items:center;gap:9px;min-width:0}
-.pg-vtcard .who > div{min-width:0}
-.pg-vtcard .av{width:34px;height:34px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;
-  font-size:11.5px;font-weight:750;color:#fff;letter-spacing:.02em}
-.pg-vtcard .who b{display:block;font-size:13px;font-weight:700;line-height:1.3;color:var(--ink)}
-.pg-vtcard .who small{display:block;font-size:10.5px;font-weight:500;color:var(--ink3);line-height:1.4;word-break:break-all}
-.pg-vtcard .cc{display:flex;align-items:flex-start;gap:7px;padding-top:7px;border-top:1px dashed var(--line)}
-.pg-vtcard .cc .pg-dot{margin-top:4px}
-.pg-vtcard .cc b{display:block;font-size:12px;font-weight:700;line-height:1.35}
-.pg-vtcard .cc small{display:block;font-size:10.5px;color:var(--ink3);line-height:1.4;margin-top:1px}
-.pg-vtcard .ln{font-size:11.5px;line-height:1.45;color:var(--ink2)}
-.pg-vtcard .ln.mut{color:var(--ink3)}
+/* 14/11: khối .pg-vt* chép tay đã GỠ — nội dung thanh bên vị trí nay lấy từ plg-ben-khuon.css, tệp SINH từ bản Retail
+   (node hasaki/sinh-khuon-plg-factory.mjs; luật TK-32). Sửa kiểu dáng: sửa ở hasaki-planogram.js Retail rồi sinh lại, KHÔNG viết .pg-vt* ở đây. */
 /* Hyperlink DUY NHẤT của pop-up: "Yêu cầu #… ↗" ở góc phải trên (khuôn .hp-ext của Hasaki) */
 .pg-ext{color:var(--brand2);text-decoration:none;font-weight:600;font-size:12px;white-space:nowrap}
 .pg-ext:hover{text-decoration:underline}
@@ -2475,14 +2469,13 @@ html.ad body .nds-tools{background:color-mix(in srgb,#000 45%,transparent)!impor
    Đầu thanh = lưới 2 hàng: hàng 1 «mã vị trí» … «Đóng» · hàng 2 «kho · thứ ngày» … «Yêu cầu #… ↗».
    (Retail có thêm «Ghi nhận 5S» ở ô giữa hàng 1 — Factory không có form đó nên lưới chỉ 2 cột.) */
 #plgmodal.modal{align-items:stretch;justify-content:flex-end;padding:0}
-#plgmodal .modalbox{width:min(720px,96vw)!important;max-height:100vh;height:100vh;border-radius:0;
-  transform:translate3d(28px,0,0);transition:transform .26s var(--ez-apple)}
-#plgmodal.show .modalbox{transform:none;animation:fadeIn .26s var(--ez-apple)}
+/* 14/11: bề rộng · không phủ nền · hộp trượt · thẻ tiêu đề nổi ⇒ VỎ CHUNG thanh-ben.css (TK-29) */
+#plgmodal .modalbox{height:100vh}
 #plgmodal .modalhd{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:'ma dong' 'cam yc';
   align-items:center;gap:6px 8px;padding:16px 20px}
 #plgmTitle{grid-area:ma;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #plgmSub{grid-area:cam;min-width:0;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#plgmodal .pg-mdong{grid-area:dong;justify-self:end}
+#plgmodal .pg-mdong{grid-area:dong;justify-self:end;min-height:28px!important;height:28px}
 #plgmPg{grid-area:yc;justify-self:end}
 #plgmPg:empty{display:none}
 /* 22/10 user lần 4 — WEB giống Retail: «Đóng» căn TRÁI thanh bên; cụm «mã vị trí / dòng phụ / Yêu cầu #… ↗» căn PHẢI, 3 dòng sát nhau */
@@ -2498,7 +2491,7 @@ html.ad body .nds-tools{background:color-mix(in srgb,#000 45%,transparent)!impor
   #plgmPg{border:0!important;height:auto!important;min-height:0!important;padding:0!important}}
 #plgmodal .mtsub:empty{display:none}
 /* Nút chữ «Đóng» = khuôn .hsk-nut.phu.nho của Retail (thanh-phan.css), màu theo token trang này */
-.pg-mdong{display:inline-flex;align-items:center;justify-content:center;min-height:30px;padding:0 10px;border-radius:6px;
+.pg-mdong{display:inline-flex;align-items:center;justify-content:center;min-height:28px;padding:0 10px;border-radius:6px;
   border:1px solid var(--border);background:var(--surface);color:var(--ink);font:inherit;font-size:13px;font-weight:600;
   line-height:1;cursor:pointer;white-space:nowrap;transition:background .15s ease,border-color .15s ease,color .15s ease,box-shadow .15s ease}
 .pg-mdong:hover{border-color:var(--accent);color:var(--accent)}
@@ -2508,16 +2501,14 @@ html.ad body .nds-tools{background:color-mix(in srgb,#000 45%,transparent)!impor
   /* Đáy thanh bên (điện thoại) — cách Retail: khung cao 100vh (vùng nhìn LỚN nhất) để luôn phủ kín khi thanh công cụ
      trình duyệt ẩn/hiện; thân chừa thêm đáy đúng phần thanh công cụ (100vh − 100dvh) để mục cuối vẫn cuộn lên được. */
   #plgmodal.modal{top:0!important;padding:0}
-  #plgmodal .modalbox{width:100vw!important;height:100vh!important;max-height:none!important}
+  #plgmodal .modalbox{height:100vh!important}
   #plgmodal .modalbody{flex:1 1 auto;min-height:0}
   @supports(height:100dvh){#plgmodal .modalbody{padding-bottom:calc(20px + 100vh - 100dvh)!important}}
   body:has(#plgmodal.show) #sideToggle{opacity:0;pointer-events:none}
   .pg-vt-tday{display:none}.pg-vt-tgon{display:inline}
   #plgmodal .pg-mdong,#plgmPg{min-height:28px;height:28px;padding:0 8px;font-size:13px;border-radius:6px}
   #plgmPg{display:inline-flex;align-items:center;border:1px solid var(--border);font-size:12px}
-  /* 7 ô ngày luôn 1 hàng (Retail .hp-vthistrow) */
-  .pg-vthistrow{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
-  .pg-vthist{min-width:0;padding:5px 2px}
+  /* 14/11: lưới 7 ô ngày (mốc 700 như Retail) nay ở plg-ben-khuon.css (sinh) */
 }
 /* Lightbox ảnh báo cáo — mở TỪ pop-up chi tiết ô, dùng lại vỏ .modal/.modalbox của dự án */
 .modalbox.pg-lbbox{width:min(980px,96vw)}
@@ -2601,6 +2592,20 @@ body.side-open #sideNav{transform:none}
 /* padding-left chừa chỗ cho nút mở thanh bên; margin-bottom bù lại 26px khoảng cách mà hàng
    .toptabs cũ vốn tạo ra — ẩn nó đi thì thanh điều khiển của tab dính sát tiêu đề. */
 .wrap>header{padding-left:40px;margin-bottom:18px}
+/* 14/11 user (2 ảnh chụp đầu trang): «giao diện tiêu đề của factory và retail chưa giống nhau» — khung trang Y KHUÔN Retail:
+   bề rộng tối đa 2100 (trước 1720 ⇒ màn rộng thanh tiêu đề thụt 2 bên như thẻ), đầu trang cao 56 dính đỉnh, nút góc bo 6. Đo: qc-khung-dong-bo.mjs */
+.wrap{max-width:2100px;width:100%;position:relative}
+.wrap>header{position:sticky;top:0;z-index:40}
+#btnSettings{border-radius:6px;font-size:13px}
+/* nút hành động đầu trang = đúng dáng nút «+ Ghi nhận 5S» của Retail (nút chính 14/400, cao 32; điện thoại cao 40) — bỏ dáng .kktab xám 12.5/600 */
+html.ad #hdrNghiemThu{height:32px;padding:0 15px;font-size:14px;font-weight:400;line-height:22px;background:var(--accent);border-color:var(--accent);color:var(--accent-text);
+  box-shadow:0 2px 0 color-mix(in srgb,var(--accent) 10%,transparent)}
+html.ad #hdrNghiemThu:hover{background:var(--accent-hover,var(--accent));border-color:var(--accent-hover,var(--accent));color:var(--accent-text)}
+html.ad #hdrNghiemThu span{font:inherit;color:inherit}
+@media(max-width:768px){html.ad #hdrNghiemThu{height:40px;padding:0 10px;font-size:12px}}
+/* nút / ô nhập gốc: cùng phông, cỡ 13, màu chữ theo giao diện như Retail (trước 13.33px + đen tuyệt đối của trình duyệt) */
+button,select,input{font-family:inherit;font-size:13px;color:var(--text)}
+#viewBtt .btt-xemp{top:68px}
 #sideToggle{display:flex;align-items:center;justify-content:center;position:fixed;top:14px;left:7px;z-index:61;width:30px;height:30px;
   background:var(--accent);color:var(--accent-text);border:0;border-radius:10px;line-height:0;padding:0;cursor:pointer;
   box-shadow:0 2px 8px rgba(0,0,0,.14);translate:0 0;
@@ -3498,50 +3503,23 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
 <!-- 12/10 giao diện Ant Design (thanh bên · đầu trang · đường dẫn "Nhóm / Mục"), CHUNG với Audit Hasaki: bản chép
      giaodien-antd.js (nguồn ở kiemsoatkho/hasaki-giaodien-antd.js). Nạp đồng bộ ở head để khung hình đầu đã đúng kiểu. -->
 <script>window.AD_BI_DANH={"hangmuctonkho/kiemke":"kk","hangmuctonkho/tonkhobatthuong":"kk#viewAbn"};   /* 15/10 link cũ → mục gộp «Tồn kho chính xác» */ window.AD_TEN='Audit Factory'; window.AD_LOGO='factory-logo.png'; window.AD_TEN_MAU='#000'; window.AD_CHUYEN={ten:'Audit Retail', app:'retail'};</script>   <!-- 13/10 user: logo Mastige (chỉ hình tròn chữ M) + chữ màu logo -->
-<script src="giaodien-antd.js?v=20261110h"></script>
+<script src="giaodien-antd.js?v=20261114c"></script>
 <script src="tai-khoan.js?v=20261110g"></script>   <!-- 14/10 đăng nhập + phân quyền (bản chép từ kiemsoatkho/tai-khoan.js) -->
 <script src="tat-loc.js?v=20261109a" defer></script><script src="lich-su-ben.js?v=20261110g" defer></script><!-- 10/11 tối Lịch sử lịch tháng + pop-up ảnh kiểu B (bản chép Retail) -->   <!-- 22/10 nút «✕ Tắt lọc» · 23/10 dời vào TRONG nút «Bộ lọc» (bản chép từ kiemsoatkho/tat-loc.js) -->
-<link rel="stylesheet" href="thanh-cuon.css?v=20261022a"><!-- 17/10 thanh cuộn chung theo theme (bản gốc hasaki/kiemsoatkho/thanh-cuon.css) -->
+<link rel="stylesheet" href="hieu-ung.css?v=20261114a"><!-- 14/11 biến hiệu ứng chung (TK-30) -->
+<link rel="stylesheet" href="thanh-phan.css?v=20261114c"><!-- 14/11 chip / nút / thanh tab Mẫu 11 — bản chép Retail (TK-32) -->
+<link rel="stylesheet" href="thanh-ben.css?v=20261114b"><!-- 14/11 VỎ THANH BÊN PHẢI chung (TK-29) -->
+<link rel="stylesheet" href="plg-ben-khuon.css?v=20261114a"><!-- 14/11 TỆP SINH từ Retail: nội dung thanh bên Planogram -->
+<link rel="stylesheet" href="thanh-cuon.css?v=20261114a"><!-- 17/10 thanh cuộn chung theo theme (bản gốc hasaki/kiemsoatkho/thanh-cuon.css) -->
 <link rel="stylesheet" href="bo-loc-ngay.css?v=20261019a"><script src="bo-loc-ngay.js?v=20261023a"></script><script src="anh-nv.js?v=20261105a"></script><!-- 05/11 ảnh đại diện NV toàn dự án (bản chép Y HỆT hasaki/kiemsoatkho/anh-nv.js) --><!-- 19/10 BỘ LỌC NGÀY CHUẨN toàn dự án (bản chép Y HỆT hasaki/kiemsoatkho/bo-loc-ngay.*) -->
 <style id="plgBenRetail">
 /* 10/11 tối user «thanh bên phải Planogram Factory làm Y CHANG Retail — dữ liệu còn thiếu để trống»: 5 tab Tổng quan · Làm gì · Báo cáo ở đâu ·
    Tài sản · Lịch sử. Khuôn thanh tab chép từ thanh-phan.css Retail (Mẫu 11, biểu tượng mặt nạ SVG), bộ chọn đổi sang vỏ Factory #plgmodal / #plgmBody */
-#plgmBody .bd-tabben{position:sticky;top:-14px;z-index:4;display:flex;margin:-14px -20px 12px;padding:4px 14px 0;background:var(--surface);border-bottom:1px solid var(--ad-chia,var(--border));overflow-x:auto;scrollbar-width:none}
-#plgmBody .bd-tabben::-webkit-scrollbar{display:none}
-#plgmBody .bd-tabben>.hp-whtab:first-child{margin-left:auto!important}#plgmBody .bd-tabben>.hp-whtab:last-child{margin-right:auto!important}
-#plgmBody .bd-tabben .hp-whtab{position:relative;flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 10px;margin:0!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;color:var(--muted);font:inherit;font-size:13px;font-weight:400;cursor:pointer}
-#plgmBody .bd-tabben .hp-whtab::before{display:none!important}
-#plgmBody .bd-tabben .hp-whtab::before{content:"";display:inline-block!important;position:static!important;inset:auto!important;flex:none;width:18px;height:18px;margin:0;border:0;border-radius:0;opacity:1;transform:none;background:currentColor!important;-webkit-mask:var(--tb-ic) center/contain no-repeat;mask:var(--tb-ic) center/contain no-repeat}
-#plgmBody .bd-tabben .hp-whtab[data-tab="tq"],#plgmBody .bd-tabben .hp-whtab[data-ptab="tq"]{--tb-ic:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M3 3h6v6H3zM11 3h6v6h-6zM3 11h6v6H3zM11 11h6v6h-6z%22/%3E%3C/svg%3E")}
-#plgmBody .bd-tabben .hp-whtab[data-tab="lam"],#plgmBody .bd-tabben .hp-whtab[data-ptab="lam"]{--tb-ic:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M4 5h12M4 10h12M4 15h7%22/%3E%3Cpath d=%22M13 15l2 2 3-4%22/%3E%3C/svg%3E")}
-#plgmBody .bd-tabben .hp-whtab[data-tab="bc"],#plgmBody .bd-tabben .hp-whtab[data-ptab="bc"]{--tb-ic:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M10 18s-5-5-5-9a5 5 0 0110 0c0 4-5 9-5 9z%22/%3E%3Ccircle cx=%2210%22 cy=%229%22 r=%221.8%22/%3E%3C/svg%3E")}
-#plgmBody .bd-tabben .hp-whtab[data-tab="ts"],#plgmBody .bd-tabben .hp-whtab[data-ptab="ts"]{--tb-ic:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M3 7l7-4 7 4v7l-7 4-7-4z%22/%3E%3Cpath d=%22M3 7l7 4 7-4M10 11v7%22/%3E%3C/svg%3E")}
-#plgmBody .bd-tabben .hp-whtab[data-tab="ls"],#plgmBody .bd-tabben .hp-whtab[data-ptab="ls"]{--tb-ic:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%221.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2210%22 cy=%2210%22 r=%227%22/%3E%3Cpath d=%22M10 6v4l3 2%22/%3E%3C/svg%3E")}
-@media(max-width:768px){#plgmodal .bd-tabben .hp-whtab{flex-direction:column!important;gap:2px!important;min-height:54px!important;font-size:11.5px!important}#plgmodal .bd-tabben .hp-whtab::after{display:none!important}#plgmodal .bd-tabben .bd-tab-so{position:absolute;top:3px;left:calc(50% + 8px)}}
-#plgmBody .bd-tabben .hp-whtab:hover{color:var(--text)}
-#plgmBody .bd-tabben .hp-whtab::after{content:'';position:absolute;left:10px;right:10px;bottom:-1px;height:2px;border-radius:2px;background:var(--accent);transform:scaleX(0);transition:transform .2s var(--ez-apple,ease)}
-#plgmBody .bd-tabben .hp-whtab.active{color:var(--accent)}
-#plgmBody .bd-tabben .hp-whtab.active::after{transform:none}
-#plgmBody .bd-tab-so{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--surface2);color:var(--muted);font-size:11px;line-height:18px;text-align:center}
-#plgmBody .bd-tab-than{animation:fadeUp .16s var(--ez-apple,ease) both}
-#plgmBody{scrollbar-gutter:stable}
-/* Mẫu 7 «Thẻ nổi đổ bóng» (khuôn hasaki-planogram.js Retail): tiêu đề + 5 tab = một thẻ trắng nổi trên nền xám nhạt */
-#plgmodal .modalbox{background:color-mix(in srgb,var(--text) 4%,var(--surface))}
-#plgmodal .modalhd{background:var(--surface);margin:12px 12px 0;border-radius:8px 8px 0 0;border-bottom:1px solid color-mix(in srgb,var(--border) 45%,transparent);
-  box-shadow:var(--shadow);clip-path:inset(-30px -30px 0 -30px);position:relative;z-index:5}
-@media(min-width:769px){#plgmodal #plgmBody .bd-tabben{margin:-14px calc(-8px - var(--sbw, 0px)) 14px -8px;border-bottom:0;border-radius:0 0 8px 8px;
-  box-shadow:var(--shadow);clip-path:inset(0 -30px -30px -30px)}}
-/* điện thoại: 5 tab CHỐT ĐÁY màn (như Retail), thẻ nổi cách mép 10 px, thân chừa đáy */
-@media(max-width:768px){#plgmodal .modalhd{margin:10px 10px 0;border-radius:8px;border-bottom:0;clip-path:none}
-  #plgmodal #plgmBody .bd-tabben{position:fixed;left:10px;right:10px;bottom:10px;top:auto;z-index:6;margin:0;padding:0 2px env(safe-area-inset-bottom);overflow:hidden;
-    border:0;border-radius:8px;box-shadow:var(--shadow)}
-  #plgmodal #plgmBody .bd-tabben .hp-whtab{flex:1 1 0;min-width:0;justify-content:center;padding:0 2px;white-space:nowrap;font-size:11px!important;letter-spacing:-.1px}
-  #plgmodal #plgmBody{padding-bottom:78px!important}}
+/* 14/11: thanh tab (Mẫu 11) = thanh-phan.css bản chép; thẻ nổi (Mẫu 7) + tab chốt đáy điện thoại = plg-ben-khuon.css (sinh từ Retail). Không chép tay ở đây nữa. */
 #plgmodal .pg-trong{padding:14px 0;color:var(--muted);font-size:12.5px}
 /* chip trạng thái yêu cầu ↗ cạnh mã (khuôn «Chờ duyệt ↗» Retail): web mã · chip; điện thoại chip · mã */
 #plgmTitle{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:nowrap}
-#plgmTitle .pg-vtchip{flex:none;font-size:11px;font-weight:600;line-height:16px;padding:1px 6px;border-radius:4px;background:var(--accent);color:var(--accent-text,#fff);text-decoration:none;white-space:nowrap}
-@media(max-width:768px){#plgmTitle{justify-content:flex-start}#plgmTitle .pg-vtchip{order:-1}
+@media(max-width:768px){#plgmTitle{justify-content:flex-start}#plgmTitle .pg-chipdau{order:-1}
   /* điện thoại như Retail: nhãn · giá trị cùng hàng; hàng ảnh xếp dưới nhãn */
   #plgmBody .pg-vtrow:not(:has(.pg-vtthumbs)){display:flex;align-items:center;justify-content:space-between;gap:12px}
   #plgmBody .pg-vtrow:not(:has(.pg-vtthumbs))>div{text-align:right;min-width:0}}
@@ -4195,11 +4173,11 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
 <!-- Pop-up chi tiết 1 ô kệ (lazy DOM: chỉ đổ nội dung khi bấm ô) — CÙNG BỐ CỤC với pop-up vị trí
      của Audit Hasaki: link "Yêu cầu #… ↗" ở góc phải trên, ruột là dải 7 ngày → hàng chi tiết →
      2 thẻ Phụ trách / Báo cáo gần nhất (xem khối CSS .pg-vt*). -->
-<div id="plgmodal" class="modal" onclick="if(event.target===this)closePlgModal()">
-  <div class="modalbox" style="width:min(680px,96vw)">
+<div id="plgmodal" class="modal">
+  <div class="modalbox">
     <!-- 22/10 user: đầu thanh bên lưới 2 hàng như Retail (xem CSS #plgmodal .modalhd); ✕ → nút chữ «Đóng» -->
     <div class="modalhd"><div class="mt" id="plgmTitle"></div><div class="mtsub" id="plgmSub"></div>
-      <button type="button" class="pg-mdong" onclick="closePlgModal()">Đóng</button>
+      <button type="button" class="hsk-nut phu nho pg-mdong" onclick="closePlgModal()">Đóng</button>
       <a id="plgmPg" class="pg-ext" target="_blank" rel="noopener"></a></div>
     <div class="modalbody" id="plgmBody" style="padding:14px 20px 20px"></div>
   </div>
@@ -4887,9 +4865,11 @@ var CAT_DATA = {};                     // cate -> {sh,pe,whs:[[kho,skuSh,skuPe],
 /* Lối "Mở Google Sheet" đã bỏ khỏi giao diện (08/08/2026) — dashboard chỉ là nơi ĐỌC, ai cần
    file nguồn thì vào Drive. SHEET_URL vẫn giữ để gviz dựng URL truy vấn. */
 
-function nf(x){ return (x||0).toLocaleString('en-US'); }
+/* 14/11 user chốt: dấu ngăn nghìn = DẤU CHẤM (1.518) như Retail, thập phân = dấu phẩy. Ô SỬA số (nfTxt / nfStrip) và công cụ
+   Chuyển đổi cân (cdF / cdSo) giữ kiểu cũ vì có đọc ngược số người gõ — đổi là sai dữ liệu. */
+function nf(x){ return (x||0).toLocaleString('vi-VN'); }
 /* CT2: tỷ lệ %% chính xác — tối đa 2 số lẻ, số nguyên thì không hiện .00 (99.12% giữ nguyên, 100% ra 100%) */
-function pct(v){ return Number((v||0).toFixed(2))+'%'; }
+function pct(v){ return String(Number((v||0).toFixed(2))).replace('.',',')+'%'; }
 function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
 function isShelf(loc){ var s=(loc||'').toString().trim().toUpperCase(); return !(s.indexOf('F0-A0')===0||s.indexOf('F00-A00')===0); }
 
@@ -5907,7 +5887,7 @@ function homeMucList(it){ return typeof it.muc==='function'?it.muc():(it.muc||[]
 function homeRender(){
   var el=document.getElementById('viewHome'); if(!el||typeof window.tqVe!=='function') return;
   var so=function(it){ try{ return it.so?it.so():null; }catch(e){ return null; } };
-  var ks=window.tqDoc&&tqDoc('kk-sku'), kl=window.tqDoc&&tqDoc('kk-loc'), p1=function(a,b){ return b?(a/b*100).toFixed(1).replace(/\.0$/,''):'0'; };
+  var ks=window.tqDoc&&tqDoc('kk-sku'), kl=window.tqDoc&&tqDoc('kk-loc'), p1=function(a,b){ return b?(a/b*100).toFixed(1).replace(/\.0$/,'').replace('.',','):'0'; };
   var gT=_gSh+_gPe;
   var chiSo=[
     gT&&{ tab:'stock', nhan:'SKU chờ lên kệ', so:nf(_gPe), tien:_gSh/gT*100, mau:'var(--warn)', phu:'đã lên kệ '+p1(_gSh,gT)+'% ('+nf(_gSh)+')' },
@@ -6593,6 +6573,8 @@ function plgVeMap(g,T){
      sinh — khối Độ phủ + dải kết luận bấm được. Để cả hai chỗ là lặp thông tin, và nó ăn mất một
      khoảng chiều cao quý giá ngay phía trên bản vẽ. */
 
+  /* 14/11: chú giải 1 hàng cuộn ngang — vẽ lại (bấm chip soi kho / lọc trạng thái) phải GIỮ vị trí cuộn, không thì cả hàng nhảy về đầu (qc-nhay-bam: lệch 214px) */
+  var _lgCu=document.querySelector('#plgMap .pg-legbox'), _lgX=_lgCu?_lgCu.scrollLeft:0;
   document.getElementById('plgMap').innerHTML=
     '<section class="panel">'+
     /* Chip "Tất cả · 161 ô" đổi thành NÚT "Toàn bộ vị trí · 161" (10/09/2026): vẫn con số đó nhưng bấm được
@@ -6602,6 +6584,7 @@ function plgVeMap(g,T){
     '<div class="pg-wrap">'+legend+'<div class="pg-scroll"><div class="pg-fit" style="--pg-ar:'+plgTyLeKho(g).toFixed(4)+'">'+
       plgSvg(g,mode,theoDay)+'</div></div></div>'+
     '</section>';
+  if(_lgX){ var _lgMoi=document.querySelector('#plgMap .pg-legbox'); if(_lgMoi) _lgMoi.scrollLeft=_lgX; }
   /* Đoạn 6 dòng "Bấm một ô… cách đọc màu: nền ô = trạng thái vệ sinh…" ĐÃ BỎ (21/08/2026).
      Hai lý do, không phải chỉ vì "dài": (a) phần "cách đọc màu" TRÙNG với khối chú giải `.pg-legbox`
      ngay bên cạnh — legend đã hiện đúng từng màu kèm số, đọc legend nhanh hơn đọc một đoạn văn tả
@@ -7291,7 +7274,8 @@ function plgNgayLs(){
   for(var i=1;i<=45;i++){ var d=new Date(t); d.setDate(t.getDate()-i); ds.push(plgISO(d)); }   // ngày TRƯỚC chip đầu, lùi 45 ngày (cửa sổ bộ sync)
   return ds;
 }
-function closePlgModal(){ plgDongModal('plgmodal'); }
+function closePlgModal(){ var m=document.getElementById('plgmodal'); if(m){ m.classList.remove('show'); setTimeout(function(){ if(!m.classList.contains('show')) m.style.display='none'; },320); }   // 14/11 vỏ chung: trượt ra .3s
+  if(window.__tbMoLaiBen) window.__tbMoLaiBen(); }
 /* Tab yêu cầu về SAU lúc pop-up đang mở thì vẽ lại — không để dải 7 ngày đứng im ở "đang đọc…" */
 function plgVtVeLai(){ var m=document.getElementById('plgmodal'); if(m&&m.classList.contains('show')) plgVtVe(); }
 
@@ -7300,11 +7284,13 @@ function plgVtVe(){
   var ycs=plgYcCua(key), r=plgYcNgay(ycs,d), s=plgState(o), m=PLG_ST[s], w=plgKhoCua(key);
   /* 22/10 user (khuôn Retail, lần 4): web chỉ mã «F0-KHO-501-06» (bỏ «Cột 06 · dãy 501 ·»); điện thoại «KHO-501-06» */
   /* 10/11 tối user «làm y khuôn Retail»: đầu thanh = mã + chip trạng thái yêu cầu ↗ (như «Chờ duyệt ↗» Retail) · dòng phụ = kho */
-  var chipLb=r?(r.stId===4?'Đã duyệt':r.stId===3?'Chờ duyệt':PLG_ST[plgYcTrangThai(r)].lb):'Planogram',
+  var chipSt=r?PLG_ST[plgYcTrangThai(r)]:null, chipLb=r?(r.stId===4?'Đã duyệt':r.stId===3?'Chờ duyệt':chipSt.lb):'Không có yêu cầu',
     chipHref=r&&r.id?PLG_PG+'/details/'+encodeURIComponent(r.id):plgPgListUrl(d,key);
   document.getElementById('plgmTitle').innerHTML='<span class="pg-vt-tday">'+esc(key)+'</span>'+
     '<span class="pg-vt-tgon">'+esc(String(key).replace(/^F0-/,''))+'</span>'+
-    '<a class="pg-vtchip" href="'+esc(chipHref)+'" target="_blank" rel="noopener">'+esc(chipLb)+' ↗</a>';
+    /* 14/11 chip đầu thanh y khuôn Retail (.hp-chipdau.tt): tô kín màu trạng thái, mũi tên SVG */
+    '<a class="pg-chipdau tt" href="'+esc(chipHref)+'" target="_blank" rel="noopener" title="'+esc(r?'Mở yêu cầu #'+r.id+' trên planogram':'Tìm trên planogram')+'" style="background:'+(chipSt?chipSt.c:'var(--muted)')+'">'+esc(chipLb)+
+    '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></a>';
   /* Dòng phụ: bỏ câu hướng dẫn «bấm ô ngày bên dưới…» (luật ⑦ không câu hướng dẫn) → DỮ LIỆU như Retail «Quầy kệ · T5 22/10»:
      kho giữ tồn (rút gọn) · thứ ngày đang xem. Kho đã lên đầu thanh thì thân không in lại dòng «Kho giữ tồn» (luật không lặp). */
   var khoNgan=w?w.split(' + ').map(plgTenNgan).join(' + '):'';
@@ -7330,7 +7316,7 @@ function plgVtVe(){
   /* --- Tầng 2: Người báo cáo · Ảnh báo cáo của ĐÚNG ngày đang chọn (khuôn Retail). Thiếu dữ liệu ⇒ «—» --- */
   var rows=[], gach='<span class="pg-hint">—</span>';
   rows.push(['Người báo cáo', r&&r.nguoi ? esc(r.nguoi)+(r.atGio?' <span class="pg-hint">lúc '+esc(r.atGio)+' '+esc(plgVNiso(r.atNgay||r.ngay))+'</span>':'') : gach]);
-  rows.push(['Ảnh báo cáo'+(r&&r.anh.length?' ('+r.anh.length+')':''), r&&r.anh.length
+  rows.push(['Ảnh báo cáo'+(r&&r.anh.length?' ('+r.anh.length+')':''), r&&r.anh.length&&(rows.anh=1)
     ? '<div class="pg-vtthumbs">'+r.anh.map(function(u,i){
         return '<img loading="lazy" src="'+esc(u)+'" alt="Ảnh báo cáo '+(i+1)+'" data-i="'+i+'" onclick="plgAnhMo(+this.getAttribute(\'data-i\'))">';
       }).join('')+'</div>' : gach]);
@@ -7351,14 +7337,14 @@ function plgVtVe(){
 
   var tab=PLGVT.tab||'tq', ngLs=plgNgayLs(), tapLs={}; ngLs.forEach(function(x){ tapLs[x]=1; });
   var luotLs=plgLuotLs(key).filter(function(l){ return tapLs[l.ngay]; }), than;
-  if(tab==='tq') than='<div class="pg-vthistrow">'+hist+'</div>'+'<div class="pg-vtduo">'+cardPt+cardBc+'</div>'+
-    rows.map(function(x){ return '<div class="pg-vtrow"><label>'+x[0]+'</label><div>'+x[1]+'</div></div>'; }).join('');
+  if(tab==='tq') than='<div class="pg-vthistrow">'+hist+'</div>'+'<div class="pg-vtduo pg-vtduo-dau">'+cardPt+cardBc+'</div>'+   // 14/11 y khuôn Retail: 2 thẻ ngay dưới dải ngày
+    rows.map(function(x,i){ return '<div class="pg-vtrow'+(i===1&&rows.anh?' anh':'')+'"><label>'+x[0]+'</label><div>'+x[1]+'</div></div>'; }).join('');
   else if(tab==='ls') than=!window.hskLichSu ? '<div class="pg-trong">Đang tải…</div>'
     : window.hskLichSu.ve({ khoa:'plgf|'+key, ngay:ngLs, luot:luotLs, sc:[], coThem:false, muc:[],
         img:function(u){ return '<img loading="lazy" decoding="async" src="'+esc(u)+'" alt="">'; },
         moAnh:function(id,vt){ window.hskLichSu.moAnh({ ma:key, luot:luotLs, id:id, i:0, vt:vt||'' }); } });
   else than='<div class="pg-trong">Chưa có dữ liệu</div>';   // Làm gì · Báo cáo ở đâu · Tài sản: kho nguyên liệu chưa có nguồn — để trống
-  document.getElementById('plgmBody').innerHTML='<div class="bd-tabben" role="tablist" aria-label="Thông tin vị trí">'+PLG_TAB_BEN.map(function(t){
+  document.getElementById('plgmBody').innerHTML='<div class="bd-tabben pg-vttab" role="tablist" aria-label="Thông tin vị trí">'+PLG_TAB_BEN.map(function(t){
       return '<button type="button" role="tab" class="hp-whtab'+(t[0]===tab?' active':'')+'" data-ptab="'+t[0]+'" aria-selected="'+(t[0]===tab)+'" onclick="plgVtTab(\''+t[0]+'\')">'+t[1]+
         '</button>'; }).join('')+'</div>'+   // 10/11 khuya user: không số cạnh tên tab (như Retail)
     '<div class="bd-tab-than" data-tab-than="'+tab+'">'+than+'</div>';
@@ -7551,6 +7537,8 @@ async function kkFetch(kind){
 }
 async function kkLoad(){
   ['sku','loc'].forEach(function(k){   // skeleton loading cho cả 2 khối
+    var nho=kkNhoDoc(k);   // 14/11: có bản nhớ lần trước ⇒ hiện ngay, không khung xương
+    if(nho&&nho.strip&&nho.st&&nho.hist){ ['kkStrip-','kkStatus-','kkHist-'].forEach(function(id,i){ var e=document.getElementById(id+k); e.innerHTML=[nho.strip,nho.st,nho.hist][i]; e._kkCu=e.innerHTML; }); var lg=document.getElementById('kkLegend-'+k); if(lg&&nho.lg) lg.innerHTML=nho.lg; return; }
     document.getElementById('kkStrip-'+k).innerHTML='<div class="sk" style="height:58px;flex:1;border-radius:10px"></div>';
     document.getElementById('kkStatus-'+k).innerHTML='<div class="sk" style="height:44px;border-radius:8px"></div>';
     document.getElementById('kkHist-'+k).innerHTML='<div class="sk" style="height:180px;border-radius:10px"></div>';
@@ -7641,7 +7629,7 @@ function kkSetWh(w){ if(KK.wh===w) w=''; KK.wh=w; kkRender(); }   // bấm lại
 function kkDash(v){ return v?esc(v):'—'; }
 /* Ô chỉnh sửa (Action / SL điều chỉnh): HIỂN THỊ số nguyên dài có dấu phẩy ngăn nghìn (180000000
    -> 180,000,000 — phản hồi 27/07), LƯU về Sheet dạng số trần; chữ tự do giữ nguyên */
-function nfTxt(t){ t=String(t==null?'':t).trim(); var s=t.replace(/,/g,''); return /^-?\d{4,}$/.test(s)?nf(Number(s)):t; }
+function nfTxt(t){ t=String(t==null?'':t).trim(); var s=t.replace(/,/g,''); return /^-?\d{4,}$/.test(s)?Number(s).toLocaleString('en-US'):t; }
 function nfStrip(t){ t=String(t==null?'':t).trim(); var s=t.replace(/,/g,''); return /^-?\d+$/.test(s)?s:t; }
 /* Email @hasaki.vn hiển thị GỌN phần trước @ (tooltip giữ đủ) — cột Counted by hết chiếm bề ngang */
 function kkByShort(v){ v=String(v||'').trim(); if(!v) return '—';
@@ -8354,6 +8342,17 @@ function kkRender(){
   kkRenderPanel('loc');
   kkRenderWh();
   if(TOPTAB==='kk') capNhatThongTin();   // dữ liệu kiểm kê vừa về -> cập nhật số dòng ở footer
+  kkNhoGhi();
+}
+/* 14/11 bản nhớ 3 khối đầu mỗi khung Kiểm kê (dải chỉ tiêu · thanh trạng thái · biểu đồ ngày) trong localStorage 24 giờ: mở mục là thấy ngay bản lần trước,
+   dữ liệu mới về giống thì không đổi gì (không nháy khung xương, không nhảy số). Chỉ nhớ khi KHÔNG lọc và mẫu số đã đủ. */
+function kkKhongLoc(){ return !KK.wh&&!KKF.s&&!KKF.e&&!(KK.cdate&&KK.cdate[0])&&![].some.call(document.querySelectorAll('#kkFilters .combo input'),function(x){ return x.value.trim(); }); }
+function kkNhoDoc(kind){ try{ var o=JSON.parse(localStorage.getItem('kk-nho-'+kind)||'null'); if(o&&Date.now()-o.at<864e5) return o; }catch(e){} return null; }
+function kkNhoGhi(){
+  if(!KK.data||!kkKhongLoc()) return;
+  ['sku','loc'].forEach(function(k){ if(KK._tam&&KK._tam[k]) return; if(!(KK.data[k]||[]).length) return;
+    var g=function(id){ var e=document.getElementById(id+k); return e?e.innerHTML:''; };
+    try{ localStorage.setItem('kk-nho-'+k,JSON.stringify({at:Date.now(),strip:g('kkStrip-'),st:g('kkStatus-'),hist:g('kkHist-'),lg:g('kkLegend-')})); }catch(e){} });
 }
 var KKF_LOC=null, KK_PLAN_LOC=null, _kkLocBuilt=false, _kkDebT=null;
 function kkRenderWhBar(){
@@ -8716,6 +8715,15 @@ function kkRenderPanel(kind){
     it('positive','pos',pos,netTile?'Lệch dương · SKU':'Lệch dương')+
     fcHtml;
   strip.innerHTML=tachNhanKs(strip.innerHTML);
+  /* 14/11 luật TK-31 (đo qc-ve-dau: số chỉ tiêu «hiện muộn +3,5 s» rồi đổi): mẫu số tồn kho (WH_DATA) về sau phiếu kiểm kê ⇒ lần vẽ đầu là BẢN TẠM
+     (Tổng / Còn lại sai, «chờ tồn kho»). Khi không lọc gì và mẫu số chưa đủ: hiện bản nhớ của lần xem trước (≤ 24 giờ), chưa có bản nhớ thì giữ khung xương;
+     quá 8 s tồn kho vẫn chưa về mới hiện số tạm. Mẫu số đủ ⇒ vẽ số thật và ghi nhớ (kkNhoGhi ở kkRender). */
+  KK._tam=KK._tam||{}; KK._tam[kind]=!_daNapTho&&typeof capChiTiet==='function';   // tồn kho chi tiết CHƯA nạp xong ⇒ mẫu số còn tạm («chờ tồn kho» sau khi đã nạp là trạng thái thật, vẫn hiện)
+  if(KK._tam[kind]&&!KK._hetCho&&kkKhongLoc()){
+    var _nho=kkNhoDoc(kind);
+    strip.innerHTML=_nho&&_nho.strip?_nho.strip:'<div class="sk" style="height:58px;flex:1;border-radius:10px"></div>';
+    if(!KK._choT) KK._choT=setTimeout(function(){ KK._hetCho=1; kkRender(); },8000);
+  }
   /* 13/10 Tổng quan phương án B: ghi số khi KHÔNG lọc gì và mẫu số đã đủ tồn kho */
   if(window.tqGhi&&!KK.wh&&!KKF.s&&!KKF.e&&!(fc.none&&fc.choTon)&&![].some.call(document.querySelectorAll('#kkFilters .combo input'),function(x){ return x.value.trim(); }))
     window.tqGhi('kk-'+kind,{ dem:counted, tong:denom, eta:fc.eta||'' });
@@ -8748,7 +8756,8 @@ function kkRenderPanel(kind){
 /* CT4: đổi bộ lọc -> nội dung mờ dần + trượt nhẹ (fadeUp — cùng animation với tab Trạng thái lưu trữ) */
 /* 13/10 user «6 ô sao không thẳng 1 hàng»: nhãn 1 dòng — phần sau « · » / trong ngoặc chuyển thành dòng phụ dưới số */
 function tachNhanKs(h){ return h.replace(/<div class="t">([^<]*)<\/div>/g, function(_, t){ var m = /^(.*?)\s*(?:·\s*(.+)|\((.+)\))$/.exec(t); return m ? '<div class="t">' + m[1] + '</div><div class="s">' + (m[2] || m[3]) +'</div>' : _; }); }
-function kkSwap(el){ if(!el) return; el.classList.remove('swap'); void el.offsetWidth; el.classList.add('swap'); }
+function kkSwap(el){ if(!el) return; var h=el.innerHTML; if(el._kkCu===h) return; el._kkCu=h;   // 14/11 nội dung không đổi (bản nhớ = bản mới) thì không chạy lại hiệu ứng
+  el.classList.remove('swap'); void el.offsetWidth; el.classList.add('swap'); }
 /* ===== Chart "Đã đếm theo ngày" — cột chồng theo KHO từ Counted date, so sánh tiến độ ngày kề trước ===== */
 var KK_COLOR={}, _kkci=0;
 function kkColor(w){ if(WH_COLOR[w]) return WH_COLOR[w]; if(!KK_COLOR[w]) KK_COLOR[w]=PAL[(_kkci++)%PAL.length]; return KK_COLOR[w]; }
@@ -17033,6 +17042,24 @@ window.addEventListener('message',function(e){   // form nhúng báo đóng (Esc
   if(e.data && e.data.nt==='dong' && /(^|\.)audit-dc\.pages\.dev$|^localhost$|^127\.0\.0\.1$/.test(new URL(e.origin).hostname)) ntDong();
 });
 document.getElementById('hdrNghiemThu').addEventListener('click',ntMo);
+/* 14/11 Kiểm kê 2 khung rời như Retail: mỗi đầu khung có nút Bộ lọc — là BẢN SOI của #kkBtnLoc (cùng lớp, cùng chữ «Đang lọc» + ✕ do tat-loc.js ghi),
+   bấm vào bản soi = bấm đúng phần tương ứng của nút gốc ⇒ một bộ lọc, một trạng thái, không tách logic. */
+(function kkTachKhung(){
+  var goc=document.getElementById('kkBtnLoc'); if(!goc) return;
+  var soi=[].map.call(document.querySelectorAll('#viewKK .grid2.even>section.panel>h2'),function(h){
+    /* đầu khung = cấu trúc thư viện (.panel-head > .ph-trai > .ph-td + .ph-dem) ⇒ cỡ chữ máy tính / điện thoại theo đúng một nguồn với Retail */
+    var tr=document.createElement('span'), td=document.createElement('span'); tr.className='ph-trai'; td.className='ph-td';
+    [].slice.call(h.childNodes).forEach(function(n){ if(n.nodeType===1&&n.classList.contains('hint')){ n.classList.add('ph-dem'); tr.appendChild(n); } else if(n.nodeType===1&&n.classList.contains('kkscope')) tr.appendChild(n);
+      else if(n.nodeType===3&&!n.nodeValue.trim()) h.removeChild(n); else td.appendChild(n); });
+    tr.insertBefore(td,tr.firstChild); h.appendChild(tr); h.classList.add('panel-head');
+    var b=document.createElement('button'); b.type='button'; h.appendChild(b);
+    b.addEventListener('click',function(e){ var t=e.target, d=null;
+      if(t!==b&&t.className&&typeof t.className==='string'){ try{ d=goc.querySelector('.'+t.className.trim().split(/\s+/).join('.')); }catch(_){} }
+      (d||goc).click(); });
+    return b; });
+  function chep(){ soi.forEach(function(b){ var c=goc.className+' kk-loc-soi'; if(b.className!==c) b.className=c; if(b.innerHTML!==goc.innerHTML) b.innerHTML=goc.innerHTML; if(b.title!==goc.title) b.title=goc.title; }); }
+  chep(); try{ new MutationObserver(chep).observe(goc,{attributes:true,childList:true,subtree:true,characterData:true}); }catch(_){}
+})();
 showTab('home');
 loadData();
 </script>
@@ -18382,8 +18409,10 @@ async function tmvIn(){
     var obsBen = new MutationObserver(function(){
       if (!document.body.classList.contains('side-open')) return;
       var coBenPhai = document.querySelector('#modal.hx-ben.show, #plgmodal.show, .hx-ben.show');
-      if (coBenPhai) nhipDoi(false);
+      if (coBenPhai){ nhipDoi(false); if (matchMedia('(min-width:769px)').matches) thuVi=1; }
     });
+    /* 14/11 vỏ chung thanh bên: đóng thanh phải ⇒ thanh trái (đã tự thu lúc mở) mở lại — như Retail */
+    var thuVi=0; window.__tbMoLaiBen=function(){ if(thuVi){ thuVi=0; if(!document.body.classList.contains('side-open')) nhipDoi(true); } };
     obsBen.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
   } catch (e) {}
   /* Bọc showTab gốc để đồng bộ trạng thái active của thanh bên (kể cả khi gọi từ nơi khác) */

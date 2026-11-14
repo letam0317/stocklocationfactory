@@ -1,0 +1,18 @@
+/* hieu-ung.css (14/11/2026) — BỘ BIẾN HIỆU ỨNG CHUNG audit-dc (Retail + Factory nạp bản chép y hệt; khai trong cai-pc/bo-thiet-ke.json › chep). Luật TK-30.
+   User 14/11: «animation chưa mượt, chưa đồng bộ» — trước đó ~32 thời lượng + ~20 kiểu easing rải khắp hai trang.
+   LUẬT: mã MỚI chỉ dùng 3 nấc thời lượng + 2 easing dưới đây; chỉ chuyển động transform / opacity (không width / height / top / left / margin);
+   không «transition: all»; keyframe chỉ lấy trong bộ: popIn · paneIn · sheetIn · menuIn · fadeUp · fadeIn · shimmer · hskQuay.
+   qc-sau-code.mjs (mã soát THOILUONG · EASING · CHUYENBOCUC · TRANSALL · KEYFRAME) chặn dòng mới sai luật. */
+:root{
+  --t-nhanh:.16s;   /* rê chuột, đổi màu, gạch chân tab, nút nhấn */
+  --t-vua:.22s;     /* ngăn kéo nổi, ô chọn xổ xuống, popIn, đổi nội dung tại chỗ */
+  --t-cham:.3s;     /* thanh bên phải trượt, tấm đáy điện thoại, đổi khung lớn */
+  --ez-apple:cubic-bezier(.32,.72,0,1);
+  --ez-spring:cubic-bezier(.16,1,.3,1);
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes hskQuay{to{transform:rotate(360deg)}}
+/* một khối giảm chuyển động cho cả hai trang (trước: Retail tắt hẳn, Factory rút còn .01ms — hai cách) */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+}

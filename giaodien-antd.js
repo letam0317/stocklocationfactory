@@ -30,7 +30,24 @@
   var SEG = "#hpWhBar .hp-wb1 .hp-whtab,#bdNay .bd-seg .hp-whtab,#bdDoiHop .bd-seg .hp-whtab,#kpiChe .hp-whtab,.lsb-seg .hp-whtab,#tkHop .tk-qtab .hp-whtab";   /* 10/11 tối + bảng quyền Quản lý tài khoản (Retail | Factory) */   /* 10/11 + Lịch sử thanh bên (Tất cả | Ảnh | Sửa chữa — lich-su-ben.js) */   /* 09/11 + Tổng kết Mẫu 13 (Nhân viên · Quản lý · Tổng kết nhanh) */   // 05/11 + Việc hôm nay (Theo người|Theo hạng mục) và hộp đổi người (Chỉ hôm nay|Từ nay về sau)   // thanh lọc "chọn 1 trong vài" kiểu Segmented (Kiểm kê/Bất thường nay dùng ô chọn)
   var H = "html.ad", B = "html.ad body";
   /* 09/11 user (Retail) «Tồn kho CX — thu hẹp thanh bên trái cho gọn khít» ⇒ Retail 176 px; Factory giữ 216 (nhãn dài: Trạng thái lưu trữ…) */
-  var SW = /factory|stocklocation/.test(location.pathname) ? 216 : 176;
+  /* 14/11 user: «không hiển thị số thống kê ở thanh bên trái để khung luôn KHÍT CHỮ, cả web / điện thoại» ⇒ bề rộng thanh trái = biến --sw,
+     đo từ nhãn dài nhất (khitThanhBen) — hai trang cùng một công thức, không còn số cứng 176 (Retail) / 216 (Factory).
+     Bản đo lần trước nhớ trong localStorage ⇒ lần tải sau đặt đúng ngay từ đầu, không xô khung. */
+  var SW_KHOA = "ad-sw:" + location.pathname.split("/").filter(Boolean)[0], SW = /factory|stocklocation/.test(location.pathname) ? 204 : 176;   /* số khởi điểm = bề rộng đo được hôm 14/11 ⇒ máy mới tải lần đầu cũng không xô khung */
+  try { var _sw = +localStorage.getItem(SW_KHOA); if (_sw >= 140 && _sw <= 280) SW = _sw; } catch (e) {}
+  document.documentElement.style.setProperty("--sw", SW + "px");
+  function khitThanhBen() {
+    var nav = document.getElementById("sideNav"); if (!nav || !nav.querySelector(".s-item")) return;
+    var cv = khitThanhBen.c || (khitThanhBen.c = document.createElement("canvas").getContext("2d")), ff = getComputedStyle(document.body).fontFamily, m = 0;
+    var chu = function (e) { var t = ""; e.childNodes.forEach(function (n) { if (n.nodeType === 3) t += n.nodeValue; }); return t.trim(); };
+    cv.font = "400 14px " + ff; nav.querySelectorAll(".s-item").forEach(function (e) { m = Math.max(m, cv.measureText(chu(e)).width + 60); });   // lề 44 trái (đệm + icon 18 + khe 6) + 16 phải
+    cv.font = "400 12px " + ff; nav.querySelectorAll(".s-grp").forEach(function (e) { m = Math.max(m, cv.measureText(chu(e)).width + 64); });
+    var lg = document.getElementById("adLogo"); if (lg) { cv.font = "600 16px " + ff; m = Math.max(m, cv.measureText(chu(lg)).width + 82); }   // 24 + ảnh 24 + khe 8 + chữ + 24 (+2 dư)
+    var ch = document.querySelector("#adChuyen a > span:nth-child(2)"); if (ch) { cv.font = "400 14px " + ff; m = Math.max(m, cv.measureText(ch.textContent.trim()).width + 94); }
+    var w = Math.max(152, Math.min(280, Math.ceil(m)));
+    if (w === SW) return; SW = w; document.documentElement.style.setProperty("--sw", w + "px"); try { localStorage.setItem(SW_KHOA, String(w)); } catch (e) {}
+  }
+  window.adKhitThanhBen = khitThanhBen;
   /* 16/10 nhịp chuyển dùng chung: khung tab chạy lại paneIn (đổi mục con trong tab — vd Xác minh Theo tác vụ ⇄ Theo máy) */
   window.nhipTab = function (el) { if (!el) return; el.style.animation = "none"; void el.offsetWidth; el.style.animation = ""; };
   function seg(suf) { return SEG.split(",").map(function (x) { return H + " " + x + suf; }).join(","); }
@@ -168,7 +185,7 @@
     H + " #btnSettings.open .bars{background:transparent}",
 
     /* ---- thanh bên: Menu kiểu antd, rộng 200 ---- */
-    H + " #sideNav{width:" + SW + "px;background:var(--surface);border-right:1px solid var(--ad-chia);padding:64px 4px 16px;gap:0;box-shadow:none}",
+    H + " #sideNav{width:var(--sw);background:var(--surface);border-right:1px solid var(--ad-chia);padding:64px 4px 16px;gap:0;box-shadow:none}",
     H + " body.side-open #sideNav{box-shadow:none}",
     H + " #sideNav .s-grp{font-size:12px;font-weight:400;color:var(--muted);opacity:1;padding:16px 16px 8px;letter-spacing:0}",
     H + " #sideNav .s-grp::before{display:none}",
@@ -186,17 +203,17 @@
     H + " #adChuyen a > span:nth-child(2){flex:1}" + H + " #adChuyen a .ic{display:inline-flex;width:18px;height:18px}" + H + " #adChuyen a .ic svg{width:18px;height:18px;fill:currentColor}",
     H + " #sideNav .s-item .sn{margin-left:auto;font-size:12px;font-weight:400;color:var(--muted);font-variant-numeric:tabular-nums}",
     H + " #sideNav .s-item{display:flex;align-items:center;gap:6px;white-space:nowrap;padding:0 8px 0 12px}",   // 13/10 user «số bị tràn»: «Tồn kho bất thường 3,613» cần 201px > 199px ô — nén lề/khe
-    H + " #sideNav .s-item .sn{flex:none;padding-left:2px}",   // tên dài 1 dòng, số canh phải (Factory "Trạng thái lưu trữ 47,790")
+    H + " #sideNav .s-item .sn{display:none!important}",   // 14/11 user: thanh trái KHÔNG hiện số thống kê (số vẫn có trên thẻ Tổng quan)   // tên dài 1 dòng, số canh phải (Factory "Trạng thái lưu trữ 47,790")
     H + " #sideNav .s-item.on .sn{color:var(--accent)}",
     /* logo đầu thanh bên — trượt cùng thanh bên */
     "#adLogo{display:none}",
-    H + " #adLogo{display:flex;align-items:center;gap:8px;position:fixed;top:0;left:0;z-index:61;width:" + SW + "px;height:56px;padding:0 24px;" +
+    H + " #adLogo{display:flex;align-items:center;gap:8px;position:fixed;top:0;left:0;z-index:61;width:var(--sw);height:56px;padding:0 24px;" +
       "background:var(--surface);border-right:1px solid var(--ad-chia);font-size:16px;font-weight:600;color:var(--text);white-space:nowrap;" +
       "transform:translate3d(-100%,0,0);visibility:hidden;transition:transform .32s var(--ez-apple,ease),visibility 0s linear .32s}",
     H + " #adLogo img{width:24px;height:24px;border-radius:50%;flex:none}",
     H + " body.side-open #adLogo{transform:none;visibility:visible;transition-delay:0s}",
     "#adChuyen{display:none}",
-    H + " #adChuyen{display:flex;align-items:center;position:fixed;left:0;bottom:0;z-index:61;width:" + SW + "px;padding:8px;box-sizing:border-box;" +
+    H + " #adChuyen{display:flex;align-items:center;position:fixed;left:0;bottom:0;z-index:61;width:var(--sw);padding:8px;box-sizing:border-box;" +
       "background:var(--surface);border-right:1px solid var(--ad-chia);border-top:1px solid var(--ad-chia);" +
       "transform:translate3d(-100%,0,0);visibility:hidden;transition:transform .32s var(--ez-apple,ease),visibility 0s linear .32s}",
     H + " body.side-open #adChuyen{transform:none;visibility:visible;transition-delay:0s}",
@@ -211,15 +228,15 @@
     H + " #sideToggle:hover{background:var(--ad-re);box-shadow:none}",
     H + " #sideToggle:focus-visible{box-shadow:" + VONG + "}",
     "@media(min-width:769px){" +
-      H + " body.side-open .wrap{padding-left:" + (SW + 24) + "px}" +
-      H + " body.side-open #sideToggle{translate:" + SW + "px 0}" +
+      H + " body.side-open .wrap{padding-left:calc(var(--sw) + 24px)}" +
+      H + " body.side-open #sideToggle{translate:var(--sw) 0}" +
     "}",
     /* 14/10 user: «nút thu gọn/mở rộng thanh bên dính liền với thanh bên — lòi ra 2/3 kích thước nút, 1/3 còn lại dính vào thanh bên» (máy tính).
        Nút 32px: left 0 + translate = mép thanh bên − 11px (mở 176 → 165 · thu gọn 72 → 61; 09/11 user «Tồn kho CX — thu hẹp thanh bên trái cho gọn khít»: 216 → 176); có nền + viền để thấy rõ gắn vào mép. */
     "@media(min-width:769px){" +
       H + " #sideToggle{left:0;top:16px;border-radius:999px;background:var(--surface);border:1px solid var(--ad-chia,var(--border));box-shadow:0 2px 6px rgba(0,0,0,.08)}" +
       H + " #sideToggle:hover{background:var(--surface);border-color:var(--accent);color:var(--accent);box-shadow:0 2px 8px rgba(0,0,0,.12)}" +
-      H + " body.side-open #sideToggle{translate:" + (SW - 11) + "px 0!important}" + H + " body:not(.side-open) #sideToggle{translate:61px 0!important}" +
+      H + " body.side-open #sideToggle{translate:calc(var(--sw) - 11px) 0!important}" + H + " body:not(.side-open) #sideToggle{translate:61px 0!important}" +
     "}",
     /* ---- 12/10 user: "thanh bên khi thu gọn thì chuyển tên các sub-tab thành nhãn" — máy tính: thu gọn = DẢI 72px (Sider collapsed của antd),
        mỗi mục là nhãn chữ nhỏ 2 dòng canh giữa, nhóm thành vạch ngăn, logo chỉ còn hình. Điện thoại giữ ngăn kéo (không đủ chỗ cho dải). ---- */
@@ -251,13 +268,13 @@
     /* 15/10 user «Kế hoạch chờ push (WMS) bo góc có đúng antd?» — nút đầu trang = Button mặc định antd: cao 32 · đệm 4×15 · chữ 14 thường · bo 6 */
     B + " #hdrKkPlan{height:32px;padding:4px 15px;font-size:14px;font-weight:400;line-height:22px;color:var(--text);border:1px solid var(--border);background:var(--surface);box-shadow:none}",
     B + " #hdrKkPlan:hover{color:var(--accent);border-color:var(--accent)}",
-    B + " :is(.hx-tag,.kpi-pill,.hk-stchip,.hp-legchip,.hp-legcnt,#pane-planogram .hp-tdrow .n){border-radius:4px!important}",
+    B + " :is(.hx-tag,.kpi-pill,.hk-stchip,.kkstchip,.hp-legchip,.hp-legcnt,#pane-planogram .hp-tdrow .n){border-radius:4px!important}",
     /* nút "i" chú thích: hình tròn thật (rộng = cao) */
     B + " .h2tip{width:16px!important;height:16px!important;min-height:16px!important;padding:0!important;line-height:14px!important;display:inline-grid;place-items:center}",
     /* Tag kiểu antd: chữ 12/20, đậm thường, viền mảnh — dùng chung cho nhãn trạng thái mọi tab */
-    B + " :is(.hx-tag,.kpi-pill,.hk-stchip){font-size:12px!important;line-height:20px;font-weight:400!important;padding:0 7px!important;letter-spacing:0!important}",
+    B + " :is(.hx-tag,.kpi-pill,.hk-stchip,.kkstchip){font-size:12px!important;line-height:20px;font-weight:400!important;padding:0 7px!important;letter-spacing:0!important}",
     /* AD-02 không IN HOA */
-    B + " :is(.hp-maphdr,.cn-lb,.tkq-cap,.hm-lg-h,.hk-stchip,.kpi-sep td){text-transform:none!important;letter-spacing:0!important}",
+    B + " :is(.hp-maphdr,.cn-lb,.tkq-cap,.hm-lg-h,.hk-stchip,.kkstchip,.kpi-sep td){text-transform:none!important;letter-spacing:0!important}",
     /* AD-06 đậm tối đa 600 (antd 400/600) */
     B + " [id^=pane-] :is(b,strong,.hx-vt,.tg-tao,.kpi-neg,.kpi-down,.kpi-pill,.tkq-cap,.tkn-summary,.hm-lg-h,.hm-lg-t,.hk-dhead,.hp-maphdr,.hp-h2btn)," +
       B + " #pane-kk .ks .t," + B + " #pane-htonbat .ht-tile .l," + B + " #pane-planogram :is(.hp-tile .l,.go,.av,.hp-tdrow .n)," + B + " .hx-bc-chu span:first-child," + B + " :is(.tkq-num,.hp-nvmore)," + B + " [id^=pane-] .st.bad," +
@@ -399,8 +416,8 @@
       /* đầu trang điện thoại 1 hàng: chỉ còn tên mục (nhóm đã thấy trong thanh bên) — chặn luật 13 rác đầu màn */
       H + " #adCrumb .g," + H + " #adCrumb .s{display:none}" +
       H + " #adCrumb{white-space:normal}" + H + " #adCrumb b{font-size:14px;line-height:20px}" +   // máy hẹp 360px: tên dài xuống 2 dòng, không cắt chữ
-      H + " #adLogo{width:200px;padding:0 16px}" + H + " #adChuyen{width:200px}" +   /* 21/10 user: điện thoại thanh bên khít cụm dữ liệu (264 → 200px) */
-      H + " #sideNav{width:200px;max-width:200px}" +
+      H + " #adLogo{width:var(--sw);padding:0 16px}" + H + " #adChuyen{width:var(--sw)}" +   /* 21/10 user: điện thoại thanh bên khít cụm dữ liệu (264 → 200px) */
+      H + " #sideNav{width:var(--sw);max-width:var(--sw)}" +
       H + " #sideToggle{width:40px;height:40px;top:8px;left:8px}" +
       H + " #btnSettings{width:40px;height:40px}" +
       H + " #btnGhiNhan{min-height:40px}" +
@@ -583,6 +600,7 @@
   window.adCanOTongQuan = canOTongQuan;
 
   function dung() {
+    try { var _nv = document.getElementById("sideNav"); if (_nv && !_nv._khit) { _nv._khit = 1; new MutationObserver(function () { khitThanhBen(); }).observe(_nv, { childList: true }); } khitThanhBen(); } catch (e) {}
     var bt = document.getElementById("brandTitle");
     if (bt && !document.getElementById("adCrumb")) { var c = document.createElement("div"); c.id = "adCrumb"; bt.after(c); }
     if (!document.getElementById("adLogo")) {
