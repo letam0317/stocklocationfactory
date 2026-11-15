@@ -6074,7 +6074,7 @@ var RFID_NAP={dang:null,xong:false};
 function rfidNap(){
   if(RFID_NAP.xong){ rfidMo(); return; }
   if(RFID_NAP.dang) return;
-  RFID_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='do-rfid.js?v=20261103b'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
+  RFID_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='do-rfid.js?v=20261115a'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
     .then(function(){ RFID_NAP.xong=true; if(TOPTAB==='rfid') rfidMo(); })
     .catch(function(){ var st=document.getElementById('rfidState'); if(st) st.innerHTML='Không tải được công cụ (mất mạng?). <button type="button" class="kktab" onclick="rfidNap()">Thử lại</button>'; })
     .finally(function(){ RFID_NAP.dang=null; });
@@ -7548,7 +7548,9 @@ async function kkFetch(kind){
 async function kkLoad(){
   ['sku','loc'].forEach(function(k){   // skeleton loading cho cả 2 khối
     var nho=kkNhoDoc(k);   // 14/11: có bản nhớ lần trước ⇒ hiện ngay, không khung xương
-    if(nho&&nho.strip&&nho.st&&nho.hist){ ['kkStrip-','kkStatus-','kkHist-'].forEach(function(id,i){ var e=document.getElementById(id+k); e.innerHTML=[nho.strip,nho.st,nho.hist][i]; e._kkCu=e.innerHTML; }); var lg=document.getElementById('kkLegend-'+k); if(lg&&nho.lg) lg.innerHTML=nho.lg; return; }
+    if(nho&&nho.strip&&nho.st&&nho.hist){ ['kkStrip-','kkStatus-','kkHist-'].forEach(function(id,i){ var e=document.getElementById(id+k); e.innerHTML=[nho.strip,nho.st,nho.hist][i]; e._kkCu=e.innerHTML; }); var lg=document.getElementById('kkLegend-'+k); if(lg&&nho.lg) lg.innerHTML=nho.lg;
+      var sc=document.querySelector('#kkHist-'+k+' .histscroll'); if(sc){ sc.scrollLeft=sc.scrollWidth; requestAnimationFrame(function(){ sc.scrollLeft=sc.scrollWidth; }); }   /* 15/11: bản nhớ cũng cuộn tới ngày mới nhất như bản thật ⇒ biểu đồ không đổi cột khi dữ liệu về */
+      return; }
     document.getElementById('kkStrip-'+k).innerHTML='<div class="sk" style="height:58px;flex:1;border-radius:10px"></div>';
     document.getElementById('kkStatus-'+k).innerHTML='<div class="sk" style="height:44px;border-radius:8px"></div>';
     document.getElementById('kkHist-'+k).innerHTML='<div class="sk" style="height:180px;border-radius:10px"></div>';

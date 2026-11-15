@@ -123,22 +123,34 @@
     }
   }
   /* Mở thẻ: nạp tab kiemke-uidgr (cache phiên 10' chung với Kiểm kê). Lỗi mạng → báo + nút thử lại (luật offline mục 3). */
+  /* 15/11 (TK-31) bản nhớ danh sách cây lần trước (≤ 24 giờ, localStorage) ⇒ mở thẻ là thấy ngay, không chờ ~3 s đọc Sheet; bản mới về giống thì không vẽ lại.
+     KHÔNG nhớ người kiểm (email) — ô «Người kiểm» có đủ lựa chọn khi bản mới về. */
+  var NHO_K = 'rfid-nho';
+  function rutGon(rows) { return rows.map(function (x) { return { req: x.req, uid: x.uid, rf: x.rf, loc: x.loc, sku: x.sku, pn: x.pn, qs: x.qs, qu: x.qu, loai: x.loai, ngay: x.ngay, type: x.type }; }); }
+  function nhoDoc() { try { var o = JSON.parse(localStorage.getItem(NHO_K) || 'null'); if (o && Array.isArray(o.d) && o.d.length && Date.now() - o.at < 864e5) return o.d.map(function (x) { x.by = ''; return x; }); } catch (e) {} return null; }
+  function nhoGhi(chuoi) { try { if (chuoi.length < 1500000) localStorage.setItem(NHO_K, '{"at":' + Date.now() + ',"d":' + chuoi + '}'); else localStorage.removeItem(NHO_K); } catch (e) {} }
   window.rfidMo = function (force) {
     gan();
-    if (R.rows && !force) { ve(); return; }
+    if (R.rows && !force && !R._tuNho) { ve(); return; }
     if (R.dangNap) return;
     R.dangNap = true;
-    var st = $('rfidState'); st.hidden = false; st.textContent = 'Đang đọc dữ liệu kiểm kê…';
+    var st = $('rfidState'), nho = R.rows ? null : nhoDoc();
+    if (nho) { R.rows = nho; R._tuNho = true; R._nhoChuoi = JSON.stringify(rutGon(nho)); ve(); }
+    else if (!R._tuNho) { st.hidden = false; st.textContent = 'Đang đọc dữ liệu kiểm kê…'; }
     Promise.resolve().then(function () { return uidgrLoad(!!force); }).then(function () {
       if (UIDGR.err) throw 0;
       var all = []; Object.keys(UIDGR.map || {}).forEach(function (c) { all = all.concat(UIDGR.map[c]); });
+      var cuChuoi = R._tuNho ? R._nhoChuoi : null; R._tuNho = false;
       R.rows = dung(all);
+      var moiChuoi = JSON.stringify(rutGon(R.rows)); if (R.rows.length) nhoGhi(moiChuoi);
+      if (cuChuoi === moiChuoi && R.rows.length) { veSel(); return; }
       if (!R.rows.some(function (x) { return x.rf; }) && !R._baoTag) {
         R._baoTag = 1;   // tab chưa có cột RFID (lượt đồng bộ đầu sau cập nhật chưa chạy) — vẫn liệt kê cây
       }
       if (!R.rows.length) { st.hidden = false; st.textContent = 'Chưa có cây thiếu / chênh lệch nào trong dữ liệu kiểm kê.'; return; }
       ve();
     }).catch(function () {
+      if (R._tuNho) return;   // đang hiện bản nhớ ⇒ giữ nguyên, lần mở sau đọc lại
       st.hidden = false;
       st.innerHTML = 'Không đọc được dữ liệu kiểm kê (mất mạng?). <button type="button" class="kktab" onclick="rfidMo(true)">Thử lại</button>';
     }).finally(function () { R.dangNap = false; });
