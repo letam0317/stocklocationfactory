@@ -4,7 +4,7 @@
                 độ chắc của máy: .chac · .xem · .none — cùng khuôn với .hx-tag của Xác minh (good/warn/bad/info/muted)
    · .hsk-nut   nút: .chinh (nền accent) · .phu (viền) · .nguy (viền đỏ) · .nho (32px); điện thoại ≥44px
    Thêm trạng thái mới = thêm 1 lớp ở đây, không tự vẽ chip ở mô-đun (qc-ma-tinh chặn lớp chip mới). */
-.hsk-chip,.hx-tag{display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;line-height:16px;border:1px solid transparent;white-space:nowrap;vertical-align:middle}
+.hsk-chip,.hx-tag{display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:0 7px;border-radius:4px;font-size:12px;font-weight:400;line-height:20px;border:1px solid transparent;white-space:nowrap;vertical-align:middle}
 .hsk-chip::before,.hx-tag::before{content:"";flex:none;width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.9}
 .hsk-chip.cho,.hsk-chip.xem,.hx-tag.warn{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 40%,transparent);background:color-mix(in srgb,var(--warn) 10%,transparent)}
 .hsk-chip.dang,.hx-tag.info{color:var(--info,var(--accent));border-color:color-mix(in srgb,var(--info,var(--accent)) 35%,transparent);background:color-mix(in srgb,var(--info,var(--accent)) 10%,transparent)}

@@ -270,13 +270,13 @@
     B + " #hdrKkPlan:hover{color:var(--accent);border-color:var(--accent)}",
     B + " :is(.hx-tag,.kpi-pill,.hk-stchip,.kkstchip,.hp-legchip,.hp-legcnt,#pane-planogram .hp-tdrow .n){border-radius:4px!important}",
     /* nút "i" chú thích: hình tròn thật (rộng = cao) */
-    B + " .h2tip{width:16px!important;height:16px!important;min-height:16px!important;padding:0!important;line-height:14px!important;display:inline-grid;place-items:center}",
+    B + " .h2tip{font-size:11px!important;width:16px!important;height:16px!important;min-height:16px!important;padding:0!important;line-height:14px!important;display:inline-grid;place-items:center}",
     /* Tag kiểu antd: chữ 12/20, đậm thường, viền mảnh — dùng chung cho nhãn trạng thái mọi tab */
-    B + " :is(.hx-tag,.kpi-pill,.hk-stchip,.kkstchip){font-size:12px!important;line-height:20px;font-weight:400!important;padding:0 7px!important;letter-spacing:0!important}",
+    B + " :is(.hx-tag,.hsk-chip,.hm-xl,.kpi-pill,.hk-stchip,.kkstchip){font-size:12px!important;line-height:20px;font-weight:400!important;padding:0 7px!important;letter-spacing:0!important}",
     /* AD-02 không IN HOA */
     B + " :is(.hp-maphdr,.cn-lb,.tkq-cap,.hm-lg-h,.hk-stchip,.kkstchip,.kpi-sep td){text-transform:none!important;letter-spacing:0!important}",
     /* AD-06 đậm tối đa 600 (antd 400/600) */
-    B + " [id^=pane-] :is(b,strong,.hx-vt,.tg-tao,.kpi-neg,.kpi-down,.kpi-pill,.tkq-cap,.tkn-summary,.hm-lg-h,.hm-lg-t,.hk-dhead,.hp-maphdr,.hp-h2btn)," +
+    B + " [id^=pane-] :is(b,strong,.hx-vt,.tg-tao,.kpi-neg,.kpi-down,.kp-d,.tkq-cap,.tkn-summary,.hm-lg-h,.hm-lg-t,.hk-dhead,.hp-maphdr,.hp-h2btn)," +
       B + " #pane-kk .ks .t," + B + " #pane-htonbat .ht-tile .l," + B + " #pane-planogram :is(.hp-tile .l,.go,.av,.hp-tdrow .n)," + B + " .hx-bc-chu span:first-child," + B + " :is(.tkq-num,.hp-nvmore)," + B + " [id^=pane-] .st.bad," +
       B + " #modal :is(b,strong){font-weight:600!important}",
     B + " :is(.hx-nut,.hx-nut.nho,.hx-tag){font-weight:400!important}",
