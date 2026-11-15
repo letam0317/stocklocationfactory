@@ -50,6 +50,9 @@
 :is(#hpVtBody,#plgmBody) .bd-tab-than{animation:fadeUp var(--t-nhanh) var(--ez-apple,ease) both}
 /* 10/11 tối (clip 18.54.51 giây 17–18): nội dung ngắn ⇒ mất thanh cuộn ⇒ bề rộng khung đổi ⇒ thanh tab + hàng lọc căn giữa trượt — giữ chỗ thanh cuộn cố định */
 :is(#hpVtBody,#plgmBody){scrollbar-gutter:stable}
+/* 15/11 user (screenshot-1794722465438 «chỗ khoanh tròn lệch — hụt vô so với khung vuông»): chỗ giữ thanh cuộn CỘNG THÊM vào đệm phải 20 ⇒ thân trái 21 / phải 30 px.
+   Thanh cuộn nằm TRONG lề phải: đệm phải = 20 − bề rộng thanh cuộn (--sbw do lich-su-ben.js đo) ⇒ nội dung cách mép hộp đều hai bên (qc-le-thanh-ben.mjs) */
+:is(#hpVtBody,#plgmBody){padding-right:calc(20px - var(--sbw, 0px))!important}
 /* 14/11 ĐẦU KHUNG ĐIỆN THOẠI (.panel-head có nút Bộ lọc) — một nguồn cho Retail + Factory: cao 38, tên 13 → 11.5 (≤ 560), ghi chú 11.5 → 11, nút Bộ lọc đệm 7 */
 @media (max-width:768px){
   html body .panel > .panel-head:has(.btn-filter){height:38px!important;min-height:38px!important;padding:0 12px!important;gap:6px!important}
