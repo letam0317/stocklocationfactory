@@ -164,7 +164,9 @@
   /* 08/11 user «toàn bộ Bộ lọc dạng NGĂN KÉO — không xô đẩy khung dữ liệu» (TK-28): khối .panel > .filters nổi (CSS index.html).
      Ở đây: (1) đặt --loc-top = đáy đầu khung thật (đầu khung có thể cao khác 40 px) lúc ngăn mở; (2) bấm ra ngoài ngăn / Esc ⇒ đẩy ngăn vào
      bằng CHÍNH nút Bộ lọc của khung (giữ logic riêng từng mô-đun). Lịch chọn ngày / ô chọn gắn ra body vẫn tính là «trong ngăn». */
-  var NGOAI_OK = ".date-pop,.dp-sheet,.cs-list,.cs,.hsk-toast,.toast,[role=dialog]";
+  /* 16/11 user «bộ lọc Kiểm kê Factory nhấn vào không hiện ngăn kéo»: nút .kk-loc-soi (bản soi #kkBtnLoc ở đầu 2 khung) bấm hộ nút gốc ⇒ ngăn mở,
+     rồi chính cú bấm đó bị tính «ngoài ngăn» ⇒ đóng ngay. Bản soi của nút Bộ lọc tính là nút. */
+  var NGOAI_OK = ".date-pop,.dp-sheet,.cs-list,.cs,.hsk-toast,.toast,[role=dialog],.kk-loc-soi";
   var NGAN = ".panel > .filters:not(.collapsed),.pg-locbody:not(.collapsed),#hpLocSlot:not(.collapsed)";   // .pg-locbody = Tiến độ Planogram Factory · #hpLocSlot = Tiến độ Planogram Retail (09/11)
   function nganMo() { return [].filter.call(document.querySelectorAll(NGAN), function (f) { return f.offsetParent !== null; }); }
   function datTop(f) { var h = f.previousElementSibling; if (h) f.parentNode.style.setProperty("--loc-top", (h.offsetTop + h.offsetHeight) + "px"); }

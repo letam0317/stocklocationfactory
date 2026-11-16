@@ -434,6 +434,8 @@ body.an-chan .footbar{display:none}
 html body #viewKK:not([hidden]){border:0!important;border-radius:0!important;background:transparent!important;padding:0!important;margin-bottom:16px}
 html.ad body #viewKK#viewKK .kk-dau-panel{border:0!important;background:none!important;margin:0!important;padding:0!important;box-shadow:none!important}
 #viewKK .kk-dau-panel>.panel-head{display:none!important}
+/* 16/11 đầu .kk-dau-panel ẩn ⇒ --loc-top của tat-loc = 0, ngăn đè lên đầu 2 khung (che nút Bộ lọc). Ngăn nằm ngay dưới đầu khung thật: --kk-dau-top do kkTachKhung đo */
+html body #viewKK .kk-dau-panel>.filters{top:var(--kk-dau-top,40px)!important}
 html body #viewKK .kk-dau-panel>.filters:not(.collapsed){border:1px solid var(--ad-chia,var(--border));border-radius:8px;background:var(--surface);margin-bottom:16px}
 html body #viewKK .grid2.even{gap:16px!important;align-items:start}
 html body #viewKK .grid2.even>section.panel{border:1px solid var(--ad-chia,var(--border))!important;border-radius:8px!important;background:var(--surface)!important;box-shadow:none!important;padding:0 0 12px!important;margin:0!important;min-width:0}
@@ -3514,7 +3516,7 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
 <script>window.AD_BI_DANH={"hangmuctonkho/kiemke":"kk","hangmuctonkho/tonkhobatthuong":"kk#viewAbn"};   /* 15/10 link cũ → mục gộp «Tồn kho chính xác» */ window.AD_TEN='Audit Factory'; window.AD_LOGO='factory-logo.png'; window.AD_TEN_MAU='#000'; window.AD_CHUYEN={ten:'Audit Retail', app:'retail'};</script>   <!-- 13/10 user: logo Mastige (chỉ hình tròn chữ M) + chữ màu logo -->
 <script src="giaodien-antd.js?v=20261115a"></script>
 <script src="tai-khoan.js?v=20261110g"></script>   <!-- 14/10 đăng nhập + phân quyền (bản chép từ kiemsoatkho/tai-khoan.js) -->
-<script src="tat-loc.js?v=20261109a" defer></script><script src="lich-su-ben.js?v=20261110g" defer></script><!-- 10/11 tối Lịch sử lịch tháng + pop-up ảnh kiểu B (bản chép Retail) -->   <!-- 22/10 nút «✕ Tắt lọc» · 23/10 dời vào TRONG nút «Bộ lọc» (bản chép từ kiemsoatkho/tat-loc.js) -->
+<script src="tat-loc.js?v=20261116a" defer></script><script src="lich-su-ben.js?v=20261110g" defer></script><!-- 10/11 tối Lịch sử lịch tháng + pop-up ảnh kiểu B (bản chép Retail) -->   <!-- 22/10 nút «✕ Tắt lọc» · 23/10 dời vào TRONG nút «Bộ lọc» (bản chép từ kiemsoatkho/tat-loc.js) -->
 <link rel="stylesheet" href="hieu-ung.css?v=20261114a"><!-- 14/11 biến hiệu ứng chung (TK-30) -->
 <link rel="stylesheet" href="thanh-phan.css?v=20261115a"><!-- 14/11 chip / nút / thanh tab Mẫu 11 — bản chép Retail (TK-32) -->
 <link rel="stylesheet" href="thanh-ben.css?v=20261114b"><!-- 14/11 VỎ THANH BÊN PHẢI chung (TK-29) -->
@@ -17069,7 +17071,10 @@ document.getElementById('hdrNghiemThu').addEventListener('click',ntMo);
       if(t!==b&&t.className&&typeof t.className==='string'){ try{ d=goc.querySelector('.'+t.className.trim().split(/\s+/).join('.')); }catch(_){} }
       (d||goc).click(); });
     return b; });
-  function chep(){ soi.forEach(function(b){ var c=goc.className+' kk-loc-soi'; if(b.className!==c) b.className=c; if(b.innerHTML!==goc.innerHTML) b.innerHTML=goc.innerHTML; if(b.title!==goc.title) b.title=goc.title; }); }
+  var dau=goc.closest(".kk-dau-panel");
+  function datDau(){ var h=soi[0]&&soi[0].closest("h2"); if(!dau||!h||!h.offsetHeight) return; var v=Math.round(h.getBoundingClientRect().bottom-dau.getBoundingClientRect().top)+"px"; if(dau.style.getPropertyValue("--kk-dau-top")!==v) dau.style.setProperty("--kk-dau-top",v); }
+  function chep(){ datDau(); soi.forEach(function(b){ var c=goc.className+' kk-loc-soi'; if(b.className!==c) b.className=c; if(b.innerHTML!==goc.innerHTML) b.innerHTML=goc.innerHTML; if(b.title!==goc.title) b.title=goc.title; }); }
+  window.addEventListener("resize",datDau);
   chep(); try{ new MutationObserver(chep).observe(goc,{attributes:true,childList:true,subtree:true,characterData:true}); }catch(_){}
 })();
 showTab('home');
