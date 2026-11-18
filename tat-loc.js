@@ -23,6 +23,7 @@
  * 08/11 user «đổi nút Đóng có ở bất cứ đâu của link audit-dc thành dấu x đỏ ở thư viện dự án»: nút bấm được có chữ ĐÚNG «Đóng»
  *   (đóng pop-up / tấm / khung sửa) ⇒ chữ thay bằng «×» + .x-do .x-do-dong, giữ aria-label/title «Đóng»; hộp vuông theo chiều cao nút
  *   (vùng chạm điện thoại ≥44 px của trang vẫn giữ). Cả #pane-baoduong. Nút «Đóng ▴» (thu gọn), «Đóng camera», «Đóng gói» không đụng.
+ * 18/11 chân ngăn kéo «Xoá lọc» + «Áp dụng» chung mọi bộ lọc (cuối tệp).
  * Bản chép: factory/tat-loc.js (sửa ở đây rồi chép sang). */
 (function () {
   if (window.__TAT_LOC) return; window.__TAT_LOC = 1;
@@ -51,7 +52,10 @@
     return !!String(x.value || "").trim();
   }
   function tatLoc(k, manh) {   // manh = mục báo đang lọc ⇒ lịch ngày khác «Chưa chọn» cũng xoá (khoảng ngày đặt từ trước khi trang mở)
-    oCuaKhung(k).forEach(function (x) {
+    oCuaKhung(k).forEach(function (x) { xoaO(x, manh); });
+  }
+  function xoaO(x, manh) {   // 18/11 tách 1 ô (dùng chung ✕ và nút «Xoá lọc» ở chân ngăn kéo)
+    (function () {
       /* «Xoá» trả về mặc định của mục (mục bắt buộc có ngày → hôm nay/hôm qua) ⇒ chữ sau Xoá chính là mặc định */
       if (x.classList.contains("date-filter") && x.__ngay) { if (dangLoc(x)) x.__ngay.xoa(); return; }   // 23/10 Theo máy: lịch dời ra body → .dp-clear không còn trong ô, xoá thẳng qua API
       if (x.classList.contains("date-filter")) { if (dangLoc(x) || (manh && chuNgay(x) !== "Chưa chọn")) { var b = x.querySelector(".dp-clear"); if (b) { b.click(); MD[khoaNgay(x)] = chuNgay(x); } } return; }
@@ -60,7 +64,7 @@
         x.dispatchEvent(new Event("change", { bubbles: true })); if (x._csWrap && typeof x._csWrap._csDongBo === "function") x._csWrap._csDongBo(); return; }
       x.value = ""; x.dispatchEvent(new Event("input", { bubbles: true })); x.dispatchEvent(new Event("change", { bubbles: true }));
       x.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true, key: "Backspace" }));
-    });
+    })();
   }
   function bam(ev) {
     ev.preventDefault(); ev.stopPropagation();
@@ -181,4 +185,64 @@
     var ds = nganMo(); if (!ds.length) return;
     ds.forEach(function (f) { var b = nutCua(f); if (b) b.click(); }); ev.stopPropagation();
   }, true);
+
+  /* 18/11 user «bổ sung nút Áp dụng và Xoá lọc ở khung bộ lọc của TẤT CẢ các bộ lọc hiện có — Áp dụng xong mặc định thu ngăn kéo (ẩn),
+     Xoá lọc xoá tất cả các trường lọc đã chọn». Áp CHUNG (không sửa từng mục): chân .loc-chan gắn cuối mọi ngăn kéo lọc Retail + Factory —
+     .panel > .filters (Vi phạm, Kiểm kê, Xác minh, Tồn bất thường, Bảo dưỡng, CCDC…) · Tiến độ Planogram (#hpLocSlot / .pg-locbody) ·
+     ngăn Lịch sử thanh bên (.lsb-keo.loc) · khối lọc pop-up điện thoại (loc-popup.js, chỉ hiện khi gập thành ngăn).
+     Áp dụng = chốt ô đang gõ (change) rồi bấm CHÍNH nút Bộ lọc của ngăn để thu vào (giữ logic riêng từng mô-đun).
+     Xoá lọc = đưa từng ô về mặc định như ✕ (xoaO), làm LẦN LƯỢT từng ô vì có mục vẽ lại cả ngăn sau mỗi change (Bảo dưỡng, Lịch sử); ngăn vẫn mở. */
+  var KEO = ".panel > .filters,.pg-locbody,#hpLocSlot,.lsb-keo.loc,.hp-mfilters,.hk-mfilters,.ht-mfilters";
+  function nutDong(f) {
+    if (f.matches(".lsb-keo")) { var r = f.closest(".lsb"); return r && r.querySelector('[data-lsb-keo="loc"]'); }
+    return f.__locPop || nutCua(f);
+  }
+  function timLai(f) {   // ngăn có thể bị mô-đun vẽ lại sau change ⇒ tìm lại theo id / gốc Lịch sử
+    var id = f.id, r = f.closest(".lsb");
+    return function () { if (f.isConnected) return f; var g = id && document.getElementById(id); if (g) return f = g;
+      g = r && r.isConnected && r.querySelector(".lsb-keo.loc"); return g ? (f = g) : null; };
+  }
+  function apDung(f) {
+    var a = document.activeElement;
+    if (a && f.contains(a) && a.matches("input,select,textarea")) { a.dispatchEvent(new Event("change", { bubbles: true })); a.blur(); }
+    var lay = timLai(f);
+    setTimeout(function () { var g = lay(); if (!g) return; var b = nutDong(g); if (b) b.click(); }, 0);
+  }
+  function xoaLoc(f) {
+    var lay = timLai(f), xong = [], n = 0, b0 = nutDong(f), manh = !!(b0 && b0.parentNode && mucBaoLoc(b0));
+    var dau = oCuaKhung(f).filter(function (x) { return x.classList.contains("date-filter"); });   // lịch ngày: chỉ xoá 1 lần (có mục mặc định hôm nay)
+    (function buoc() {
+      var g = lay(); if (!g || ++n > 15) return;
+      var x = oCuaKhung(g).filter(function (o) { return xong.indexOf(o) < 0 && (dangLoc(o) || (manh && dau.indexOf(o) >= 0)); })[0];
+      if (!x) { henGan(); return; }
+      xong.push(x); xoaO(x, manh); setTimeout(buoc, 40);
+    })();
+  }
+  function ganChan() {
+    [].forEach.call(document.querySelectorAll(KEO), function (f) {
+      var c = f.querySelector(":scope > .loc-chan");
+      if (c && c === f.lastElementChild) return;
+      if (!c) {
+        c = document.createElement("div"); c.className = "loc-chan"; c.setAttribute("data-khong-tat-loc", "");
+        c.innerHTML = '<button type="button" class="hsk-nut phu nho loc-chan-xoa">Xoá lọc</button><button type="button" class="hsk-nut chinh nho loc-chan-ap">Áp dụng</button>';
+        c.addEventListener("click", function (ev) {
+          var t = ev.target.closest("button"); if (!t) return; ev.stopPropagation();
+          var k = c.parentNode; if (!k) return;
+          if (t.classList.contains("loc-chan-ap")) apDung(k); else xoaLoc(k);
+        });
+      }
+      f.appendChild(c);   // luôn đứng CUỐI ngăn (mô-đun chèn thêm ô sau ⇒ dời xuống lại)
+    });
+  }
+  var cT = 0; function henChan() { clearTimeout(cT); cT = setTimeout(ganChan, 60); }
+  new MutationObserver(function (ms) { if (ms.some(function (m) { return !(m.target.closest && m.target.closest(".loc-chan")); })) henChan(); })
+    .observe(document.documentElement, { subtree: true, childList: true });
+  var stc = document.createElement("style");
+  stc.textContent = ".loc-chan{grid-column:1/-1;flex:1 0 100%;width:100%;box-sizing:border-box;display:flex;justify-content:flex-end;align-items:center;gap:8px;" +
+      "margin:4px 0 0;padding:10px 0 0;border-top:1px solid var(--ad-chia,var(--border))}" +
+    ".loc-chan>.hsk-nut{flex:0 1 140px;min-height:36px}" +   /* điện thoại: 2 nút gần chia đôi hàng, không cần điểm gãy riêng */
+    /* khối lọc pop-up module trên máy tính là thanh lọc cố định (không phải ngăn) ⇒ chỉ hiện chân khi gập thành ngăn (điện thoại) */
+    ":is(.hp-mfilters,.hk-mfilters,.ht-mfilters):not(.loc-pop-mo)>.loc-chan{display:none!important}";
+  (document.head || document.documentElement).appendChild(stc);
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", ganChan); else ganChan();
 })();
