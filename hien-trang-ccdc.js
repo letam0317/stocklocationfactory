@@ -214,7 +214,7 @@
     '#ccAnhModal .xa-khung img,#ccAnhModal .xa-khung video{max-width:100%;max-height:100%;object-fit:contain;display:block}',
     '#ccAnhModal .xa-khung iframe{width:100%;height:100%;border:0}',
     '#ccAnhModal .xa-dieu{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:10px;font-size:14px;color:var(--ink2)}',
-    '#ccAnhModal .xa-dieu .cc-nut{min-width:44px;font-size:20px;justify-content:center}',
+    '#ccAnhModal .xa-dieu .cc-nut{width:40px;min-width:40px;height:40px;padding:0;border-radius:50%;justify-content:center}',   /* 19/11 mũi tên tròn như thanh bên Planogram */
     '#ccTsModal .ts-ds button{display:block;text-align:left;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:10px 12px;cursor:pointer;color:var(--ink);font:inherit}',
     '#ccTsModal .ts-ds button:hover{border-color:#1677ff}',
     '#ccTsModal .ts-ds b{font-weight:600} #ccTsModal .ts-ds small{display:block;font-size:12.5px;color:var(--ink3);margin-top:2px}',
@@ -597,7 +597,7 @@
     var mS = pop('ccSpModal', 'Ảnh sản phẩm', '<div class="sp-tt" id="ccSpTt"></div><div class="sp-khung" id="ccSpKhung"></div><div class="sp-dong" id="ccSpDong"></div>');
     mS.addEventListener('click', function (ev) { if (ev.target === mS || ev.target.closest('.mclose')) plgDongModal('ccSpModal'); });
     var mA = pop('ccAnhModal', 'Ảnh / clip hiện trạng', '<div class="xa-khung" id="ccAnhKhung"></div>' +
-      '<div class="xa-dieu"><button type="button" class="cc-nut" data-xa="-1" aria-label="Trước">‹</button><span id="ccAnhSo"></span><button type="button" class="cc-nut" data-xa="1" aria-label="Sau">›</button></div>');
+      '<div class="xa-dieu"><button type="button" class="cc-nut" data-xa="-1" aria-label="Ảnh trước"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><span id="ccAnhSo"></span><button type="button" class="cc-nut" data-xa="1" aria-label="Ảnh sau"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></div>');
     mA.addEventListener('click', function (ev) {
       if (ev.target === mA || ev.target.closest('.mclose')) { dongXemAnh(); return; }
       var b = ev.target.closest('[data-xa]'); if (b && XA) veXemAnh(XA.i + (+b.dataset.xa));

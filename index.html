@@ -2525,11 +2525,11 @@ html.ad body .nds-tools{background:color-mix(in srgb,#000 45%,transparent)!impor
 .modalbox.pg-lbbox{width:min(980px,96vw)}
 .pg-lb{position:relative;display:flex;align-items:center;justify-content:center;padding:0 14px 18px;min-height:0}
 .pg-lb img{max-width:100%;max-height:74vh;border-radius:12px;background:color-mix(in srgb,var(--ink3) 12%,transparent)}
-.pg-lbnav{position:absolute;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;
-  border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:22px;line-height:1;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);
-  transition:background .16s ease,transform .16s var(--ez-apple)}
-.pg-lbnav:hover{background:var(--hover);transform:translateY(-50%) scale(1.08)}
+/* 19/11 user «nút chuyển ảnh trước / sau đồng bộ theo mẫu thanh bên Planogram»: mũi tên tròn 40 px như pop-up ảnh kiểu B (lich-su-ben.js #lsbLb) */
+.pg-lbnav{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;padding:0;border-radius:50%;
+  border:1px solid color-mix(in srgb,white 25%,transparent);background:color-mix(in srgb,black 55%,transparent);color:white;cursor:pointer;
+  display:flex;align-items:center;justify-content:center}
+.pg-lbnav:hover{background:color-mix(in srgb,black 70%,transparent)}
 .pg-lbnav:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .pg-lbnav.prev{left:18px}
 .pg-lbnav.next{right:18px}
@@ -4201,9 +4201,9 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
       <!-- 22/10 user: pop-up ảnh có chip «Đóng» như Retail (thay dấu ×) -->
       <button type="button" class="pg-mdong" onclick="closePlgAnh()">Đóng</button></div>
     <div class="pg-lb">
-      <button type="button" class="pg-lbnav prev" onclick="plgAnhDi(-1)" aria-label="Ảnh trước">&lsaquo;</button>
+      <button type="button" class="pg-lbnav prev" onclick="plgAnhDi(-1)" aria-label="Ảnh trước"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
       <img id="plgAnhImg" alt="Ảnh báo cáo vệ sinh">
-      <button type="button" class="pg-lbnav next" onclick="plgAnhDi(1)" aria-label="Ảnh sau">&rsaquo;</button>
+      <button type="button" class="pg-lbnav next" onclick="plgAnhDi(1)" aria-label="Ảnh sau"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
     </div>
   </div>
 </div>
@@ -6061,7 +6061,7 @@ var CCDC_NAP={dang:null,xong:false};
 function ccdcNap(){
   if(CCDC_NAP.xong){ ccdcMo(); return; }
   if(CCDC_NAP.dang) return;
-  CCDC_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='hien-trang-ccdc.js?v=20261114a'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
+  CCDC_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='hien-trang-ccdc.js?v=20261119a'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
     .then(function(){ CCDC_NAP.xong=true; if(TOPTAB==='ccdc') ccdcMo(); })
     .catch(function(){ CCDC_NAP.dang=null; var v=document.getElementById('viewCcdc'); if(v) v.innerHTML='<div class="state" style="padding:32px 20px">Không tải được công cụ (mất mạng?). <button type="button" class="kktab" onclick="ccdcNap()">Thử lại</button></div>'; });
 }
