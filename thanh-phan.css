@@ -65,3 +65,29 @@
 /* 14/11 DẢI CHIP TRẠNG THÁI (Kiểm kê hai trang): số chip đổi theo dữ liệu / bộ lọc ⇒ LUÔN 1 hàng, thừa thì cuộn ngang trong dải (luật TK-31 — khung không cao thấp theo dữ liệu) */
 :is(.hk-stchips,.kkstchips){flex-wrap:nowrap!important;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;min-width:0}
 :is(.hk-stchips,.kkstchips)::-webkit-scrollbar{display:none}:is(.hk-stchips,.kkstchips)>*{flex:none;white-space:nowrap}
+
+/* ===== KÍCH THƯỚC POP-UP CHUẨN — TK-33 (19/11/2026) =====
+   User 19/11: «kích thước pop-up có nơi to, nơi nhỏ — đồng bộ toàn bộ những nơi có pop-up, web / điện thoại, Retail / Factory».
+   Đo 19/11 (1366): 40 hộp, 16 bề rộng khác nhau (440…1280), bo 8/14/16/18; điện thoại: Retail toàn màn, Factory thẻ lề 8 bo 18, CCDC tấm đáy.
+   Nay 3 CỠ, cao = theo nội dung (khít, tối đa màn − 48), bo 8 (khuôn Ant Design):
+     LỚN 1200  bảng / danh sách / ảnh      · VỪA 800  chi tiết / thẻ thông tin      · NHỎ 560  hỏi đáp / mã QR / biểu mẫu ngắn
+   Điện thoại ≤768: LỚN + VỪA = toàn màn (bo 0) · NHỎ = tấm trượt từ đáy (bo 8 hai góc trên).
+   Thanh bên phải (#hpVtModal / #plgmodal) KHÔNG thuộc luật này — xem thanh-ben.css.
+   Pop-up MỚI: thêm id vào ĐÚNG 1 nhóm dưới đây (qc-popup-tran đo: hộp phải đúng 1 trong 3 cỡ). !important vì CSS mô-đun bơm SAU, cùng cấp id. */
+:root{--pop-lon:1200px;--pop-vua:800px;--pop-nho:560px}
+@media (min-width:769px){
+  :is(#modal,#statModal,#hpModal,#hpAiModal,#hpNkModal,#hpcmodal,#hplmodal,#htModal,#hkKkModal,#hkFcModal,#plgallmodal,#plgtramodal,#plganhmodal,#plmodal,#pcmodal,#prmodal,#fcmodal,#abnmodal,#tvtmodal,#ccNdsModal,#ccAnhModal)
+    >:is(.modal-box,.modalbox,.hmm-box,.gm-box,.hp-modalbox,.hpc-box,.ht-modalbox,.hk-modalbox){width:min(var(--pop-lon),calc(100vw - 48px))!important;max-width:none!important;max-height:calc(100dvh - 48px)!important;border-radius:8px!important}
+  :is(#hmModal,#ntmodal,#catmodal,#kkmodal)
+    >:is(.modal-box,.modalbox,.hmm-box,.gm-box,.hp-modalbox,.hpc-box,.ht-modalbox,.hk-modalbox){width:min(var(--pop-vua),calc(100vw - 48px))!important;max-width:none!important;max-height:calc(100dvh - 48px)!important;border-radius:8px!important}
+  :is(#ghiModal,#csmodal,#qtcqrmodal,#qtcshowqrmodal,#ccCamModal,#ccTsModal,#ccQsModal,#ccChonModal,#ccVtXemModal,#ccSpModal,#ccVtModal,#ccInModal)
+    >:is(.modal-box,.modalbox,.hmm-box,.gm-box,.hp-modalbox,.hpc-box,.ht-modalbox,.hk-modalbox){width:min(var(--pop-nho),calc(100vw - 48px))!important;max-width:none!important;max-height:calc(100dvh - 48px)!important;border-radius:8px!important}
+}
+@media (max-width:768px){
+  :is(#modal,#statModal,#hpModal,#hpAiModal,#hpNkModal,#hpcmodal,#hplmodal,#htModal,#hkKkModal,#hkFcModal,#plgallmodal,#plgtramodal,#plganhmodal,#plmodal,#pcmodal,#prmodal,#fcmodal,#abnmodal,#tvtmodal,#ccNdsModal,#ccAnhModal,#hmModal,#ntmodal,#catmodal,#kkmodal){padding:0!important;align-items:stretch!important;justify-content:stretch!important}
+  :is(#modal,#statModal,#hpModal,#hpAiModal,#hpNkModal,#hpcmodal,#hplmodal,#htModal,#hkKkModal,#hkFcModal,#plgallmodal,#plgtramodal,#plganhmodal,#plmodal,#pcmodal,#prmodal,#fcmodal,#abnmodal,#tvtmodal,#ccNdsModal,#ccAnhModal,#hmModal,#ntmodal,#catmodal,#kkmodal)
+    >:is(.modal-box,.modalbox,.hmm-box,.gm-box,.hp-modalbox,.hpc-box,.ht-modalbox,.hk-modalbox){width:100%!important;max-width:none!important;height:100%!important;max-height:100%!important;margin:0!important;border-radius:0!important}
+  :is(#ghiModal,#csmodal,#qtcqrmodal,#qtcshowqrmodal,#ccCamModal,#ccTsModal,#ccQsModal,#ccChonModal,#ccVtXemModal,#ccSpModal,#ccVtModal,#ccInModal){padding:0!important;align-items:flex-end!important;justify-content:center!important}
+  :is(#ghiModal,#csmodal,#qtcqrmodal,#qtcshowqrmodal,#ccCamModal,#ccTsModal,#ccQsModal,#ccChonModal,#ccVtXemModal,#ccSpModal,#ccVtModal,#ccInModal)
+    >:is(.modal-box,.modalbox,.hmm-box,.gm-box,.hp-modalbox,.hpc-box,.ht-modalbox,.hk-modalbox){width:100%!important;max-width:none!important;max-height:92%!important;margin:0!important;border-radius:8px 8px 0 0!important}
+}
