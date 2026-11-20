@@ -704,9 +704,10 @@
       (f.viTri || f.gio ? '<div class="cc-vt">Vị trí đặt ' + (f.viTri ? '<b>' + e_(f.viTri) + '</b>' : '') + (f.gio ? '<b class="gio">' + IC_GIO + e_(f.gio) + '</b>' : '') + '<button type="button" class="x" data-lam="boVt" aria-label="Bỏ vị trí">✕</button></div>' : '') +
       /* 13/11 user: mẫu in «Thông tin SKU» ⇒ ô SỐ LƯỢNG TEM (bắt buộc) ngay dưới Phân loại; mẫu «Phương án xử lý» ⇒ ẩn (in 1 tem như cũ).
          Sửa phiếu không in ⇒ không hiện. Bước ± đổi số tại chỗ (không vẽ lại form ⇒ không nhảy). */
-      (mauSkuDangChon() && !f.sua ? '<div class="cc-h3">Số lượng tem <i>*</i></div><div class="cc-bac">' +
+      /* 20/11 user «bổ sung số lượng tem khi chọn PA xử lý» ⇒ ô hiện cho CẢ 2 mẫu khi gửi mới; PA mặc định 1 (không bắt buộc gõ) */
+      (!f.sua ? '<div class="cc-h3">Số lượng tem' + (mauSkuDangChon() ? ' <i>*</i>' : '') + '</div><div class="cc-bac">' +
         '<button type="button" class="cc-nut" data-lam="slTem:-1" aria-label="Bớt 1 tem">−</button>' +
-        '<input id="ccSoTem" class="o" inputmode="numeric" autocomplete="off" placeholder="Số tem" value="' + (f.soTemIn || '') + '">' +
+        '<input id="ccSoTem" class="o" inputmode="numeric" autocomplete="off" placeholder="Số tem" value="' + (f.soTemIn || (mauSkuDangChon() ? '' : 1)) + '">' +
         '<button type="button" class="cc-nut" data-lam="slTem:1" aria-label="Thêm 1 tem">+</button></div>' : '') +
       (f.loi ? '<div class="cc-loi">' + e_(f.loi) + '</div>' : '') +
       (chonIn && n ? '<div class="cc-chon"><button type="button" data-lam="chonIn" aria-label="Đổi mẫu in, máy in" title="Đổi mẫu in, máy in"><b>' + e_(tenTheo(MAU_IN, chonIn.mau)) + '</b> · ' + e_(tenTheo(MAY_IN, chonIn.may)) + IC_BUT + '</button></div>' : '') +
@@ -767,7 +768,7 @@
       else if (lam === 'boSn') { CC.f.sn = ''; veForm(); }
       else if (lam === 'themTs') qsMo();
       else if (lam === 'chonIn') chonMo('');
-      else if (/^slTem:-?1$/.test(lam)) { CC.f.soTemIn = Math.max(1, Math.min(50, (CC.f.soTemIn || 0) + (+lam.slice(6)))); var oS = $('ccSoTem'); if (oS) oS.value = CC.f.soTemIn; boLoiForm(); }
+      else if (/^slTem:-?1$/.test(lam)) { CC.f.soTemIn = Math.max(1, Math.min(50, (CC.f.soTemIn || (mauSkuDangChon() ? 0 : 1)) + (+lam.slice(6)))); var oS = $('ccSoTem'); if (oS) oS.value = CC.f.soTemIn; boLoiForm(); }
       else if (lam === 'quet') moQuet();
       else if (lam === 'nds') ndsMo();
       else if (lam === 'gui') gui();
@@ -1274,7 +1275,7 @@
     if (!mauSku && !String(f.viTri || '').trim() && !String(f.gio || '').trim()) { f.loi = 'Cần mã vị trí — bấm biểu tượng QR trên nút phân loại để quét / nhập.'; veForm(); return; }   // 11/11 tối user: bắt buộc mã vị trí mới cho gửi/in
     var lg = loiGio(f); if (lg) { f.loi = lg; veForm(); return; }           // 13/11: giỏ phải đúng phương án (TSD / TL / SC)
     var inLuon = !!(f.sku || f.tuDo) && (!f.sua || (inSua && !mauSku));                                          // 11/11 user: nút «In, gửi» = gửi + in 1 tem
-    var soIn = mauSku ? Math.max(1, Math.min(50, f.soTemIn || 1)) : 1;      // 13/11 mẫu «Thông tin SKU» in đúng số tem đã nhập
+    var soIn = !f.sua ? Math.max(1, Math.min(50, f.soTemIn || 1)) : 1;      // 13/11 «Thông tin SKU» · 20/11 cả «Phương án xử lý»: in đúng số tem đã nhập (sửa phiếu vẫn 1)
     var cu = f.sua ? timMa(f.ma) : null, now = Date.now();
     var it = { mauIn: mauSku ? 'sku' : 'pa', cate: f.cate || ((traSku(f.sku) || {}).cate) || '', ma: f.ma || maMoi(), luc: cu ? cu.luc : now, capNhat: now, nguoi: cu ? cu.nguoi : n.ten, tk: cu ? cu.tk : n.id,
       sku: f.sku, maGo: f.maGo, cach: f.sku || f.maGo ? (f.cach || 'Gõ tay') : '', ten: f.ten, loai: f.loai, dv: f.dv, phanLoai: f.phanLoai,
