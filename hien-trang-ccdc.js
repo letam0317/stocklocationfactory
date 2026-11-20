@@ -370,6 +370,15 @@
     '#ccSpModal .sp-tt span{min-width:0;overflow-wrap:anywhere}',
     '#ccSpModal .sp-tt .cost{white-space:nowrap;margin-left:auto}',
     '#ccSpModal .sp-tt b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}',
+    /* 20/11 tồn WMS theo kho dưới khung ảnh (dưới ảnh ⇒ dài ngắn không xô ảnh) */
+    '#ccSpModal .sp-ton{margin-top:8px;height:38px;font-size:13px;line-height:19px;color:var(--ink3);overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}',
+    '#ccSpModal .sp-ton b,.cc-spn b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}',
+    /* 20/11 thẻ nổi khi RÊ CHUỘT vào mắt (máy tính): khung chốt cứng 280 px — ảnh 264×180 + 2 dòng Cost / Tồn một hàng, không nhảy */
+    '.cc-spn{position:fixed;z-index:1200;width:280px;box-sizing:border-box;padding:8px;background:var(--surface,#fff);border:1px solid var(--line);border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.25);pointer-events:none;font-size:13px;line-height:19px;color:var(--ink3)}',
+    '.cc-spn .k{display:flex;align-items:center;justify-content:center;width:100%;height:180px;background:#fff;border-radius:6px;overflow:hidden;text-align:center;padding:8px;box-sizing:border-box}',
+    '.cc-spn .k img{max-width:100%;max-height:100%;object-fit:contain;display:block}',
+    '.cc-spn .d{height:19px;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '.cc-spn .d+.d{margin-top:2px}',
     '#viewCcdc .cc-the .cc-the-h{display:flex;align-items:center;gap:8px;min-width:0}',
     '#viewCcdc .cc-the .cc-the-sp b{font-size:18.5px;font-weight:600;line-height:1.2}',
     '#viewCcdc .cc-the .cc-the-sp>span{font-size:14.5px;line-height:1.3;color:var(--ink);overflow-wrap:anywhere}',
@@ -594,7 +603,7 @@
       var a = ev.target.closest('[data-vxanh]'); if (a) { var x = timMa(a.dataset.vxanh); if (x) xemAnh(x, +a.dataset.i || 0); }
     });
     /* 13/11 tấm «Ảnh sản phẩm» (nút mắt ở thẻ SKU): ảnh từ WMS (như trang QR Generator) + nhãn hiệu */
-    var mS = pop('ccSpModal', 'Ảnh sản phẩm', '<div class="sp-tt" id="ccSpTt"></div><div class="sp-khung" id="ccSpKhung"></div><div class="sp-dong" id="ccSpDong"></div>');
+    var mS = pop('ccSpModal', 'Ảnh sản phẩm', '<div class="sp-tt" id="ccSpTt"></div><div class="sp-khung" id="ccSpKhung"></div><div class="sp-ton" id="ccSpTon"></div><div class="sp-dong" id="ccSpDong"></div>');
     mS.addEventListener('click', function (ev) { if (ev.target === mS || ev.target.closest('.mclose')) plgDongModal('ccSpModal'); });
     var mA = pop('ccAnhModal', 'Ảnh / clip hiện trạng', '<div class="xa-khung" id="ccAnhKhung"></div>' +
       '<div class="xa-dieu"><button type="button" class="cc-nut" data-xa="-1" aria-label="Ảnh trước"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><span id="ccAnhSo"></span><button type="button" class="cc-nut" data-xa="1" aria-label="Ảnh sau"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></div>');
@@ -1484,17 +1493,78 @@
       if (!r.im) { k.textContent = 'Không tải được ảnh — thử lại sau'; return; }
       k.textContent = ''; k.appendChild(r.im); window.CCDC_SP_MS = Date.now() - t0;   // bộ đo đọc số này
     };
-    var p = ndsSpNap(sku), pk = qr ? khoTs(qr, sku) : Promise.resolve('');
-    plgMoModal('ccSpModal');
+    var p = spAnh(sku), pk = qr ? khoTs(qr, sku) : Promise.resolve(''), tn = $('ccSpTon');
+    if (tn) tn.innerHTML = '';
+    noiDong(); plgMoModal('ccSpModal');
     p.then(ve);
-    /* Kho + Cost vẽ MỘT lần khi cả hai đã về (dòng giữ chỗ sẵn) — máy chủ bản cũ chưa trả cost ⇒ không vẽ chữ Cost */
-    Promise.all([p, pk]).then(function (a) {
-      if (SP_DANG !== sku || !tt) return; var x = (a[0] && a[0].k) || {}, kho = a[1], c = Number(x.cost);
-      tt.innerHTML = (kho ? '<span>Kho <b>' + e_(kho) + '</b></span>' : '') +
-        (x.cost === undefined || x.tat ? '' : '<span class="cost">Cost <b>' + (c > 0 ? Math.round(c).toLocaleString('vi-VN') + ' đ' : 'chưa có') + '</b></span>');
+    /* 20/11 Kho + Cost + Tồn vẽ NGAY khi số liệu về (ndsTraSp) — KHÔNG chờ ảnh tải xong như trước (Cost từng trễ theo ảnh).
+       Cost luôn có chữ: số / «chưa có trên WMS» / «máy chủ tắt». */
+    Promise.all([spDl(sku), pk]).then(function (a) {
+      if (SP_DANG !== sku || !tt) return; var x = a[0] || {}, kho = a[1];
+      tt.innerHTML = (kho ? '<span>Kho <b>' + e_(kho) + '</b></span>' : '') + '<span class="cost">Cost <b>' + costChu(x) + '</b></span>';
+      if (tn) tn.innerHTML = tonHtml(x, 0);
     });
   }
+  /* 20/11 BẪY: ndsTraSp nhớ kết quả «máy chủ tắt» 60 s — lượt tải sẵn chạy SỚM (chưa có địa chỉ máy chủ / phiên) làm mắt hiện «tắt» cả phút
+     dù máy chủ sống ⇒ lúc người dùng thật sự xem: gặp «tắt» thì bỏ nhớ, dò lại máy chủ, hỏi lại ĐÚNG 1 lần. */
+  var SP_THU = {};
+  function spDl(sku) {
+    return ndsTraSp(sku).then(function (x) {
+      if (!x || !x.tat) return x;
+      if (SP_THU[sku] && SP_THU[sku] > Date.now()) return SP_THU.p && SP_THU.p[sku] ? SP_THU.p[sku] : x;
+      SP_THU[sku] = Date.now() + 15000;
+      try { delete NDS_SP[sku]; delete NDS_ANH[sku]; if (!NDS_GOI.may) NDS_GOI.mayLuc = 0; } catch (e) { }
+      SP_THU.p = SP_THU.p || {}; return (SP_THU.p[sku] = ndsTraSp(sku));
+    });
+  }
+  function spAnh(sku) { return spDl(sku).then(function () { return ndsSpNap(sku); }); }
+  function costChu(x) { var c = Number(x && x.cost); return x && x.tat ? 'máy chủ tắt' : c > 0 ? Math.round(c).toLocaleString('vi-VN') + ' đ' : 'chưa có trên WMS'; }
+  /* tồn WMS theo kho (in_stock > 0). gon = thẻ nổi một hàng (đủ chữ ở title) */
+  function tonHtml(x, gon) {
+    if (!x || x.tat || !Array.isArray(x.ton)) return x && x.tat ? '' : 'Tồn <b>chưa tra được</b>';
+    if (!x.ton.length) return 'Tồn <b>0</b>';
+    /* SKU phổ biến tồn ở 200+ cửa hàng ⇒ chỉ nêu kho Factory (170 QL1A · 130 Ấp Chánh) trước, rồi kho nhiều nhất; tối đa 3 (tấm: 5) + «+N kho» */
+    var fac = function (t) { return /170 QUOC LO 1A|130 AP CHANH/i.test(t[0]) ? 0 : 1; };
+    var xep = x.ton.slice().sort(function (a, b) { return fac(a) - fac(b) || b[1] - a[1]; }), toi = gon ? 3 : 5;
+    var ds = xep.slice(0, toi).map(function (t) { return e_(t[0]) + ' <b>' + Number(t[1]).toLocaleString('vi-VN') + '</b>'; });
+    if (xep.length > toi) ds.push('+' + (xep.length - toi) + ' kho');
+    return 'Tồn <b>' + Number(x.tong).toLocaleString('vi-VN') + '</b> · ' + ds.join(' · ');
+  }
   window.ccdcAnhSp = spMo;
+  /* 20/11 user «trỏ vào mắt cần hiện Ảnh + Cost ngay < 1 s, đồng thời tồn kho»: máy tính (chuột) rê vào mắt ⇒ thẻ nổi cạnh mắt, khung chốt cứng.
+     Dữ liệu đã được index.html tải sẵn từ lúc rê (ndsSpNap ở pointerover) ⇒ cùng nhịp. Điện thoại không có rê ⇒ chạm mắt vẫn mở tấm như cũ. */
+  var NOI = null, NOI_M = null, NOI_SKU = '', RE = window.matchMedia ? window.matchMedia('(hover: hover) and (pointer: fine)') : null;
+  function noiDong() { NOI_SKU = ''; NOI_M = null; if (NOI) NOI.style.display = 'none'; }
+  function noiMo(m) {
+    var sku = m.dataset.matSku, qr = m.dataset.matQr || ''; NOI_SKU = sku; NOI_M = m;
+    if (m.title) { m.dataset.tieuDe = m.title; m.removeAttribute('title'); }   // khỏi chồng chú thích trình duyệt lên thẻ
+    if (!NOI) { NOI = document.createElement('div'); NOI.className = 'cc-spn'; NOI.setAttribute('aria-hidden', 'true'); document.body.appendChild(NOI); }
+    NOI.innerHTML = '<div class="k">Đang tải ảnh…</div><div class="d" data-d="c"></div><div class="d" data-d="t"></div>';
+    var r = m.getBoundingClientRect(), W = 280, H = 244;
+    NOI.style.left = Math.max(8, Math.min(r.left - 8, innerWidth - W - 8)) + 'px';
+    NOI.style.top = (r.bottom + 6 + H > innerHeight - 8 ? Math.max(8, r.top - 6 - H) : r.bottom + 6) + 'px';
+    NOI.style.display = 'block';
+    var k = NOI.querySelector('.k'), dc = NOI.querySelector('[data-d="c"]'), dt = NOI.querySelector('[data-d="t"]');
+    Promise.all([spDl(sku), qr ? khoTs(qr, sku) : '']).then(function (a) {
+      if (NOI_SKU !== sku) return; var x = a[0] || {};
+      dc.innerHTML = 'Cost <b>' + costChu(x) + '</b>' + (a[1] ? ' · Kho <b>' + e_(a[1]) + '</b>' : '');   // Cost đứng ĐẦU ⇒ dòng dài chỉ cắt phần Kho
+      dt.innerHTML = tonHtml(x, 1); dt.title = dt.textContent;
+    });
+    spAnh(sku).then(function (rr) {
+      if (NOI_SKU !== sku) return; var x = (rr && rr.k) || {};
+      if (rr && rr.im) { k.textContent = ''; k.appendChild(rr.im.cloneNode()); return; }
+      k.textContent = x.tat ? 'Máy chủ tra ảnh đang tắt' : x.khongThay ? 'Không tìm thấy SKU này trên WMS' : !x.anh ? 'SKU này chưa có ảnh trên WMS' : 'Không tải được ảnh';
+    });
+  }
+  var matCua = function (t) { return t && t.closest ? t.closest('[data-mat-sku]') : null; };
+  document.addEventListener('pointerover', function (ev) {
+    if (ev.pointerType !== 'mouse' || (RE && !RE.matches)) return; var m = matCua(ev.target);
+    if (m && m.dataset.matSku !== NOI_SKU) noiMo(m);
+  }, true);
+  document.addEventListener('pointerout', function (ev) { var m = matCua(ev.target); if (m && !(ev.relatedTarget && m.contains(ev.relatedTarget))) noiDong(); }, true);
+  ['pointerdown', 'keydown'].forEach(function (t) { window.addEventListener(t, noiDong, true); });
+  /* cuộn: chỉ đóng khi chính trang / khung CHỨA mắt cuộn (khung khác tự cuộn — danh sách, thông báo — không được đóng thẻ) */
+  window.addEventListener('scroll', function (ev) { var t = ev.target; if (NOI_M && (t === document || t === window || (t.contains && t.contains(NOI_M)))) noiDong(); }, true);
   /* tải sẵn cho các dòng ĐANG HIỆN (Đã ghi nhận 8 dòng đầu, tấm Phiếu tại, trang chi tiết) lúc trình duyệt rảnh — máy chủ nhớ 24 giờ nên
      WMS chỉ bị hỏi 1 lần / SKU / ngày. Làm nóng đường tới máy chủ (điện thoại phải hỏi Apps Script địa chỉ đường hầm ~1–2 s) ngay khi mở mục. */
   function spNapSan(skus) {
