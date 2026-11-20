@@ -23,7 +23,7 @@
       if (!co) return; theoTen[chuan(r[iT])] = co; if (x.em) theoEm[x.em] = co; });
   }
   function daHong() {   // giữ chữ cái tạm, KHÔNG khoá: lượt sau thử lại
-    if (!theoTen) theoTen = {}; hong = Date.now(); hongTb = tb(); xongTai();
+    if (!theoTen) theoTen = {}; hong = Date.now(); hongTb = tb(); danhDau(); xongTai();
     if (!henLai) henLai = setTimeout(function () { henLai = 0; if (hong) tai(); }, 30e3);
   }
   function daXong(rows, H) { hong = 0; nap(rows, H); gan(document, true); xongTai(); try { window.dispatchEvent(new Event("hsk-anh-nv")); } catch (e) {} }
@@ -34,7 +34,8 @@
     var k = khoaThu || tb();
     if (!k) { daHong(); return; }   // máy chưa có khoá / chưa đăng nhập ⇒ chữ cái tạm, đăng nhập xong tự thử lại
     dangTai = true;
-    var cb = "anhnv_" + Date.now(), s = document.createElement("script"), xong = function () { dangTai = false; delete window[cb]; s.remove(); };
+    var cb = "anhnv_" + Date.now(), s = document.createElement("script"), hc = 0, xong = function () { clearTimeout(hc); dangTai = false; window[cb] = function () {}; s.remove(); };
+    hc = setTimeout(function () { xong(); daHong(); }, 15e3);
     window[cb] = function (j) {
       xong();
       if (!j || j.status !== "success") {
@@ -49,6 +50,8 @@
     s.src = URL_GAS + "?action=readTab&tab=" + TAB + "&callback=" + cb + "&tb=" + encodeURIComponent(k);
     document.head.appendChild(s);
   }
+  /* 20/11 user «máy khác khung avatar không hình, chỉ khung»: hỏng/không quyền ⇒ đánh dấu xong mọi vòng chờ để chữ cái hiện ngay */
+  function danhDau() { document.querySelectorAll("[data-anh-nv]:not([data-anh-xong])").forEach(function (el) { el.setAttribute("data-anh-xong", "1"); }); }
   function xongTai() { var d = doi; doi = []; d.forEach(function (f) { try { f(); } catch (e) {} }); }
   /* danh bạ sẵn sàng thì gọi f (ô gợi ý người cần danh bạ, không chỉ ảnh) */
   function san(f) { if (theoTen && !dangTai) { if (hong) tai(); f(); return; } doi.push(f); tai(); }   // đang hỏng: trả chữ cái ngay, về được thì báo «hsk-anh-nv»
