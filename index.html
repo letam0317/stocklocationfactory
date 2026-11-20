@@ -6062,7 +6062,7 @@ var CCDC_NAP={dang:null,xong:false};
 function ccdcNap(){
   if(CCDC_NAP.xong){ ccdcMo(); return; }
   if(CCDC_NAP.dang) return;
-  CCDC_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='hien-trang-ccdc.js?v=20261120b'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
+  CCDC_NAP.dang=new Promise(function(ok,loi){ var s=document.createElement('script'); s.src='hien-trang-ccdc.js?v=20261120c'; s.onload=ok; s.onerror=loi; document.head.appendChild(s); })
     .then(function(){ CCDC_NAP.xong=true; if(TOPTAB==='ccdc') ccdcMo(); })
     .catch(function(){ CCDC_NAP.dang=null; var v=document.getElementById('viewCcdc'); if(v) v.innerHTML='<div class="state" style="padding:32px 20px">Không tải được công cụ (mất mạng?). <button type="button" class="kktab" onclick="ccdcNap()">Thử lại</button></div>'; });
 }
@@ -14856,7 +14856,7 @@ function ndsGoiHen(txt){
       var dau = [];
       var p = j.phieu, tenP = p && p.loai === 'PL' ? 'Kiện PL ' + p.so + (p.kien ? ' (' + p.kien + ')' : '') + ' · IT ' + p.it   // 12/11 PL 1014 ⇒ hàng của phiếu IT chứa kiện
         : ndsLaPo(kw) ? 'PO ' + kw + (p && p.nPhieu > 1 ? ' (' + p.nPhieu + ' phiếu nhập)' : '') : 'Phiếu IT ' + kw;   // 13/11 mã PO
-      if (j.loai === 'phieu') dau.push({ nhom: p ? tenP + ' · ' + [p.ncc, p.kho, p.tt].filter(Boolean).join(' · ') : tenP,
+      if (j.loai === 'phieu') dau.push({ nhom: p ? tenP + ' · ' + [p.ncc, p.kho, p.tt, p.ly && 'Lý do: ' + p.ly].filter(Boolean).join(' · ') : tenP,   // 20/11 + lý do (ghi chú phiếu IT)
         dong: (j.ds || []).map(function(d){ return { sku: d.sku, ten: d.ten, phu: 'SL ' + d.sl }; }) });
       else if ((j.ds || []).length) dau.push({ nhom: 'Tài sản WMS · khớp ' + ((j.ds || []).every(function(d){ return String(d.qr).toLowerCase() === kw.toLowerCase(); }) ? 'QR tài sản' : 'S/N'),
         dong: (j.ds || []).map(function(d){ return { sku: d.sku, ten: d.ten, phu: [d.qr && 'QR ' + d.qr, d.sn && 'S/N ' + d.sn, d.kho].filter(Boolean).join(' · ') }; }) });

@@ -372,6 +372,7 @@
     '#ccSpModal .sp-tt b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}',
     /* 20/11 tồn WMS theo kho dưới khung ảnh (dưới ảnh ⇒ dài ngắn không xô ảnh) */
     '#ccSpModal .sp-ton{margin-top:8px;height:38px;font-size:13px;line-height:19px;color:var(--ink3);overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}',
+    '#ccSpModal .sp-ly{margin-top:4px;font-size:13px;line-height:19px;color:var(--ink3);overflow-wrap:anywhere} #ccSpModal .sp-ly:empty{display:none} #ccSpModal .sp-ly a{color:#1677ff;text-decoration:none}',
     '#ccSpModal .sp-ton b,.cc-spn b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}',
     /* 20/11 thẻ nổi khi RÊ CHUỘT vào mắt (máy tính): khung chốt cứng 280 px — ảnh 264×180 + 2 dòng Cost / Tồn một hàng, không nhảy */
     '.cc-spn{position:fixed;z-index:1200;width:280px;box-sizing:border-box;padding:8px;background:var(--surface,#fff);border:1px solid var(--line);border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.25);pointer-events:none;font-size:13px;line-height:19px;color:var(--ink3)}',
@@ -392,6 +393,10 @@
     '#viewCcdc .cc-the-dd .cc-them{grid-column:3;grid-row:1 / span 2;justify-self:center;display:grid;place-items:center;width:28px;height:28px;border:1px solid #91caff;border-radius:6px;background:#e6f4ff;color:#1677ff;cursor:pointer;padding:0}',
     '#viewCcdc .cc-the-dd .cc-them svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}',
     '#viewCcdc .cc-the-dd>.x{grid-column:4;justify-self:end}',
+    /* 20/11 dòng «Lý do» (QR tài sản): một hàng chốt cứng 20 px, chữ thường, dài thì «…» (đủ chữ ở title) */
+    '#viewCcdc .cc-the-dd .gt.ly{grid-column:2 / span 3;height:20px;line-height:20px;font-family:inherit;font-weight:400;font-size:13px}',
+    '#viewCcdc .cc-the-dd .gt.ly b{font-family:inherit;font-weight:600}',
+    '#viewCcdc .cc-the-dd .gt.ly a{color:#1677ff;text-decoration:none}',
     /* tấm «QR tài sản · S/N» — ô nhập cỡ chữ 16 px (iPhone không tự phóng to trang khi chạm ô < 16 px) */
     '#ccQsModal{z-index:101} #ccQsModal .cc-than{padding:14px 16px 16px}',
     '@media(min-width:769px){#ccQsModal .modalbox{width:min(520px,96vw)}}',   /* điện thoại: tấm trượt đáy rộng hết màn như các tấm khác */
@@ -603,7 +608,7 @@
       var a = ev.target.closest('[data-vxanh]'); if (a) { var x = timMa(a.dataset.vxanh); if (x) xemAnh(x, +a.dataset.i || 0); }
     });
     /* 13/11 tấm «Ảnh sản phẩm» (nút mắt ở thẻ SKU): ảnh từ WMS (như trang QR Generator) + nhãn hiệu */
-    var mS = pop('ccSpModal', 'Ảnh sản phẩm', '<div class="sp-tt" id="ccSpTt"></div><div class="sp-khung" id="ccSpKhung"></div><div class="sp-ton" id="ccSpTon"></div><div class="sp-dong" id="ccSpDong"></div>');
+    var mS = pop('ccSpModal', 'Ảnh sản phẩm', '<div class="sp-tt" id="ccSpTt"></div><div class="sp-khung" id="ccSpKhung"></div><div class="sp-ton" id="ccSpTon"></div><div class="sp-ly" id="ccSpLy"></div><div class="sp-dong" id="ccSpDong"></div>');
     mS.addEventListener('click', function (ev) { if (ev.target === mS || ev.target.closest('.mclose')) plgDongModal('ccSpModal'); });
     var mA = pop('ccAnhModal', 'Ảnh / clip hiện trạng', '<div class="xa-khung" id="ccAnhKhung"></div>' +
       '<div class="xa-dieu"><button type="button" class="cc-nut" data-xa="-1" aria-label="Ảnh trước"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><span id="ccAnhSo"></span><button type="button" class="cc-nut" data-xa="1" aria-label="Ảnh sau"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></div>');
@@ -662,7 +667,11 @@
       return '<span class="nh">' + nhan + '</span>' + (gt ? '<b class="gt">' + e_(gt) + '</b>' : '<span class="gt trong">Chưa có</span>') +
         (dau ? '<button type="button" class="cc-them" data-lam="themTs" aria-label="Thêm / đổi QR tài sản, S/N" title="Thêm / đổi QR tài sản, S/N"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg></button>' : '') +
         (gt ? '<button type="button" class="x" data-lam="' + bo + '" aria-label="' + nhanBo + '">✕</button>' : ''); };
-    var dd2 = '<div class="cc-the-dd">' + hangTs('QR tài sản', f.qrTs, 'boTs', 'Bỏ QR tài sản', true) + hangTs('S/N', f.sn, 'boSn', 'Bỏ S/N', false) + '</div>';
+    /* 20/11 user «quét QR tài sản ⇒ hiện thêm lý do hư hỏng / chuyển về gần nhất nếu có»: dòng «Lý do» GIỮ CHỖ 1 hàng ngay khi có QR
+       (chữ về sau chỉ thay trong ô ⇒ không nhảy); bấm vào mở task work.hasaki (nếu phiếu IT có link task). */
+    var dd2 = '<div class="cc-the-dd">' + hangTs('QR tài sản', f.qrTs, 'boTs', 'Bỏ QR tài sản', true) + hangTs('S/N', f.sn, 'boSn', 'Bỏ S/N', false) +
+      (f.qrTs ? '<span class="nh">Lý do</span><span class="gt ly" id="ccLyTs">' + lyHtml(f.qrTs) + '</span>' : '') + '</div>';
+    if (f.qrTs) lyTs(f.qrTs).then(function () { var o = $('ccLyTs'); if (o && CC.f.qrTs) o.innerHTML = lyHtml(CC.f.qrTs); });
     /* 13/11 user duyệt «Mẫu nút mắt đầu tên sản phẩm»: mắt (chỉ icon) ĐẦU tên ⇒ pop-up ảnh. Thẻ hiện là TẢI SẴN dữ liệu + ảnh (bấm mắt ra ngay);
        ngành hàng thiếu trong danh mục ⇒ lấy từ chính lượt tải sẵn đó rồi vẽ lại */
     if (f.sku && typeof ndsSpNap === 'function') { var skuC = f.sku; ndsSpNap(skuC).then(function (r) { var k = r && r.k; if (k && k.cate && CC.f.sku === skuC && !CC.f.cate && !cateF) { CC.f.cate = k.cate; veForm(); } }); }
@@ -1503,8 +1512,10 @@
     Promise.all([spDl(sku), pk]).then(function (a) {
       if (SP_DANG !== sku || !tt) return; var x = a[0] || {}, kho = a[1];
       tt.innerHTML = (kho ? '<span>Kho <b>' + e_(kho) + '</b></span>' : '') + '<span class="cost">Cost <b>' + costChu(x) + '</b></span>';
-      if (tn) tn.innerHTML = tonHtml(x, 0);
+      if (tn) tn.innerHTML = tonHtml(x, 0, !!qr);
     });
+    /* 20/11 có QR tài sản ⇒ lý do hư hỏng / chuyển về gần nhất (dưới ảnh, không xô ảnh) */
+    var ly = $('ccSpLy'); if (ly) { ly.innerHTML = ''; if (qr) lyTs(qr).then(function () { if (SP_DANG === sku) ly.innerHTML = 'Lý do ' + lyHtml(qr); }); }
   }
   /* 20/11 BẪY: ndsTraSp nhớ kết quả «máy chủ tắt» 60 s — lượt tải sẵn chạy SỚM (chưa có địa chỉ máy chủ / phiên) làm mắt hiện «tắt» cả phút
      dù máy chủ sống ⇒ lúc người dùng thật sự xem: gặp «tắt» thì bỏ nhớ, dò lại máy chủ, hỏi lại ĐÚNG 1 lần. */
@@ -1518,11 +1529,37 @@
       SP_THU.p = SP_THU.p || {}; return (SP_THU.p[sku] = ndsTraSp(sku));
     });
   }
+  /* 20/11 lý do hư hỏng / chuyển về gần nhất của 1 QR tài sản (máy chủ 8591 /api/tra-ts?ly=, nguồn ghi chú phiếu IT WMS). Nhớ theo QR trong phiên. */
+  var LY_TS = {};
+  function lyTs(qr) {
+    qr = String(qr || '').trim(); var k = qr.toLowerCase(); if (qr.length < 4) return Promise.resolve(null);
+    if (LY_TS[k]) return LY_TS[k].p;
+    var o = LY_TS[k] = { v: undefined };
+    o.p = (typeof ndsMayChu === 'function' ? ndsMayChu() : Promise.resolve('')).then(function (u) {
+      if (!u) return null; var c = new AbortController(); setTimeout(function () { c.abort(); }, 8000);
+      return fetch(u + '/api/tra-ts?ly=' + encodeURIComponent(qr), { headers: { 'x-tk-phien': (window.TK && TK.phien) || '' }, signal: c.signal }).then(function (r) { return r.ok ? r.json() : null; });
+    }).catch(function () { return null; }).then(function (j) { o.v = j; if (!j) setTimeout(function () { if (LY_TS[k] === o) delete LY_TS[k]; }, 60000); return j; });
+    return o.p;
+  }
+  function ngayVn(s) { var m = /^(\d{4})-(\d\d)-(\d\d)/.exec(s || ''); return m ? m[3] + '/' + m[2] + '/' + m[1].slice(2) : ''; }
+  /* «lý do · dd/mm/yy · từ kho» — chưa về: «Đang tra…»; không khớp chắc / máy chủ tắt: «Chưa có» */
+  function lyHtml(qr) {
+    var o = LY_TS[String(qr || '').trim().toLowerCase()];
+    if (!o || o.v === undefined) return '<span class="trong">Đang tra…</span>';
+    var j = o.v; if (!j || !j.it) return '<span class="trong">Chưa có</span>';
+    var chu = j.ly || 'Phiếu không ghi lý do', phu = [ngayVn(j.ngay), j.tu && 'từ ' + j.tu].filter(Boolean).join(' · ');
+    var tieu = [chu, 'IT ' + j.it, phu, j.den && '→ ' + j.den].filter(Boolean).join(' · ');
+    var noi = (j.task ? '<a href="https://work.hasaki.vn/tasks?task_id=' + e_(j.task) + '" target="_blank" rel="noopener">' + e_(chu) + '</a>' : '<b>' + e_(chu) + '</b>') + (phu ? ' · ' + e_(phu) : '');
+    return '<span title="' + e_(tieu) + '">' + noi + '</span>';
+  }
   function spAnh(sku) { return spDl(sku).then(function () { return ndsSpNap(sku); }); }
   function costChu(x) { var c = Number(x && x.cost); return x && x.tat ? 'máy chủ tắt' : c > 0 ? Math.round(c).toLocaleString('vi-VN') + ' đ' : 'chưa có trên WMS'; }
   /* tồn WMS theo kho (in_stock > 0). gon = thẻ nổi một hàng (đủ chữ ở title) */
-  function tonHtml(x, gon) {
+  function tonHtml(x, gon, coQr) {
     if (!x || x.tat || !Array.isArray(x.ton)) return x && x.tat ? '' : 'Tồn <b>chưa tra được</b>';
+    /* 20/11 user: tra theo SKU (không QR tài sản) ⇒ CHỈ tồn 2 kho GENERAL - 170 QUOC LO 1A + NG - GENERAL - 170 QUOC LO 1A (có QR thì đủ kho như dưới) */
+    if (!coQr) { var lay = function (ten) { var t = x.ton.filter(function (y) { return String(y[0]).trim().toUpperCase() === ten; })[0]; return t ? Number(t[1]) : 0; };
+      return 'Tồn ' + (gon ? 'GENERAL 170' : 'GENERAL 170 QL1A') + ' <b>' + lay('GENERAL - 170 QUOC LO 1A').toLocaleString('vi-VN') + '</b> · ' + (gon ? 'NG-GENERAL 170' : 'NG GENERAL 170 QL1A') + ' <b>' + lay('NG - GENERAL - 170 QUOC LO 1A').toLocaleString('vi-VN') + '</b>'; }
     if (!x.ton.length) return 'Tồn <b>0</b>';
     /* SKU phổ biến tồn ở 200+ cửa hàng ⇒ chỉ nêu kho Factory (170 QL1A · 130 Ấp Chánh) trước, rồi kho nhiều nhất; tối đa 3 (tấm: 5) + «+N kho» */
     var fac = function (t) { return /170 QUOC LO 1A|130 AP CHANH/i.test(t[0]) ? 0 : 1; };
@@ -1549,7 +1586,7 @@
     Promise.all([spDl(sku), qr ? khoTs(qr, sku) : '']).then(function (a) {
       if (NOI_SKU !== sku) return; var x = a[0] || {};
       dc.innerHTML = 'Cost <b>' + costChu(x) + '</b>' + (a[1] ? ' · Kho <b>' + e_(a[1]) + '</b>' : '');   // Cost đứng ĐẦU ⇒ dòng dài chỉ cắt phần Kho
-      dt.innerHTML = tonHtml(x, 1); dt.title = dt.textContent;
+      dt.innerHTML = tonHtml(x, 1, !!qr); dt.title = dt.textContent;
     });
     spAnh(sku).then(function (rr) {
       if (NOI_SKU !== sku) return; var x = (rr && rr.k) || {};
