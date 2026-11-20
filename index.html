@@ -2846,8 +2846,9 @@ body.side-anim:has(.wrap :is([class*="modal"],[id$="modal"],[id$="Modal"],#light
 /* 11/11 danh sách gợi ý S/N · QR tài sản · phiếu IT · tên (mẫu duyệt): dòng = SKU + chip + TÊN ĐỦ dòng dưới + dòng phụ mono */
 /* 13/11 ✕ đỏ trong ô gõ: nằm ĐÈ trong khung (absolute) ⇒ hiện/ẩn không xô chữ, không nhảy ô */
 .nds-oxoa{position:relative;flex:1;min-width:96px;display:flex}
-.nds-oxoa input{width:100%;padding-right:32px!important}
-.nds-xoa{position:absolute;right:3px;top:50%;transform:translateY(-50%);width:28px;height:28px;border:0;background:none;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#ff4d4f;border-radius:6px}
+.nds-oxoa input{width:100%;padding-right:40px!important}
+/* 20/11 user «nhấn ✕ không xoá / bấm khó»: vùng bấm phủ CẢ chiều cao ô, rộng 40 px (chuẩn chạm ≥ 40); xoá ngay lúc chạm xuống + giữ tiêu điểm ô (điện thoại khỏi sụp bàn phím làm xê nút) */
+.nds-xoa{position:absolute;right:0;top:0;bottom:0;width:40px;height:auto;touch-action:manipulation;border:0;background:none;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#ff4d4f;border-radius:6px}
 .nds-xoa svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
 .nds-xoa:hover{background:#fff1f0}
 .nds-oxoa input:placeholder-shown+.nds-xoa{display:none}
@@ -3689,7 +3690,7 @@ html.ad body .cd-in.trong>input{padding-right:calc(var(--dvw,34px) + 16px)!impor
         <!-- 13/11 user: dấu ✕ đỏ trong khung gõ để xoá nhanh — ô trống (placeholder đang hiện) thì ẩn bằng CSS :placeholder-shown, kể cả khi mã đặt value -->
         <span class="nds-oxoa"><input id="ndsMa" aria-label="Mã phiếu PO/IT hoặc tên sản phẩm" autocomplete="off" spellcheck="false" placeholder="SKU, mã PO, phiếu IT, S/N, tên hàng…"
           oninput="ndsMaGo(this.value)" onfocus="ndsMayChu()"
-          onkeydown="if(event.key==='Enter'){event.preventDefault();ndsTraMa();}"><button type="button" class="nds-xoa" onclick="ndsXoaO()" aria-label="Xoá chữ đã gõ" title="Xoá"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span>
+          onkeydown="if(event.key==='Enter'){event.preventDefault();ndsTraMa();}"><button type="button" class="nds-xoa" onpointerdown="event.preventDefault();ndsXoaO()" onmousedown="event.preventDefault()" onclick="if(!event.detail)ndsXoaO()" aria-label="Xoá chữ đã gõ" title="Xoá"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span>
         <button type="button" class="kktab nds-go" onclick="ndsTraMa()">Tra</button>
         <!-- 12/11 user: icon QR ngang hàng bên phải nút Tra — mượn bộ quét chung qtcQuetMo (QTC.dich) -->
         <button type="button" class="kktab nds-qr" onclick="ndsQuetQr()" title="Quét QR / mã vạch" aria-label="Quét QR / mã vạch"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4"/><rect x="6" y="6" width="3" height="3"/><rect x="11" y="6" width="3" height="3"/><rect x="6" y="11" width="3" height="3"/><path d="M11 11h3v3"/></svg></button>
