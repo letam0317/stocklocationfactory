@@ -546,10 +546,13 @@
     /* 14/11 TK-31 (đo: hàng chỉ số Factory hiện sau ~0,9 s, đẩy cả lưới thẻ xuống 141px): nguồn về muộn ⇒ ô chỉ số chưa có số lấy từ BẢN NHỚ lần trước (≤24 giờ, theo nhãn)
        trong 8 s đầu sau khi mở trang; nguồn về thì thay số tại chỗ. Quá 8 s vẫn thiếu thì vẽ đúng thực tế (ô đó thật sự không có). */
     try { var KCS = "tq-cs-" + TQ_APP, nho = JSON.parse(localStorage.getItem(KCS) || "null"), cu = nho && Date.now() - nho.ts < 864e5 ? nho.ds || [] : [];
-      if (cs.length) { var coNhan = {}; cs.forEach(function (c) { coNhan[c.nhan] = 1; });
+      /* 20/11 user «khung bị lặp lại — tràn xuống dưới» (điện thoại: «Vi phạm tháng 09/2026» bản nhớ + «Vi phạm tháng 11/2026» mới cùng hiện, ô thứ 3 rớt hàng):
+         nhãn mang THÁNG nên đổi tháng là lệch khoá ⇒ bản nhớ bị gộp thêm. Khoá ô = tab (nhãn chỉ khi ô không có tab). */
+      var khoaCs = function (c) { return c.tab || c.nhan; };
+      if (cs.length) { var coNhan = {}; cs.forEach(function (c) { coNhan[khoaCs(c)] = 1; });
         var moi = cs.map(function (c) { return { tab: c.tab, nhan: c.nhan, so: c.so, phu: c.phu, tien: c.tien, mau: c.mau }; });
-        if (performance.now() < 8000) { var gop = []; cu.forEach(function (c) { if (!coNhan[c.nhan] && (!c.tab || coQ(c.tab))) gop.push(c); });
-          if (gop.length) { var thuTu = cu.map(function (c) { return c.nhan; }); cs = cs.concat(gop).sort(function (x, y) { var i = thuTu.indexOf(x.nhan), j = thuTu.indexOf(y.nhan); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j); }); } }
+        if (performance.now() < 8000) { var gop = []; cu.forEach(function (c) { if (!coNhan[khoaCs(c)] && (!c.tab || coQ(c.tab))) gop.push(c); });
+          if (gop.length) { var thuTu = cu.map(khoaCs); cs = cs.concat(gop).sort(function (x, y) { var i = thuTu.indexOf(khoaCs(x)), j = thuTu.indexOf(khoaCs(y)); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j); }); } }
         if (!gop || !gop.length) localStorage.setItem(KCS, JSON.stringify({ ts: Date.now(), ds: moi }));
       } else if (performance.now() < 8000) cs = cu.filter(function (c) { return !c.tab || coQ(c.tab); });
     } catch (e) {}
