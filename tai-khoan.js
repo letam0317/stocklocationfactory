@@ -77,18 +77,27 @@
      GAS tk_mang đối chiếu sổ IP Wi-Fi công ty; nhớ kết quả theo IP 12 giờ (tk-mang) để lần sau vào ngay, mỗi lần mở trang vẫn so lại IP.
      Chưa đăng nhập + không chắc đang ở mạng công ty ⇒ sang trang đăng nhập (?ve= quay lại đúng link). Bộ đo localhost:8123 miễn. ---------- */
   var NOI_BO = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
-  function ipMoi() {
-    var lay = function (u, doc) { var c = window.AbortController ? new AbortController() : null; setTimeout(function () { if (c) c.abort(); }, 4000);
-      return fetch(u, { cache: "no-store", signal: c ? c.signal : undefined }).then(function (r) { return r.text(); }).then(doc); };
-    return lay("https://www.cloudflare.com/cdn-cgi/trace", function (t) { var m = /^ip=(.+)$/m.exec(t); if (!m) throw 0; return m[1].trim(); })
-      .catch(function () { return lay("https://api.ipify.org?format=json", function (t) { return String(JSON.parse(t).ip || ""); }); }).catch(function () { return ""; });
+  /* 21/11 tối (user «vào Wi-Fi Hasaki Picking vẫn báo ngoài»): 2 lỗi gốc —
+     (1) trước lấy IP qua www.cloudflare.com ⇒ mạng có IPv6 trả IPv6, mà IPv6 KHÁC NHAU theo từng máy (địa chỉ riêng tư) ⇒ quản trị khai mạng từ máy mình,
+         máy khác cùng Wi-Fi vẫn lệch. Nay lấy IPv4 TRƯỚC (1.1.1.1 chỉ đi IPv4 — một IP công cộng chung cho cả mạng); IPv6 chỉ để đối chiếu mạng đã lỡ khai bằng IPv6.
+     (2) kết quả «ngoài mạng» bị nhớ 12 giờ theo IP ⇒ quản trị thêm mạng rồi máy nhân viên vẫn báo ngoài tới nửa ngày. Nay chỉ NHỚ kết quả «trong mạng công ty»;
+         «ngoài» thì lần nào mở cũng hỏi lại. */
+  var layIp = function (u) { var c = window.AbortController ? new AbortController() : null; setTimeout(function () { if (c) c.abort(); }, 4000);
+    return fetch(u, { cache: "no-store", signal: c ? c.signal : undefined }).then(function (r) { return r.text(); })
+      .then(function (t) { var m = /^ip=(.+)$/m.exec(t) || /"ip"\s*:\s*"([^"]+)"/.exec(t); if (!m) throw 0; return m[1].trim(); }); };
+  function ipMoi() {   // IPv4 trước
+    return layIp("https://1.1.1.1/cdn-cgi/trace").catch(function () { return layIp("https://api.ipify.org?format=json"); })
+      .catch(function () { return layIp("https://www.cloudflare.com/cdn-cgi/trace"); }).catch(function () { return ""; });
   }
+  function ip6() { return layIp("https://www.cloudflare.com/cdn-cgi/trace").then(function (x) { return x.indexOf(":") >= 0 ? x : ""; }).catch(function () { return ""; }); }
   function mangNho() { try { var m = JSON.parse(ls.get("tk-mang") || "null"); return m && Date.now() - m.ts < 12 * 3600e3 ? m : null; } catch (e) { return null; } }
   function tkMang() {   // → Promise {cty, ip}
     return ipMoi().then(function (ip) {
       if (!ip) return { cty: false, ip: "" };
-      var m = mangNho(); if (m && m.ip === ip) return m;
-      return goi("tk_mang", { ip: ip }).then(function (j) { var r = { cty: !!j.cty, ip: ip, ts: Date.now() }; ls.set("tk-mang", JSON.stringify(r)); return r; })
+      var m = mangNho(); if (m && m.ip === ip && m.cty) return m;   // chỉ tin bộ nhớ khi đã là mạng công ty
+      var hoi = function (x) { return goi("tk_mang", { ip: x }).then(function (j) { return !!j.cty; }); };
+      return hoi(ip).then(function (ok) { return ok ? ok : ip6().then(function (v6) { return v6 && v6 !== ip ? hoi(v6) : false; }); })
+        .then(function (ok) { var r = { cty: ok, ip: ip, ts: Date.now() }; ls.set("tk-mang", JSON.stringify(r)); return r; })
         .catch(function () { return { cty: false, ip: ip }; });
     });
   }
