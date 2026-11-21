@@ -10,6 +10,24 @@
   var GAS = location.port === "8123" && /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? "/api/tk-thu"   // bản QC: qua máy chủ nội bộ → HEAD
     : "https://script.google.com/macros/s/AKfycbzIE6E68VYxS0Zm1vj8Ttfd790-JYolO1C4rMoEPj7FdNOWLPb23QpUHgIZ2T_dlZPJRQ/exec";
   var APP = /factory|stocklocation/.test(location.pathname) ? "f" : "r";
+  /* 21/11 tối (user «làm»): KÍNH LỎNG toàn dashboard Retail + Factory — kinh-long.css (thay TK-04 «không kính mờ» cho lớp này). Nạp ngay lúc dựng trang
+     (document.write ⇒ chặn vẽ như thẻ link thường, không chớp phẳng rồi mới kính). Máy yếu (≤4 luồng / ≤4 GB) hoặc đo khung hình lần cuộn đầu chậm (>22 ms)
+     ⇒ html.kl-nhe bỏ làm mờ. Mỗi người tắt / bật ở menu tài khoản › «Kính lỏng» (localStorage kinh-long). Trang đăng nhập không dùng. */
+  var KL_BAT = (function () { try { return localStorage.getItem("kinh-long") !== "0"; } catch (e) { return true; } })();
+  if (KL_BAT && !window.TK_TRANG_DN) (function () {
+    var H = document.documentElement, href = "kinh-long.css?v=20261121a"; H.classList.add("kl");
+    if ((navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4) H.classList.add("kl-nhe");
+    if (document.readyState === "loading") document.write('<link rel="stylesheet" id="klCss" href="' + href + '">');
+    else { var l = document.createElement("link"); l.rel = "stylesheet"; l.id = "klCss"; l.href = href; document.head.appendChild(l); }
+    var svg = '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="klLong" x="0" y="0" width="100%" height="100%">' +
+      '<feTurbulence type="fractalNoise" baseFrequency="0.006 0.012" numOctaves="2" seed="7" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="22" xChannelSelector="R" yChannelSelector="G"/></filter></svg>';
+    var themSvg = function () { document.body.insertAdjacentHTML("afterbegin", svg); };
+    if (document.body) themSvg(); else document.addEventListener("DOMContentLoaded", themSvg);
+    var dangDo = false;   // đo 60 khung ở lần cuộn đầu (lúc tải trang bận dựng dữ liệu nên không đo khi đó)
+    addEventListener("scroll", function cuon() { if (dangDo || H.classList.contains("kl-nhe")) return; dangDo = true; removeEventListener("scroll", cuon);
+      var n = 0, tong = 0, truoc = 0; requestAnimationFrame(function k(t) { if (truoc) { tong += t - truoc; n++; } truoc = t;
+        if (n < 60) requestAnimationFrame(k); else if (tong / n > 22) H.classList.add("kl-nhe"); }); }, { passive: true, capture: true });
+  })();
   var API_XM = function () { try { return localStorage.getItem("hx-api") || window.HX_API || "http://127.0.0.1:8591"; } catch (e) { return window.HX_API || "http://127.0.0.1:8591"; } };   // 19/10 hàm: HX_API đổi sau khi dò đường hầm
   /* 22/10 user «phải hiển thị hạng mục con bên trong: theo tác vụ/theo máy,…»: bảng quyền theo đúng thanh bên — mục có mục con = [khoá cha|null, tên, [con…], tab thanh bên].
      Khoá cha (r.xacminh) = mức cao nhất của các con (máy chủ 8591 vẫn hỏi r.xacminh); con chưa từng lưu thì thừa hưởng quyền cha cũ. Cùng luật ở google-script-TaiKhoan.gs. */
@@ -175,9 +193,11 @@
   }
   function moMenu(b) {
     dongMenu(); var m = document.createElement("div"); m.id = "tkMenu";
-    m.innerHTML = (TK.nguoi.vaiTro === "quantri" ? '<button data-a="ql">Quản lý tài khoản</button><button data-a="wf">Wi-Fi công ty</button>' : "") + '<button data-a="mk">Đổi mật khẩu</button><button data-a="dx">Đăng xuất</button>';
+    m.innerHTML = (TK.nguoi.vaiTro === "quantri" ? '<button data-a="ql">Quản lý tài khoản</button><button data-a="wf">Wi-Fi công ty</button>' : "") +
+      '<button data-a="kl">Kính lỏng: ' + (KL_BAT ? "Tắt" : "Bật") + '</button><button data-a="mk">Đổi mật khẩu</button><button data-a="dx">Đăng xuất</button>';
     document.body.appendChild(m); var r = b.getBoundingClientRect(); m.style.left = r.left + "px"; m.style.bottom = (innerHeight - r.top + 4) + "px"; m.style.minWidth = r.width + "px";
-    m.onclick = function (ev) { var a = ev.target.dataset.a; dongMenu(); if (a === "ql") moQuanLy(); if (a === "wf") moWifi(); if (a === "mk") moDoiMk(); if (a === "dx") dangXuat(); };
+    m.onclick = function (ev) { var a = ev.target.dataset.a; dongMenu(); if (a === "ql") moQuanLy(); if (a === "wf") moWifi(); if (a === "mk") moDoiMk(); if (a === "dx") dangXuat();
+      if (a === "kl") { ls.set("kinh-long", KL_BAT ? "0" : null); location.reload(); } };
     setTimeout(function () { document.addEventListener("click", dongMenu, { once: true }); }, 0);
   }
   function dongMenu() { var m = document.getElementById("tkMenu"); if (m) m.remove(); }

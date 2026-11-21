@@ -1,0 +1,51 @@
+/* kinh-long.css (21/11/2026) — KÍNH LỎNG toàn dashboard audit-dc (Retail + Factory nạp bản chép y hệt).
+   User duyệt 21/11 «làm» sau PDF «Xem thử kính lỏng audit-dc Retail 21-11-2026.pdf» ⇒ thay TK-04 «không kính mờ» cho riêng lớp này.
+   Nạp bởi tai-khoan.js (gắn html.kl); mỗi người tắt được ở menu tài khoản › «Kính lỏng» (localStorage kinh-long=0).
+   NHẸ MÁY: thẻ / khung / ô chỉ số nằm trên nền loang trơn ⇒ KHÔNG làm mờ (làm mờ nền trơn không khác gì, chỉ tốn GPU khi cuộn) — chỉ kính trong + viền sáng.
+   Làm mờ + uốn hình (SVG #klLong, chỉ Edge/Chrome) chỉ ở lớp ĐÈ lên nội dung: thanh trên, thanh bên trái, thanh bên chi tiết, pop-up.
+   html.kl-nhe (máy yếu / đo khung hình khi cuộn chậm): bỏ mọi làm mờ, kính đặc hơn.
+   Tiền tố html.kl.kl:root để thắng html.ad body{…!important} và :root[data-company] body. Không mã màu hex (qc-ma-tinh). */
+html.kl.kl:root{
+  --kl-mat:linear-gradient(135deg,rgba(255,255,255,.68),rgba(255,255,255,.38));
+  --kl-mat-dac:linear-gradient(135deg,rgba(255,255,255,.82),rgba(255,255,255,.64));
+  --kl-vien:rgba(255,255,255,.72);
+  --kl-bong:inset 0 1px 0 rgba(255,255,255,.95),inset 0 -1px 0 rgba(255,255,255,.28),inset 1px 0 0 rgba(255,255,255,.35),0 10px 30px rgba(23,63,53,.10);
+  --kl-mo:blur(22px) saturate(185%);
+  --kl-uon:url(#klLong) blur(16px) saturate(190%)}
+html.kl.kl:root body{
+  background:radial-gradient(60% 50% at 12% 18%,rgba(63,138,116,.42),transparent 70%),radial-gradient(50% 45% at 88% 10%,rgba(22,119,255,.20),transparent 70%),
+    radial-gradient(55% 50% at 72% 88%,rgba(127,184,163,.50),transparent 70%),radial-gradient(45% 40% at 22% 92%,rgba(250,173,20,.14),transparent 70%),
+    rgb(234,242,238)!important;
+  background-attachment:fixed!important}
+/* ===== thẻ nằm trên nền: kính trong, không làm mờ ===== */
+html.kl.kl:root :is(.panel,.kb-tile,.tq-the,.tq-o){background:var(--kl-mat)!important;border:1px solid var(--kl-vien)!important;
+  box-shadow:var(--kl-bong)!important;border-radius:20px!important}
+html.kl.kl:root .panel{overflow:hidden}
+html.kl.kl:root th{background:rgba(255,255,255,.42)!important}
+/* ===== lớp đè lên nội dung: làm mờ + uốn hình ===== */
+html.kl.kl:root :is(header,#sideNav){background:var(--kl-mat)!important;border-color:var(--kl-vien)!important;box-shadow:var(--kl-bong)!important;
+  -webkit-backdrop-filter:var(--kl-uon)!important;backdrop-filter:var(--kl-uon)!important}
+html.kl.kl:root #sideNav .s-item.on{background:rgba(255,255,255,.72)!important;border-radius:14px!important;
+  box-shadow:inset 0 1px 0 white,0 4px 14px rgba(22,119,255,.16)!important}
+html.kl.kl:root .modal-box{background:var(--kl-mat-dac)!important;border:1px solid var(--kl-vien)!important;
+  box-shadow:var(--kl-bong),0 24px 60px rgba(0,0,0,.18)!important;-webkit-backdrop-filter:var(--kl-mo)!important;backdrop-filter:var(--kl-mo)!important}
+/* BẪY: lớp vỏ có will-change:opacity ⇒ thành «gốc nền» riêng, hộp bên trong chỉ làm mờ được vỏ trong suốt (không thấy trang phía sau) ⇒ tắt gợi ý đó ở vỏ */
+html.kl.kl:root :has(>:is(.modal-box,.tb-hop,.hp-modalbox,.modalbox)){will-change:auto!important}
+/* thanh bên chi tiết (vỏ thanh-ben.css): hộp kính mờ, đầu thanh = thẻ kính */
+html.kl.kl:root :is(.tb-vo,#modal.hx-ben,#hpVtModal,#plgmodal)>:is(.tb-hop,.modal-box,.hp-modalbox,.modalbox){background:rgba(240,247,244,.72)!important;
+  border-left:1px solid var(--kl-vien)!important;box-shadow:inset 1px 0 0 rgba(255,255,255,.8),-14px 0 36px rgba(23,63,53,.16)!important;
+  -webkit-backdrop-filter:blur(28px) saturate(180%)!important;backdrop-filter:blur(28px) saturate(180%)!important}
+html.kl.kl:root :is(.tb-vo,#modal.hx-ben,#hpVtModal,#plgmodal) :is(.tb-dau,.modal-head,.hp-modalhd,.modalhd){background:var(--kl-mat)!important;
+  box-shadow:var(--kl-bong)!important;border:1px solid var(--kl-vien)}
+html.kl.kl:root #modal.hx-ben .modal-head::before{background:transparent!important}
+html.kl.kl:root #modal.hx-ben .modal-head::after{background:var(--kl-mat)!important;box-shadow:var(--kl-bong)!important}
+/* ===== điện thoại: danh sách thẻ — mỗi phiếu một thẻ kính, khung bao trong suốt ===== */
+@media(max-width:768px){
+  html.kl.kl:root .panel:has(.cardlist){background:transparent!important;border:0!important;box-shadow:none!important;overflow:visible}
+  html.kl.kl:root .cl-item{background:var(--kl-mat)!important;border:1px solid var(--kl-vien)!important;border-radius:18px!important;margin:0 0 10px!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 8px 22px rgba(23,63,53,.10)!important}
+}
+/* ===== máy yếu: bỏ làm mờ, kính đặc ===== */
+html.kl.kl-nhe:root :is(header,#sideNav,.modal-box){-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:rgba(250,252,251,.94)!important}
+html.kl.kl-nhe:root :is(.tb-vo,#modal.hx-ben,#hpVtModal,#plgmodal)>:is(.tb-hop,.modal-box,.hp-modalbox,.modalbox){-webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;background:rgba(244,249,247,.97)!important}
