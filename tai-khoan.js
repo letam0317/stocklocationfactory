@@ -71,6 +71,38 @@
       if (j.status !== "success") { var e = new Error(j.message || "Lỗi"); e.code = j.code; throw e; } return j; });
   }
   function nho() { ls.set("tk-nho", JSON.stringify({ ts: Date.now(), nguoi: TK.nguoi, quyen: TK.quyen })); }
+
+  /* ---------- 21/11 CỬA MẠNG CÔNG TY cho chế độ khách (user: «khách chỉ xem được các mục phân quyền khi ở Wi-Fi công ty; ngoài Wi-Fi công ty
+     chỉ đăng nhập mới xem được»). IP công cộng đọc MỚI mỗi lần (không dùng tb-ip của phiên — đổi Wi-Fi ↔ 4G giữa chừng vẫn bắt được),
+     GAS tk_mang đối chiếu sổ IP Wi-Fi công ty; nhớ kết quả theo IP 12 giờ (tk-mang) để lần sau vào ngay, mỗi lần mở trang vẫn so lại IP.
+     Chưa đăng nhập + không chắc đang ở mạng công ty ⇒ sang trang đăng nhập (?ve= quay lại đúng link). Bộ đo localhost:8123 miễn. ---------- */
+  var NOI_BO = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+  function ipMoi() {
+    var lay = function (u, doc) { var c = window.AbortController ? new AbortController() : null; setTimeout(function () { if (c) c.abort(); }, 4000);
+      return fetch(u, { cache: "no-store", signal: c ? c.signal : undefined }).then(function (r) { return r.text(); }).then(doc); };
+    return lay("https://www.cloudflare.com/cdn-cgi/trace", function (t) { var m = /^ip=(.+)$/m.exec(t); if (!m) throw 0; return m[1].trim(); })
+      .catch(function () { return lay("https://api.ipify.org?format=json", function (t) { return String(JSON.parse(t).ip || ""); }); }).catch(function () { return ""; });
+  }
+  function mangNho() { try { var m = JSON.parse(ls.get("tk-mang") || "null"); return m && Date.now() - m.ts < 12 * 3600e3 ? m : null; } catch (e) { return null; } }
+  function tkMang() {   // → Promise {cty, ip}
+    return ipMoi().then(function (ip) {
+      if (!ip) return { cty: false, ip: "" };
+      var m = mangNho(); if (m && m.ip === ip) return m;
+      return goi("tk_mang", { ip: ip }).then(function (j) { var r = { cty: !!j.cty, ip: ip, ts: Date.now() }; ls.set("tk-mang", JSON.stringify(r)); return r; })
+        .catch(function () { return { cty: false, ip: ip }; });
+    });
+  }
+  window.tkMang = tkMang;
+  var veDangNhap = function () { var u = location.pathname + location.search + location.hash;
+    location.replace("/retail/dang-nhap" + (/\.pages\.dev$/.test(location.hostname) ? "" : ".html") + "?ve=" + encodeURIComponent(u)); };   // máy chủ xem trước không tự bỏ .html
+  var BAT_CUA_MANG = true;   // 21/11 user (3G vẫn xem được Tổng kết/Vi phạm/Quy định) ⇒ bật cả bản chính
+  function cuaMang() {
+    if (!BAT_CUA_MANG || window.TK_TRANG_DN || NOI_BO || TK.phien || !/^\/(retail|factory)\//.test(location.pathname) || /\/dang-nhap/.test(location.pathname)) return;   // không bao giờ vòng lặp
+    var m = mangNho();
+    if (!(m && m.cty)) { document.documentElement.style.visibility = "hidden"; return veDangNhap(); }   // chưa chắc ở mạng công ty: không bày dữ liệu, sang đăng nhập
+    tkMang().then(function (r) { if (!r.cty && !TK.phien) veDangNhap(); });   // có nhớ: kiểm lại ngầm (đã rời Wi-Fi công ty thì đẩy ra)
+  }
+  cuaMang();
   function datNguoi(n, phien) {
     TK.nguoi = n; if (phien != null) { TK.phien = phien; ls.set("tk-phien", phien || null); }
     if (n) { window.HSK_NGUOI_DUNG = { ten: n.ten, code: n.id, email: n.id }; ls.set("hsk-nguoi-dung", JSON.stringify(window.HSK_NGUOI_DUNG)); }
@@ -159,7 +191,7 @@
   var QC = /\.audit-dc\.pages\.dev$/.test(location.hostname);
   var laQT = function () { return !!(TK.nguoi && TK.nguoi.vaiTro === "quantri"); };
   function veQC() {
-    if (!QC || !document.body) return;
+    if (!QC || !document.body || window.TK_TRANG_DN) return;   // 21/11 trang đăng nhập (dang-nhap.html) tự là cửa — không phủ chắn QC lên nó
     if (!document.getElementById("tkDauChim")) { var dc = document.createElement("div"); dc.id = "tkDauChim"; dc.setAttribute("aria-hidden", "true"); document.body.appendChild(dc); }
     var c = document.getElementById("tkCanQC");
     if (laQT()) { if (c) c.remove(); return; }
@@ -274,6 +306,7 @@
     try { window.dispatchEvent(new Event("hx-phien")); } catch (e) {}
     apQuyen(); bao();   // dựng lại thanh bên NGAY (không chờ Apps Script trả quyền khách)
     taiKhach().then(function () { apQuyen(); bao(); });
+    cuaMang();   // 21/11 đăng xuất ở ngoài mạng công ty ⇒ không còn quyền khách, về trang đăng nhập
   }
   window.tkDangXuat = dangXuat;
   /* 10/11 tối user «mỗi tài khoản mới có mật khẩu mặc định 33333 — bắt buộc pop-up đổi mật khẩu ngay lần đầu đăng nhập»: batBuoc = hộp khoá
