@@ -87,6 +87,9 @@
   :is(#modal,#statModal,#hpModal,#hpAiModal,#hpNkModal,#hpcmodal,#hplmodal,#htModal,#hkKkModal,#hkFcModal,#plgallmodal,#plgtramodal,#plganhmodal,#plmodal,#pcmodal,#prmodal,#fcmodal,#abnmodal,#tvtmodal,#ccNdsModal,#ccAnhModal,#hmModal,#ntmodal,#catmodal,#kkmodal){padding:0!important;align-items:stretch!important;justify-content:stretch!important}
   :is(#modal,#statModal,#hpModal,#hpAiModal,#hpNkModal,#hpcmodal,#hplmodal,#htModal,#hkKkModal,#hkFcModal,#plgallmodal,#plgtramodal,#plganhmodal,#plmodal,#pcmodal,#prmodal,#fcmodal,#abnmodal,#tvtmodal,#ccNdsModal,#ccAnhModal,#hmModal,#ntmodal,#catmodal,#kkmodal)
     >:is(.modal-box,.modalbox,.hmm-box,.gm-box,.hp-modalbox,.hpc-box,.ht-modalbox,.hk-modalbox){width:100%!important;max-width:none!important;height:100%!important;max-height:100%!important;margin:0!important;border-radius:0!important}
+  /* 21/11 user (video 1795233133384, giây 9): pop-up Luỹ kế 1 người MẤT KHUNG NỀN khi cuộn — #statModal cuộn ở lớp phủ, hộp chốt cao 100% (1 màn)
+     ⇒ nội dung dài hơn tràn ra ngoài nền, lộ bảng phía sau. Hộp cao theo nội dung, tối thiểu 1 màn (nền phủ hết phần cuộn). */
+  #statModal>.modal-box{height:auto!important;min-height:100%!important;max-height:none!important;align-self:flex-start!important}
   :is(#ghiModal,#csmodal,#qtcqrmodal,#qtcshowqrmodal,#ccCamModal,#ccTsModal,#ccQsModal,#ccChonModal,#ccVtXemModal,#ccSpModal,#ccVtModal,#ccInModal){padding:0!important;align-items:flex-end!important;justify-content:center!important}
   :is(#ghiModal,#csmodal,#qtcqrmodal,#qtcshowqrmodal,#ccCamModal,#ccTsModal,#ccQsModal,#ccChonModal,#ccVtXemModal,#ccSpModal,#ccVtModal,#ccInModal)
     >:is(.modal-box,.modalbox,.hmm-box,.gm-box,.hp-modalbox,.hpc-box,.ht-modalbox,.hk-modalbox){width:100%!important;max-width:none!important;max-height:92%!important;margin:0!important;border-radius:8px 8px 0 0!important}
