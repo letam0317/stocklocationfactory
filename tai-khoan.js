@@ -163,12 +163,36 @@
   }
   function moMenu(b) {
     dongMenu(); var m = document.createElement("div"); m.id = "tkMenu";
-    m.innerHTML = (TK.nguoi.vaiTro === "quantri" ? '<button data-a="ql">Quản lý tài khoản</button>' : "") + '<button data-a="mk">Đổi mật khẩu</button><button data-a="dx">Đăng xuất</button>';
+    m.innerHTML = (TK.nguoi.vaiTro === "quantri" ? '<button data-a="ql">Quản lý tài khoản</button><button data-a="wf">Wi-Fi công ty</button>' : "") + '<button data-a="mk">Đổi mật khẩu</button><button data-a="dx">Đăng xuất</button>';
     document.body.appendChild(m); var r = b.getBoundingClientRect(); m.style.left = r.left + "px"; m.style.bottom = (innerHeight - r.top + 4) + "px"; m.style.minWidth = r.width + "px";
-    m.onclick = function (ev) { var a = ev.target.dataset.a; dongMenu(); if (a === "ql") moQuanLy(); if (a === "mk") moDoiMk(); if (a === "dx") dangXuat(); };
+    m.onclick = function (ev) { var a = ev.target.dataset.a; dongMenu(); if (a === "ql") moQuanLy(); if (a === "wf") moWifi(); if (a === "mk") moDoiMk(); if (a === "dx") dangXuat(); };
     setTimeout(function () { document.addEventListener("click", dongMenu, { once: true }); }, 0);
   }
   function dongMenu() { var m = document.getElementById("tkMenu"); if (m) m.remove(); }
+
+  /* ---------- 21/11 Wi-Fi công ty (chỉ quản trị): trang không đọc được tên Wi-Fi ⇒ đứng ở mạng nào (Hasaki Picking, Hasaki Factory…) thì
+     bấm «Thêm mạng đang dùng» để IP công cộng của mạng đó được tính là mạng công ty (GAS tk_wifi → WIFI_IP_ALLOW). ---------- */
+  function moWifi() {
+    var o = hop("Wi-Fi công ty", '<div class="tk-f"><div class="tk-wf-nay">Đang kiểm tra mạng…</div>' +
+      '<label>Tên Wi-Fi<input name="ten" maxlength="40" placeholder="vd: Hasaki Picking"></label>' +
+      '<button type="button" class="tk-chinh" data-a="them" disabled>Thêm mạng đang dùng</button><div class="tk-st"></div><div class="tk-ds tk-wf-ds"></div></div>', 440);
+    var ipNay = "", nut = o.querySelector('[data-a="them"]');
+    var ve = function (j) {
+      o.querySelector(".tk-wf-nay").innerHTML = "Mạng đang dùng: <b>" + e_(j.ip || "không đọc được IP") + "</b> · " +
+        (j.cty ? '<span class="tk-wf-chip ok">Wi-Fi công ty</span>' : '<span class="tk-wf-chip ngoai">Chưa tính là Wi-Fi công ty</span>');
+      nut.disabled = !j.ip || j.cty;
+      o.querySelector(".tk-wf-ds").innerHTML = (j.tay || []).map(function (x) {
+        return '<div class="tk-dong tk-wf-dong"><span><b>' + e_(x.ten || "Chưa đặt tên") + "</b><span>" + e_(x.muc) + '</span></span><button type="button" class="tk-xoa" data-go="' + e_(x.muc) + '">Gỡ</button></div>'; }).join("") +
+        ((j.hoc || []).length ? '<div class="tk-goiy">' + j.hoc.length + " IP tự học từ máy đã cấp quyền (14 ngày)</div>" : "");
+    };
+    var goiWf = function (d) { d.ip = ipNay; d.phien = TK.phien; return goi("tk_wifi", d).then(function (j) { ls.set("tk-mang", null); ve(j); return j; }); };
+    ipMoi().then(function (ip) { ipNay = ip; return goiWf({}); }).catch(function (e) { trangThai(o, "loi", e.message); });
+    nut.onclick = function () { nut.disabled = true; trangThai(o, "", "Đang thêm…");
+      goiWf({ lam: "them", ten: o.querySelector("[name=ten]").value }).then(function () { trangThai(o, "ok", "Đã thêm — mạng này giờ là Wi-Fi công ty"); })
+        .catch(function (e) { trangThai(o, "loi", e.message); nut.disabled = false; }); };
+    o.querySelector(".tk-wf-ds").onclick = function (ev) { var m = ev.target.dataset && ev.target.dataset.go; if (!m) return;
+      ev.target.disabled = true; goiWf({ lam: "go", muc: m }).then(function () { trangThai(o, "ok", "Đã gỡ " + m); }).catch(function (e) { trangThai(o, "loi", e.message); }); };
+  }
 
   /* ---------- hộp thoại dùng chung (khuôn Modal antd, popIn sẵn có) ---------- */
   function hop(tieuDe, than, rong, khoa) {   // khoa = hộp bắt buộc (không ✕, không bấm nền / Esc để đóng)
@@ -488,6 +512,9 @@
     ".tk-dong{display:flex;flex-direction:column;padding:8px 12px;border:1px solid var(--border);border-radius:6px;cursor:pointer}.tk-dong:hover{border-color:var(--accent)}",
     ".tk-dong.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--surface))}.tk-dong b{font-weight:600;font-size:14px}.tk-dong span{font-size:12px;color:var(--muted)}",
     ".tk-hai{display:grid;grid-template-columns:1fr 1fr;gap:12px}.tk-tieu{font-weight:600}.tk-goiy{font-size:13px;color:var(--muted)}",
+    ".tk-wf-nay{font-size:14px;line-height:1.8}.tk-wf-chip{display:inline-flex;padding:0 8px;border-radius:4px;font-size:12px;font-weight:600;white-space:nowrap}",
+    ".tk-wf-chip.ok{background:color-mix(in srgb,var(--good) 14%,transparent);color:var(--good)}.tk-wf-chip.ngoai{background:color-mix(in srgb,var(--bad) 12%,transparent);color:var(--bad)}",
+    ".tk-wf-dong{flex-direction:row;align-items:center;justify-content:space-between;gap:12px;cursor:default}.tk-wf-dong>span{display:flex;flex-direction:column}",
     ".tk-qwrap{max-height:46vh;overflow:auto;border:1px solid var(--border);border-radius:6px}",
     ".tk-q{width:100%;border-collapse:collapse;font-size:14px}.tk-q th{position:sticky;top:0;background:var(--ad-nen2,var(--surface2));font-weight:600;padding:8px 12px;text-align:center;border-bottom:1px solid var(--border)}",
     ".tk-q th:first-child,.tk-q td:first-child{text-align:left}.tk-q td{padding:6px 12px;text-align:center;border-bottom:1px solid var(--ad-chia,var(--border))}",
