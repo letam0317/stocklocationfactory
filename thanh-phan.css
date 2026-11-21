@@ -94,3 +94,9 @@
   :is(#ghiModal,#csmodal,#qtcqrmodal,#qtcshowqrmodal,#ccCamModal,#ccTsModal,#ccQsModal,#ccChonModal,#ccVtXemModal,#ccSpModal,#ccVtModal,#ccInModal)
     >:is(.modal-box,.modalbox,.hmm-box,.gm-box,.hp-modalbox,.hpc-box,.ht-modalbox,.hk-modalbox){width:100%!important;max-width:none!important;max-height:92%!important;margin:0!important;border-radius:8px 8px 0 0!important}
 }
+/* 21/11 user: «bỏ luôn khung nền pop-up khi nhấn vào 1 cá nhân ở mục Tổng kết — phía sau hiển thị mờ là được» (#statModal, mọi cỡ màn):
+   không hộp trắng, không lớp tối; nội dung nằm thẳng trên lớp kính làm mờ trang phía sau (sáng theo màu nền theme ⇒ chữ vẫn đọc rõ). */
+html #statModal{background:color-mix(in srgb,var(--surface) 55%,transparent);-webkit-backdrop-filter:blur(14px) saturate(1.15);backdrop-filter:blur(14px) saturate(1.15)}
+html #statModal>.modal-box{background:transparent!important;box-shadow:none!important;border-color:transparent!important}
+/* điện thoại tắt kính mờ để cuộn mượt (thanh-cuon.css ②) ⇒ thay bằng màn sáng dày hơn: phía sau chỉ còn mờ nhạt, chữ pop-up không lẫn với bảng */
+@media (max-width:768px),(pointer:coarse){html #statModal{background:color-mix(in srgb,var(--surface) 92%,transparent)}}
