@@ -14,7 +14,9 @@
      403 bằng mã máy mà có phiên tài khoản ⇒ thử ngay bằng phiên; tải được thì gắn ảnh cả vòng đã vẽ chữ cái + báo «hsk-anh-nv» để mô-đun vẽ lại tên. */
   var hong = 0, hongTb = "", henLai = 0;
   var chuan = function (s) { return String(s == null ? "" : s).normalize("NFC").replace(/\s+/g, " ").trim().toUpperCase(); };
-  var tb = function () { try { return localStorage.getItem("tb-khoa") || (localStorage.getItem("tk-phien") ? "tk:" + localStorage.getItem("tk-phien") : ""); } catch (e) { return ""; } };
+  /* 21/11 user «máy lạ vào audit-dc thấy chữ viết tắt»: không mã máy, không phiên ⇒ dùng VÉ KHÁCH ẢNH (tai-khoan.js lưu từ tk_mang khi ở Wi-Fi công ty; GAS chỉ trả tên + ảnh) */
+  var khach = function () { try { var v = localStorage.getItem("tk-anh-kh") || "", m = /^kh:(\d{13})\./.exec(v); return m && Number(m[1]) > Date.now() ? v : ""; } catch (e) { return ""; } };
+  var tb = function () { try { return localStorage.getItem("tb-khoa") || (localStorage.getItem("tk-phien") ? "tk:" + localStorage.getItem("tk-phien") : "") || khach(); } catch (e) { return ""; } };
   function nap(rows, H) {
     theoTen = {}; theoEm = {}; theoMa = {}; DS = [];
     var iT = H.indexOf("TÊN"), iM = H.indexOf("MÃ NV"), iE = H.indexOf("EMAIL"), iA = H.indexOf("ẢNH");
@@ -41,6 +43,7 @@
       if (!j || j.status !== "success") {
         var ph = ""; try { ph = localStorage.getItem("tk-phien") || ""; } catch (e) {}
         if (j && j.code === 403 && ph && k !== "tk:" + ph) { tai("tk:" + ph); return; }   // mã máy hết hạn nhưng phiên tài khoản còn
+        var kh = khach(); if (j && j.code === 403 && kh && k !== kh && k.indexOf("kh:") !== 0) { tai(kh); return; }   // mã máy / phiên hết hạn ⇒ vé khách ảnh
         daHong(); return; }
       var H = (j.header || []).map(chuan);
       try { sessionStorage.setItem(KHOA_PHIEN, JSON.stringify({ luc: Date.now(), H: H, rows: j.rows })); } catch (e) {}

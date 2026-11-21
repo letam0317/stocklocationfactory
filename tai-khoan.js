@@ -109,11 +109,13 @@
   }
   function ip6() { return layIp("https://www.cloudflare.com/cdn-cgi/trace").then(function (x) { return x.indexOf(":") >= 0 ? x : ""; }).catch(function () { return ""; }); }
   function mangNho() { try { var m = JSON.parse(ls.get("tk-mang") || "null"); return m && Date.now() - m.ts < 12 * 3600e3 ? m : null; } catch (e) { return null; } }
+  function khAnhCon() { var m = /^kh:(\d{13})\./.exec(ls.get("tk-anh-kh") || ""); return !!m && Number(m[1]) - Date.now() > 10 * 60e3; }
   function tkMang() {   // → Promise {cty, ip}
     return ipMoi().then(function (ip) {
       if (!ip) return { cty: false, ip: "" };
-      var m = mangNho(); if (m && m.ip === ip && m.cty) return m;   // chỉ tin bộ nhớ khi đã là mạng công ty
-      var hoi = function (x) { return goi("tk_mang", { ip: x }).then(function (j) { return !!j.cty; }); };
+      var m = mangNho(); if (m && m.ip === ip && m.cty && khAnhCon()) return m;   // chỉ tin bộ nhớ khi đã là mạng công ty (và vé khách ảnh còn hạn)
+      /* 21/11 user «máy lạ thấy avatar chữ viết tắt»: đúng mạng công ty ⇒ GAS kèm vé khách ẢNH (kh:…, 12 h) — anh-nv.js dùng khi máy không có mã máy / phiên */
+      var hoi = function (x) { return goi("tk_mang", { ip: x }).then(function (j) { if (j.khach) { ls.set("tk-anh-kh", j.khach); if (window.hskAnhNV && hskAnhNV.san) hskAnhNV.san(function () {}); } return !!j.cty; }); };
       return hoi(ip).then(function (ok) { return ok ? ok : ip6().then(function (v6) { return v6 && v6 !== ip ? hoi(v6) : false; }); })
         .then(function (ok) { var r = { cty: ok, ip: ip, ts: Date.now() }; ls.set("tk-mang", JSON.stringify(r)); return r; })
         .catch(function () { return { cty: false, ip: ip }; });
