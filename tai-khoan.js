@@ -304,13 +304,21 @@
     var nut = document.getElementById("btnGhiNhan"); if (nut) nut.title = "Ghi nhận vi phạm 5S";
   }
 
+  /* 21/11 tối (user «khung đăng nhập khi bấm nút Xác minh ổ khoá cũng nên là khung này cho đồng bộ»): cùng khuôn trang đăng nhập audit-dc —
+     logo + AUDIT RETAIL / AUDIT FACTORY · Kiểm soát kho, tiêu đề, kính mờ; máy tính thẻ trắng giữa màn, điện thoại thẻ kính tối ở ~1/7 màn (bàn phím không che) */
   function moDangNhap(sau) {
-    var o = hop("Đăng nhập", '<form class="tk-f" autocomplete="on"><label>Tài khoản<input name="id" autocomplete="username" required placeholder="vd: tamlc" value="' + e_(ls.get("tk-id") || "") + '"></label>' +
+    var hieu = '<div class="tk-dnh"><img src="' + (APP === "r" ? "hasaki-logo.png" : "factory-logo.png") + '" alt=""><span><b>' + (APP === "r" ? "AUDIT RETAIL" : "AUDIT FACTORY") +
+      '</b><i>Kiểm soát kho</i></span></div><div class="tk-dnt">Đăng nhập</div>';
+    var o = hop("Đăng nhập", hieu + '<form class="tk-f" autocomplete="on"><label>Tài khoản<input name="id" autocomplete="username" required placeholder="vd: tamlc" value="' + e_(ls.get("tk-id") || "") + '"></label>' +
       '<label>Mật khẩu<input name="mk" type="password" autocomplete="current-password" required></label><button type="submit" class="tk-chinh">Đăng nhập</button><div class="tk-st"></div></form>');
+    o.classList.add("tk-dn");
     var f = o.querySelector("form"); (f.id.value ? f.mk : f.id).focus();
     f.onsubmit = function (ev) { ev.preventDefault(); var nut = f.querySelector("button"); nut.disabled = true; trangThai(o, "", "Đang kiểm tra…");
       dangNhap(f.id.value, f.mk.value).then(function () {
         ls.set("tk-id", f.id.value.trim().toLowerCase().replace(/@.*$/, ""));
+        nut.classList.add("tk-xong"); nut.textContent = "✓"; trangThai(o, "", ""); o.classList.add("tk-dn-xong");   // như trang đăng nhập: ✓ rồi khung lùi mờ
+        return new Promise(function (ok) { setTimeout(ok, 240); });
+      }).then(function () {
         dongHop();
         if (typeof window.adHuyLinkCho === "function") window.adHuyLinkCho();   // 22/10 không để link sâu cũ kéo sang mục khác sau khi về Tổng quan
         if (sau) { try { sau(); } catch (e) {} }
@@ -498,6 +506,24 @@
     "#tkHop{position:fixed;inset:0;z-index:1400;display:flex;align-items:flex-start;justify-content:center;padding:80px 16px 16px;background:rgba(0,0,0,.45);overflow:auto}",
     "#tkHop .tk-box{width:100%;background:var(--surface);color:var(--text);border-radius:8px;box-shadow:0 6px 16px rgba(0,0,0,.08),0 9px 28px 8px rgba(0,0,0,.05);animation:popIn .2s ease}",
     "#tkHop .tk-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--border)}#tkHop .tk-hd b{font-size:16px;font-weight:600}",
+    /* 21/11 tối: hộp Đăng nhập = khuôn trang đăng nhập audit-dc */
+    "#tkHop.tk-dn{z-index:5000;align-items:center;padding:16px;background:rgba(6,21,18,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}",
+    "#tkHop.tk-dn .tk-box{position:relative;max-width:370px!important;padding:28px;border-radius:14px;background:rgba(255,255,255,.92);color:rgba(0,0,0,.88);",
+    "  border:1px solid rgba(255,255,255,.7);box-shadow:0 24px 60px rgba(0,0,0,.28),0 2px 6px rgba(0,0,0,.08);transition:transform .3s cubic-bezier(.32,.72,0,1),opacity .24s ease}",
+    "#tkHop.tk-dn .tk-hd{position:absolute;top:8px;right:8px;padding:0;border:0}#tkHop.tk-dn .tk-hd b{display:none}#tkHop.tk-dn .tk-x{color:inherit;opacity:.55}",
+    "#tkHop.tk-dn .tk-bd{padding:0;display:flex;flex-direction:column;gap:18px}#tkHop.tk-dn .tk-f label{color:inherit}",
+    "#tkHop.tk-dn .tk-f input:not([type=radio]):not([type=checkbox]){background:white;color:rgba(0,0,0,.88);border-color:rgba(0,0,0,.15)}",
+    ".tk-dnh{display:flex;align-items:center;gap:10px}.tk-dnh img{width:38px;height:38px;border-radius:50%}",
+    ".tk-dnh b{display:block;font-size:17px;font-weight:600;letter-spacing:.06em}.tk-dnh i{display:block;font-style:normal;font-size:12px;opacity:.6}.tk-dnt{font-size:20px;font-weight:600}",
+    "#tkHop .tk-chinh.tk-xong{background:rgb(82,196,26);border-color:rgb(82,196,26)}#tkHop.tk-dn-xong .tk-box{transform:scale(.97);opacity:0}",
+    "@media(max-width:768px){#tkHop.tk-dn{align-items:flex-start;padding:calc(max(16px,env(safe-area-inset-top)) + 13vh) 16px 16px;background:rgba(6,21,18,.5);-webkit-backdrop-filter:none;backdrop-filter:none}",
+    "  #tkHop.tk-dn .tk-box{max-width:340px!important;padding:14px 14px 14px;border-radius:24px;color:white;text-shadow:0 1px 2px rgba(0,0,0,.35);",
+    "    background:linear-gradient(145deg,rgba(255,255,255,.16),rgba(255,255,255,.03)),rgba(18,40,34,.97);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);",
+    "    border:1px solid rgba(255,255,255,.38);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 14px 36px rgba(0,0,0,.3)}",
+    "  #tkHop.tk-dn .tk-bd{gap:12px}.tk-dnh{gap:9px}.tk-dnh img{width:32px;height:32px}.tk-dnh b{font-size:13.5px}.tk-dnh i{opacity:.8}.tk-dnt{font-size:16px}",
+    "  #tkHop.tk-dn .tk-f{gap:9px}#tkHop.tk-dn .tk-f label{font-size:12.5px;gap:3px}#tkHop.tk-dn .tk-chinh{min-height:34px;font-size:14.5px;text-shadow:none}",
+    "  #tkHop.tk-dn .tk-f input:not([type=radio]):not([type=checkbox]){height:34px;font-size:16px;border-color:rgba(255,255,255,.55);background:rgba(255,255,255,.82);text-shadow:none}",
+    "  #tkHop.tk-dn .tk-st{color:rgba(255,255,255,.85)}}",
     "#tkHop .tk-x{width:32px;height:32px;border:0;border-radius:6px;background:none;color:var(--muted);font-size:20px;cursor:pointer}#tkHop .tk-x:hover{background:var(--ad-nen2,var(--surface2))}",
     "#tkHop .tk-bd{padding:16px 24px 24px}",
     ".tk-f{display:flex;flex-direction:column;gap:12px}.tk-f label{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--text)}",
