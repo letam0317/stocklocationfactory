@@ -105,10 +105,13 @@
   var veDangNhap = function () { var u = location.pathname + location.search + location.hash;
     location.replace("/retail/dang-nhap" + (/\.pages\.dev$/.test(location.hostname) ? "" : ".html") + "?ve=" + encodeURIComponent(u)); };   // máy chủ xem trước không tự bỏ .html
   var BAT_CUA_MANG = true;   // 21/11 user (3G vẫn xem được Tổng kết/Vi phạm/Quy định) ⇒ bật cả bản chính
+  /* 21/11 tối (user «vào link audit-dc kể cả retail/factory đều trả về màn đăng nhập»): chưa đăng nhập ⇒ LUÔN sang màn đăng nhập (kể cả đang ở Wi-Fi công ty);
+     chỉ khi đã chọn «vuốt để xem» ở màn đăng nhập (sessionStorage tk-khach, hết khi đóng tab) mới vào chế độ khách — và vẫn phải đang ở Wi-Fi công ty. */
+  var daChonKhach = function () { try { return sessionStorage.getItem("tk-khach") === "1"; } catch (e) { return false; } };
   function cuaMang() {
     if (!BAT_CUA_MANG || window.TK_TRANG_DN || NOI_BO || TK.phien || !/^\/(retail|factory)\//.test(location.pathname) || /\/dang-nhap/.test(location.pathname)) return;   // không bao giờ vòng lặp
     var m = mangNho();
-    if (!(m && m.cty)) { document.documentElement.style.visibility = "hidden"; return veDangNhap(); }   // chưa chắc ở mạng công ty: không bày dữ liệu, sang đăng nhập
+    if (!daChonKhach() || !(m && m.cty)) { document.documentElement.style.visibility = "hidden"; return veDangNhap(); }   // chưa chọn khách / chưa chắc ở mạng công ty: không bày dữ liệu, sang đăng nhập
     tkMang().then(function (r) { if (!r.cty && !TK.phien) veDangNhap(); });   // có nhớ: kiểm lại ngầm (đã rời Wi-Fi công ty thì đẩy ra)
   }
   cuaMang();
@@ -340,6 +343,7 @@
   }
   window.tkMoDangNhap = moDangNhap;
   function dangXuat() {
+    try { sessionStorage.removeItem("tk-khach"); } catch (e) {}   // đăng xuất ⇒ về màn đăng nhập (không rơi sang chế độ khách)
     var p = TK.phien; if (p) goi("tk_dangxuat", { phien: p }).catch(function () {});
     /* 16/10 user «đăng xuất rồi mà vẫn thấy mục con Xác minh»: 1 lần đăng xuất = thu hồi CẢ phiên máy chủ Xác minh 8591 (trước chỉ xoá ở máy) */
     var hx = ls.get("hx-phien"); if (APP === "r" && hx) fetch(API_XM() + "/api/dang-xuat", { method: "POST", headers: { "x-hx-phien": hx } }).catch(function () {});
