@@ -60,6 +60,9 @@ html.kl.kl:root :is(.modal-box,.modalbox,.hmm-box,.gm-box,.hp-modalbox,.hpc-box,
   border:1px solid var(--kl-vien)!important;box-shadow:var(--kl-bong),0 24px 60px var(--kl-bong-mau)!important;
   -webkit-backdrop-filter:var(--kl-mo)!important;backdrop-filter:var(--kl-mo)!important}
 /* pop-up Tổng kết › 1 người: trước đây bỏ khung (21/11 sáng) — nay có lại nền = hộp kính (user 21/11 tối «bổ sung nền») */
+/* 21/11 tối (ảnh user 1795251589348 «mất khung nền»): hộp bị chốt cao 1 màn (thanh-phan.css) mà lịch sử dài tràn ra ngoài nền ⇒ hộp cao THEO NỘI DUNG, lớp phủ cuộn */
+html.kl.kl:root #statModal{overflow-y:auto!important;align-items:flex-start!important}
+html.kl.kl:root #statModal>.modal-box{height:auto!important;max-height:none!important;overflow:visible!important}
 html.kl.kl:root #statModal>.modal-box{background:var(--kl-mat-dac)!important;border-color:var(--kl-vien)!important;box-shadow:var(--kl-bong),0 24px 60px var(--kl-bong-mau)!important}
 
 /* ===== thanh bên chi tiết (vỏ thanh-ben.css): hộp kính mờ, đầu thanh = thẻ kính ===== */
